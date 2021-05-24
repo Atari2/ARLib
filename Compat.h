@@ -1,7 +1,6 @@
 #pragma once
 
 #ifdef _MSC_VER		// MSVC
-#define WINDOWS
 #include <intrin.h>
 #define unreachable __assume(0);
 #ifdef _WIN64
@@ -29,3 +28,27 @@
 #else				// OTHER
 #error "Unsupported compiler"
 #endif
+
+#if defined(_WIN32) || defined(_WIN64)
+#define WINDOWS
+#elif (defined(__unix__) || defined(__unix)) && !defined(BSD)
+#define UNIX
+#else
+#error "Unsupported platform"
+#endif
+
+#ifdef ENVIRON64
+	#ifdef WINDOWS
+		static_assert(sizeof(void*) == 8 && sizeof(unsigned __int64) == 8);
+	#else
+		static_assert(sizeof(void*) == 8 && sizeof(unsigned long) == 8);
+	#endif
+#else
+	#ifdef WINDOWS
+		static_assert(sizeof(void*) == 4 && sizeof(unsigned int) == 4);
+	#else
+		static_assert(sizeof(void*) == 4 && sizeof(unsigned int) == 4);
+	#endif
+#endif
+
+static_assert(sizeof(char) == 1);
