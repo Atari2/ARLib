@@ -1,4 +1,5 @@
 #pragma once
+#include "Types.h"
 size_t strlen(const char*);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* destination, const char* source, size_t num);

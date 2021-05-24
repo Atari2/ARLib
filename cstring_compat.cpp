@@ -55,9 +55,9 @@ void* memmove(void* dst0, const void* src0, size_t length) {
 		return dst;
 	if ((unsigned long)dst < (unsigned long)src) {
 		// copy forward
-		size_t t = (int)src;
-		if ((t | (int)dst) & wmask) {
-			if ((t ^ (int)dst) & wmask || length < wsize)
+		size_t t = (size_t)src;
+		if ((t | (size_t)dst) & wmask) {
+			if ((t ^ (size_t)dst) & wmask || length < wsize)
 				t = length;
 			else
 				t = wsize - (t & wmask);
@@ -76,9 +76,9 @@ void* memmove(void* dst0, const void* src0, size_t length) {
 	else {
 		src += length;
 		dst += length;
-		size_t t = (int)src;
-		if ((t | (int)dst) & wmask) {
-			if ((t ^ (int)dst) & wmask || length <= wsize)
+		size_t t = (size_t)src;
+		if ((t | (size_t)dst) & wmask) {
+			if ((t ^ (size_t)dst) & wmask || length <= wsize)
 				t = length;
 			else
 				t &= wmask;
