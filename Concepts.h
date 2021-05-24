@@ -1,7 +1,7 @@
 #pragma once
 #include "TypeTraits.h"
 #include "Iterator.h"
-#include <cstdint>
+#include "Types.h"
 
 // this is a hacky fix to an issue that can lead to the Hashable concept constraint not finding the appropriate function
 // so if it wasn't included yet, include it

@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Concepts.h"
+#include "Utility.h"
 
 namespace ARLib {
 	template <typename T>
@@ -71,7 +72,7 @@ namespace ARLib {
 			}
 
 			ListEntry<T>& operator=(ListEntry<T>&& other) requires MoveAssignable<T> {
-				m_entry = std::move(other.m_entry);
+				m_entry = move(other.m_entry);
 				m_prev = other.m_prev;
 				m_next = other.m_next;
 				other.m_prev = nullptr;

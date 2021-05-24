@@ -40,7 +40,7 @@ namespace ARLib {
 		return hash(s) == hash(z);
 	}
 
-	inline constexpr bool hash_equals(const char* s, const char* z) {
+	inline bool hash_equals(const char* s, const char* z) {
 		return hash(s) == hash(z);
 	}
 }

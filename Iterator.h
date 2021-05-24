@@ -1,4 +1,6 @@
 #pragma once
+#include "Types.h"
+
 namespace ARLib {
 	template <typename T>
 	class IteratorBase {
@@ -54,11 +56,13 @@ namespace ARLib {
 
 		Iterator& operator=(const Iterator<T>& other) {
 			m_current = other.m_current;
+			return *this;
 		}
 
 		Iterator& operator=(Iterator<T>&& other) {
 			m_current = other.m_current;
 			other.m_current = nullptr;
+			return *this;
 		}
 
 		Iterator<T>& operator++() {

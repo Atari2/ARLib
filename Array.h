@@ -24,7 +24,6 @@ namespace ARLib {
 			append_internal_(Forward<Args>(args)...);
 		}
 
-		template <>
 		void append_internal_(T&& value) {
 			m_storage[m_size++] = move(value);
 		}

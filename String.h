@@ -4,6 +4,7 @@
 #include "Assertion.h"
 #include "HashCalc.h"
 #include "Ordering.h"
+#include "Types.h"
 #include "cstring_compat.h"
 
 namespace ARLib {

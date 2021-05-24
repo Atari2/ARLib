@@ -1,6 +1,7 @@
 #pragma once
 
 #ifdef _MSC_VER		// MSVC
+#define WINDOWS
 #include <intrin.h>
 #define unreachable __assume(0);
 #ifdef _WIN64

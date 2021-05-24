@@ -2,6 +2,7 @@
 #include "BaseTraits.h"
 #include "Assertion.h"
 #include "std_includes.h"
+
 namespace ARLib {
     constexpr uint32_t hash32(uint32_t key) {
         key += ~(key << 15);

@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include "Types.h"
 
 namespace ARLib {
     // the overwhelming majority of the type traits are copy-pasted from cppreference
