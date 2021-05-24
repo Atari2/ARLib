@@ -18,17 +18,17 @@ namespace ARLib {
 
 	template <typename T> 
 	requires CopyConstructible<T> || MoveConstructible<T> || CopyAssignable<T> || MoveAssignable<T>
-		class ListEntry {
+		class CircularListEntry {
 		friend class CircularDoublyLinkedList<T>;
 		friend class CircularListIteratorBase<T>;
 		friend class CircularListIterator<T>;
 		friend class ReverseCircularListIterator<T>;
 
 		T m_entry;
-		ListEntry<T>* m_prev = nullptr;
-		ListEntry<T>* m_next = nullptr;
+		CircularListEntry<T>* m_prev = nullptr;
+		CircularListEntry<T>* m_next = nullptr;
 
-		ListEntry(T&& entry, ListEntry<T>* prev, ListEntry<T>* next) requires MoveConstructible<T> 
+		CircularListEntry(T&& entry, CircularListEntry<T>* prev, CircularListEntry<T>* next) requires MoveConstructible<T> 
 			: m_entry(move(entry)), m_prev(prev), m_next(next) {
 			if (prev)
 				prev->m_next = this;
@@ -36,7 +36,7 @@ namespace ARLib {
 				next->m_prev = this;
 		}
 
-		ListEntry(const T& entry, ListEntry<T>* prev, ListEntry<T>* next) requires CopyConstructible<T> 
+		CircularListEntry(const T& entry, CircularListEntry<T>* prev, CircularListEntry<T>* next) requires CopyConstructible<T> 
 			: m_entry(entry), m_prev(prev), m_next(next) {
 			if (prev)
 				prev->m_next = this;
@@ -45,33 +45,33 @@ namespace ARLib {
 		}
 
 		T& entry__() { return m_entry; }
-		ListEntry<T>* prev__() const { return m_prev; }
-		ListEntry<T>* next__() const { return m_next; }
+		CircularListEntry<T>* prev__() const { return m_prev; }
+		CircularListEntry<T>* next__() const { return m_next; }
 
-		void swap_prev(ListEntry<T>* new_prev) {
+		void swap_prev(CircularListEntry<T>* new_prev) {
 			m_prev = new_prev;
 		}
-		void swap_next(ListEntry<T>* new_next) {
+		void swap_next(CircularListEntry<T>* new_next) {
 			m_next = new_next;
 		}
-		void swap_both(ListEntry<T>* new_prev, ListEntry<T>* new_next) {
+		void swap_both(CircularListEntry<T>* new_prev, CircularListEntry<T>* new_next) {
 			m_next = new_next;
 			m_prev = new_prev;
 		}
 
 		public:
 			const T& entry() const { return m_entry; }
-			const ListEntry<T>* prev() const { return m_prev; }
-			const ListEntry<T>* next() const { return m_next; }
+			const CircularListEntry<T>* prev() const { return m_prev; }
+			const CircularListEntry<T>* next() const { return m_next; }
 
-			ListEntry<T>& operator=(const ListEntry<T>& other) requires CopyAssignable<T> {
+			CircularListEntry<T>& operator=(const CircularListEntry<T>& other) requires CopyAssignable<T> {
 				m_entry = other.m_entry;
 				m_prev = other.m_prev;
 				m_next = other.m_next;
 				return *this;
 			}
 
-			ListEntry<T>& operator=(ListEntry<T>&& other) requires MoveAssignable<T> {
+			CircularListEntry<T>& operator=(CircularListEntry<T>&& other) requires MoveAssignable<T> {
 				m_entry = move(other.m_entry);
 				m_prev = other.m_prev;
 				m_next = other.m_next;
@@ -80,7 +80,7 @@ namespace ARLib {
 				return *this;
 			}
 
-			~ListEntry() {
+			~CircularListEntry() {
 				m_entry.~T();
 			}
 
@@ -88,7 +88,7 @@ namespace ARLib {
 
 	template <typename T>
 	class CircularListIteratorBase {
-		using Entry = ListEntry<T>;
+		using Entry = CircularListEntry<T>;
 	protected:
 		const Entry* m_current;
 		const Entry* m_begin;
@@ -128,7 +128,7 @@ namespace ARLib {
 #define at_end CircularListIteratorBase<T>::at_end
 	template <typename T>
 	class CircularListIterator final : public CircularListIteratorBase<T> {
-		using Entry = ListEntry<T>;
+		using Entry = CircularListEntry<T>;
 		virtual void internal_advance_() override {
 			if (at_end) return;
 			m_current = m_current->next();
@@ -191,7 +191,7 @@ namespace ARLib {
 
 	template <typename T>
 	class ReverseCircularListIterator final : public CircularListIteratorBase<T> {
-		using Entry = ListEntry<T>;
+		using Entry = CircularListEntry<T>;
 		virtual void internal_advance_() override {
 			if (at_end) return;
 			m_current = m_current->prev();
@@ -257,7 +257,7 @@ namespace ARLib {
 	template <typename T>
 	class CircularDoublyLinkedList {
 	public:
-		using Entry = ListEntry<T>;
+		using Entry = CircularListEntry<T>;
 		using Iter = CircularListIterator<T>;
 		using ReverseIter = ReverseCircularListIterator<T>;
 
@@ -268,14 +268,14 @@ namespace ARLib {
 
 		void internal_single_append_(T&& value) {
 			if (m_size == 0) {
-				Entry* val = new Entry(value, nullptr, nullptr);
+				Entry* val = new Entry(Forward<T>(value), nullptr, nullptr);
 				val->swap_both(val, val);
 				m_first = val;
 				m_last = val;
 			}
 			else {
 				Entry* last = m_last;
-				m_last = new Entry(value, last, m_first);
+				m_last = new Entry(Forward<T>(value), last, m_first);
 			}
 			m_size++;
 		}
