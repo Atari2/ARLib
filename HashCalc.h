@@ -49,8 +49,8 @@ namespace ARLib {
             HARD_ASSERT(false, "Invalid pointer size");
     }
 
-    constexpr uint32_t hashptr(const void* ptr) {
-        return hashptr((PtrSize)uintptr_t(ptr));
+    uint32_t hashptr(const void* ptr) {
+        return hashptr((PtrSize)ptr);
     }
 
     constexpr uint32_t hashstr(const char* string, size_t size)

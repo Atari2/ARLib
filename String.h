@@ -516,10 +516,10 @@ namespace ARLib {
         return String{ source, len + 1};
     }
 
-    inline constexpr uint32_t hash(const String& s) {
+    inline uint32_t hash(const String& s) {
         return hashptr(&s);
     }
-    inline constexpr bool hash_equals(const String& a, const String& b) {
+    inline bool hash_equals(const String& a, const String& b) {
         return hashptr(&a) == hashptr(&b);
     }
 };

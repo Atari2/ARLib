@@ -16,7 +16,7 @@ namespace ARLib {
 		return hashsize(s);
 	}
 
-	inline constexpr uint32_t hash(const void* s) {
+	inline uint32_t hash(const void* s) {
 		return hashptr(s);
 	}
 
@@ -36,7 +36,7 @@ namespace ARLib {
 		return hash(s) == hash(z);
 	}
 
-	inline constexpr bool hash_equals(const void* s, const void* z) {
+	inline bool hash_equals(const void* s, const void* z) {
 		return hash(s) == hash(z);
 	}
 

@@ -64,7 +64,7 @@ namespace ARLib {
 
 		bool insert(const T& elem) requires CopyAssignable<T> {
 			Iter it = find(elem);
-			if (it != end()) { false; }
+			if (it != end()) { return false; }
 			else { append_internal_(elem); }
 			return true;
 		}
