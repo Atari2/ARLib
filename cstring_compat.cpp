@@ -4,7 +4,7 @@ namespace ARLib {
 #define	wsize	sizeof(word)
 #define	wmask	(wsize - 1)
 	char* strcpy(char* dest, const char* src) {
-		while (*dest++ = *src++);
+		while ((*dest++ = *src++));
 		return dest;
 	}
 	char* strncpy(char* dest, const char* src, size_t num) {
