@@ -55,7 +55,7 @@ namespace ARLib {
 		}
 
 		void resize_to_capacity_(size_t capacity) {
-			SOFT_ASSERT((capacity >= m_capacity), "Trying to shrink capacity");
+			SOFT_ASSERT_FMT((capacity >= m_capacity), "Trying to shrink capacity from %lu to %lu, capacity can only grow", m_capacity, capacity);
 			m_capacity = capacity;
 			T* new_storage = new T[m_capacity];
 			for (size_t i = 0; i < m_size; i++) {
@@ -134,12 +134,12 @@ namespace ARLib {
 		}
 
 		T& operator[](size_t index) const {
-			SOFT_ASSERT(assert_size_(index), "Index out of bounds");
+			SOFT_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size);
 			return m_storage[index];
 		}
 
 		T& index(size_t index) const {
-			SOFT_ASSERT(assert_size_(index), "Index out of bounds");
+			SOFT_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size);
 			return m_storage[index];
 		}
 
@@ -150,7 +150,7 @@ namespace ARLib {
 		}
 
 		void remove(size_t index) {
-			SOFT_ASSERT((index < m_size), "Index out of bounds on remove()");
+			SOFT_ASSERT_FMT((index < m_size), "Index %lu was out of bounds in vector of size %lu", index, m_size);
 			m_storage[index].~T();
 			m_size--;
 			memmove(m_storage + index, m_storage + index + 1, sizeof(T) * (m_size - index));

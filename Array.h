@@ -11,11 +11,11 @@ namespace ARLib {
 		size_t m_size = 0;
 
 		void assert_size_(size_t index) {
-			SOFT_ASSERT((index < m_size), "Index out of bounds in array")
+			SOFT_ASSERT_FMT((index < m_size), "Index %lu out of bounds in array of size %lu", index, m_size)
 		}
 
 		void assert_capacity_() {
-			SOFT_ASSERT((m_size < m_capacity), "Size can't be higher than capacity")
+			SOFT_ASSERT_FMT((m_size < m_capacity), "Size %lu can't be higher than capacity %lu", m_size, m_capacity)
 		}
 
 		template <typename... Args>
@@ -33,7 +33,7 @@ namespace ARLib {
 
 		template <typename... Args>
 		Array(Args&&... args) {
-			HARD_ASSERT((sizeof...(args) <= S), "More arguments than size of array");
+			HARD_ASSERT_FMT((sizeof...(args) <= S), "More arguments %lu than size of array %lu", sizeof...(args), S);
 			append_internal_(Forward<Args>(args)...);
 		}
 

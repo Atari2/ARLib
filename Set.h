@@ -17,7 +17,7 @@ namespace ARLib {
 		T* m_storage = nullptr;
 
 		void grow_internal_(size_t capacity) {
-			HARD_ASSERT((capacity > m_capacity && capacity > m_size), "You can't grow by shrinking the size")
+			HARD_ASSERT_FMT((capacity > m_capacity && capacity > m_size), "You can't grow by shrinking the size, size = %lu, attempted capacity = %lu", m_size, capacity)
 			m_capacity = capacity;
 			T* new_storage = new T[m_capacity];
 			for (size_t i = 0; i < m_size; i++)
@@ -31,7 +31,7 @@ namespace ARLib {
 		}
 
 		void assert_index_(size_t index) {
-			SOFT_ASSERT((index < m_size), "Index was higher than size");
+			SOFT_ASSERT_FMT((index < m_size), "Index %lu was higher than size %lu", index, m_size);
 		}
 
 		void append_internal_(T&& elem) {

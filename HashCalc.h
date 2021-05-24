@@ -46,7 +46,7 @@ namespace ARLib {
         else if constexpr (sizeof(ptr) == 4)
             return hash32(ptr);
         else
-            HARD_ASSERT(false, "Invalid pointer size");
+            HARD_ASSERT_FMT(false, "Invalid pointer size %lu", sizeof(ptr));
     }
 
     uint32_t hashptr(const void* ptr) {
