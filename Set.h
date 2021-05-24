@@ -109,7 +109,7 @@ namespace ARLib {
 		}
 
 		bool remove(size_t index) {
-			if (index >= size) return false;
+			if (index >= m_size) return false;
 			return remove(m_storage[index]);
 		}
 

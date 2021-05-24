@@ -50,7 +50,7 @@ namespace ARLib {
     }
 
     constexpr uint32_t hashptr(const void* ptr) {
-        return hashptr(PtrSize(ptr));
+        return hashptr((PtrSize)uintptr_t(ptr));
     }
 
     constexpr uint32_t hashstr(const char* string, size_t size)

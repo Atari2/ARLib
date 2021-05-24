@@ -5,10 +5,12 @@ namespace ARLib {
 #ifdef WINDOWS
     #if defined(ENVIRON64)
         typedef unsigned __int64 size_t;
+        typedef unsigned __int64 uintptr_t;
         typedef __int64          ptrdiff_t;
         typedef __int64          intptr_t;
     #else
         typedef unsigned int     size_t;
+        typedef unsigned __int64 uintptr_t;
         typedef int              ptrdiff_t;
         typedef int              intptr_t;
     #endif
@@ -19,10 +21,12 @@ namespace ARLib {
 #else
     #if defined(ENVIRON64)
         typedef unsigned long size_t;
+        typedef unsigned long uintptr_t;
         typedef long ptrdiff_t;
         typedef long intptr_t;
     #else
         typedef unsigned int     size_t;
+        typedef unsigned int     uintptr_t;
         typedef int              ptrdiff_t;
         typedef int              intptr_t;
     #endif

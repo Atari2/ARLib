@@ -18,10 +18,10 @@ namespace ARLib {
 		}
 	public:
 		using Type = T;
-		virtual bool operator==(const IteratorBase<T>& other) {
+		virtual bool operator==(const IteratorBase<T>& other) const {
 			return m_current == other.m_current;
 		}
-		virtual bool operator!=(const IteratorBase<T>& other) {
+		virtual bool operator!=(const IteratorBase<T>& other) const {
 			return m_current != other.m_current;
 		}
 		virtual bool operator<(const IteratorBase<T>& other) {

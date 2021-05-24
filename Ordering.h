@@ -7,7 +7,7 @@ namespace ARLib {
 		Greater
 	};
 	class Ordering {
-		const OrderingType m_type;
+		OrderingType m_type;
 	public:
 		Ordering(OrderingType type) : m_type(type) {}
 		Ordering() = delete;
