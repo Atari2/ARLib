@@ -20,10 +20,10 @@ namespace ARLib {
         typedef unsigned char uint8_t;
 #else
     #if defined(ENVIRON64)
-        typedef unsigned long size_t;
-        typedef unsigned long uintptr_t;
-        typedef long ptrdiff_t;
-        typedef long intptr_t;
+        typedef unsigned long long size_t;
+        typedef unsigned long long uintptr_t;
+        typedef long long ptrdiff_t;
+        typedef long long intptr_t;
     #else
         typedef unsigned int     size_t;
         typedef unsigned int     uintptr_t;

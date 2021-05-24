@@ -101,10 +101,10 @@ namespace ARLib {
 			return { m_current - offset };
 		}
 
-		bool operator==(const Iterator<T>& other) {
+		bool operator==(const Iterator<T>& other) const {
 			return m_current == other.m_current;
 		}
-		bool operator!=(const Iterator<T>& other) {
+		bool operator!=(const Iterator<T>& other) const {
 			return m_current != other.m_current;
 		}
 		bool operator<(const Iterator<T>& other) {
