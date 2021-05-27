@@ -8,7 +8,7 @@ namespace ARLib {
 		return dest;
 	}
 	char* strncpy(char* dest, const char* src, size_t num) {
-		while (--num)
+		while (num--)
 			*dest++ = *src++;
 		return dest;
 	}
