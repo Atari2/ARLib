@@ -21,6 +21,16 @@ namespace ARLib {
 		return value;
 	}
 
+	template <IteratorConcept Iter, typename Functor>
+	auto sum(Iter begin, Iter end, Functor&& func) {
+		if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
+		auto total = func(*begin);
+		begin++;
+		for (; begin != end; begin++)
+			total += func(*begin);
+		return total;
+	}
+
 	template <typename C> requires Iterable<C>
 	auto max(const C& cont) {
 		return max(cont.begin(), cont.end());
@@ -29,6 +39,11 @@ namespace ARLib {
 	template <typename C> requires Iterable<C>
 	auto min(const C& cont) {
 		return min(cont.begin(), cont.end());
+	}
+
+	template <typename C, typename Functor> requires Iterable<C>
+	auto sum(const C& cont, Functor&& func) {
+		return sum(cont.begin(), cont.end(), Forward<Functor>(func));
 	}
 
 	// follows very naive quicksort implementation
