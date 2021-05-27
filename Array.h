@@ -15,7 +15,7 @@ namespace ARLib {
 		}
 
 		void assert_capacity_() {
-			SOFT_ASSERT_FMT((m_size < m_capacity), "Size %lu can't be higher than capacity %lu", m_size, m_capacity)
+			HARD_ASSERT_FMT((m_size < m_capacity), "Size %lu can't be higher than capacity %lu", m_size + 1, m_capacity)
 		}
 
 		template <typename... Args>

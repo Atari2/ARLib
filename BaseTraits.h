@@ -24,6 +24,8 @@ namespace ARLib {
     template <class T>
     using IsUnion = std::is_union<T>;
 
+
+
     // type traits
 
     // integral constant
@@ -49,6 +51,35 @@ namespace ARLib {
 
     using TrueType = BoolConstant<true>;
     using FalseType = BoolConstant<false>;
+
+
+    template<class T> struct IsConst : FalseType {};
+    template<class T> struct IsConst<const T> : TrueType {};
+
+
+    template <class T> struct IsReference : FalseType {};
+    template <class T> struct IsReference<T&> : TrueType {};
+    template <class T> struct IsReference<T&&> : TrueType {};
+
+    template<class T>
+    struct IsArray : FalseType {};
+
+    template<class T>
+    struct IsArray<T[]> : TrueType {};
+
+    template<class T, size_t N>
+    struct IsArray<T[N]> : TrueType {};
+
+
+    template<class T>
+    struct IsFunction : IntegralConstant<
+        bool,
+        !IsConst<const T>::value && !IsReference<T>::value
+    > {};
+
+    template< class T > struct RemoveReference { typedef T type; };
+    template< class T > struct RemoveReference<T&> { typedef T type; };
+    template< class T > struct RemoveReference<T&&> { typedef T type; };
 
     // details
     namespace detail {
@@ -95,12 +126,14 @@ namespace ARLib {
         );
         template<class, class>
         auto TestImplicitlyConvertible(...)->FalseType;
+
+        template <class T>
+        auto TryAddPointer(int)-> TypeIdentity<typename RemoveReference<T>::type*>;
+        template <class T>
+        auto TryAddPointer(...)-> TypeIdentity<T>;
     }
 
     // remove/add qualifiers
-    template< class T > struct RemoveReference { typedef T type; };
-    template< class T > struct RemoveReference<T&> { typedef T type; };
-    template< class T > struct RemoveReference<T&&> { typedef T type; };
 
     template< class T > struct RemoveCv { typedef T type; };
     template< class T > struct RemoveCv<const T> { typedef T type; };
@@ -113,6 +146,15 @@ namespace ARLib {
     template< class T > struct RemoveVolatile { typedef T type; };
     template< class T > struct RemoveVolatile<volatile T> { typedef T type; };
 
+    template<class T>
+    struct RemoveExtent { typedef T type; };
+
+    template<class T>
+    struct RemoveExtent<T[]> { typedef T type; };
+
+    template<class T, size_t N>
+    struct RemoveExtent<T[N]> { typedef T type; };
+
     template <class T>
     using RemoveReferenceT = typename RemoveReference<T>::type;
 
@@ -124,6 +166,9 @@ namespace ARLib {
     struct AddLvalueReference : decltype(detail::TryAddLvalueReference<T>(0)) {};
     template <class T>
     struct AddRvalueReference : decltype(detail::TryAddRvalueReference<T>(0)) {};
+
+    template <class T>
+    struct AddPointer : decltype(detail::TryAddPointer<T>(0)) {};
 
     // is same
     template<class T, class U>

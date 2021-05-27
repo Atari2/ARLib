@@ -112,6 +112,22 @@ namespace ARLib {
     template< class T >
     using AddRvalueReferenceT = typename AddRvalueReference<T>::type;
 
+    template< class T >
+    struct Decay {
+    private:
+        typedef typename RemoveReference<T>::type U;
+    public:
+        typedef typename Conditional<
+            IsArray<U>::value,
+            typename RemoveExtent<U>::type*,
+            typename Conditional<
+            IsFunction<U>::value,
+            typename AddPointer<U>::type,
+            typename RemoveCv<U>::type
+            >::type
+        >::type type;
+    };
+
     template <class T, class... Args>
     inline constexpr bool ConstructibleV = ConstructibleImpl<T, Args...>::type;
     template <class T, class... Args>
@@ -152,6 +168,8 @@ namespace ARLib {
     inline constexpr bool TriviallyMoveConstructibleV = TriviallyMoveConstructibleImpl<T>::value;
     template <class T>
     inline constexpr bool TriviallyCopyConstructibleV = TriviallyCopyConstructibleImpl<T>::value;
+    template< class T >
+    using RemoveExtentT = typename RemoveExtent<T>::type;
 
     template< class T >
     inline constexpr bool DefaultConstructibleV = DefaultConstructibleImpl<T>::value;
