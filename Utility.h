@@ -20,5 +20,4 @@ namespace ARLib {
     {
         return static_cast<RemoveReferenceT<T>&&>(t);
     }
-
 }

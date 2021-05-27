@@ -517,10 +517,10 @@ namespace ARLib {
     }
 
     inline uint32_t hash(const String& s) {
-        return hashptr(&s);
+        return hashstr(s.data(), s.length());
     }
     inline bool hash_equals(const String& a, const String& b) {
-        return hashptr(&a) == hashptr(&b);
+        return hash(a) == hash(b);
     }
 };
 

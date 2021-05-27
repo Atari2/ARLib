@@ -168,6 +168,14 @@ namespace ARLib {
 			other.m_size = 0;
 		}
 
+		LinkedList<T>& operator=(LinkedList<T>&& other) noexcept {
+			m_head = other.m_head;
+			m_size = other.m_size;
+			other.m_head = nullptr;
+			other.m_size = 0;
+			return *this;
+		}
+
 		void prepend(T&& value) {
 			internal_single_prepend_(Forward<T>(value));
 		}

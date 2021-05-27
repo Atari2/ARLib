@@ -106,6 +106,12 @@ namespace ARLib {
 			resize_to_capacity_(capacity);
 		}
 
+		void resize(size_t capacity) requires DefaultConstructible<T> {
+			reserve(capacity);
+			for (size_t i = 0; i < capacity; i++)
+				append({});
+		}
+
 		void shrink_to_fit() {
 			shrink_to_size_();
 		}
