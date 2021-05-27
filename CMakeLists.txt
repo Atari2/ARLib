@@ -24,13 +24,15 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/HashCalc.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/HashBase.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Set.h"
-	"${CMAKE_CURRENT_SOURCE_DIR}/HashSet.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/HashTable.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Map.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/HashMap.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Optional.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/std_includes.h"
 )
 add_library(ARLib ${LIB_SOURCE_FILES})
