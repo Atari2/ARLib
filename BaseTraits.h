@@ -131,6 +131,12 @@ namespace ARLib {
         auto TryAddPointer(int)-> TypeIdentity<typename RemoveReference<T>::type*>;
         template <class T>
         auto TryAddPointer(...)-> TypeIdentity<T>;
+
+        template <class T>
+        struct ReferenceWrapper : FalseType {};
+        template <class U>
+        struct ReferenceWrapper<ReferenceWrapper<U>> : TrueType {};
+        
     }
 
     // remove/add qualifiers

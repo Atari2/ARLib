@@ -128,6 +128,71 @@ namespace ARLib {
         >::type type;
     };
 
+    namespace detail {
+
+        template<class T>
+        struct InvokeImpl {
+            template<class F, class... Args>
+            static auto call(F&& f, Args&&... args)
+                -> decltype(Forward<F>(f)(Forward<Args>(args)...));
+        };
+
+        template<class B, class MT>
+        struct InvokeImpl<MT B::*> {
+            template<class T, class Td = typename Decay<T>::type,
+                class = typename EnableIf<BaseOf<B, Td>::value>::type
+            >
+                static auto get(T&& t)->T&&;
+
+            template<class T, class Td = typename Decay<T>::type,
+                class = typename EnableIf<ReferenceWrapper<Td>::value>::type
+            >
+                static auto get(T&& t) -> decltype(t.get());
+
+            template<class T, class Td = typename Decay<T>::type,
+                class = typename EnableIf<!BaseOf<B, Td>::value>::type,
+                class = typename EnableIf<!ReferenceWrapper<Td>::value>::type
+            >
+                static auto get(T&& t) -> decltype(*Forward<T>(t));
+
+            template<class T, class... Args, class MT1,
+                class = typename EnableIf<IsFunction<MT1>::value>::type
+            >
+                static auto call(MT1 B::* pmf, T&& t, Args&&... args)
+                -> decltype((InvokeImpl::get(Forward<T>(t)).*pmf)(Forward<Args>(args)...));
+
+            template<class T>
+            static auto call(MT B::* pmd, T&& t)
+                -> decltype(InvokeImpl::get(Forward<T>(t)).*pmd);
+        };
+
+        template<class F, class... Args, class Fd = typename Decay<F>::type>
+        auto INVOKE(F&& f, Args&&... args)
+            -> decltype(InvokeImpl<Fd>::call(Forward<F>(f), Forward<Args>(args)...));
+
+        template <typename AlwaysVoid, typename, typename...>
+        struct InvokeResult { };
+        template <typename F, typename...Args>
+        struct InvokeResult<decltype(void(detail::INVOKE(declval<F>(), declval<Args>()...))),
+            F, Args...> {
+            using type = decltype(detail::INVOKE(declval<F>(), declval<Args>()...));
+        };
+    }
+
+    template <class> struct ResultOf;
+
+    template <class F, class... ArgTypes>
+    struct ResultOf<F(ArgTypes...)> : detail::InvokeResult<void, F, ArgTypes...> {};
+
+    template <class F, class... ArgTypes>
+    struct InvokeResult : detail::InvokeResult<void, F, ArgTypes...> {};
+
+    template< class T >
+    using ResultOfT = typename ResultOf<T>::type;
+
+    template< class F, class... ArgTypes>
+    using InvokeResultT = typename InvokeResult<F, ArgTypes...>::type;
+
     template <class T, class... Args>
     inline constexpr bool ConstructibleV = ConstructibleImpl<T, Args...>::type;
     template <class T, class... Args>
