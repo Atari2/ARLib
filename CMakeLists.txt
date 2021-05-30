@@ -3,7 +3,6 @@ project(ARLib VERSION 0.1)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(LIB_SOURCE_FILES "")
-
 list(
 	APPEND LIB_SOURCE_FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/Types.h"
@@ -36,17 +35,19 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/std_includes.h"
 )
 add_library(ARLib ${LIB_SOURCE_FILES})
-if (WIN32)
+if (WIN32 AND NOT CMAKE_COMPILER_IS_GNUCXX)
+    add_subdirectory(ASM_MSVC)
 	target_compile_options(ARLib PRIVATE /std:c++latest)
 else()
+	add_subdirectory(ASM_GCC)
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-		target_compile_options(ARLib PRIVATE -fsanitize=address,undefined,leak --std=c++20)
+		target_compile_options(ARLib PRIVATE -fsanitize=address,undefined,leak -std=c++20 -msse4.1)
 		target_link_options(ARLib PRIVATE -fsanitize=address,undefined,leak)
 	else()
-		target_compile_options(ARLib PRIVATE --std=c++20)
+		target_compile_options(ARLib PRIVATE -std=c++20 -msse4.1)
 	endif()
 endif()
-
+target_link_libraries(ARLib ARLib_asm_ext)
 if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
 	target_compile_definitions(ARLib PUBLIC DEBUG)
 endif()
