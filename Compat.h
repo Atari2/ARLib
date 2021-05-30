@@ -30,7 +30,11 @@
 #endif
 
 #if defined(_WIN32) || defined(_WIN64)
+#ifdef _MSC_VER
 #define WINDOWS
+#else
+#error "Use MSVC on Windows, please"
+#endif
 #elif (defined(__unix__) || defined(__unix)) && !defined(BSD)
 #define UNIX
 #else
