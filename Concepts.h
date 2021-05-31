@@ -143,4 +143,9 @@ namespace ARLib {
 		{ a.begin() };
 		{ a.end() };
 	};
+
+	template <typename T>
+	concept Stringable = requires(T a) {
+		{ a.to_string() };
+	};
 }
