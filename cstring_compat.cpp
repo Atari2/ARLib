@@ -35,6 +35,14 @@ namespace ARLib {
 		return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
 	}
 
+	int isdigit(int c) {
+		return c >= 48 && c <= 57;
+	}
+
+	int isalnum(int c) {
+		return isdigit(c) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
+	}
+
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4311 4302)

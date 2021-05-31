@@ -13,6 +13,8 @@ namespace ARLib {
 	int strncmp(const char*, const char*, size_t);
 	char* strcat(char* dst, const char* src);
 	int isspace(int c);
+	int isdigit(int c);
+	int isalnum(int c);
 	void* memmove(void* dst, const void* src, size_t num);
 	int toupper(int c);
 	int tolower(int c);
