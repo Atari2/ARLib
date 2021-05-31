@@ -5,10 +5,12 @@
 #include "Algorithm.h"
 #include "List.h"
 #include "Vector.h"
+#include "cmath_compat.h"
 
 namespace ARLib {
 	template <typename T, size_t TBL_SIZE = 0> requires Hashable<T> && EqualityComparable<T>
 	class HashTable {
+		// this is slow af
 		static constexpr size_t table_sizes[] = { 13, 19, 31 };
 		Vector<LinkedList<T>> m_storage;
 		size_t m_size = table_sizes[TBL_SIZE];
@@ -37,19 +39,24 @@ namespace ARLib {
 				internal_append(Forward<Args>(args)...);
 		}
 
-		float load() {
-			size_t s = sum(m_storage, [](const auto& item) {
+		double load() {
+			Vector<double> vec_sizes(m_storage.size());
+			size_t s = sum(m_storage, [&vec_sizes](const auto& item) {
+				vec_sizes.append(item.size());
 				return item.size();
 			});
-			float avg_load = (float)s / (float)m_size;
-			return avg_load;
+			double avg_load = (double)s / (double)m_size;
+			double sr = sum(vec_sizes, [avg_load](const auto& item) {
+				return pow(item - avg_load, 2);
+			});
+			double res = sqrt(sr / (double)m_size);
+			return res;
 		}
 
 		template <typename Functor>
 		void for_each(Functor&& func) {
 			int i = 0;
 			m_storage.for_each([&func, &i](auto& bkt) {
-				printf("Bucket %d (size of bucket %llu):\n", i++, bkt.size());
 				bkt.for_each(func);
 			});
 		}
@@ -61,7 +68,32 @@ namespace ARLib {
 		void insert(T&& val) {
 			m_storage[hash(val) % m_size].prepend(Forward<T>(val));
 		}
-		
+
+		void insert_precalc(const T& val, uint32_t hash) {
+			T v = val;
+			m_storage[hash % m_size].prepend(Forward<T>(v));
+		}
+		void insert_precalc(T&& val, uint32_t hash) {
+			m_storage[hash % m_size].prepend(Forward<T>(val));
+		}
+
+
+		const auto find_uncertain(const T& val) {
+			return m_storage[hash(val) % m_size].find(val);
+		}
+
+		const auto find_uncertain_precalc(const T& val, uint32_t hash) {
+			return m_storage[hash % m_size].find(val);
+		}
+
+		const auto end(uint32_t hash) {
+			return m_storage[hash % m_size].end();
+		}
+
+		const auto end_precalc(uint32_t hash) {
+			return m_storage[hash % m_size].end();
+		}
+
 		const T& find(const T& val) {
 			return *m_storage[hash(val) % m_size].find(val);
 		}
