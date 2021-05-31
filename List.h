@@ -65,12 +65,13 @@ namespace ARLib {
 	template <typename T>
 	class LinkedListIteratorBase {
 		using Entry = ListEntry<T>;
+		friend LinkedList<T>;
 	protected:
-		const Entry* m_current;
+		Entry* m_current;
 		virtual void internal_advance_() = 0;
 	public:
 		using Type = T;
-		LinkedListIteratorBase(const Entry* current) : m_current(current) {
+		LinkedListIteratorBase(Entry* current) : m_current(current) {
 
 		}
 
@@ -83,8 +84,8 @@ namespace ARLib {
 			return m_current != other.m_current;
 		}
 
-		const T& operator*() const {
-			return m_current->entry();
+		T& operator*() const {
+			return m_current->entry__();
 		}
 	};
 
@@ -94,10 +95,10 @@ namespace ARLib {
 		using Entry = ListEntry<T>;
 		virtual void internal_advance_() override {
 			SOFT_ASSERT(m_current, "m_current must not be nullptr")
-			m_current = m_current->next();
+			m_current = m_current->next__();
 		}
 	public:
-		LinkedListIterator(const Entry* current) : LinkedListIteratorBase<T>(current) {
+		LinkedListIterator(Entry* current) : LinkedListIteratorBase<T>(current) {
 
 		}
 		LinkedListIterator<T>& operator=(const LinkedListIterator<T>& other) {
@@ -284,7 +285,7 @@ namespace ARLib {
 		Iter find(const T& value) const requires EqualityComparable<T> {
 			if (m_size == 0) return { nullptr };
 			for (Iter beg = begin(); beg != end(); ++beg) {
-				if (*beg == value) return { beg.current() };
+				if (*beg == value) return { beg.m_current };
 			}
 			return { nullptr };
 		}
