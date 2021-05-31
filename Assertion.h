@@ -12,4 +12,5 @@ void assertion_failed__(const char* msg);
 #define SOFT_ASSERT(val, msg) if (!val) { puts(msg); puts(ERRINFO); } 
 #define SOFT_ASSERT_FMT(val, fmt, ...) if (!val) { printf(fmt"\n", __VA_ARGS__); puts(ERRINFO); }
 
-#define TODO(cls) cls() {todo__();}; static void todo__() { HARD_ASSERT(false, CONCAT(STRINGIFY(cls), " is not implemented yet")) }
+#define TODO_CLS(cls) cls() {todo__();}; static void todo__() { HARD_ASSERT(false, CONCAT(STRINGIFY(cls), " is not implemented yet")) }
+#define TODO(func) HARD_ASSERT(false, CONCAT(STRINGIFY(func), " not implemented yet"))
