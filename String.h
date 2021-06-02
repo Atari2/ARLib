@@ -57,22 +57,6 @@ namespace ARLib {
             }
         }
 
-        void grow_internal() {
-            if (is_local()) {
-                // grow outside of locality, copy buffer and change active member of union
-                m_data_buf = new char[SMALL_STRING_CAP * 2];
-                memmove(m_data_buf, m_local_buf, SMALL_STRING_CAP + 1);
-                m_allocated_capacity = SMALL_STRING_CAP * 2;
-            }
-            else {
-                m_allocated_capacity *= 2;
-                char* new_buf = new char[m_allocated_capacity];
-                memmove(new_buf, m_data_buf, m_size + 1);
-                delete[] m_data_buf;
-                m_data_buf = new_buf;
-            }
-        }
-
         void grow_if_needed(size_t newsize) {
             if (is_local()) {
                 if (newsize > SMALL_STRING_CAP)
@@ -142,6 +126,23 @@ namespace ARLib {
 
         // constructors, destructor equality operators
         String() : m_data_buf(local_data_internal()) {};
+        String(size_t size) {
+            grow_if_needed(size);
+        }
+        String(const char* begin, const char* end) {
+            m_size = end - begin;
+            bool local = m_size <= SMALL_STRING_CAP;
+            if (local) {
+                strncpy(m_local_buf, begin, m_size);
+                m_data_buf = local_data_internal();
+            }
+            else {
+                m_allocated_capacity = m_size + 1;
+                m_data_buf = new char[m_allocated_capacity];
+                strncpy(m_data_buf, begin, m_size);
+                m_data_buf[m_size] = '\0';
+            }
+        }
         String(const char* other, size_t size) : m_size(size) {
             bool local = m_size <= SMALL_STRING_CAP;
             auto real_len = strlen(other);
@@ -353,7 +354,7 @@ namespace ARLib {
         // concatenation
         void append(char c) {
             auto new_size = m_size + 1;
-            grow_internal();
+            grow_if_needed(new_size);
             get_buf_internal()[m_size] = c;
             get_buf_internal()[++m_size] = '\0';
         }
@@ -604,6 +605,10 @@ namespace ARLib {
             String str(*this);
             str.ilower();
             return str;
+        }
+
+        void reserve(size_t new_capacity) {
+            grow_if_needed(new_capacity);
         }
     };
 
