@@ -17,6 +17,9 @@ namespace ARLib {
 			Key m_key;
 			Val m_value;
 		public:
+			Entry() : m_key(), m_value() {
+
+			}
 			Entry(Key key, Val value) : m_key(move(key)), m_value(move(value)) {
 
 			}

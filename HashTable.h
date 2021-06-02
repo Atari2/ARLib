@@ -12,7 +12,7 @@ namespace ARLib {
 	class HashTable {
 		// this is slow af
 		static constexpr size_t table_sizes[] = { 13, 19, 31 };
-		Vector<LinkedList<T>> m_storage;
+		Vector<Vector<T>> m_storage;
 		size_t m_size = table_sizes[TBL_SIZE];
 		
 		template <typename... Args>
@@ -63,18 +63,18 @@ namespace ARLib {
 
 		void insert(const T& val) {
 			T v = val;
-			m_storage[hash(val) % m_size].prepend(Forward<T>(v));
+			m_storage[hash(val) % m_size].append(Forward<T>(v));
 		}
 		void insert(T&& val) {
-			m_storage[hash(val) % m_size].prepend(Forward<T>(val));
+			m_storage[hash(val) % m_size].append(Forward<T>(val));
 		}
 
 		void insert_precalc(const T& val, uint32_t hash) {
 			T v = val;
-			m_storage[hash % m_size].prepend(Forward<T>(v));
+			m_storage[hash % m_size].append(Forward<T>(v));
 		}
 		void insert_precalc(T&& val, uint32_t hash) {
-			m_storage[hash % m_size].prepend(Forward<T>(val));
+			m_storage[hash % m_size].append(Forward<T>(val));
 		}
 
 
