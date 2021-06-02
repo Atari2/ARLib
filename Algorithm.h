@@ -82,6 +82,27 @@ namespace ARLib {
 	void sort(const C& cont) {
 		quicksort_internal(cont.begin(), cont.end() - 1);
 	}
+
+	template <Iterable C>
+	auto begin(const C& cont) {
+		return cont.begin();
+	}
+
+	template <Iterable C>
+	auto end(const C& cont) {
+		return cont.end();
+	}
+
+	template <typename C, size_t N>
+	C* begin(C (&cont)[N]) {
+		return PointerTraits<C*>::pointer_to(*cont);
+	}
+
+	template <typename C, size_t N>
+	C* end(C (&cont)[N]) {
+		return PointerTraits<C*>::pointer_to(*cont) + N;
+	}
+
 }
 
 using ARLib::max;
