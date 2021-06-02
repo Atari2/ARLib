@@ -3,6 +3,7 @@
 #ifdef _MSC_VER		// MSVC
 #include <intrin.h>
 #define unreachable __assume(0);
+#define forceinline __forceinline
 #ifdef _WIN64
 	#define ENVIRON64 1
 #else
@@ -11,6 +12,7 @@
 
 #elif __clang__		// CLANG
 #define unreachable __builtin_unreachable();
+#define forceinline __attribute__ ((always_inline))
 #if __x86_64__ || __ppc64__
 	#define ENVIRON64 1
 #else
@@ -18,13 +20,13 @@
 #endif
 
 #elif __GNUG__		// GCC
+#define unreachable __builtin_unreachable();
+#define forceinline __attribute__ ((always_inline))
 #if __x86_64__ || __ppc64__
 	#define ENVIRON64 1
 #else
 	#define ENVIRON32 1
 #endif
-#define unreachable __builtin_unreachable();
-
 #else				// OTHER
 #error "Unsupported compiler"
 #endif
