@@ -92,9 +92,8 @@ namespace ARLib {
 
 
 	template<typename T>
-	concept Hashable = requires(T a, T b) {
-		{ hash(a) } -> ConvertibleTo<uint32_t>;
-		{ hash_equals(a, b) } -> SameAs<bool>;
+	concept Hashable = requires(const T& a) {
+		{ Hash<T>{}(a) } -> SameAs<size_t>;
 	};
 
 	template <typename T>

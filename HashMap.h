@@ -12,57 +12,64 @@ namespace ARLib {
 	};
 
 	template <Hashable Key, EqualityComparable Val>
+	struct HashMapEntry {
+		Key m_key;
+		Val m_value;
+	public:
+		Hash<Key> hasher{};
+		HashMapEntry() : m_key(), m_value() {
+
+		}
+		HashMapEntry(Key key, Val value) : m_key(move(key)), m_value(move(value)) {
+
+		}
+		HashMapEntry(HashMapEntry&& other) noexcept : m_key(move(other.m_key)), m_value(move(other.m_value)) {
+
+		}
+		HashMapEntry(const HashMapEntry& other) : m_key(other.m_key), m_value(other.m_value) {
+
+		}
+
+		HashMapEntry& operator=(HashMapEntry&& other) noexcept {
+			m_key = move(other.m_key);
+			m_value = move(other.m_value);
+			return *this;
+		}
+
+		const Key& key() const {
+			return m_key;
+		}
+
+		bool operator==(const HashMapEntry& other) {
+			return hasher(this->m_key) == hasher(other.m_key);
+		}
+
+		bool operator!=(const HashMapEntry& other) {
+			return hasher(this->m_key) != hasher(other.m_key);
+		}
+	};
+
+	template <typename Key, typename Value>
+	struct Hash<HashMapEntry<Key, Value>> {
+		[[nodiscard]] forceinline size_t operator()(const HashMapEntry<Key, Value>& key) const noexcept {
+			return key.hasher(key.key());
+		}
+	};
+
+	template <Hashable Key, EqualityComparable Val, size_t TBL_SIZE = 0>
 	class HashMap {
-		struct Entry {
-			Key m_key;
-			Val m_value;
-		public:
-			Entry() : m_key(), m_value() {
-
-			}
-			Entry(Key key, Val value) : m_key(move(key)), m_value(move(value)) {
-
-			}
-			Entry(Entry&& other) noexcept : m_key(move(other.m_key)), m_value(move(other.m_value)) {
-
-			}
-			Entry(const Entry& other) : m_key(other.m_key), m_value(other.m_value) {
-
-			}
-
-			Entry& operator=(Entry&& other) noexcept {
-				m_key = move(other.m_key);
-				m_value = move(other.m_value);
-				return *this;
-			}
-			bool operator==(const Entry& other) {
-				return hash_equals(*this, other);
-			}
-
-			bool operator!=(const Entry& other) {
-				return !hash_equals(*this, other);
-			}
-
-			friend uint32_t hash(const Entry& s) {
-				return hash(s.m_key);
-			}
-			friend bool hash_equals(const Entry& a, const Entry& b) {
-				return hash(a) == hash(b);
-			}
-		};
-
+		using MapEntry = HashMapEntry<Key, Val>;
 		size_t m_size = 0;
-
-		HashTable<Entry> m_table{};
+		HashTable<MapEntry, TBL_SIZE> m_table{};
 	public:
 		HashMap() = default;
 		double load() { return m_table.load(); };
 		InsertionResult add(Key key, Val value) {
-			Entry entry{ key, value };
-			uint32_t hs = hash(entry);
+			MapEntry entry{ key, value };
+			auto hs = m_table.hasher(entry);
 			auto iter = m_table.find_uncertain_precalc(entry, hs);
 			if (iter == m_table.end_precalc(hs)) {
-				m_table.insert(Forward<Entry>(entry));
+				m_table.insert(Forward<MapEntry>(entry));
 				m_size++;
 				return InsertionResult::New;
 			}
@@ -71,11 +78,11 @@ namespace ARLib {
 				return InsertionResult::Replace;
 			}
 		}
-		InsertionResult add(Entry entry) {
-			uint32_t hs = hash(entry);
+		InsertionResult add(MapEntry entry) {
+			auto hs = m_table.hasher(entry);
 			auto iter = m_table.find_uncertain_precalc(entry, hs);
 			if (iter == m_table.end_precalc(hs)) {
-				m_table.insert(Forward<Entry>(entry));
+				m_table.insert(Forward<MapEntry>(entry));
 				m_size++;
 				return InsertionResult::New;
 			}
@@ -87,6 +94,8 @@ namespace ARLib {
 
 		size_t size() const { return m_size; }
 	};
+
+
 }
 
 using ARLib::HashMap;

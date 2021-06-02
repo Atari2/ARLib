@@ -1,7 +1,7 @@
 #pragma once
 #include "Concepts.h"
 #include "Assertion.h"
-#include "HashCalc.h"
+#include "HashBase.h"
 #include "Algorithm.h"
 #include "List.h"
 #include "Vector.h"
@@ -23,7 +23,7 @@ namespace ARLib {
 		}
 
 	public:
-		
+		Hash<T> hasher{};
 		HashTable() {
 			m_storage.resize(m_size);
 		}
@@ -63,10 +63,10 @@ namespace ARLib {
 
 		void insert(const T& val) {
 			T v = val;
-			m_storage[hash(val) % m_size].append(Forward<T>(v));
+			m_storage[hasher(val) % m_size].append(Forward<T>(v));
 		}
 		void insert(T&& val) {
-			m_storage[hash(val) % m_size].append(Forward<T>(val));
+			m_storage[hasher(val) % m_size].append(Forward<T>(val));
 		}
 
 		void insert_precalc(const T& val, uint32_t hash) {
@@ -79,7 +79,7 @@ namespace ARLib {
 
 
 		const auto find_uncertain(const T& val) {
-			return m_storage[hash(val) % m_size].find(val);
+			return m_storage[hasher(val) % m_size].find(val);
 		}
 
 		const auto find_uncertain_precalc(const T& val, uint32_t hash) {
@@ -95,7 +95,7 @@ namespace ARLib {
 		}
 
 		const T& find(const T& val) {
-			return *m_storage[hash(val) % m_size].find(val);
+			return *m_storage[hasher(val) % m_size].find(val);
 		}
 
 		void remove(const T& val) {
