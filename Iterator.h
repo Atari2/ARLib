@@ -1,5 +1,6 @@
 #pragma once
 #include "Types.h"
+#include "BaseTraits.h"
 
 namespace ARLib {
 	template <typename T>
@@ -119,24 +120,25 @@ namespace ARLib {
 
 	};
 
-	template <typename T>
-	class ConstIterator final : public IteratorBase<T> {
+	template <typename Ct>
+	class ConstIterator final : public IteratorBase<typename AddConst<Ct>::type> {
+		using T = typename AddConst<Ct>::type;
 	public:
 		ConstIterator(T* start) : IteratorBase<T>(start) {}
 
-		ConstIterator(const ConstIterator<T>& other) : IteratorBase<T>(other) {
+		ConstIterator(const ConstIterator<Ct>& other) : IteratorBase<T>(other) {
 
 		}
 
-		ConstIterator(ConstIterator<T>&& other) : IteratorBase<T>(other) {
+		ConstIterator(ConstIterator<Ct>&& other) : IteratorBase<T>(other) {
 			other.m_current = nullptr;
 		}
 
-		ConstIterator& operator=(const ConstIterator<T>& other) {
+		ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) {
 			m_current = other.m_current;
 		}
 
-		ConstIterator& operator=(ConstIterator<T>&& other) {
+		ConstIterator<Ct>& operator=(ConstIterator<Ct>&& other) {
 			m_current = other.m_current;
 			other.m_current = nullptr;
 		}
@@ -145,40 +147,40 @@ namespace ARLib {
 			return *m_current;
 		}
 
-		ConstIterator<T>& operator++() {
+		ConstIterator<Ct>& operator++() {
 			m_current++;
 			return *this;
 		}
 
-		ConstIterator<T> operator++(int) {
+		ConstIterator<Ct> operator++(int) {
 			return { m_current++ };
 		}
 
 
-		ConstIterator<T>& operator+=(int offset) {
+		ConstIterator<Ct>& operator+=(int offset) {
 			m_current += offset;
 			return *this;
 		}
 
-		ConstIterator<T> operator+(int offset) {
+		ConstIterator<Ct> operator+(int offset) {
 			return { m_current + offset };
 		}
 
-		ConstIterator<T>& operator--() {
+		ConstIterator<Ct>& operator--() {
 			m_current--;
 			return *this;
 		}
 
-		ConstIterator<T> operator--(int) {
+		ConstIterator<Ct> operator--(int) {
 			return { m_current-- };
 		}
 
-		ConstIterator<T>& operator-=(int offset) {
+		ConstIterator<Ct>& operator-=(int offset) {
 			m_current -= offset;
 			return *this;
 		}
 
-		ConstIterator<T> operator-(int offset) {
+		ConstIterator<Ct> operator-(int offset) {
 			return { m_current - offset };
 		}
 
