@@ -89,46 +89,80 @@ namespace ARLib {
 		TODO(FloatToStr)
 		return "";
 	}
-	String IntToStr(int value, SupportedBase base = SupportedBase::Decimal) {
-		String rev{};
-		if (base == SupportedBase::Decimal) {
-			int div = 10;
-			if (value == 0)
-				rev.append('0');
-			while (value > 0) {
-				int rem = fmod(static_cast<double>(value), div);
-				rev.append((rem / (div / 10)) + 48);
-				value -= rem;
-				if (value > 0)
-					div *= 10;
+
+
+	template <class UnsignedIntegral>
+	char* unsigned_to_buffer(char* next, UnsignedIntegral uvalue) {
+#ifdef ENVIRON64
+		auto uvalue_trunc = uvalue;
+#else
+		constexpr bool huge_unsigned = sizeof(UnsignedIntegral) > 4;
+		if constexpr (huge_unsigned) {
+			while (uvalue > 0xFFFFFFFFU) {
+				auto uvalue_chunk = static_cast<unsigned long>(uvalue % 1000000000);
+				uvalue /= 1000000000;
+				for (int i = 0; i != 9; ++i) {
+					*--next = static_cast<char>('0' + uvalue_chunk % 10);
+					uvalue_chunk /= 10;
+				}
 			}
 		}
-		else if (base == SupportedBase::Hexadecimal) {
-			if (value == 0)
+		auto uvalue_trunc = static_cast<unsigned long>(uvalue);
+#endif
+		do {
+			*--next = static_cast<char>('0' + uvalue_trunc % 10);
+			uvalue_trunc /= 10;
+		} while (uvalue_trunc != 0);
+		return next;
+	}
+
+
+	template<class Integral, SupportedBase Base = SupportedBase::Decimal>
+	String IntToStr(Integral value) {
+		static_assert(IsIntegralV<Integral>, "IntToStr type must be integral type");
+		if constexpr (Base == SupportedBase::Decimal) {
+			char buf[21] = { 0 };
+			char* const buf_end = end(buf);
+			char* next = buf_end;
+			const auto uvalue = static_cast<MakeUnsignedT<Integral>>(value);
+			if (value < 0) {
+				next = unsigned_to_buffer(next, 0 - uvalue);
+				*--next = '-';
+			}
+			else {
+				next = unsigned_to_buffer(next, uvalue);
+			}
+			return String{ next, buf_end };
+		}
+		else {
+			String rev{};
+			if constexpr (Base == SupportedBase::Hexadecimal) {
+				if (value == 0)
+					rev.append('0');
+				while (value > 0) {
+					Integral rem = value % 16;
+					if (rem > 9)
+						rev.append(rem + 55);
+					else
+						rev.append(rem + 48);
+					value >>= 4;
+				}
+				rev.append('x');
 				rev.append('0');
-			while (value > 0) {
-				int rem = value % 16;
-				if (rem > 9)
-					rev.append(rem + 55);
-				else
+			}
+			else if constexpr (Base == SupportedBase::Binary) {
+				if (value == 0)
+					rev.append('0');
+				while (value > 0) {
+					Integral rem = value % 2;
 					rev.append(rem + 48);
-				value >>= 4;
-			}
-			rev.append('x');
-			rev.append('0');
-		}
-		else if (base == SupportedBase::Binary) {
-			if (value == 0)
+					value >>= 1;
+				}
+				rev.append('b');
 				rev.append('0');
-			while (value > 0) {
-				int rem = value % 2;
-				rev.append(rem + 48);
-				value >>= 1;
 			}
-			rev.append('b');
-			rev.append('0');
+			return rev.reversed();
 		}
-		return rev.reversed();
 	}
 
 	template <Stringable T>
