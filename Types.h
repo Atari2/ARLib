@@ -2,6 +2,7 @@
 #include "Compat.h"
 
 namespace ARLib {
+    typedef decltype(nullptr) nullptr_t;
 #ifdef WINDOWS
     #if defined(ENVIRON64)
         typedef unsigned __int64 size_t;
