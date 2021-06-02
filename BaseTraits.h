@@ -183,6 +183,10 @@ namespace ARLib {
     template<class T>
     struct IsSame<T, T> : TrueType {};
 
+    // isvoid
+    template< class T >
+    struct IsVoid : IsSame<void, typename RemoveCv<T>::type> {};
+
     // is lvalue reference
     template<class T> struct IsLvalueReference : FalseType {};
     template<class T> struct IsLvalueReference<T&> : TrueType {};
@@ -222,6 +226,76 @@ namespace ARLib {
     template<class T>
     typename AddRvalueReference<T>::type declval() noexcept;
 
+    template <class T>
+    [[nodiscard]] constexpr T* addressof(T& val) noexcept {
+        return __builtin_addressof(val);
+    }
+
     // ptrsize
     using PtrSize = ConditionalT<sizeof(void*) == 8, uint64_t, uint32_t>;
+    
+    template<typename...> using VoidT = void;
+    
+    class Undefined;
+
+    // Given Template<T, ...> return T, otherwise invalid.
+    template<typename T>
+    struct GetFirstArg
+    {
+        using type = Undefined;
+    };
+
+    template<template<typename, typename...> class Template, typename T,
+        typename... Types>
+        struct GetFirstArg<Template<T, Types...>>
+    {
+        using type = T;
+    };
+
+    template<typename T>
+    using GetFirstArgT = typename GetFirstArg<T>::type;
+
+    // Given Template<T, ...> and U return Template<U, ...>, otherwise invalid.
+    template<typename T, typename U>
+    struct ReplaceFirstArg
+    { };
+
+    template<template<typename, typename...> class Template, typename U,
+        typename T, typename... Types>
+        struct ReplaceFirstArg<Template<T, Types...>, U>
+    {
+        using type = Template<U, Types...>;
+    };
+
+    template<typename T, typename U>
+    using ReplaceFirstArgT = typename ReplaceFirstArg<T, U>::type;
+
+    template<typename T>
+    using MakeNotVoid = typename Conditional<IsVoid<T>::value, Undefined, T>::type;
+
+
+    template<typename Default, typename _AlwaysVoid,
+        template<typename...> class Op, typename... Args>
+    struct Detector
+    {
+        using value_t = FalseType;
+        using type = Default;
+    };
+
+    template<typename Default, template<typename...> class Op,
+        typename... Args>
+        struct Detector<Default, VoidT<Op<Args...>>, Op, Args...>
+    {
+        using value_t = TrueType;
+        using type = Op<Args...>;
+    };
+
+    template<typename Default, template<typename...> class Op,
+        typename... Args>
+        using DetectedOr = Detector<Default, void, Op, Args...>;
+
+    template<typename Default, template<typename...> class Op,
+        typename... Args>
+        using DetectedOrT
+        = typename DetectedOr<Default, Op, Args...>::type;
 }

@@ -3,14 +3,76 @@
 #include "Utility.h"
 
 namespace ARLib {
+    
+    template<typename Ptr>
+    struct PointerTraits
+    {
+    private:
+        template<typename T>
+        using element_type_internal = typename T::element_type;
+
+        template<typename T>
+        using difference_type_internal = typename T::difference_type;
+
+        template<typename T, typename U, typename = void>
+        struct rebind_internal : ReplaceFirstArg<T, U> { };
+
+        template<typename T, typename U>
+        struct rebind_internal<T, U, VoidT<typename T::template rebind<U>>>
+        {
+            using type = typename T::template rebind<U>;
+        };
+
+    public:
+        /// The pointer type.
+        using pointer = Ptr;
+
+        /// The type pointed to.
+        using element_type
+            = DetectedOrT<GetFirstArgT<Ptr>, element_type_internal, Ptr>;
+
+        /// The type used to represent the difference between two pointers.
+        using difference_type
+            = DetectedOrT<ptrdiff_t, difference_type_internal, Ptr>;
+
+        /// A pointer to a different type.
+        template<typename U>
+        using rebind = typename rebind_internal<Ptr, U>::type;
+
+        static Ptr
+            pointer_to(MakeNotVoid<element_type>& e)
+        {
+            return Ptr::pointer_to(e);
+        }
+
+        static_assert(!IsSame<element_type, Undefined>::value,
+            "pointer type defines element_type or is like SomePointer<T, Args>");
+    };
+
+
+    template<typename T>
+    struct PointerTraits<T*>
+    {
+        /// The pointer type
+        typedef T* pointer;
+        /// The type pointed to
+        typedef T  element_type;
+        /// Type used to represent the difference between two pointers
+        typedef ptrdiff_t difference_type;
+
+        template<typename U>
+        using rebind = U*;
+
+        static constexpr pointer
+            pointer_to(MakeNotVoid<element_type>& r) noexcept
+        {
+            return addressof(r);
+        }
+    };
 
     // isclass
     template <class T>
     struct IsClass : decltype(detail::Test<T>(nullptr)) {};
-
-    // isvoid
-    template< class T >
-    struct IsVoid : IsSame<void, typename RemoveCv<T>::type> {};
 
     // convertible
     template<class From, class To>
