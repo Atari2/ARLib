@@ -53,7 +53,7 @@ namespace ARLib {
 		HashTable<Entry> m_table{};
 	public:
 		HashMap() = default;
-
+		double load() { return m_table.load(); };
 		InsertionResult add(Key key, Val value) {
 			Entry entry{ key, value };
 			uint32_t hs = hash(entry);
