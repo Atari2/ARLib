@@ -2,6 +2,7 @@
 #include "TypeTraits.h"
 #include "Iterator.h"
 #include "Types.h"
+#include "Badge.h"
 
 // this is a hacky fix to an issue that can lead to the Hashable concept constraint not finding the appropriate function
 // so if it wasn't included yet, include it
@@ -147,5 +148,10 @@ namespace ARLib {
 	template <typename T>
 	concept Stringable = requires(T a) {
 		{ a.to_string() };
+	};
+
+	template <typename T>
+	concept Badgeable = requires(T a) {
+		{ Badge<T>{} } -> SameAs<Badge<T>>;
 	};
 }

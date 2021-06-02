@@ -29,6 +29,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Optional.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CharConv.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Badge.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.cpp"
