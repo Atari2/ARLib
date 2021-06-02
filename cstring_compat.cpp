@@ -26,8 +26,10 @@ namespace ARLib {
 	}
 
 	char* strcat(char* dst, const char* src) {
-		while (*dst++);
+		if (*dst != '\0')
+			while (*++dst);
 		while (*src) { *dst++ = *src++; }
+		*dst = *src;
 		return dst;
 	}
 
