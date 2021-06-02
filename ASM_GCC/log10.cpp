@@ -41,7 +41,7 @@ extern "C" {
 			"fstp %%st(1) \n"
 			"rt:"
 			: "=m"(ret)
-			: "g"(arg), "g"(one), "g"(limit)
+			: "m"(arg), "m"(one), "m"(limit)
 			: "memory"
 			);
 		return ret;

@@ -30,7 +30,7 @@ extern "C" {
 			"fldz                \n"
 			"2: \n"
 			: "=m"(ret)
-			: "g"(arg)
+			: "m"(arg)
 			: "memory"
 			);
 		return ret;
