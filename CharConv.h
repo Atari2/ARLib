@@ -165,9 +165,8 @@ namespace ARLib {
 		}
 	}
 
-	template <Stringable T>
-	String ToString(const T& value) {
-		if constexpr (IsSameV<T, String>)
+	String ToString(Stringable auto& value) {
+		if constexpr (IsSameV<decltype(value), String>)
 			return value;
 		return value.to_string();
 	}
