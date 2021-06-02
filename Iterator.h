@@ -249,16 +249,17 @@ namespace ARLib {
 		}
 	};
 
-	template <typename T>
-	class ConstReverseIterator final : public IteratorBase<T> {
+	template <typename Ct>
+	class ConstReverseIterator final : public IteratorBase<typename AddConst<Ct>::type> {
+		using T = typename AddConst<Ct>::type;
 	public:
 		ConstReverseIterator(T* end) : IteratorBase<T>(end) {}
 
-		ConstReverseIterator(const ConstReverseIterator<T>& other) : IteratorBase<T>(other.m_current) {
+		ConstReverseIterator(const ConstReverseIterator<Ct>& other) : IteratorBase<T>(other.m_current) {
 
 		}
 
-		ConstReverseIterator(ConstReverseIterator<T>&& other) : IteratorBase<T>(other) {
+		ConstReverseIterator(ConstReverseIterator<Ct>&& other) : IteratorBase<T>(other) {
 			other.m_current = nullptr;
 		}
 
@@ -266,48 +267,48 @@ namespace ARLib {
 			return *m_current;
 		}
 
-		ConstReverseIterator& operator=(const ConstReverseIterator<T>& other) {
+		ConstReverseIterator<Ct>& operator=(const ConstReverseIterator<Ct>& other) {
 			m_current = other.m_current;
 		}
 
-		ConstReverseIterator& operator=(ConstReverseIterator<T>&& other) {
+		ConstReverseIterator<Ct>& operator=(ConstReverseIterator<Ct>&& other) {
 			m_current = other.m_current;
 			other.m_current = nullptr;
 		}
 
-		ConstReverseIterator<T>& operator++() {
+		ConstReverseIterator<Ct>& operator++() {
 			m_current--;
 			return *this;
 		}
 
-		ConstReverseIterator<T> operator++(int) {
+		ConstReverseIterator<Ct> operator++(int) {
 			return { m_current-- };
 		}
 
-		ConstReverseIterator<T>& operator+=(int offset) {
+		ConstReverseIterator<Ct>& operator+=(int offset) {
 			m_current -= offset;
 			return *this;
 		}
 
-		ConstReverseIterator<T> operator+(int offset) {
+		ConstReverseIterator<Ct> operator+(int offset) {
 			return { m_current - offset };
 		}
 
-		ConstReverseIterator<T>& operator--() {
+		ConstReverseIterator<Ct>& operator--() {
 			m_current++;
 			return *this;
 		}
 
-		ConstReverseIterator<T> operator--(int) {
+		ConstReverseIterator<Ct> operator--(int) {
 			return { m_current++ };
 		}
 
-		ConstReverseIterator<T>& operator-=(int offset) {
+		ConstReverseIterator<Ct>& operator-=(int offset) {
 			m_current += offset;
 			return *this;
 		}
 
-		ConstReverseIterator<T> operator-(int offset) {
+		ConstReverseIterator<Ct> operator-(int offset) {
 			return { m_current + offset };
 		}
 	};
