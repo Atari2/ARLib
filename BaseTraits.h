@@ -3,7 +3,7 @@
 #include "Types.h"
 
 namespace ARLib {
-    // the overwhelming majority of the type traits are copy-pasted from cppreference
+    // the overwhelming majority of the type traits are copy-pasted from msvc's implementation
     // since those are reliable and this is a finnicky thing
     // it just made sense to use those, so I can both have a correct and malleable implementation.
     // aliases to std:: members that I have no clue how to implement
@@ -57,6 +57,14 @@ namespace ARLib {
     using TrueType = BoolConstant<true>;
     using FalseType = BoolConstant<false>;
 
+    template <class T>
+    struct IsTrivial : BoolConstant<__is_trivially_constructible(T) && __is_trivially_copyable(T)> {
+
+    };
+
+
+    template <class T>
+    inline constexpr bool IsTrivialV = __is_trivially_constructible(T) && __is_trivially_copyable(T);
 
     template<class T> struct IsConst : FalseType {};
     template<class T> struct IsConst<const T> : TrueType {};

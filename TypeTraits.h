@@ -367,6 +367,36 @@ namespace ARLib {
     template<class T, class U>
     inline constexpr bool IsSameV = IsSame<T, U>::value;
 
+    template<class T>
+    inline constexpr bool IsConstV = IsConst<T>::value;
+
+    template <class>
+    inline constexpr bool IsVolatileV = false;
+
+    template <class T>
+    inline constexpr bool IsVolatileV<volatile T> = true;
+
+    template <class T>
+    struct IsVolatile : BoolConstant<IsVolatileV<T>> {};
+
+    template <class>
+    inline constexpr bool IsPointerV = false;
+
+    template <class T>
+    inline constexpr bool IsPointerV<T*> = true;
+
+    template <class T>
+    inline constexpr bool IsPointerV<T* const> = true;
+
+    template <class T>
+    inline constexpr bool IsPointerV<T* volatile> = true;
+
+    template <class T>
+    inline constexpr bool IsPointerV<T* const volatile> = true;
+
+    template <class T>
+    struct IsPointer : BoolConstant<IsPointerV<T>> {};
+
     template< class From, class To >
     inline constexpr bool ConvertibleV = Convertible<From, To>::value;
 
