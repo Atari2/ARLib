@@ -38,9 +38,6 @@ namespace ARLib {
 		}
 
 		void clear_() {
-			for (size_t i = 0; i < m_size; i++) {
-				m_storage[i].~T();
-			}
 			delete[] m_storage;
 			m_storage = nullptr;
 			m_end_of_storage = nullptr;
@@ -160,6 +157,21 @@ namespace ARLib {
 			m_storage[index].~T();
 			m_size--;
 			memmove(m_storage + index, m_storage + index + 1, sizeof(T) * (m_size - index));
+		}
+
+		void remove(const T& val) {
+			for (size_t i = 0; i < m_size; i++) {
+				if (val == m_storage[i]) {
+					remove(i);
+					return;
+				}
+			}
+		}
+
+		Iter find(const T& val) {
+			for (auto it = begin(); it != end(); it++)
+				if (*it == val) return it;
+			return end();
 		}
 
 		size_t capacity() {

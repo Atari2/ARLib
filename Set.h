@@ -155,8 +155,6 @@ namespace ARLib {
 
 		~Set() {
 			if (m_capacity == 0) return;
-			for (size_t i = 0; i < m_size; i++)
-				m_storage[i].~T();
 			delete[] m_storage;
 			m_storage = nullptr;
 		}
