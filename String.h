@@ -8,7 +8,9 @@
 #include "Iterator.h"
 #include "cstring_compat.h"
 
+
 namespace ARLib {
+    class StringView;
 
     class String {
         static constexpr size_t SMALL_STRING_CAP = 24;
@@ -209,18 +211,9 @@ namespace ARLib {
             other.m_data_buf = nullptr;
             other.m_size = 0;
         }
-        /*
-        String(StringView other) : m_size(other.length()) {
-            m_small_string_opt = m_size <= SMALL_STRING_CAP;
-            if (m_small_string_opt) {
-                strcpy(m_small_string_buf, other.data());
-            }
-            else {
-                m_big_string_buf = new char[m_size + 1];
-                strcpy(m_big_string_buf, other.data());
-            }
-        }
-        */
+
+        String(StringView other);
+
         String& operator=(const String& other) {
             if (this != &other) {
                 m_size = other.m_size;
@@ -261,6 +254,14 @@ namespace ARLib {
                 m_data_buf = nullptr;
             }
         }
+
+        [[nodiscard]] String substring(size_t first = 0, size_t last = npos) {
+            if (last == npos)
+                last = length();
+            return String{ get_buf_internal() + first, get_buf_internal() + last };
+        }
+
+        [[nodiscard]] StringView substringview(size_t first = 0, size_t last = npos);
 
         // comparison operators
         [[nodiscard]] bool operator==(const String& other) const {
@@ -303,7 +304,7 @@ namespace ARLib {
             else return greater;
         }
 
-
+        [[nodiscard]] size_t size() const { return m_size; }
         [[nodiscard]] size_t length() const { return m_size; }
         [[nodiscard]] size_t capacity() const { return is_local() ? SMALL_STRING_CAP : m_allocated_capacity ;}
         [[nodiscard]] const char* data() const { return get_buf_internal(); }
@@ -612,34 +613,17 @@ namespace ARLib {
         }
     };
 
-    // TODO: make stringview usable
-    class StringView {
-        const char* m_start = nullptr;
-        const char* m_end = nullptr;
-
-    public:
-        static constexpr auto npos = String::npos;
-        StringView(const char* buf, size_t size) : m_start(buf) { m_end = buf + size; }
-        StringView(const char* buf) : m_start(buf) { m_end = buf + strlen(buf); }
-        StringView(const String& ref) : m_start(ref.data()) { m_end = m_start + ref.length(); }
-        [[nodiscard]] const size_t length() const { return m_end - m_start; }
-        [[nodiscard]] const char* data() const { return m_start; }
-        [[nodiscard]] const char* end() const { return m_end; }
-        [[nodiscard]] String extract_string() const { return String(m_start, length()); }
-    };
-
-    String operator""s(const char* source, size_t len) {
+    String operator""_s(const char* source, size_t len) {
         return String{ source, len + 1};
     }
 
-    inline uint32_t hash(const String& s) {
-        return hashstr(s.data(), s.length());
-    }
-    inline bool hash_equals(const String& a, const String& b) {
-        return hash(a) == hash(b);
-    }
+    template <>
+    struct Hash<String> {
+        [[nodiscard]] size_t operator()(const String& key) const noexcept {
+            return hash_array_representation(key.data(), key.size());
+        }
+    };
 };
 
 using ARLib::String;
-using ARLib::StringView;
-using ARLib::operator""s;
+using ARLib::operator""_s;
