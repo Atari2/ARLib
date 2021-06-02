@@ -174,6 +174,60 @@ namespace ARLib {
     template< class T >
     using AddRvalueReferenceT = typename AddRvalueReference<T>::type;
 
+
+    template <bool>
+    struct Select { 
+        template <class T1, class>
+        using Apply = T1;
+    };
+
+    template <>
+    struct Select<false> {
+        template <class, class T2>
+        using Apply = T2;
+    };
+
+
+    template <size_t>
+    struct MakeUnsignedHelper;
+
+    template <>
+    struct MakeUnsignedHelper<1> {
+        template <class>
+        using Apply = uint8_t;
+    };
+
+    template <>
+    struct MakeUnsignedHelper<2> {
+        template <class>
+        using Apply = uint16_t;
+    };
+
+    template <>
+    struct MakeUnsignedHelper<4> {
+        template <class>
+        using Apply = uint32_t;
+    };
+
+    template <>
+    struct MakeUnsignedHelper<8> {
+        template <class>
+        using Apply = uint64_t;
+    };
+
+    template <class T>
+    using MakeUnsignedBase = typename MakeUnsignedHelper<sizeof(T)>::template Apply<T>;
+
+    template <class T>
+    struct MakeUnsigned {
+        static_assert(IsNonboolIntegral<T> || IsEnumV<T>, "make_unsigned<T> requires a non bool integral type.");
+
+        using type = typename RemoveCv<T>::template Apply<MakeUnsignedBase>;
+    };
+
+    template <class T>
+    using MakeUnsignedT = typename MakeUnsigned<T>::type;
+
     template< class T >
     struct Decay {
     private:

@@ -24,6 +24,11 @@ namespace ARLib {
     template <class T>
     using IsUnion = std::is_union<T>;
 
+    template <class T>
+    using IsEnum = std::is_enum<T>;
+
+    template <class T>
+    inline constexpr bool IsEnumV = IsEnum<T>::value;
 
 
     // type traits
@@ -141,10 +146,29 @@ namespace ARLib {
 
     // remove/add qualifiers
 
-    template< class T > struct RemoveCv { typedef T type; };
-    template< class T > struct RemoveCv<const T> { typedef T type; };
-    template< class T > struct RemoveCv<volatile T> { typedef T type; };
-    template< class T > struct RemoveCv<const volatile T> { typedef T type; };
+    template< class T > struct RemoveCv { 
+        typedef T type; 
+        template <template <class> class Fn>
+        using Apply = Fn<T>;
+    };
+    template< class T > struct RemoveCv<const T> {
+        typedef T type; 
+
+        template <template <class> class Fn>
+        using Apply = const Fn<T>;
+    };
+    template< class T > struct RemoveCv<volatile T> { 
+        typedef T type; 
+
+        template <template <class> class Fn>
+        using Apply = volatile Fn<T>;
+    };
+    template< class T > struct RemoveCv<const volatile T> { 
+        typedef T type; 
+
+        template <template <class> class Fn>
+        using Apply = const volatile Fn<T>;
+    };
 
     template< class T > struct RemoveConst { typedef T type; };
     template< class T > struct RemoveConst<const T> { typedef T type; };
@@ -222,6 +246,27 @@ namespace ARLib {
     struct Conjunction<B1, Bn...>
         : Conditional<bool(B1::value), Conjunction<Bn...>, B1> {};
 
+    // disjunction
+    template <bool FirstValue, class First, class... Rest>
+    struct DisjunctionBase {
+        using type = First;
+    };
+
+    template <class False, class Next, class... Rest>
+    struct DisjunctionBase<false, False, Next, Rest...> { // first trait is false, try the next trait
+        using type = typename DisjunctionBase<Next::value, Next, Rest...>::type;
+    };
+
+    template <class... Traits>
+    struct Disjunction : FalseType {}; // If _Traits is empty, false_type
+
+    template <class First, class... Rest>
+    struct Disjunction<First, Rest...> : DisjunctionBase<First::value, First, Rest...>::type {
+    };
+
+    template <class... Traits>
+    inline constexpr bool DisjunctionV = Disjunction<Traits...>::value;
+
     // declval
     template<class T>
     typename AddRvalueReference<T>::type declval() noexcept;
@@ -230,6 +275,24 @@ namespace ARLib {
     [[nodiscard]] constexpr T* addressof(T& val) noexcept {
         return __builtin_addressof(val);
     }
+
+    template <class T, class... Types>
+    inline constexpr bool IsAnyOfV = DisjunctionV<IsSame<T, Types>...>;
+
+    [[nodiscard]] constexpr bool is_constant_evaluated() noexcept {
+        return __builtin_is_constant_evaluated();
+    }
+
+    template <class T>
+    inline constexpr bool IsIntegralV = IsAnyOfV<typename RemoveCv<T>::type, bool, char, signed char, unsigned char,
+        wchar_t,
+        char16_t, char32_t, short, unsigned short, int, unsigned int, long, unsigned long, long long, unsigned long long>;
+
+    template <class T>
+    struct IsIntegral : BoolConstant<IsIntegralV<T>> {};
+
+    template <class T>
+    inline constexpr bool IsNonboolIntegral = IsIntegralV<T> && !IsSame<typename RemoveCv<T>::type, bool>::value;
 
     // ptrsize
     using PtrSize = ConditionalT<sizeof(void*) == 8, uint64_t, uint32_t>;
