@@ -8,12 +8,12 @@
 #include "cmath_compat.h"
 
 namespace ARLib {
-	template <typename T, size_t TBL_SIZE = 0> requires Hashable<T> && EqualityComparable<T>
+	template <typename T, size_t TBL_SIZE_INDEX = 0> requires Hashable<T> && EqualityComparable<T>
 	class HashTable {
 		// this is slow af
 		static constexpr size_t table_sizes[] = { 13, 19, 31 };
 		Vector<Vector<T>> m_storage;
-		size_t m_size = table_sizes[TBL_SIZE];
+		size_t m_size = table_sizes[TBL_SIZE_INDEX];
 		
 		template <typename... Args>
 		void internal_append(T&& arg, Args&&... args) {
@@ -54,7 +54,7 @@ namespace ARLib {
 		}
 
 		template <typename Functor>
-		void for_each(Functor&& func) {
+		void for_each(Functor func) {
 			int i = 0;
 			m_storage.for_each([&func, &i](auto& bkt) {
 				bkt.for_each(func);
