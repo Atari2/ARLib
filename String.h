@@ -150,7 +150,7 @@ namespace ARLib {
             auto real_len = strlen(other);
             if (local) {
                 if (m_size > real_len) {
-                    strcpy(m_local_buf, other);
+                    strncpy(m_local_buf, other, real_len);
                 }
                 else {
                     strncpy(m_local_buf, other, m_size);
