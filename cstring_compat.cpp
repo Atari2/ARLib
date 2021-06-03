@@ -3,13 +3,37 @@ namespace ARLib {
 	typedef int word;
 #define	wsize	sizeof(word)
 #define	wmask	(wsize - 1)
+
+	void* memcpy_vectorized(void* dst0, const void* src0, size_t num) {
+		char* dst = static_cast<char*>(dst0);
+		const char* src = static_cast<const char*>(src0);
+		size_t rem = num % 32;
+		for (size_t offset = 0; offset < (num - rem); offset += 32) {
+			__m256i buffer = _mm256_loadu_si256((const __m256i*)(src + offset));
+			_mm256_storeu_si256((__m256i*)(dst + offset), buffer);
+		}
+		dst += (num - rem);
+		src += (num - rem);
+		for (size_t i = 0; i < rem; i++) {
+			*dst++ = *src++;
+		}
+		return dst;
+	}
+
 	char* strcpy(char* dest, const char* src) {
 		while ((*dest++ = *src++));
 		return dest;
 	}
+
 	char* strncpy(char* dest, const char* src, size_t num) {
-		while (num--)
+		while (num--) {
 			*dest++ = *src++;
+			if (*src == '\0')
+				break;
+		}
+		while (num--) {
+			*dest++ = '\0';
+		}
 		return dest;
 	}
 	int strcmp(const char* first, const char* second) {
@@ -102,7 +126,17 @@ namespace ARLib {
 #ifdef _MSC_VER
 #pragma warning( pop )
 #endif
-
+	void* memcpy(void* dst0, const void* src0, size_t num) {
+		[[unlikely]] if (num >= 64) {
+			return memcpy_vectorized(dst0, src0, num);
+		}
+		char* dst = static_cast<char*>(dst0);
+		const char* src = static_cast<const char*>(src0);
+		while (num--) {
+			*dst++ = *src++;
+		}
+		return dst;
+	}
 	int toupper(int c) {
 		if (c >= 96 && c <= 122)
 			return c - 32;
@@ -114,3 +148,5 @@ namespace ARLib {
 		return c;
 	}
 }
+#undef word
+#undef wmask
