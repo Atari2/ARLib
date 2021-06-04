@@ -34,6 +34,8 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Badge.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cstdio_compat.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/cstdio_compat.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/std_includes.h"
@@ -45,10 +47,10 @@ if (WIN32 AND NOT CMAKE_COMPILER_IS_GNUCXX)
 else()
 	add_subdirectory(ASM_GCC)
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-		target_compile_options(ARLib PRIVATE -fsanitize=address,undefined,leak -std=c++20 -msse4.1 -mavx)
+		target_compile_options(ARLib PRIVATE -fsanitize=address,undefined,leak -std=c++20 -msse4.1 -mavx -fno-exceptions)
 		target_link_options(ARLib PRIVATE -fsanitize=address,undefined,leak)
 	else()
-		target_compile_options(ARLib PRIVATE -std=c++20 -msse4.1 -mavx)
+		target_compile_options(ARLib PRIVATE -std=c++20 -msse4.1 -mavx -fno-exceptions)
 	endif()
 endif()
 target_link_libraries(ARLib ARLib_asm_ext)
