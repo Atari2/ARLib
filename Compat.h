@@ -31,11 +31,12 @@
 #error "Unsupported compiler"
 #endif
 
-#if defined(_WIN32) || defined(_WIN64)
+#ifdef _WIN64
 #ifdef _MSC_VER
+// windows means strictly MSVC, if you want mingw, use MINDOWS_MINGW
 #define WINDOWS
 #else
-#error "Use MSVC on Windows, please"
+#define WINDOWS_MINGW
 #endif
 #elif (defined(__unix__) || defined(__unix)) && !defined(BSD)
 #define UNIX
@@ -47,14 +48,10 @@
 	#ifdef WINDOWS
 		static_assert(sizeof(void*) == 8 && sizeof(unsigned __int64) == 8);
 	#else
-		static_assert(sizeof(void*) == 8 && sizeof(unsigned long) == 8);
+		static_assert(sizeof(void*) == 8 && sizeof(unsigned long long) == 8);
 	#endif
 #else
-	#ifdef WINDOWS
-		static_assert(sizeof(void*) == 4 && sizeof(unsigned int) == 4);
-	#else
-		static_assert(sizeof(void*) == 4 && sizeof(unsigned int) == 4);
-	#endif
+#error "This library is 64-bit only"
 #endif
 
 static_assert(sizeof(char) == 1);
