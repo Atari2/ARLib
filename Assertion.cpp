@@ -15,6 +15,6 @@ void abort_arlib() {
 }
 
 void assertion_failed__(const char* msg) {
-	puts(msg);
+	ARLib::puts(msg);
 	abort_arlib();
 }
