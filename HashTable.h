@@ -8,13 +8,18 @@
 #include "cmath_compat.h"
 
 namespace ARLib {
+	enum class InsertionResult {
+		New,
+		Replace
+	};
+
 	template <typename T, size_t TBL_SIZE_INDEX = 0> requires Hashable<T> && EqualityComparable<T>
 	class HashTable {
-		// this is slow af
 		static constexpr size_t table_sizes[] = { 13, 19, 31 };
 		Vector<Vector<T>> m_storage;
-		size_t m_size = table_sizes[TBL_SIZE_INDEX];
-		
+		size_t m_bucket_count = table_sizes[TBL_SIZE_INDEX];
+		size_t m_size = 0;
+
 		template <typename... Args>
 		void internal_append(T&& arg, Args&&... args) {
 			insert(Forward<T>(arg));
@@ -25,27 +30,24 @@ namespace ARLib {
 	public:
 		Hash<T> hasher{};
 		HashTable() {
-			m_storage.resize(m_size);
+			m_storage.resize(m_bucket_count);
 		}
-		HashTable(size_t initial_capacity) : m_size(initial_capacity) {
-			m_storage.resize(initial_capacity);
+		HashTable(size_t initial_bucket_count) : m_size(initial_bucket_count) {
+			m_storage.resize(initial_bucket_count);
 		}
 		template<typename... Args>
 		HashTable(T&& a, T&& b, Args&&... args) {
-			m_storage.resize(m_size);
+			m_storage.resize(m_bucket_count);
 			insert(Forward<T>(a));
 			insert(Forward<T>(b));
 			if constexpr (sizeof...(args) > 0)
 				internal_append(Forward<Args>(args)...);
+			m_size = sizeof...(args);
 		}
 
 		double load() {
 			Vector<double> vec_sizes(m_storage.size());
-			size_t s = sum(m_storage, [&vec_sizes](const auto& item) {
-				vec_sizes.append(item.size());
-				return item.size();
-			});
-			double avg_load = (double)s / (double)m_size;
+			double avg_load = (double)m_size / (double)m_bucket_count;
 			double sr = sum(vec_sizes, [avg_load](const auto& item) {
 				return pow(item - avg_load, 2);
 			});
@@ -56,53 +58,67 @@ namespace ARLib {
 		template <typename Functor>
 		void for_each(Functor func) {
 			int i = 0;
-			m_storage.for_each([&func, &i](auto& bkt) {
+			m_storage.for_each([&func](auto& bkt) {
 				bkt.for_each(func);
 			});
 		}
 
-		void insert(const T& val) {
-			T v = val;
-			m_storage[hasher(val) % m_size].append(Forward<T>(v));
-		}
-		void insert(T&& val) {
-			m_storage[hasher(val) % m_size].append(Forward<T>(val));
+		InsertionResult insert(const T& val) {
+			T entry = val;
+			return insert(Forward<T>(entry));
 		}
 
-		void insert_precalc(const T& val, uint32_t hash) {
-			T v = val;
-			m_storage[hash % m_size].append(Forward<T>(v));
-		}
-		void insert_precalc(T&& val, uint32_t hash) {
-			m_storage[hash % m_size].append(Forward<T>(val));
-		}
-
-
-		const auto find_uncertain(const T& val) {
-			return m_storage[hasher(val) % m_size].find(val);
-		}
-
-		const auto find_uncertain_precalc(const T& val, uint32_t hash) {
-			return m_storage[hash % m_size].find(val);
+		InsertionResult insert(T&& entry) {
+			auto hs = hasher(entry);
+			auto iter = find(entry);
+			if (iter == end(hs)) {
+				m_storage[hs % m_bucket_count].append(Forward<T>(entry));
+				m_size++;
+				return InsertionResult::New;
+			}
+			else {
+				(*iter) = move(entry);
+				return InsertionResult::Replace;
+			}
 		}
 
-		const auto end(uint32_t hash) {
-			return m_storage[hash % m_size].end();
+		auto find(const T& val) {
+			auto hash = hasher(val);
+			const auto& bucket = m_storage[hash % m_bucket_count];
+			for (auto it = bucket.begin(); it != bucket.end(); it++) {
+				auto& item = *it;
+				if (hash == hasher(item))
+					if (item.key() == val.key())
+						return it;
+			}
+			return bucket.end();
 		}
 
-		const auto end_precalc(uint32_t hash) {
-			return m_storage[hash % m_size].end();
+		template <typename Functor>
+		auto find_if(size_t hash, Functor func) {
+			const auto& bucket = m_storage[hash % m_bucket_count];
+			for (auto it = bucket.begin(); it != bucket.end(); it++) {
+				auto& item = *it;
+				if (hash == hasher(*it))
+					if (func(*it))
+						return it;
+			}
+			return bucket.end();
 		}
 
-		const T& find(const T& val) {
-			return *m_storage[hasher(val) % m_size].find(val);
+		const auto end(size_t hash) {
+			return m_storage[hash % m_bucket_count].end();
 		}
 
 		void remove(const T& val) {
-			m_storage[hash(val) % m_size].remove(val);
+			m_storage[hash(val) % m_bucket_count].remove(val);
 		}
+
+		size_t size() { return m_size; }
+		size_t bucket_count() { return m_bucket_count;  }
 
 	};
 }
 
 using ARLib::HashTable;
+using ARLib::InsertionResult;

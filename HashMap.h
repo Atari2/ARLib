@@ -6,12 +6,7 @@
 
 namespace ARLib {
 
-	enum class InsertionResult {
-		New,
-		Replace
-	};
-
-	template <Hashable Key, EqualityComparable Val>
+	template <Hashable Key, typename Val>
 	struct HashMapEntry {
 		Key m_key;
 		Val m_value;
@@ -48,6 +43,10 @@ namespace ARLib {
 			return m_value;
 		}
 
+		Val& value() {
+			return m_value;
+		}
+
 		bool operator==(const HashMapEntry& other) {
 			return m_hashval == other.m_hashval;
 		}
@@ -64,40 +63,20 @@ namespace ARLib {
 		}
 	};
 
-	template <Hashable Key, EqualityComparable Val, size_t TBL_SIZE_INDEX = 0>
+	template <Hashable Key, typename Val, size_t TBL_SIZE_INDEX = 0>
 	class HashMap {
 		using MapEntry = HashMapEntry<Key, Val>;
-		size_t m_size = 0;
 		HashTable<MapEntry, TBL_SIZE_INDEX> m_table{};
 	public:
 		HashMap() = default;
 		double load() { return m_table.load(); };
+
 		InsertionResult add(Key key, Val value) {
 			MapEntry entry{ key, value };
-			auto hs = entry.hashval();
-			auto iter = m_table.find_uncertain_precalc(entry, hs);
-			if (iter == m_table.end_precalc(hs)) {
-				m_table.insert(Forward<MapEntry>(entry));
-				m_size++;
-				return InsertionResult::New;
-			}
-			else {
-				(*iter) = move(entry);
-				return InsertionResult::Replace;
-			}
+			return m_table.insert(Forward<MapEntry>(entry));
 		}
 		InsertionResult add(MapEntry entry) {
-			auto hs = entry.hashval();
-			auto iter = m_table.find_uncertain_precalc(entry, hs);
-			if (iter == m_table.end_precalc(hs)) {
-				m_table.insert(Forward<MapEntry>(entry));
-				m_size++;
-				return InsertionResult::New;
-			}
-			else {
-				(*iter) = move(entry);
-				return InsertionResult::Replace;
-			}
+			return m_table.insert(Forward<MapEntry>(entry));
 		}
 
 		template <typename Functor>
@@ -107,11 +86,21 @@ namespace ARLib {
 			});
 		}
 
-		size_t size() const { return m_size; }
+		auto find(const Key& key) {
+			return m_table.find_if(Hash<Key>{}(key), [&key](const auto& entry) {
+				return entry.key() == key;
+			});
+		}
+
+		Val& operator[](const Key& key) {
+			return (*find(key)).value();
+		}
+
+		size_t size() { return m_table.size(); }
+		size_t bucket_count() { return m_table.bucket_count(); }
 	};
 
 
 }
 
 using ARLib::HashMap;
-using ARLib::InsertionResult;
