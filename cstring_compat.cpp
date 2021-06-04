@@ -30,7 +30,11 @@ namespace ARLib {
 			*dest++ = *src++;
 			if (*src == '\0')
 				break;
+			if (num == 0)
+				break;
 		}
+		if (num == 0)
+			return dest;
 		while (num--) {
 			*dest++ = '\0';
 		}
@@ -80,7 +84,7 @@ namespace ARLib {
 		const char* src = static_cast<const char*>(src0);
 		if (length == 0 || dst == src)
 			return dst;
-		if ((unsigned long)dst < (unsigned long)src) {
+		if ((uintptr_t)dst < (uintptr_t)src) {
 			// copy forward
 			size_t t = (size_t)src;
 			if ((t | (size_t)dst) & wmask) {
