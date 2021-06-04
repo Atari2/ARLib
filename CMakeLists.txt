@@ -32,6 +32,8 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CharConv.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Badge.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstdio_compat.cpp"
@@ -43,7 +45,7 @@ list(
 add_library(ARLib ${LIB_SOURCE_FILES})
 if (WIN32 AND NOT CMAKE_COMPILER_IS_GNUCXX)
     add_subdirectory(ASM_MSVC)
-	target_compile_options(ARLib PRIVATE /std:c++latest)
+	target_compile_options(ARLib PRIVATE /std:c++latest /arch:AVX2)
 else()
 	add_subdirectory(ASM_GCC)
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
