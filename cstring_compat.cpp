@@ -1,4 +1,6 @@
 #include "cstring_compat.h"
+#include "CpuInfo.h"
+
 namespace ARLib {
 	typedef int word;
 #define	wsize	sizeof(word)
@@ -129,7 +131,7 @@ namespace ARLib {
 #pragma warning( pop )
 #endif
 	void* memcpy(void* dst0, const void* src0, size_t num) {
-		[[unlikely]] if (num >= 64) {
+		[[unlikely]] if (num >= 64 && cpuinfo.avx2()) {			// check avx2 support
 			return memcpy_vectorized(dst0, src0, num);
 		}
 		char* dst = static_cast<char*>(dst0);
