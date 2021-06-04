@@ -90,12 +90,6 @@ namespace ARLib {
 	template <typename Cls>
 	concept TriviallyCopyAssignable = requires { Supports<TriviallyCopyAssignableV<Cls>>::value; };
 
-
-	template<typename T>
-	concept Hashable = requires(const T& a) {
-		{ Hash<T>{}(a) } -> SameAs<size_t>;
-	};
-
 	template <typename T>
 	concept Incrementable = requires(T a) {
 		{ ++a };
@@ -122,6 +116,12 @@ namespace ARLib {
 		{ a == b } -> ConvertibleTo<bool>;
 		{ a != b} -> ConvertibleTo<bool>;
 	};
+
+	template<typename T>
+	concept Hashable = requires(const T & a) {
+		{ Hash<T>{}(a) } -> SameAs<size_t>;
+	} && EqualityComparable<T>;
+
 
 	template <typename T>
 	concept LessComparable = requires (T a, T b) {
