@@ -41,9 +41,7 @@ namespace ARLib {
 		return dest;
 	}
 	int strcmp(const char* first, const char* second) {
-		for (; *first == *second; first++, second++)
-			if (*first == '\0')
-				return 0;
+		for (; *first == *second && *first; first++, second++);
 		return *first - *second;
 	}
 	int strncmp(const char* first, const char* second, size_t num) {
