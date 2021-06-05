@@ -121,8 +121,8 @@ namespace ARLib {
 	String IntToStr(Integral value) {
 		static_assert(IsIntegralV<Integral>, "IntToStr type must be integral type");
 		if constexpr (Base == SupportedBase::Decimal) {
-			char buf[21] = { 0 };
-			char* const buf_end = end(buf);
+			char buf[22] = { 0 };
+			char* const buf_end = end(buf) - 1;
 			char* next = buf_end;
 			const auto uvalue = static_cast<MakeUnsignedT<Integral>>(value);
 			if (value < 0) {
