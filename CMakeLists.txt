@@ -31,6 +31,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CharConv.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Badge.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/UniquePtr.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.cpp"
