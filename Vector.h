@@ -2,6 +2,7 @@
 #include "Concepts.h"
 #include "Iterator.h"
 #include "Assertion.h"
+#include "std_includes.h"
 
 namespace ARLib {
 	template <MoveAssignable T>
