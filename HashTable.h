@@ -114,7 +114,7 @@ namespace ARLib {
 		}
 
 	public:
-		static constexpr size_t table_sizes[] = { 13, 19, 31 };
+		static constexpr size_t table_sizes[3] = { 13, 19, 31 };
 		Hash<T> hasher{};
 		HashTable() {
 			m_storage.resize(m_bucket_count);

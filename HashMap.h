@@ -47,7 +47,7 @@ namespace ARLib {
 			return m_value;
 		}
 
-		bool operator==(const HashMapEntry& other) {
+		bool operator==(const HashMapEntry& other) const {
 			return m_hashval == other.m_hashval;
 		}
 
