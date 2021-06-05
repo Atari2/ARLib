@@ -97,6 +97,22 @@ namespace ARLib {
 		}
 
 		size_t size() { return m_storage.size(); }
+
+		Iterator<Entry> begin() {
+			return m_storage.begin();
+		}
+
+		ConstIterator<Entry> cbegin() const {
+			return m_storage.cbegin();
+		}
+
+		Iterator<Entry> end() {
+			return m_storage.end();
+		}
+
+		ConstIterator<Entry> cend() {
+			return m_storage.cend();
+		}
 	};
 
 }

@@ -13,9 +13,95 @@ namespace ARLib {
 		Replace
 	};
 
+	template <typename T, size_t BKT_SIZE>
+	class HashTableIterator {
+		Vector<Vector<T>>& m_backing_store;
+		size_t m_current_bucket = 0;
+		size_t m_current_vector_index = 0;
+	public:
+		static constexpr size_t npos = static_cast<size_t>(-1);
+		HashTableIterator(Vector<Vector<T>>& backing_store) : m_backing_store(backing_store) {
+
+		}
+
+		HashTableIterator(Vector<Vector<T>>& backing_store, size_t bucket_index, size_t vector_index) 
+			: m_backing_store(backing_store), m_current_bucket(bucket_index), m_current_vector_index(vector_index) {
+
+		}
+
+		HashTableIterator(HashTableIterator<T, BKT_SIZE>&& other) = default;
+		HashTableIterator(const HashTableIterator<T, BKT_SIZE>& other) = default;
+		HashTableIterator& operator=(HashTableIterator<T, BKT_SIZE>&& other) = default;
+		HashTableIterator& operator=(const HashTableIterator<T, BKT_SIZE>& other) = default;
+
+		bool operator==(const HashTableIterator<T, BKT_SIZE>& other) const {
+			return &m_backing_store == &other.m_backing_store && m_current_bucket == other.m_current_bucket && m_current_vector_index == other.m_current_vector_index;
+		}
+
+		bool operator!=(const HashTableIterator<T, BKT_SIZE>& other) const {
+			return &m_backing_store != &other.m_backing_store || m_current_bucket != other.m_current_bucket || m_current_vector_index != other.m_current_vector_index;
+		}
+
+		T& operator*() {
+			return m_backing_store[m_current_bucket][m_current_vector_index];
+		}
+
+		HashTableIterator& operator++() {
+			if (m_backing_store[m_current_bucket].empty() || m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
+				if (m_current_bucket == BKT_SIZE - 1 || m_backing_store[m_current_bucket + 1].empty()) {
+					// end iterator has npos
+					m_current_vector_index = npos;
+					m_current_bucket = npos;
+					return *this;
+				}
+				m_current_vector_index = 0;
+				m_current_bucket++;
+			}
+			else {
+				m_current_vector_index++;
+			}
+			return *this;
+		}
+
+		HashTableIterator operator++(int) {
+			if (m_backing_store[m_current_bucket].empty() ||  m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
+				return { m_backing_store, m_current_bucket == BKT_SIZE - 1 ? npos : m_current_bucket + 1, m_current_bucket == BKT_SIZE - 1 ? npos : 0};
+			}
+			else {
+				return { m_backing_store, m_current_bucket, m_current_vector_index + 1 };
+			}
+		}
+
+		HashTableIterator& operator--() {
+			if (m_backing_store[m_current_bucket].empty() || m_current_vector_index == 0) {
+				if (m_current_bucket == 0 || m_backing_store[m_current_bucket - 1].empty()) {
+					// end iterator has npos
+					m_current_vector_index = npos;
+					m_current_bucket = npos;
+					return *this;
+				}
+				m_current_vector_index = m_backing_store[m_current_bucket - 1].size() - 1;
+				m_current_bucket--;
+			}
+			else {
+				m_current_vector_index--;
+			}
+			return *this;
+		}
+
+		HashTableIterator operator--(int) {
+			if (m_backing_store[m_current_bucket].empty() || m_current_vector_index == 0) {
+				return { m_backing_store, m_current_bucket == 0 ? npos : m_current_bucket - 1, m_current_bucket == 0 ? npos : m_backing_store[m_current_bucket - 1].size() - 1 };
+			}
+			else {
+				return { m_backing_store, m_current_bucket, m_current_vector_index - 1 };
+			}
+		}
+
+	};
+
 	template <typename T, size_t TBL_SIZE_INDEX = 0> requires Hashable<T> && EqualityComparable<T>
 	class HashTable {
-		static constexpr size_t table_sizes[] = { 13, 19, 31 };
 		Vector<Vector<T>> m_storage;
 		size_t m_bucket_count = table_sizes[TBL_SIZE_INDEX];
 		size_t m_size = 0;
@@ -28,6 +114,7 @@ namespace ARLib {
 		}
 
 	public:
+		static constexpr size_t table_sizes[] = { 13, 19, 31 };
 		Hash<T> hasher{};
 		HashTable() {
 			m_storage.resize(m_bucket_count);
@@ -110,6 +197,14 @@ namespace ARLib {
 			return m_storage[hash % m_bucket_count].end();
 		}
 
+		HashTableIterator<T, table_sizes[TBL_SIZE_INDEX]> tbegin() {
+			return {m_storage, 0, 0};
+		}
+
+		HashTableIterator<T, table_sizes[TBL_SIZE_INDEX]> tend() {
+			return { m_storage, HashTableIterator<T, table_sizes[TBL_SIZE_INDEX]>::npos, HashTableIterator < T, table_sizes[TBL_SIZE_INDEX]>::npos };
+		}
+		
 		void remove(const T& val) {
 			m_storage[hash(val) % m_bucket_count].remove(val);
 		}
@@ -121,4 +216,5 @@ namespace ARLib {
 }
 
 using ARLib::HashTable;
+using ARLib::HashTableIterator;
 using ARLib::InsertionResult;
