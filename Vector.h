@@ -174,12 +174,16 @@ namespace ARLib {
 			return end();
 		}
 
-		size_t capacity() {
+		size_t capacity() const {
 			return m_capacity;
 		}
 
-		size_t size() {
+		size_t size() const {
 			return m_size;
+		}
+
+		bool empty() const {
+			return m_size == 0;
 		}
 
 		const T* data() {
