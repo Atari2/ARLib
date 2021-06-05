@@ -118,7 +118,7 @@ namespace ARLib {
 			}
 			t = length / wsize;
 			if (t) {
-				do { src -= wsize; dst -= wsize; *(word*)dst = *(word*)src; } while (--t);
+				do { src -= wsize; dst -= wsize; *(word*)dst = *(const word*)src; } while (--t);
 			}
 			t = length & wmask;
 			if (t) {

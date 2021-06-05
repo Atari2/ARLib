@@ -89,7 +89,7 @@ namespace ARLib {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             indexes.reserve(size);
-            for (int i = 0; i < size; i++) {
+            for (size_t i = 0; i < size; i++) {
                 indexes.push_back(index_of(any[i]));
             }
             return indexes;
@@ -98,7 +98,7 @@ namespace ARLib {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             indexes.reserve(size);
-            for (int i = 0; i < size; i++) {
+            for (size_t i = 0; i < size; i++) {
                 indexes.push_back(last_index_of(any[i]));
             }
             return indexes;
@@ -107,7 +107,7 @@ namespace ARLib {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             indexes.reserve(size);
-            for (int i = 0; i < size; i++) {
+            for (size_t i = 0; i < size; i++) {
                 indexes.push_back(index_not_of(any[i]));
             }
             return indexes;
@@ -116,7 +116,7 @@ namespace ARLib {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             indexes.reserve(size);
-            for (int i = 0; i < size; i++) {
+            for (size_t i = 0; i < size; i++) {
                 indexes.push_back(last_index_not_of(any[i]));
             }
             return indexes;
@@ -394,7 +394,7 @@ namespace ARLib {
         
         // indexing access
         [[nodiscard]] char at(size_t index) const {
-            SOFT_ASSERT_FMT((index >= m_size || index < 0), "Index of %llu was out of bounds of String with size %llu", index, m_size)
+            SOFT_ASSERT_FMT((index >= m_size), "Index of %llu was out of bounds of String with size %llu", index, m_size)
             return get_buf_internal()[index];
         }
         [[nodiscard]] char& operator[](size_t index) { return get_buf_internal()[index]; }

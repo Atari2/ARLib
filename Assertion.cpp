@@ -1,7 +1,7 @@
 #include "Assertion.h"
 #include "Compat.h"
 
-void abort__() {
+[[noreturn]] void abort__() {
 #ifdef _MSC_VER
 	__fastfail(1);
 #else

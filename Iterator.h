@@ -34,6 +34,10 @@ namespace ARLib {
 		virtual size_t operator-(const IteratorBase<T>& other) {
 			return m_current - other.m_current;
 		}
+
+		virtual ~IteratorBase() {
+
+		}
 	};
 
 	// for some god forsaken reason
