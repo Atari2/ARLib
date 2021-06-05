@@ -9,3 +9,9 @@ For now it relies on:
 - cstdio
 - immintrin, intrin
 - global operator new()
+
+This library has been compiled and tested with:
+- MSVC 19.29.30037.0
+- GCC 10.2 & 11
+- Clang 12
+- Mingw x64 with GCC 10.2
