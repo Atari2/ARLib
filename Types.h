@@ -4,6 +4,7 @@
 namespace ARLib {
     typedef decltype(nullptr) nullptr_t;
 #ifdef WINDOWS
+    typedef int errno_t;
     #if defined(ENVIRON64)
         typedef unsigned __int64 size_t;
         typedef unsigned __int64 uintptr_t;
