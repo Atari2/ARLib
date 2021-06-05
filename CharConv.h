@@ -73,7 +73,7 @@ namespace ARLib {
 			int num = c >= 'A' ? (c - 55) : (c - 48);
 			if (num >= base)
 				return total;
-			total += round((num * pow(static_cast<double>(base), pw)));
+			total += static_cast<int>(round((num * pow(static_cast<double>(base), pw))));
 			pw += 1.0;
 			if (opp == cur_index)
 				break;

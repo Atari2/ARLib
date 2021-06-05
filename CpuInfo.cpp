@@ -42,7 +42,7 @@ namespace ARLib {
 	static void xgetbv(uint32_t feat, uint32_t& a, uint32_t& d)
 	{
 		uint64_t ret = _xgetbv(feat);
-		a = ret;
+		a = static_cast<uint32_t>(ret & 0xFFFFFFFF);
 		d = ret >> 32;
 	}
 

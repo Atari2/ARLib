@@ -158,7 +158,7 @@ namespace ARLib {
 #endif
 		}
 
-		constexpr bool fsgbase() {
+		constexpr bool fsgsbase() {
 #ifdef __FSGSBASE__
 			return true;
 #else

@@ -5,18 +5,22 @@ extern "C" {
 #ifdef WINDOWS
 #ifndef _FILE_DEFINED
 #define _FILE_DEFINED
-	typedef struct _IO_FILE FILE;
+	typedef struct _iobuf
+	{
+		void* placeholder;
+	} FILE;
+
+	__declspec(dllimport) FILE* __cdecl __acrt_iob_func(unsigned);
+
+	#define stdin  (__acrt_iob_func(0))
+	#define stdout (__acrt_iob_func(1))
+	#define stderr (__acrt_iob_func(2))
 #endif
 #else
 #ifndef __FILE_defined
 #define __FILE_defined 1
 	typedef struct _IO_FILE FILE;
 #endif
-#endif
-
-#define SEEK_SET	0
-#define SEEK_CUR	1
-#define SEEK_END	2
 
 	extern FILE* stdin;
 	extern FILE* stdout;
@@ -25,6 +29,12 @@ extern "C" {
 #define stdin stdin
 #define stdout stdout
 #define stderr stderr
+#endif
+
+#define SEEK_SET	0
+#define SEEK_CUR	1
+#define SEEK_END	2
+
 }
 
 namespace ARLib {

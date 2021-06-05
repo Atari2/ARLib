@@ -1,11 +1,19 @@
 #include "cstdio_compat.h"
+#include "Assertion.h"
 #include <cstdio>
 #include <cstdarg>
 namespace ARLib {
 
 	FILE* fopen(const char* filename, const char* mode)
 	{
+#ifdef WINDOWS
+		FILE* pfile = nullptr;
+		errno_t err = ::fopen_s(&pfile, filename, mode);
+		SOFT_ASSERT_FMT((err == 0), "Failed to open %s in mode %s", filename, mode);
+		return pfile;
+#else
 		return ::fopen(filename, mode);
+#endif
 	}
 
 	int fclose(FILE* fp) {
