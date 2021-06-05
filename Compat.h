@@ -4,6 +4,7 @@
 #include <intrin.h>
 #define unreachable __assume(0);
 #define forceinline __forceinline
+#define noop		__noop
 #ifdef _WIN64
 	#define ENVIRON64 1
 #else
@@ -13,6 +14,7 @@
 #elif __clang__		// CLANG
 #define unreachable __builtin_unreachable();
 #define forceinline __attribute__ ((always_inline))
+#define noop ((void)0)
 #if __x86_64__ || __ppc64__
 	#define ENVIRON64 1
 #else
@@ -22,6 +24,7 @@
 #elif __GNUG__		// GCC
 #define unreachable __builtin_unreachable();
 #define forceinline __attribute__ ((always_inline))
+#define noop ((void)0)
 #if __x86_64__ || __ppc64__
 	#define ENVIRON64 1
 #else

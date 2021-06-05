@@ -1,4 +1,5 @@
 #pragma once
+#include "Compat.h"
 
 #define STRINGIFY(TOK) #TOK
 #define TOSTRING(X) STRINGIFY(X)
@@ -16,6 +17,6 @@
 #define DEBUGMSG(msg) puts(msg);
 #define DEBUGFMTMSG(msg, ...) printf(msg, __VA_ARGS__);
 #else
-#define DEBUGMSG(msg) (void)0;
-#define DEBUGFMTMSG(msg, ...) (void)0;
+#define DEBUGMSG(msg) noop;
+#define DEBUGFMTMSG(msg, ...) noop;
 #endif
