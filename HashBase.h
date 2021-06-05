@@ -1,6 +1,5 @@
 #pragma once
 #define HASHBASE_INCLUDE
-#include "HashCalc.h"
 #include "cstring_compat.h"
 #include "Compat.h"
 #include "TypeTraits.h"

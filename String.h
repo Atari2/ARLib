@@ -2,7 +2,6 @@
 #include "Vector.h"
 #include "Algorithm.h"
 #include "Assertion.h"
-#include "HashCalc.h"
 #include "Ordering.h"
 #include "Types.h"
 #include "Iterator.h"
