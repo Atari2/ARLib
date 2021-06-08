@@ -1,5 +1,6 @@
 #pragma once
 #include "Compat.h"
+#include "Types.h"
 
 extern "C" {
 #ifdef WINDOWS
@@ -46,4 +47,9 @@ namespace ARLib {
 	int fputs(const char* buf, FILE* fp);
 	int printf(const char* fmt, ...);
 	int fprintf(FILE* fp, const char* fmt, ...);
+	int sprintf(char* str, const char* format, ...);
+	int snprintf(char* str, size_t n, const char* format, ...);
+#ifdef WINDOWS
+	int scprintf(const char* format, ...);
+#endif
 }
