@@ -3,6 +3,7 @@
 #include "Concepts.h"
 #include "Assertion.h"
 #include "cmath_compat.h"
+#include "cstdio_compat.h"
 
 namespace ARLib {
 
@@ -82,12 +83,27 @@ namespace ARLib {
 	}
 
 	String DoubleToStr(double value) {
-		TODO(DoubleToStr)
-		return "";
+#ifdef WINDOWS
+		const auto len = static_cast<size_t>(scprintf("%f", value));
+		String str(len);
+		sprintf(str.rawptr(), "%f", value);
+		return str;
+#else
+		const int n = 308 /* numeric limits length for dbl */ + 20;
+		String str(n);
+		snprintf(str.rawptr(), n, "%f", value);
+		return str;
+#endif
 	}
 	String FloatToStr(float value) {
-		TODO(FloatToStr)
-		return "";
+#ifdef WINDOWS
+		return DoubleToStr(static_cast<double>(value));
+#else
+		const int n = 38 /* numeric limits length for flt */ + 20;
+		String str(n);
+		snprintf(str.rawptr(), n, "%f", value);
+		return str;
+#endif
 	}
 
 
@@ -172,6 +188,8 @@ namespace ARLib {
 	}
 }
 
+using ARLib::FloatToStr;
+using ARLib::DoubleToStr;
 using ARLib::StrToInt;
 using ARLib::IntToStr;
 using ARLib::SupportedBase;
