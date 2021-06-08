@@ -52,7 +52,9 @@ namespace ARLib {
                     new_capacity = m_allocated_capacity * 2;
                 m_allocated_capacity = new_capacity;
                 char* new_buf = new char[m_allocated_capacity];
-                memmove(new_buf, m_data_buf, m_size + 1);
+                new_buf[m_size] = '\0';
+                if (m_size != 0)
+                    memmove(new_buf, m_data_buf, m_size + 1);
                 delete[] m_data_buf;
                 m_data_buf = new_buf;
             }
@@ -64,7 +66,7 @@ namespace ARLib {
                     grow_internal(newsize + 1);
             }
             else {
-                if (newsize > m_allocated_capacity - 1)
+                if (newsize > m_allocated_capacity - 1 || m_allocated_capacity == 0)
                     grow_internal(newsize + 1);
             }
         }
@@ -128,6 +130,8 @@ namespace ARLib {
         // constructors, destructor equality operators
         String() : m_data_buf(local_data_internal()) {};
         String(size_t size) {
+            if (size <= SMALL_STRING_CAP)
+                m_data_buf = local_data_internal();
             grow_if_needed(size);
         }
         String(const char* begin, const char* end) {
@@ -192,8 +196,8 @@ namespace ARLib {
                 m_data_buf = local_data_internal();
             }
             else {
-                m_allocated_capacity = m_size + 1;
-                m_data_buf = new char[m_size + 1];
+                m_allocated_capacity = other.m_allocated_capacity;
+                m_data_buf = new char[m_allocated_capacity];
                 strcpy(m_data_buf, other.m_data_buf);
             }
         }
@@ -203,7 +207,8 @@ namespace ARLib {
                 m_data_buf = local_data_internal();
             }
             else {
-                m_allocated_capacity = other.m_size;
+                m_allocated_capacity = other.m_allocated_capacity;
+                m_size = other.m_size;
                 m_data_buf = other.m_data_buf;
                 other.m_allocated_capacity = 0;
             }
@@ -237,7 +242,8 @@ namespace ARLib {
                     m_data_buf = local_data_internal();
                 }
                 else {
-                    delete[] m_data_buf;
+                    if (m_allocated_capacity != 0)
+                        delete[] m_data_buf;
                     m_data_buf = other.m_data_buf;
                     m_allocated_capacity = other.m_allocated_capacity;
                     other.m_data_buf = nullptr;
@@ -307,6 +313,7 @@ namespace ARLib {
         [[nodiscard]] size_t length() const { return m_size; }
         [[nodiscard]] size_t capacity() const { return is_local() ? SMALL_STRING_CAP : m_allocated_capacity ;}
         [[nodiscard]] const char* data() const { return get_buf_internal(); }
+        [[nodiscard]] char* rawptr() { return get_buf_internal(); }
         [[nodiscard]] bool is_empty() const { return m_size == 0; }
 
         // starts/ends with

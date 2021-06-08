@@ -21,7 +21,9 @@ namespace ARLib {
 	public:
 		static constexpr size_t npos = static_cast<size_t>(-1);
 		HashTableIterator(Vector<Vector<T>>& backing_store) : m_backing_store(backing_store) {
-
+			while (m_backing_store[m_current_bucket].empty()) {
+				m_current_bucket++;
+			}
 		}
 
 		HashTableIterator(Vector<Vector<T>>& backing_store, size_t bucket_index, size_t vector_index) 
@@ -198,7 +200,7 @@ namespace ARLib {
 		}
 
 		HashTableIterator<T, table_sizes[TBL_SIZE_INDEX]> tbegin() {
-			return {m_storage, 0, 0};
+			return { m_storage };
 		}
 
 		HashTableIterator<T, table_sizes[TBL_SIZE_INDEX]> tend() {
