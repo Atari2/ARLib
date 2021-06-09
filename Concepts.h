@@ -153,4 +153,7 @@ namespace ARLib {
 	concept Badgeable = requires(T a) {
 		{ Badge<T>{} } -> SameAs<Badge<T>>;
 	};
+
+	template <typename T>
+	concept Integral = IsIntegralV<T>;
 }
