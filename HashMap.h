@@ -73,7 +73,7 @@ namespace ARLib {
 		double load() { return m_table.load(); };
 
 		InsertionResult add(Key key, Val value) {
-			MapEntry entry{ key, value };
+			MapEntry entry{ Forward<Key>(key), Forward<Val>(value) };
 			return m_table.insert(Forward<MapEntry>(entry));
 		}
 		InsertionResult add(MapEntry entry) {
