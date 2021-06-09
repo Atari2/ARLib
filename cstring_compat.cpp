@@ -22,6 +22,20 @@ namespace ARLib {
 		return dst;
 	}
 
+	void* memset_vectorized(void* dst0, uint8_t val, size_t size) {
+		uint8_t* dst = static_cast<uint8_t*>(dst0);
+		size_t rem = size % 32;
+		for (size_t offset = 0; offset < (size - rem); offset += 32) {
+			__m256i buffer = _mm256_set1_epi8(val);
+			_mm256_storeu_si256((__m256i*)(dst + offset), buffer);
+		}
+		dst += (size - rem);
+		for (size_t i = 0; i < rem; i++) {
+			*dst++ = val;
+		}
+		return dst0;
+	}
+
 	char* strcpy(char* dest, const char* src) {
 		while ((*dest++ = *src++));
 		return dest;
@@ -131,7 +145,7 @@ namespace ARLib {
 #pragma warning( pop )
 #endif
 	void* memcpy(void* dst0, const void* src0, size_t num) {
-		[[unlikely]] if (num >= 64 && cpuinfo.avx2()) {			// check avx2 support
+		if (num >= 64 && cpuinfo.avx2()) {			// check avx2 support
 			return memcpy_vectorized(dst0, src0, num);
 		}
 		char* dst = static_cast<char*>(dst0);
@@ -140,6 +154,16 @@ namespace ARLib {
 			*dst++ = *src++;
 		}
 		return dst;
+	}
+	void* memset(void* ptr, uint8_t value, size_t size)
+	{
+		if (size >= 64 && cpuinfo.avx2()) {			// check avx2 support
+			return memset_vectorized(ptr, value, size);
+		}
+		uint8_t* dst = static_cast<uint8_t*>(ptr);
+		for (size_t i = 0; i < size; i++)
+			dst[i] = value;
+		return ptr;
 	}
 	int toupper(int c) {
 		if (c >= 96 && c <= 122)

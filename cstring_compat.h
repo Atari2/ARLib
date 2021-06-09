@@ -1,7 +1,21 @@
 #pragma once
-#include "Types.h"
+#include "Concepts.h"
 #include <immintrin.h>
+
+
 namespace ARLib {
+
+	constexpr inline bool haszerobyte(Integral auto v) {
+		if constexpr (sizeof(v) == 1)
+			return !v;
+		else if constexpr (sizeof(v) == 2)
+			return (((v)-0x0101) & ~(v) & 0x8080);
+		else if constexpr (sizeof(v) == 4)
+			return (((v)-0x01010101) & ~(v) & 0x80808080);
+		else if constexpr (sizeof(v) == 8)
+			return (((v)-0x0101010101010101) & ~(v) & 0x8080808080808080);
+	}
+
 	constexpr inline size_t strlen(const char* ptr) {
 		size_t len = 0;
 		while (*(ptr++))
@@ -29,6 +43,7 @@ namespace ARLib {
 	int isalnum(int c);
 	void* memmove(void* dst, const void* src, size_t num);
 	void* memcpy(void* dst, const void* src, size_t num);
+	void* memset(void* ptr, uint8_t value, size_t size);
 	int toupper(int c);
 	int tolower(int c);
 }
