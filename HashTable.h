@@ -135,10 +135,9 @@ namespace ARLib {
 		}
 
 		double load() {
-			Vector<double> vec_sizes(m_storage.size());
 			double avg_load = (double)m_size / (double)m_bucket_count;
-			double sr = sum(vec_sizes, [avg_load](const auto& item) {
-				return pow(item - avg_load, 2);
+			double sr = sum(m_storage, [avg_load](const auto& item) {
+				return pow(item.size() - avg_load, 2);
 			});
 			double res = sqrt(sr / (double)m_size);
 			return res;
