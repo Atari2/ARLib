@@ -134,6 +134,14 @@ namespace ARLib {
                 m_data_buf = local_data_internal();
             grow_if_needed(size);
         }
+        String(size_t size, char c) {
+            if (size <= SMALL_STRING_CAP)
+                m_data_buf = local_data_internal();
+            grow_if_needed(size);
+            memset(get_buf_internal(), c, size);
+            m_size = size;
+            get_buf_internal()[m_size] = '\0';
+        }
         String(const char* begin, const char* end) {
             m_size = end - begin;
             bool local = m_size <= SMALL_STRING_CAP;
