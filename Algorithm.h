@@ -103,6 +103,35 @@ namespace ARLib {
 		return PointerTraits<C*>::pointer_to(*cont) + N;
 	}
 
+	constexpr auto bit_round(Integral auto v) {
+		v--;
+		v |= v >> 1;
+		v |= v >> 2;
+		v |= v >> 4;
+		v |= v >> 8;
+		v |= v >> 16;
+		v++;
+		return v;
+	}
+
+	auto bit_round_growth(Sized auto requested_size) {
+		if (requested_size == 0)
+			return static_cast<decltype(requested_size)>(2);
+		size_t ret = bit_round(requested_size);
+		if (ret == requested_size)
+			return ret * 2;
+		return ret;
+	}
+
+	auto basic_growth(Sized auto requested_size) {
+		if (requested_size < 4096) {
+			return bit_round_growth(requested_size);
+		}
+		else
+			return requested_size + 2048;
+	}
+
+
 }
 
 using ARLib::max;
