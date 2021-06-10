@@ -156,4 +156,7 @@ namespace ARLib {
 
 	template <typename T>
 	concept Integral = IsIntegralV<T>;
+
+	template <typename T>
+	concept Sized = IsSizeV<T>;
 }

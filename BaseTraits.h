@@ -58,6 +58,14 @@ namespace ARLib {
     using FalseType = BoolConstant<false>;
 
     template <class T>
+    struct IsTriviallyCopiable : BoolConstant<__is_trivially_copyable(T)> {
+
+    };
+
+    template <class T>
+    inline constexpr bool IsTriviallyCopiableV = __is_trivially_copyable(T);
+
+    template <class T>
     struct IsTrivial : BoolConstant<__is_trivially_constructible(T) && __is_trivially_copyable(T)> {
 
     };
@@ -297,7 +305,13 @@ namespace ARLib {
         char16_t, char32_t, short, unsigned short, int, unsigned int, long, unsigned long, long long, unsigned long long>;
 
     template <class T>
+    inline constexpr bool IsSizeV = IsAnyOfV<typename RemoveCv<T>::type, unsigned int, unsigned long, unsigned long long>;
+
+    template <class T>
     struct IsIntegral : BoolConstant<IsIntegralV<T>> {};
+
+    template <class T>
+    struct IsSize : BoolConstant<IsSizeV<T>> {};
 
     template <class T>
     inline constexpr bool IsNonboolIntegral = IsIntegralV<T> && !IsSame<typename RemoveCv<T>::type, bool>::value;
