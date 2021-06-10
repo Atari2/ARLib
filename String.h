@@ -12,7 +12,7 @@ namespace ARLib {
     class StringView;
 
     class String {
-        static constexpr size_t SMALL_STRING_CAP = 24;
+        static constexpr size_t SMALL_STRING_CAP = 15;
         union {
             char m_local_buf[SMALL_STRING_CAP + 1] = { 0 };
             size_t m_allocated_capacity;
@@ -40,17 +40,16 @@ namespace ARLib {
             return data_internal() == local_data_internal();
         }
 
-        void grow_internal(size_t new_capacity) {
+        void grow_internal(size_t requested_capacity) {
             if (is_local()) {
                 // grow outside of locality, copy buffer and change active member of union
-                m_data_buf = new char[new_capacity];
-                memmove(m_data_buf, m_local_buf, new_capacity + 1);
-                m_allocated_capacity = new_capacity;
+                requested_capacity = basic_growth(requested_capacity);
+                m_data_buf = new char[requested_capacity];
+                memmove(m_data_buf, m_local_buf, SMALL_STRING_CAP + 1);
+                m_allocated_capacity = requested_capacity;
             }
             else {
-                if (new_capacity < m_allocated_capacity * 2)
-                    new_capacity = m_allocated_capacity * 2;
-                m_allocated_capacity = new_capacity;
+                m_allocated_capacity = basic_growth(requested_capacity);
                 char* new_buf = new char[m_allocated_capacity];
                 new_buf[m_size] = '\0';
                 if (m_size != 0)
@@ -66,8 +65,9 @@ namespace ARLib {
                     grow_internal(newsize + 1);
             }
             else {
-                if (newsize > m_allocated_capacity - 1 || m_allocated_capacity == 0)
+                if (newsize > m_allocated_capacity - 1 || m_allocated_capacity == 0) {
                     grow_internal(newsize + 1);
+                }
             }
         }
 
@@ -377,6 +377,7 @@ namespace ARLib {
             auto new_size = m_size + other.m_size;
             grow_if_needed(new_size);
             strcat(get_buf_internal(), other.get_buf_internal());
+            m_size += other.m_size;
         }
         void concat(const char* other) {
             String sother(other);

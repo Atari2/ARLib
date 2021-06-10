@@ -2,6 +2,8 @@
 #include "Concepts.h"
 #include "Iterator.h"
 #include "Assertion.h"
+#include "Algorithm.h"
+#include "cstring_compat.h"
 #include "std_includes.h"
 
 namespace ARLib {
@@ -23,7 +25,7 @@ namespace ARLib {
 
 		void ensure_capacity_() {
 			if (m_size == m_capacity) {
-				resize_to_capacity_(m_capacity == 0 ? 1 : m_capacity * 2);
+				round_to_capacity_(m_capacity);
 			}
 		}
 
@@ -52,12 +54,25 @@ namespace ARLib {
 			resize_to_capacity_(m_size);
 		}
 
+		void round_to_capacity_(size_t capacity) {
+			if constexpr (IsTriviallyCopiableV<T>) {
+				resize_to_capacity_(basic_growth(capacity));
+			}
+			else {
+				resize_to_capacity_(bit_round_growth(capacity));
+			}
+		}
+
 		void resize_to_capacity_(size_t capacity) {
-			SOFT_ASSERT_FMT((capacity >= m_capacity), "Trying to shrink capacity from %lu to %lu, capacity can only grow", m_capacity, capacity)
 			m_capacity = capacity;
 			T* new_storage = new T[m_capacity];
-			for (size_t i = 0; i < m_size; i++) {
-				new_storage[i] = move(m_storage[i]);
+			if constexpr (IsTriviallyCopiableV<T>) {
+				memcpy(new_storage, m_storage, sizeof(T) * m_size);
+			}
+			else {
+				for (size_t i = 0; i < m_size; i++) {
+					new_storage[i] = move(m_storage[i]);
+				}
 			}
 			delete[] m_storage;
 			m_storage = new_storage;
@@ -72,11 +87,11 @@ namespace ARLib {
 		Vector() = default;
 
 		Vector(size_t capacity) {
-			resize_to_capacity_(capacity);
+			round_to_capacity_(capacity);
 		}
 
 		Vector(std::initializer_list<T> list) {
-			resize_to_capacity_(list.size());
+			round_to_capacity_(list.size());
 			size_t i = 0;
 			for (T val : list) {
 				m_storage[i] = move(val);
@@ -89,19 +104,19 @@ namespace ARLib {
 		template <MoveAssignable... Values>
 		Vector(T&& val1, T&& val2, Values&&... values) {
 			if constexpr (sizeof...(values) == 0) {
-				resize_to_capacity_(2);
+				round_to_capacity_(2);
 				append_internal_single_(Forward<T>(val1));
 				append_internal_single_(Forward<T>(val2));
 				return;
 			}
-			resize_to_capacity_(sizeof...(values) + 2);
+			round_to_capacity_(sizeof...(values) + 2);
 			append_internal_(Forward<T>(val1), Forward<T>(val2), Forward<Values>(values)...);
 		}
 
 		void reserve(size_t capacity) {
 			if (capacity < m_capacity)
 				return;
-			resize_to_capacity_(capacity);
+			round_to_capacity_(capacity);
 		}
 
 		void resize(size_t capacity) requires DefaultConstructible<T> {
@@ -157,7 +172,14 @@ namespace ARLib {
 			SOFT_ASSERT_FMT((index < m_size), "Index %lu was out of bounds in vector of size %lu", index, m_size)
 			m_storage[index].~T();
 			m_size--;
-			memmove(m_storage + index, m_storage + index + 1, sizeof(T) * (m_size - index));
+			// FIXME: this breaks if IsTriviallyCopiable<T> is false
+			if constexpr (IsTriviallyCopiableV<T>) {
+				memmove(m_storage + index, m_storage + index + 1, sizeof(T) * (m_size - index));
+			}
+			else {
+				for (size_t i = index; i < m_size; i++)
+					m_storage[i] = move(m_storage[i + 1]);
+			}
 		}
 
 		void remove(const T& val) {
