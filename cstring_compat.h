@@ -37,6 +37,7 @@ namespace ARLib {
 	char* strncpy(char* destination, const char* source, size_t num);
 	int strcmp(const char*, const char*);
 	int strncmp(const char*, const char*, size_t);
+	char* strcat_eff(char* end_of_dst, const char* src);
 	char* strcat(char* dst, const char* src);
 	int isspace(int c);
 	int isdigit(int c);

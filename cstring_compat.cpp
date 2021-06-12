@@ -67,6 +67,12 @@ namespace ARLib {
 		return *first - *second;
 	}
 
+	char* strcat_eff(char* end_of_dst, const char* src) {
+		while (*src) { *end_of_dst++ = *src++; }
+		*end_of_dst = *src;
+		return end_of_dst;
+	}
+
 	char* strcat(char* dst, const char* src) {
 		if (*dst != '\0')
 			while (*++dst);
@@ -145,7 +151,7 @@ namespace ARLib {
 #pragma warning( pop )
 #endif
 	void* memcpy(void* dst0, const void* src0, size_t num) {
-		if (num >= 64 && cpuinfo.avx2()) {			// check avx2 support
+		[[unlikely]] if (num >= 64 && cpuinfo.avx2()) {			// check avx2 support
 			return memcpy_vectorized(dst0, src0, num);
 		}
 		char* dst = static_cast<char*>(dst0);
