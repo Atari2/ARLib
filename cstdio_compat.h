@@ -17,7 +17,7 @@ extern "C" {
 	#define stdout (__acrt_iob_func(1))
 	#define stderr (__acrt_iob_func(2))
 #endif
-#else
+#elif not defined(WINDOWS_MINGW)
 #ifndef __FILE_defined
 #define __FILE_defined 1
 	typedef struct _IO_FILE FILE;
@@ -30,6 +30,11 @@ extern "C" {
 #define stdin stdin
 #define stdout stdout
 #define stderr stderr
+#else
+	typedef struct _iobuf FILE;
+	extern FILE* stdin;
+	extern FILE* stdout;
+	extern FILE* stderr;
 #endif
 
 #define SEEK_SET	0
