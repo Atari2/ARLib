@@ -15,6 +15,7 @@ namespace ARLib {
 
 
 		// this constructor works only if the container operates on contiguous memory (e.g. not a linked list)
+		// actually this whole class only operates on contiguous memory
 		GenericView(const Iterable auto& container) {
 			m_begin_view = &(*container.begin());
 			m_end_view = &(*container.end()) - 1;
