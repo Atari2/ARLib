@@ -24,7 +24,7 @@ namespace ARLib {
 			ptr.m_storage = nullptr;
 		}
 		template<typename... Args>
-		UniquePtr(Args&&... args) {
+		UniquePtr(EmplaceT<T>, Args&&... args) {
 			m_storage = new T{ Forward<Args>(args)... };
 		}
 

@@ -35,11 +35,9 @@ namespace ARLib {
 			(*m_count)++;
 		}
 
-		// FIXME: find a way to SFINAE away this constructor so I don't have to add Arg0, Arg1
-		// Just having "typename... Args" makes this constructor match instead of above one when trying to copy construct...
-		template<typename Arg0, typename Arg1, typename... Args>
-		SharedPtr(Arg0&& arg0, Arg1&& arg1, Args&&... args) {
-			m_storage = new T{ Forward<Arg0>(arg0), Forward<Arg1>(arg1), Forward<Args>(args)...};
+		template<typename... Args>
+		SharedPtr(EmplaceT<T>, Args&&... args) {
+			m_storage = new T{ Forward<Args>(args)...};
 			m_count = new size_t{ 1 };
 		}
 

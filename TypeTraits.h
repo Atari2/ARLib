@@ -415,4 +415,8 @@ namespace ARLib {
     template <bool B>
     inline constexpr bool SupportsV = Supports<B>::value;
 
+    // Helper to SFINAE away emplace variadic template parameters constructors
+    template <class T>
+    struct EmplaceT {};
+
 }
