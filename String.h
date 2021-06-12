@@ -200,18 +200,18 @@ namespace ARLib {
         }
         String(const String& other) noexcept : m_size(other.m_size) {
             if (other.is_local()) {
-                strcpy(m_local_buf, other.m_local_buf);
+                memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
                 m_data_buf = local_data_internal();
             }
             else {
                 m_allocated_capacity = other.m_allocated_capacity;
                 m_data_buf = new char[m_allocated_capacity];
-                strcpy(m_data_buf, other.m_data_buf);
+                memcpy(m_data_buf, other.m_data_buf, other.m_size + 1);
             }
         }
         String(String&& other) noexcept : m_size(other.m_size) {
             if (other.is_local()) {
-                strcpy(m_local_buf, other.m_local_buf);
+                memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
                 m_data_buf = local_data_internal();
             }
             else {
@@ -230,14 +230,14 @@ namespace ARLib {
             if (this != &other) {
                 m_size = other.m_size;
                 if (other.is_local()) {
-                    strcpy(m_local_buf, other.m_local_buf);
+                    memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
                     m_data_buf = local_data_internal();
                 }
                 else {
                     delete[] m_data_buf;
                     m_data_buf = new char[m_size + 1];
                     m_allocated_capacity = m_size + 1;
-                    strcpy(m_data_buf, other.m_data_buf);
+                    memcpy(m_data_buf, other.m_data_buf, other.m_size + 1);
                 }
             }
             return *this;
@@ -246,7 +246,7 @@ namespace ARLib {
             if (this != &other) {
                 m_size = other.m_size;
                 if (other.is_local()) {
-                    strcpy(m_local_buf, other.m_local_buf);
+                    memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
                     m_data_buf = local_data_internal();
                 }
                 else {
@@ -376,7 +376,7 @@ namespace ARLib {
         void concat(const String& other) {
             auto new_size = m_size + other.m_size;
             grow_if_needed(new_size);
-            strcat(get_buf_internal(), other.get_buf_internal());
+            strcat_eff(get_buf_internal() + m_size, other.get_buf_internal());
             m_size += other.m_size;
         }
         void concat(const char* other) {
@@ -573,7 +573,7 @@ namespace ARLib {
                 m_data_buf[m_size] = '\0';
                 // if the m_size is now small enough, let's swap to small String
                 if (m_size <= SMALL_STRING_CAP) {
-                    strcpy(m_local_buf, m_data_buf);
+                    memcpy(m_local_buf, m_data_buf, SMALL_STRING_CAP + 1);
                     delete[] m_data_buf;
                     m_data_buf = local_data_internal();
                 }
