@@ -9,6 +9,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Utility.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Concepts.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Ordering.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Ordering.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CircularList.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Iterator.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/String.h"

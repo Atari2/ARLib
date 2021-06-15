@@ -1,4 +1,12 @@
 #pragma once
+#include "Compat.h"
+
+// this is here so I can declare the proper constructor in the cpp file 
+// and avoid "#include <compare>" in here
+// it's only needed because otherwise I can't use <=> in my DefaultOrdering<T> class in SortedVector<T>
+namespace std {
+	struct strong_ordering;
+}
 
 namespace ARLib {
 	enum class OrderingType {
@@ -6,6 +14,7 @@ namespace ARLib {
 		Equal,
 		Greater
 	};
+
 	class Ordering {
 		OrderingType m_type;
 	public:
@@ -15,11 +24,12 @@ namespace ARLib {
 		Ordering(Ordering&&) = default;
 		Ordering& operator=(const Ordering&) = default;
 		Ordering& operator=(Ordering&&) = default;
-		constexpr OrderingType type() const { return m_type; }
+		forceinline OrderingType type() const { return m_type; }
 
-		friend constexpr bool operator==(const Ordering& v, const Ordering& w) noexcept {
+		friend forceinline bool operator==(const Ordering& v, const Ordering& w) noexcept {
 			return v.type() == w.type();
 		}
+		Ordering(const std::strong_ordering&);
 	};
 
 	static const inline Ordering less{ OrderingType::Less };
