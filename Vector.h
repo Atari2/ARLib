@@ -172,7 +172,6 @@ namespace ARLib {
 			SOFT_ASSERT_FMT((index < m_size), "Index %lu was out of bounds in vector of size %lu", index, m_size)
 			m_storage[index].~T();
 			m_size--;
-			// FIXME: this breaks if IsTriviallyCopiable<T> is false
 			if constexpr (IsTriviallyCopiableV<T>) {
 				memmove(m_storage + index, m_storage + index + 1, sizeof(T) * (m_size - index));
 			}
