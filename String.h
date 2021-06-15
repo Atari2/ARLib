@@ -129,12 +129,12 @@ namespace ARLib {
 
         // constructors, destructor equality operators
         String() : m_data_buf(local_data_internal()) {};
-        String(size_t size) {
+        explicit String(size_t size) {
             if (size <= SMALL_STRING_CAP)
                 m_data_buf = local_data_internal();
             grow_if_needed(size);
         }
-        String(size_t size, char c) {
+        explicit String(size_t size, char c) {
             if (size <= SMALL_STRING_CAP)
                 m_data_buf = local_data_internal();
             grow_if_needed(size);
@@ -142,7 +142,7 @@ namespace ARLib {
             m_size = size;
             get_buf_internal()[m_size] = '\0';
         }
-        String(const char* begin, const char* end) {
+        explicit String(const char* begin, const char* end) {
             m_size = end - begin;
             bool local = m_size <= SMALL_STRING_CAP;
             if (local) {
@@ -292,20 +292,19 @@ namespace ARLib {
         }
         [[nodiscard]] bool operator!=(const String& other) const { return !(*this == other); }
         [[nodiscard]] bool operator<(const String& other) const {
-            size_t smaller_len = m_size > other.m_size ? other.m_size : m_size;
             bool local = is_local();
             bool other_local = other.is_local();
             if (local && other_local) {
-                return strncmp(m_local_buf, other.m_local_buf, smaller_len) < 0;
+                return strncmp(m_local_buf, other.m_local_buf, other.m_size) < 0;
             }
             else if (local && !other_local) {
-                return strncmp(m_local_buf, other.m_data_buf, smaller_len) < 0;
+                return strncmp(m_local_buf, other.m_data_buf, other.m_size) < 0;
             }
             else if (!local && other_local) {
-                return strncmp(m_data_buf, other.m_local_buf, smaller_len) < 0;
+                return strncmp(m_data_buf, other.m_local_buf, other.m_size) < 0;
             }
             else {
-                return strncmp(m_data_buf, other.m_data_buf, smaller_len) < 0;
+                return strncmp(m_data_buf, other.m_data_buf, other.m_size) < 0;
             }
         }
         [[nodiscard]] bool operator>(const String& other) const { return !(*this < other) && !(*this == other); }
