@@ -17,6 +17,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/StringView.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/BaseTraits.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/TypeTraits.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/SortedVector.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Vector.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Array.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Macros.h"
