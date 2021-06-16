@@ -85,7 +85,16 @@ namespace ARLib {
 
 	public:
 		Vector() = default;
-
+		Vector(Vector&& other) {
+			m_storage = other.m_storage;
+			m_end_of_storage = other.m_end_of_storage;
+			m_capacity = other.m_capacity;
+			m_size = other.m_size;
+			other.m_storage = nullptr;
+			other.m_end_of_storage = nullptr;
+			other.m_size = 0;
+			other.m_capacity = 0;
+		}
 		Vector(size_t capacity) {
 			round_to_capacity_(capacity);
 		}
@@ -111,6 +120,18 @@ namespace ARLib {
 			}
 			round_to_capacity_(sizeof...(values) + 2);
 			append_internal_(Forward<T>(val1), Forward<T>(val2), Forward<Values>(values)...);
+		}
+
+		Vector& operator=(Vector&& other) noexcept {
+			m_storage = other.m_storage;
+			m_end_of_storage = other.m_end_of_storage;
+			m_capacity = other.m_capacity;
+			m_size = other.m_size;
+			other.m_storage = nullptr;
+			other.m_end_of_storage = nullptr;
+			other.m_size = 0;
+			other.m_capacity = 0;
+			return *this;
 		}
 
 		void reserve(size_t capacity) {
