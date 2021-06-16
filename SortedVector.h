@@ -55,12 +55,31 @@ namespace ARLib {
 				}
 			}
 		}
+		
+		size_t find_insert_index_(const T& element) {
+			if (m_size == 0)
+				return 0;
+			size_t left = 0;
+			size_t right = m_size - 1;
+			if (m_ordering(element, m_storage[left]) == less) 
+				return 0;
+			if (m_ordering(element, m_storage[right]) == greater)
+				return m_size;
+			while (left <= right) {
+				size_t mid = (left + right) / 2;
+				auto ord = m_ordering(m_storage[mid], element);
+				if (ord == equal)
+					return mid;
+				else if (ord == greater)
+					right = mid - 1;
+				else
+					left = mid + 1;
+			}
+			return left;
+		}
 
 		void insert_single_element_(T&& element) {
-			size_t insert_index = 0;
-			// this algo can stand improvement (e.g. using a simple binary search instead of linear)
-			while (insert_index < m_size && m_ordering(m_storage[insert_index], element) == less)
-				insert_index++;
+			size_t insert_index = find_insert_index_(element);
 			ensure_capacity_();
 			if constexpr (IsTriviallyCopiableV<T>) {
 				memmove(m_storage + insert_index + 1, m_storage + insert_index, sizeof(T) * (m_size - insert_index));
