@@ -13,34 +13,35 @@ namespace ARLib {
 		Replace
 	};
 
-	template <typename T, size_t BKT_SIZE>
+	template <typename T>
 	class HashTableIterator {
 		Vector<Vector<T>>& m_backing_store;
 		size_t m_current_bucket = 0;
 		size_t m_current_vector_index = 0;
+		size_t m_bkt_size = 0;
 	public:
 		static constexpr size_t npos = static_cast<size_t>(-1);
-		HashTableIterator(Vector<Vector<T>>& backing_store) : m_backing_store(backing_store) {
+		HashTableIterator(Vector<Vector<T>>& backing_store) : m_backing_store(backing_store), m_bkt_size(backing_store.size()) {
 			while (m_backing_store[m_current_bucket].empty()) {
 				m_current_bucket++;
 			}
 		}
 
 		HashTableIterator(Vector<Vector<T>>& backing_store, size_t bucket_index, size_t vector_index) 
-			: m_backing_store(backing_store), m_current_bucket(bucket_index), m_current_vector_index(vector_index) {
+			: m_backing_store(backing_store), m_current_bucket(bucket_index), m_current_vector_index(vector_index), m_bkt_size(backing_store.size()) {
 
 		}
 
-		HashTableIterator(HashTableIterator<T, BKT_SIZE>&& other) = default;
-		HashTableIterator(const HashTableIterator<T, BKT_SIZE>& other) = default;
-		HashTableIterator& operator=(HashTableIterator<T, BKT_SIZE>&& other) = default;
-		HashTableIterator& operator=(const HashTableIterator<T, BKT_SIZE>& other) = default;
+		HashTableIterator(HashTableIterator<T>&& other) = default;
+		HashTableIterator(const HashTableIterator<T>& other) = default;
+		HashTableIterator& operator=(HashTableIterator<T>&& other) = default;
+		HashTableIterator& operator=(const HashTableIterator<T>& other) = default;
 
-		bool operator==(const HashTableIterator<T, BKT_SIZE>& other) const {
+		bool operator==(const HashTableIterator<T>& other) const {
 			return &m_backing_store == &other.m_backing_store && m_current_bucket == other.m_current_bucket && m_current_vector_index == other.m_current_vector_index;
 		}
 
-		bool operator!=(const HashTableIterator<T, BKT_SIZE>& other) const {
+		bool operator!=(const HashTableIterator<T>& other) const {
 			return &m_backing_store != &other.m_backing_store || m_current_bucket != other.m_current_bucket || m_current_vector_index != other.m_current_vector_index;
 		}
 
@@ -50,7 +51,7 @@ namespace ARLib {
 
 		HashTableIterator& operator++() {
 			if (m_backing_store[m_current_bucket].empty() || m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
-				if (m_current_bucket == BKT_SIZE - 1 || m_backing_store[m_current_bucket + 1].empty()) {
+				if (m_current_bucket == m_bkt_size - 1 || m_backing_store[m_current_bucket + 1].empty()) {
 					// end iterator has npos
 					m_current_vector_index = npos;
 					m_current_bucket = npos;
@@ -67,7 +68,7 @@ namespace ARLib {
 
 		HashTableIterator operator++(int) {
 			if (m_backing_store[m_current_bucket].empty() ||  m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
-				return { m_backing_store, m_current_bucket == BKT_SIZE - 1 ? npos : m_current_bucket + 1, m_current_bucket == BKT_SIZE - 1 ? npos : 0};
+				return { m_backing_store, m_current_bucket == m_bkt_size - 1 ? npos : m_current_bucket + 1, m_current_bucket == m_bkt_size - 1 ? npos : 0};
 			}
 			else {
 				return { m_backing_store, m_current_bucket, m_current_vector_index + 1 };
@@ -104,6 +105,7 @@ namespace ARLib {
 
 	template <typename T, size_t TBL_SIZE_INDEX = 0> requires Hashable<T> && EqualityComparable<T>
 	class HashTable {
+		static constexpr inline double load_factor = 3.0;
 		Vector<Vector<T>> m_storage;
 		size_t m_bucket_count = table_sizes[TBL_SIZE_INDEX];
 		size_t m_size = 0;
@@ -113,6 +115,20 @@ namespace ARLib {
 			insert(Forward<T>(arg));
 			if constexpr (sizeof...(args) > 0)
 				internal_append(Forward<Args>(args)...);
+		}
+
+		void rehash_internal_() {
+			m_bucket_count = prime_generator(m_bucket_count);
+			auto new_storage = Vector<Vector<T>>{};
+			new_storage.resize(m_bucket_count);
+			for (auto& vec : m_storage) {
+				for (auto& item : vec) {
+					auto hs = hasher(item);
+					new_storage[hs % m_bucket_count].append(Forward<T>(item));
+				}
+			}
+			m_storage.clear();
+			m_storage = move(new_storage);
 		}
 
 	public:
@@ -157,6 +173,12 @@ namespace ARLib {
 		}
 
 		InsertionResult insert(T&& entry) {
+			// this is not good, calculating load() every time is costy
+			double ld = load();
+			if (ld  >= load_factor) {
+				printf("Rehashing because load is %lf...\n", ld);
+				rehash_internal_();
+			}
 			auto hs = hasher(entry);
 			auto iter = find(entry);
 			if (iter == end(hs)) {
@@ -198,12 +220,12 @@ namespace ARLib {
 			return m_storage[hash % m_bucket_count].end();
 		}
 
-		HashTableIterator<T, table_sizes[TBL_SIZE_INDEX]> tbegin() {
+		HashTableIterator<T> tbegin() {
 			return { m_storage };
 		}
 
-		HashTableIterator<T, table_sizes[TBL_SIZE_INDEX]> tend() {
-			return { m_storage, HashTableIterator<T, table_sizes[TBL_SIZE_INDEX]>::npos, HashTableIterator < T, table_sizes[TBL_SIZE_INDEX]>::npos };
+		HashTableIterator<T> tend() {
+			return { m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos };
 		}
 		
 		void remove(const T& val) {
