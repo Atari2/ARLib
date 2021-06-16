@@ -279,8 +279,8 @@ namespace ARLib {
         // comparison operators
         [[nodiscard]] bool operator==(const String& other) const {
             if (other.m_size == m_size) {
-                // if m_small_string_opt is true for *this, it's also true for other,
-                // due to the fact that they share length, therefor we don't need to check if other.m_small_string_opt is true
+                // if is_local is true for *this, it's also true for other,
+                // due to the fact that they share length, therefor we don't need to check if other.is_local is true
                 if (is_local()) {
                     return strcmp(m_local_buf, other.m_local_buf) == 0;
                 }
@@ -292,27 +292,15 @@ namespace ARLib {
         }
         [[nodiscard]] bool operator!=(const String& other) const { return !(*this == other); }
         [[nodiscard]] bool operator<(const String& other) const {
-            bool local = is_local();
-            bool other_local = other.is_local();
-            if (local && other_local) {
-                return strncmp(m_local_buf, other.m_local_buf, other.m_size) < 0;
-            }
-            else if (local && !other_local) {
-                return strncmp(m_local_buf, other.m_data_buf, other.m_size) < 0;
-            }
-            else if (!local && other_local) {
-                return strncmp(m_data_buf, other.m_local_buf, other.m_size) < 0;
-            }
-            else {
-                return strncmp(m_data_buf, other.m_data_buf, other.m_size) < 0;
-            }
+            return strncmp(get_buf_internal(), other.get_buf_internal(), other.m_size) < 0;
         }
         [[nodiscard]] bool operator>(const String& other) const { return !(*this < other) && !(*this == other); }
         [[nodiscard]] bool operator<=(const String& other) const { return (*this < other || *this == other); }
         [[nodiscard]] bool operator>=(const String& other) const { return (*this > other || *this == other); }
         [[nodiscard]] Ordering operator<=>(const String & other) const {
-            if (*this == other) return equal;
-            else if (*this < other) return less;
+            auto val = strncmp(get_buf_internal(), other.get_buf_internal(), other.m_size);
+            if (val == 0) return equal;
+            else if (val < 0) return less;
             else return greater;
         }
 
