@@ -5,7 +5,7 @@
 #ifdef _MSC_VER
 	__fastfail(1);
 #else
-	asm volatile("call abort");
+	__asm__ volatile("call abort");
 #endif
 	unreachable
 }
