@@ -32,6 +32,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/HashMap.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Optional.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CharConv.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Badge.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/UniquePtr.h"
