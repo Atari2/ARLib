@@ -8,7 +8,7 @@ namespace ARLib {
 		T* m_object = nullptr;
 		bool m_exists = false;
 
-		void assert_not_null_() {
+		void assert_not_null_() const {
 			SOFT_ASSERT(m_object, "Null deref in Optional")
 		}
 
@@ -19,6 +19,32 @@ namespace ARLib {
 		}
 	public:
 		Optional() = default;
+		Optional(const Optional<T>& other) {
+			if (other.m_exists) {
+				m_object = new T{ *other.m_object };
+			}
+			m_exists = other.m_exists;
+		}
+		Optional(Optional<T>&& other) {
+			m_object = other.m_object;
+			m_exists = other.m_exists;
+			other.m_object = nullptr;
+			other.m_exists = false;
+		}
+
+		Optional& operator=(const Optional<T>& other) {
+			if (other.m_exists)
+				*m_object = *other.m_object;
+			m_exists = other.m_exists;
+			return *this;
+		}
+		Optional& operator=(Optional<T>&& other) {
+			m_object = other.m_object;
+			m_exists = other.m_exists;
+			other.m_object = nullptr;
+			other.m_exists = false;
+			return *this;
+		}
 
 		Optional(T&& val) requires MoveAssignable<T> : m_object(new T), m_exists(true) {
 			*m_object = move(val);
@@ -83,7 +109,7 @@ namespace ARLib {
 		}
 
 		template <typename... Args>
-		void emplate(Args... args) {
+		void emplace(Args... args) {
 			m_object = new T(args...);
 			m_exists = true;
 		}

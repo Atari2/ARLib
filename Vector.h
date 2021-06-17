@@ -271,6 +271,14 @@ namespace ARLib {
 			return { m_storage - 1 };
 		}
 
+		T& last() {
+			return m_storage[m_size - 1];
+		}
+
+		const T& last() const {
+			return m_storage[m_size - 1];
+		}
+
 		void clear() {
 			clear_();
 		}
