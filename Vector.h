@@ -1,14 +1,20 @@
 #pragma once
+#include "std_includes.h"
 #include "Concepts.h"
 #include "Iterator.h"
 #include "Assertion.h"
 #include "Algorithm.h"
 #include "cstring_compat.h"
-#include "std_includes.h"
+
 
 namespace ARLib {
-	template <MoveAssignable T>
+	// this in origin was `template <MoveAssignable T>`
+	// however that failed to compile when used as a return type, didn't when using auto
+	// reverted back to static_assert().
+	// https://godbolt.org/z/hnYj99MPc
+	template <typename T>
 	class Vector  {
+		static_assert(MoveAssignableV<T>);
 		using Iter = Iterator<T>;
 		using ConstIter = ConstIterator<T>;
 		using ReverseIter = ReverseIterator<T>;
@@ -85,7 +91,7 @@ namespace ARLib {
 
 	public:
 		Vector() = default;
-		Vector(Vector&& other) {
+		Vector(Vector&& other) noexcept {
 			m_storage = other.m_storage;
 			m_end_of_storage = other.m_end_of_storage;
 			m_capacity = other.m_capacity;
@@ -189,7 +195,7 @@ namespace ARLib {
 				func(v);
 		}
 
-		void remove(size_t index) {
+		void remove_at(size_t index) {
 			SOFT_ASSERT_FMT((index < m_size), "Index %lu was out of bounds in vector of size %lu", index, m_size)
 			m_storage[index].~T();
 			m_size--;
@@ -205,7 +211,7 @@ namespace ARLib {
 		void remove(const T& val) {
 			for (size_t i = 0; i < m_size; i++) {
 				if (val == m_storage[i]) {
-					remove(i);
+					remove_at(i);
 					return;
 				}
 			}
