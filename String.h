@@ -1,10 +1,10 @@
 #pragma once
-#include "Vector.h"
 #include "Algorithm.h"
 #include "Assertion.h"
 #include "Ordering.h"
 #include "Types.h"
 #include "Iterator.h"
+#include "Vector.h"
 #include "cstring_compat.h"
 
 
@@ -84,22 +84,21 @@ namespace ARLib {
             }
             return data_internal();
         }
-        static const char* get_buf_internal(const String& other) {
-            return other.get_buf_internal();
-        }
         Vector<size_t> all_indexes(const char* any) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
-            indexes.reserve(size);
             for (size_t i = 0; i < size; i++) {
-                indexes.push_back(index_of(any[i]));
+                auto index = index_of(any[i]);
+                while (index != npos) {
+                    indexes.push_back(index);
+                    index = index_of(any[i], index + 1);
+                }
             }
             return indexes;
         }
         Vector<size_t> all_last_indexes(const char* any) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
-            indexes.reserve(size);
             for (size_t i = 0; i < size; i++) {
                 indexes.push_back(last_index_of(any[i]));
             }
@@ -108,7 +107,6 @@ namespace ARLib {
         Vector<size_t> all_not_indexes(const char* any) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
-            indexes.reserve(size);
             for (size_t i = 0; i < size; i++) {
                 indexes.push_back(index_not_of(any[i]));
             }
@@ -117,7 +115,6 @@ namespace ARLib {
         Vector<size_t> all_last_not_indexes(const char* any) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
-            indexes.reserve(size);
             for (size_t i = 0; i < size; i++) {
                 indexes.push_back(last_index_not_of(any[i]));
             }
@@ -273,7 +270,7 @@ namespace ARLib {
                 last = length();
             return String{ get_buf_internal() + first, get_buf_internal() + last };
         }
-
+        [[nodiscard]] StringView view();
         [[nodiscard]] StringView substringview(size_t first = 0, size_t last = npos);
 
         // comparison operators
@@ -317,7 +314,7 @@ namespace ARLib {
                 return false;
             if (other.m_size == m_size)
                 return other == *this;
-            auto res = strncmp(get_buf_internal(other), get_buf_internal(), other.m_size);
+            auto res = strncmp(other.get_buf_internal(), get_buf_internal(), other.m_size);
             return res == 0;
         }
         [[nodiscard]] bool starts_with(const char* other) const {
@@ -335,7 +332,7 @@ namespace ARLib {
             if (other.m_size == m_size)
                 return other == *this;
             auto ptrdiff = m_size - other.m_size;
-            const char* buf = get_buf_internal(other);
+            const char* buf = other.get_buf_internal();
             const char* my_buf = get_buf_internal();
             auto res = strncmp(my_buf + ptrdiff, buf, other.m_size);
             return res == 0;
@@ -404,10 +401,11 @@ namespace ARLib {
         [[nodiscard]] char operator[](size_t index) const { return get_buf_internal()[index]; }
 
         // various char checks
-        [[nodiscard]] size_t index_of(char c) const {
+        [[nodiscard]] size_t index_of(char c, size_t start_index = 0) const {
             if (m_size == 0) return npos;
+            if (start_index >= m_size) return npos;
             const char* buf = get_buf_internal();
-            for (size_t i = 0; i < m_size; i++) {
+            for (size_t i = start_index; i < m_size; i++) {
                 if (buf[i] == c)
                     return i;
             }
@@ -422,10 +420,11 @@ namespace ARLib {
             }
             return npos;
         }
-        [[nodiscard]] size_t index_not_of(char c) const {
+        [[nodiscard]] size_t index_not_of(char c, size_t start_index = 0) const {
             if (m_size == 0) return npos;
+            if (start_index >= m_size) return npos;
             const char* buf = get_buf_internal();
-            for (size_t i = 0; i < m_size; i++) {
+            for (size_t i = start_index; i < m_size; i++) {
                 if (buf[i] != c)
                     return i;
             }
@@ -586,6 +585,21 @@ namespace ARLib {
             return ret;
         }
 
+        Vector<String> split(const char* sep = " \n\t\v") {
+            auto indexes = all_indexes(sep);
+            Vector<String> vec{};
+            vec.reserve(indexes.size() + 1);
+            size_t prev_index = 0;
+            for (auto index : indexes) {
+                vec.append(substring(prev_index, index));
+                prev_index = index + 1;
+            }
+            vec.append(substring(prev_index));
+            return vec;
+        }
+
+        Vector<StringView> split_view(const char* sep = " \n\t\v");
+
         // upper/lower
         void iupper() {
             char* buf = get_buf_internal();
@@ -615,9 +629,7 @@ namespace ARLib {
         }
     };
 
-    String operator""_s(const char* source, size_t len) {
-        return String{ source, len + 1};
-    }
+    String operator""_s(const char* source, size_t len);
 
     template <>
     struct Hash<String> {
