@@ -15,6 +15,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/String.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/String.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/StringView.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/StringView.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/BaseTraits.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/TypeTraits.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/SortedVector.h"
