@@ -40,6 +40,8 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/GenericView.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/ContextManager.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/EnumHelpers.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/cstdio_compat.cpp"
