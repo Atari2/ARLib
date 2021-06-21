@@ -38,7 +38,7 @@ namespace ARLib {
 			m_exists = other.m_exists;
 			return *this;
 		}
-		Optional& operator=(Optional<T>&& other) {
+		Optional& operator=(Optional<T>&& other) noexcept {
 			m_object = other.m_object;
 			m_exists = other.m_exists;
 			other.m_object = nullptr;
@@ -56,16 +56,14 @@ namespace ARLib {
 
 		Optional<T>& operator=(const T& val) requires CopyAssignable<T> {
 			evict_();
-			m_object = new T;
-			*m_object = val;
+			m_object = new T{ val };
 			m_exists = true;
 			return *this;
 		}
 
 		Optional<T>& operator=(T&& val) requires CopyAssignable<T> {
 			evict_();
-			m_object = new T;
-			*m_object = move(val);
+			m_object = new T{ Forward<T>(val) };
 			m_exists = true;
 			return *this;
 		}
