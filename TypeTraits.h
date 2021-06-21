@@ -295,6 +295,20 @@ namespace ARLib {
         };
     }
 
+    template <class T, bool = IsEnumV<T>>
+    struct UnderlyingTypeImpl {
+        using type = __underlying_type(T);
+    };
+
+    template <class T>
+    struct UnderlyingTypeImpl<T, false> {};
+
+    template <class T>
+    struct UnderlyingType : UnderlyingTypeImpl<T> {}; // determine underlying type for enum
+
+    template <class T>
+    using UnderlyingTypeT = typename UnderlyingType<T>::type;
+
     template <class> struct ResultOf;
 
     template <class F, class... ArgTypes>
