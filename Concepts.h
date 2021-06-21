@@ -159,4 +159,7 @@ namespace ARLib {
 
 	template <typename T>
 	concept Sized = IsSizeV<T>;
+
+	template <typename T>
+	concept Enum = IsEnumV<T>;
 }
