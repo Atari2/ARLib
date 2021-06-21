@@ -112,6 +112,13 @@ namespace ARLib {
 			m_exists = true;
 		}
 
+		void put(T&& value) {
+			if (m_exists)
+				evict_();
+			m_object = new T{ Forward<T>(value) };
+			m_exists = true;
+		}
+
 		T* detach() { 
 			assert_not_null_(); 
 			T* val = m_object; 

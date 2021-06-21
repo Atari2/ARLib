@@ -181,6 +181,19 @@ namespace ARLib {
 		}
 	}
 
+	bool StrToBool(const String& value) {
+		if (value == "true")
+			return true;
+		else
+			return false;
+	}
+
+	String BoolToStr(bool value) {
+		if (value)
+			return String{ "true" };
+		return String{ "false" };
+	}
+
 	String ToString(Stringable auto& value) {
 		if constexpr (IsSameV<decltype(value), String>)
 			return value;
