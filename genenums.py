@@ -1,6 +1,7 @@
 import re
 import os
 from sys import argv
+import math
 
 patt = re.compile(r"(\w*)\((\w*)\)\[(.*)\]")
 
@@ -14,12 +15,20 @@ try:
 except:
 	pass
 
+def power_bit_length(x):
+	return 2**(x - 1).bit_length()
+
 for line in filter(lambda x: x.strip() and x.strip()[0] != '#', lines):
 	match = patt.match(line)
 	if match:
 		cls_name = match.group(1)
 		cls_type = match.group(2)
 		cls_members = match.group(3).split(',')
+		if not cls_type:
+			required_bytes = math.ceil(len(cls_members) / 8)
+			if required_bytes > 8:
+				raise ValueError("Can't fit these many members in 8 bytes (which is the max)")
+			cls_type = f'uint{power_bit_length(required_bytes) * 8}_t'
 		with open(f'{folder}/GeneratedEnums/{cls_name}.h', 'w') as f:
 			f.write('#pragma once\n#include "../Types.h"\n#include "../EnumHelpers.h"\nnamespace ARLib {\n')
 			f.write(f'\tenum class {cls_name} : {cls_type} {{\n')

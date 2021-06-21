@@ -1,4 +1,6 @@
 # this is a file used to generate enum definitions
 # it generates bitfield enums by default
 # format is "ClassName(UnderlyingType)[Members...]"
-ManageWhen(uint8_t)[None, AtExit, AtEnter, OnFailure, OnSuccess]
+# underlying_type can be omitted and will be filled in by the generation script
+# underlying_type can be from uint8_t, uint16_t, uint32_t, uint64_t
+ManageWhen()[None, AtExit, AtEnter, OnFailure, OnSuccess]
