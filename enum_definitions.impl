@@ -1,0 +1,4 @@
+# this is a file used to generate enum definitions
+# it generates bitfield enums by default
+# format is "ClassName(UnderlyingType)[Members...]"
+ManageWhen(uint8_t)[None, AtExit, AtEnter, OnFailure, OnSuccess]

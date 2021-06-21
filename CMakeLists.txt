@@ -48,6 +48,20 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/std_includes.h"
 )
+
+file(GLOB_RECURSE GeneratedEnums "GeneratedEnums/*.h")
+list(APPEND LIB_SOURCE_FILES GeneratedEnums)
+if (WIN32)
+	set(pyexe "py")
+else()
+	set(pyexe "python3")
+endif()
+
+add_custom_target(
+					run ALL
+					COMMAND ${pyexe} ${CMAKE_CURRENT_SOURCE_DIR}/genenums.py ${CMAKE_CURRENT_SOURCE_DIR}
+					COMMENT "Generating enums"
+				 )
 add_library(ARLib ${LIB_SOURCE_FILES})
 if (WIN32 AND NOT CMAKE_COMPILER_IS_GNUCXX)
     add_subdirectory(ASM_MSVC)
@@ -62,6 +76,7 @@ else()
 		endif()
 	else()
 		if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+			message(STATUS "Building debug lib")
 			target_compile_options(ARLib PRIVATE -fsanitize=address,undefined,leak -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra)
 			target_link_options(ARLib PRIVATE -fsanitize=address,undefined,leak)
 		else()
