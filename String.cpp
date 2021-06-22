@@ -2,7 +2,7 @@
 #include "StringView.h"
 
 namespace ARLib {
-    [[nodiscard]] StringView String::substringview(size_t first, size_t last) {
+    [[nodiscard]] StringView String::substringview(size_t first, size_t last) const {
         if (last == npos)
             last = length();
         return StringView{ get_buf_internal() + first, last - first };
@@ -25,7 +25,7 @@ namespace ARLib {
         }
     }
 
-    Vector<StringView> String::split_view(const char* sep) {
+    Vector<StringView> String::split_view(const char* sep) const {
         auto indexes = all_indexes(sep);
         Vector<StringView> vec{};
         vec.reserve(indexes.size() + 1);

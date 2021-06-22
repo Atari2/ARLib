@@ -37,6 +37,11 @@ namespace ARLib {
             view.m_end = nullptr;
             return *this;
         }
+
+        const char& operator[](size_t index) noexcept {
+            return m_start[index];
+        }
+
         [[nodiscard]] StringView substring(size_t size) {
             return StringView{ m_start, size };
         }

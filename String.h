@@ -271,7 +271,7 @@ namespace ARLib {
             return String{ get_buf_internal() + first, get_buf_internal() + last };
         }
         [[nodiscard]] StringView view();
-        [[nodiscard]] StringView substringview(size_t first = 0, size_t last = npos);
+        [[nodiscard]] StringView substringview(size_t first = 0, size_t last = npos) const;
 
         // comparison operators
         [[nodiscard]] bool operator==(const String& other) const {
@@ -585,7 +585,7 @@ namespace ARLib {
             return ret;
         }
 
-        Vector<String> split(const char* sep = " \n\t\v") {
+        Vector<String> split(const char* sep = " \n\t\v") const {
             auto indexes = all_indexes(sep);
             Vector<String> vec{};
             vec.reserve(indexes.size() + 1);
@@ -598,7 +598,7 @@ namespace ARLib {
             return vec;
         }
 
-        Vector<StringView> split_view(const char* sep = " \n\t\v");
+        Vector<StringView> split_view(const char* sep = " \n\t\v") const;
 
         // upper/lower
         void iupper() {
