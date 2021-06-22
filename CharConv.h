@@ -1,5 +1,6 @@
 #pragma once
 #include "String.h"
+#include "StringView.h"
 #include "Concepts.h"
 #include "Assertion.h"
 #include "cmath_compat.h"
@@ -14,16 +15,66 @@ namespace ARLib {
 		Octal
 	};
 
-	double StrToDouble(const String& str) {
-		TODO(StrToDouble)
-		return 0.0;
-	}
-	float StrToFloat(const String& str) {
-		TODO(StrToFloat)
-		return 0.0f;
-	}
-	int StrToInt(const String& str, int base = 10) {
+	int StrViewToInt(StringView view, int base = 10) {
+		if (base < 2 || base > 36)
+			return 0;
 
+		size_t cur_index = 0;
+		size_t max_index = view.length();
+		// skip whitespace
+		while (isspace(view[cur_index])) {
+			cur_index++;
+		}
+
+		if (cur_index == max_index)
+			return 0;
+
+		int sign = 1;
+		if (view[cur_index] == '+' || view[cur_index] == '-')
+			sign = view[cur_index] == '+' ? 1 : -1;
+
+		if (cur_index == max_index)
+			return 0 * sign;
+
+		if (base == 16) {
+			if (view[cur_index] == '0' && tolower(view[cur_index + 1]) == 'x')
+				cur_index += 2;
+		}
+		else if (base == 2) {
+			if (view[cur_index] == '0' && tolower(view[cur_index + 1]) == 'b')
+				cur_index += 2;
+		}
+
+		// skip leading zeros
+		while (view[cur_index] == '0') {
+			cur_index++;
+		}
+
+		if (cur_index == max_index)
+			return 0 * sign;
+
+
+		// 0-9 => 48-57
+		// A-Z => 65-90
+
+		int total = 0;
+		double pw = 0.0;
+		for (size_t opp = max_index - 1; opp >= cur_index; opp--) {
+			char c = toupper(view[opp]);
+			if (!isalnum(c))
+				return total;
+			int num = c >= 'A' ? (c - 55) : (c - 48);
+			if (num >= base)
+				return total;
+			total += static_cast<int>(round((num * pow(static_cast<double>(base), pw))));
+			pw += 1.0;
+			if (opp == cur_index)
+				break;
+		}
+		return total;
+	}
+
+	int64_t StrToI64(const String& str, int base = 10) {
 		if (base < 2 || base > 36)
 			return 0;
 
@@ -38,8 +89,11 @@ namespace ARLib {
 			return 0;
 
 		int sign = 1;
-		if (str[cur_index] == '+' || str[cur_index] == '-')
-			sign = str[cur_index] == '+' ? 1 : -1;
+		char s = str[cur_index];
+		if (s == '+' || s == '-') {
+			sign = s == '+' ? 1 : -1;
+			cur_index++;
+		}
 
 		if (cur_index == max_index)
 			return 0 * sign;
@@ -65,7 +119,7 @@ namespace ARLib {
 		// 0-9 => 48-57
 		// A-Z => 65-90
 
-		int total = 0;
+		int64_t total = 0;
 		double pw = 0.0;
 		for (size_t opp = max_index - 1; opp >= cur_index; opp--) {
 			char c = toupper(str[opp]);
@@ -74,12 +128,24 @@ namespace ARLib {
 			int num = c >= 'A' ? (c - 55) : (c - 48);
 			if (num >= base)
 				return total;
-			total += static_cast<int>(round((num * pow(static_cast<double>(base), pw))));
+			total += static_cast<int64_t>(round((num * pow(static_cast<double>(base), pw))));
 			pw += 1.0;
 			if (opp == cur_index)
 				break;
 		}
-		return total;
+		return total * sign;
+	}
+
+	int StrToInt(const String& str, int base = 10) {
+		return static_cast<int>(StrToI64(str, base));
+	}
+
+	double StrToDouble(const String& str) {
+		TODO(StrToDouble)
+	}
+
+	float StrToFloat(const String& str) {
+		TODO(StrToFloat)
 	}
 
 	String DoubleToStr(double value) {
@@ -205,4 +271,5 @@ using ARLib::FloatToStr;
 using ARLib::DoubleToStr;
 using ARLib::StrToInt;
 using ARLib::IntToStr;
+using ARLib::StrToFloat;
 using ARLib::SupportedBase;
