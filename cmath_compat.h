@@ -15,6 +15,25 @@ namespace ARLib {
 		constexpr bool is_infinity(double num);
 		constexpr bool is_infinity(float num);
 	}
+
+	namespace NumericLimits {
+#ifdef _MSC_VER
+		constexpr double HugeEnough = 1e+300;  // must overflow
+
+		constexpr auto Infinity = ((float)(HugeEnough * HugeEnough));
+		constexpr auto HugeVal = ((double)Infinity);
+		constexpr auto HugeValF = ((float)Infinity);
+		constexpr auto HugeValL = ((long double)Infinity);
+		constexpr auto Nan = ((float)(Infinity * 0.0f));
+#else
+		constexpr auto Infinity = __builtin_inff();
+		constexpr auto HugeVal = ((double)Infinity);
+		constexpr auto HugeValF = ((float)Infinity);
+		constexpr auto HugeValL = ((long double)Infinity);
+		constexpr auto Nan = __builtin_nanf("");
+#endif
+	}
+
 	namespace NumericConstants {
 		template <class T>
 		struct InvalidN {
