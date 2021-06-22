@@ -17,6 +17,10 @@ namespace ARLib {
         typedef unsigned __int32 uint32_t;
         typedef unsigned __int16 uint16_t;
         typedef unsigned __int8 uint8_t;
+        typedef __int64 int64_t;
+        typedef __int32 int32_t;
+        typedef __int16 int16_t;
+        typedef __int8 int8_t;
 #else
     // we fall here if we're using MINGW or we're on Linux
 #define SIZED decltype(sizeof(void*))
@@ -40,5 +44,10 @@ namespace ARLib {
 
     static_assert(sizeof(char) == 1);
     typedef unsigned char uint8_t;
+
+    typedef long long int64_t;
+    typedef int int32_t;
+    typedef short int16_t;
+    typedef char int8_t;
 #endif
 }
