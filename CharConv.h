@@ -15,7 +15,9 @@ namespace ARLib {
 		Octal
 	};
 
-	int StrViewToInt(StringView view, int base = 10) {
+	// FIXME: avoid pow/round calls in Str{View}To{I64/int}
+
+	int64_t StrViewToI64(StringView view, int base = 10) {
 		if (base < 2 || base > 36)
 			return 0;
 
@@ -30,8 +32,11 @@ namespace ARLib {
 			return 0;
 
 		int sign = 1;
-		if (view[cur_index] == '+' || view[cur_index] == '-')
-			sign = view[cur_index] == '+' ? 1 : -1;
+		char s = view[cur_index];
+		if (s == '+' || s == '-') {
+			sign = s == '+' ? 1 : -1;
+			cur_index++;
+		}
 
 		if (cur_index == max_index)
 			return 0 * sign;
@@ -57,21 +62,25 @@ namespace ARLib {
 		// 0-9 => 48-57
 		// A-Z => 65-90
 
-		int total = 0;
+		int64_t total = 0;
 		double pw = 0.0;
 		for (size_t opp = max_index - 1; opp >= cur_index; opp--) {
 			char c = toupper(view[opp]);
 			if (!isalnum(c))
-				return total;
+				return total * sign;
 			int num = c >= 'A' ? (c - 55) : (c - 48);
 			if (num >= base)
 				return total;
-			total += static_cast<int>(round((num * pow(static_cast<double>(base), pw))));
+			total += static_cast<int64_t>(round((num * pow(static_cast<double>(base), pw))));
 			pw += 1.0;
 			if (opp == cur_index)
 				break;
 		}
-		return total;
+		return total * sign;
+	}
+
+	int StrViewToInt(StringView view, int base = 10) {
+		return static_cast<int>(StrViewToI64(view, base));
 	}
 
 	int64_t StrToI64(const String& str, int base = 10) {
@@ -124,7 +133,7 @@ namespace ARLib {
 		for (size_t opp = max_index - 1; opp >= cur_index; opp--) {
 			char c = toupper(str[opp]);
 			if (!isalnum(c))
-				return total;
+				return total * sign;
 			int num = c >= 'A' ? (c - 55) : (c - 48);
 			if (num >= base)
 				return total;
@@ -140,12 +149,26 @@ namespace ARLib {
 		return static_cast<int>(StrToI64(str, base));
 	}
 
+	// FIXME: make this more efficient
 	double StrToDouble(const String& str) {
-		TODO(StrToDouble)
+		auto parts = str.split_view(".,");
+		auto len = parts.size();
+		if (len == 1)
+			return static_cast<double>(StrToI64(str));
+		if (len > 2)
+			return NumericLimits::Nan;
+		auto integral_part = static_cast<double>(StrViewToI64(parts[0]));
+		double sign = 1.0;
+		if (integral_part < 0)
+			sign = -1.0;
+		integral_part = abs(integral_part);
+		auto fract_part = static_cast<double>(StrViewToI64(parts[1]));
+		fract_part /= pow(10.0, parts[1].length());
+		return (integral_part + fract_part) * sign;
 	}
 
 	float StrToFloat(const String& str) {
-		TODO(StrToFloat)
+		return static_cast<float>(StrToDouble(str));
 	}
 
 	String DoubleToStr(double value) {
@@ -272,4 +295,5 @@ using ARLib::DoubleToStr;
 using ARLib::StrToInt;
 using ARLib::IntToStr;
 using ARLib::StrToFloat;
+using ARLib::StrToDouble;
 using ARLib::SupportedBase;
