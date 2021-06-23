@@ -117,7 +117,7 @@ namespace ARLib {
     }
     double exp(double x) { return arlib_exp(x); }
     double log(double x) {
-        // FIXME: on MSCV this returns NAN instead of -NAN for some reason
+        // FIXME: on MSVC this returns NAN instead of -NAN for some reason
         if (x < 0.0) return -static_cast<double>(NumericLimits::Nan);
         if (x == 0.0) return -static_cast<double>(NumericLimits::Infinity);
         return arlib_log(x);
@@ -128,14 +128,12 @@ namespace ARLib {
         return arlib_log10(x);
     }
     double ceil(double x) {
-        alignas(16) double mem_addr[]{0, 0};
-        _mm_store1_pd(mem_addr, _mm_round_pd(_mm_load1_pd(&x), _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC));
-        return mem_addr[0];
+        return _mm_cvtsd_f64(
+        _mm_round_sd(_mm_undefined_pd(), _mm_set_sd(x), _MM_FROUND_TO_POS_INF | _MM_FROUND_NO_EXC));
     }
     double floor(double x) {
-        alignas(16) double mem_addr[]{0, 0};
-        _mm_store1_pd(mem_addr, _mm_round_pd(_mm_load1_pd(&x), _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC));
-        return mem_addr[0];
+        return _mm_cvtsd_f64(
+        _mm_round_sd(_mm_undefined_pd(), _mm_set_sd(x), _MM_FROUND_TO_NEG_INF | _MM_FROUND_NO_EXC));
     }
     double fmod(double numer, double denom) {
         // FIXME: this is most likely incorrect
@@ -144,14 +142,11 @@ namespace ARLib {
         return numer - ((double)result * denom);
     }
     double trunc(double x) {
-        alignas(16) double mem_addr[]{0, 0};
-        _mm_store1_pd(mem_addr, _mm_round_pd(_mm_load1_pd(&x), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC));
-        return mem_addr[0];
+        return _mm_cvtsd_f64(_mm_round_sd(_mm_undefined_pd(), _mm_set_sd(x), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC));
     }
     double round(double x) {
-        alignas(16) double mem_addr[]{0, 0};
-        _mm_store1_pd(mem_addr, _mm_round_pd(_mm_load1_pd(&x), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));
-        return mem_addr[0];
+        return _mm_cvtsd_f64(
+        _mm_round_sd(_mm_undefined_pd(), _mm_set_sd(x), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));
     }
 
 } // namespace ARLib
