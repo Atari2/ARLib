@@ -178,8 +178,6 @@ namespace ARLib {
         }
     } // namespace detail
 
-    constexpr inline auto max_prime_size_t = 18446744073709551557llu;
-
     size_t prime_generator(size_t n) {
         constexpr size_t max_prime_size_t_ = 18446744073709551557llu;
         if (n < max_prime_size_t_) return detail::generate_next_prime(n);
