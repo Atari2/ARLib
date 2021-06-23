@@ -112,7 +112,7 @@ namespace ARLib {
                 if ((n % p) == 0) return false;
 
             // if n is a 32-bit integer, perform full trial division
-            if (n <= max_int) {
+            if (n <= max_int32) {
                 size_t i = 211;
                 while ((i * i) < n) {
                     for (auto o : offsets) {
