@@ -138,12 +138,12 @@ namespace ARLib {
     String DoubleToStr(double value) {
 #ifdef WINDOWS
         const auto len = static_cast<size_t>(scprintf("%f", value));
-        String str(len);
+        String str{len};
         sprintf(str.rawptr(), "%f", value);
         return str;
 #else
         const int n = 308 /* numeric limits length for dbl */ + 20;
-        String str(n);
+        String str{n};
         snprintf(str.rawptr(), n, "%f", value);
         return str;
 #endif
@@ -153,7 +153,7 @@ namespace ARLib {
         return DoubleToStr(static_cast<double>(value));
 #else
         const int n = 38 /* numeric limits length for flt */ + 20;
-        String str(n);
+        String str{n};
         snprintf(str.rawptr(), n, "%f", value);
         return str;
 #endif
@@ -228,7 +228,8 @@ namespace ARLib {
     }
 
     bool StrToBool(const String& value) {
-        if (value == "true")
+        constexpr StringView view{"true"};
+        if (value == view)
             return true;
         else
             return false;

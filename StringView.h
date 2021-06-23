@@ -11,10 +11,20 @@ namespace ARLib {
 
         public:
         static constexpr auto npos = String::npos;
-        StringView() = default;
-        StringView(const char* begin, const char* end) : m_start(begin), m_end(end) {}
-        StringView(const char* buf, size_t size) : m_start(buf) { m_end = buf + size; }
-        StringView(const char* buf) : m_start(buf) { m_end = buf + strlen(buf); }
+        constexpr StringView() = default;
+
+        constexpr StringView(const char* begin, const char* end) : m_start(begin), m_end(end) {}
+
+        template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
+        constexpr StringView(T buf, size_t size) : m_start(buf), m_end(buf + size) {}
+
+        template <size_t N>
+        consteval StringView(const char (&buf)[N]) : m_start(buf), m_end(buf + N - 1) {}
+
+        template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
+        StringView(T buf) : m_start(buf) {
+            m_end = buf + strlen(buf);
+        }
         StringView(const String& ref) : m_start(ref.data()) { m_end = m_start + ref.length(); }
         StringView(const StringView& view) : m_start(view.m_start), m_end(view.m_end) {}
         StringView(StringView&& view) noexcept {
@@ -36,7 +46,7 @@ namespace ARLib {
             return *this;
         }
 
-        const char& operator[](size_t index) noexcept { return m_start[index]; }
+        const char& operator[](size_t index) const noexcept { return m_start[index]; }
 
         [[nodiscard]] StringView substring(size_t size) { return StringView{m_start, size}; }
         void print_view() { printf("%.*s\n", size(), m_start); }
