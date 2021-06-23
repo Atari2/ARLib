@@ -271,10 +271,13 @@ namespace ARLib {
             }
             return false;
         }
+        [[nodiscard]] bool operator==(const StringView& other) const;
         [[nodiscard]] bool operator!=(const String& other) const { return !(*this == other); }
+        [[nodiscard]] bool operator!=(const StringView& other) const;
         [[nodiscard]] bool operator<(const String& other) const {
             return strncmp(get_buf_internal(), other.get_buf_internal(), other.m_size) < 0;
         }
+        [[nodiscard]] bool operator<(const StringView& other) const;
         [[nodiscard]] bool operator>(const String& other) const { return !(*this < other) && !(*this == other); }
         [[nodiscard]] bool operator<=(const String& other) const { return (*this < other || *this == other); }
         [[nodiscard]] bool operator>=(const String& other) const { return (*this > other || *this == other); }
@@ -287,6 +290,7 @@ namespace ARLib {
             else
                 return greater;
         }
+        [[nodiscard]] Ordering operator<=>(const StringView& other) const;
 
         [[nodiscard]] size_t size() const { return m_size; }
         [[nodiscard]] size_t length() const { return m_size; }

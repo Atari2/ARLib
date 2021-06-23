@@ -2,6 +2,34 @@
 #include "StringView.h"
 
 namespace ARLib {
+    [[nodiscard]] bool String::operator==(const StringView& other) const {
+        auto thislen = size();
+        auto otherlen = other.size();
+        auto buf = get_buf_internal();
+        if (thislen != otherlen) return false;
+        for (size_t i = 0; i < thislen; i++) {
+            if (buf[i] != other[i]) return false;
+        }
+        return true;
+    }
+
+    [[nodiscard]] bool String::operator!=(const StringView& other) const { return !(*this == other); };
+
+    [[nodiscard]] bool String::operator<(const StringView& other) const {
+        // we use the size() of the stringview cause it's not guaranteed to be null terminated
+        return strncmp(get_buf_internal(), other.data(), other.size());     
+    }
+
+    [[nodiscard]] Ordering String::operator<=>(const StringView& other) const {
+        auto val = strncmp(get_buf_internal(), other.data(), other.size());
+        if (val == 0)
+            return equal;
+        else if (val < 0)
+            return less;
+        else
+            return greater;
+    }
+
     [[nodiscard]] StringView String::substringview(size_t first, size_t last) const {
         if (last == npos) last = length();
         return StringView{get_buf_internal() + first, last - first};
