@@ -41,6 +41,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/SharedPtr.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Memory.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/GenericView.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/ContextManager.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/EnumHelpers.h"

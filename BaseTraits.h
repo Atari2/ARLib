@@ -316,13 +316,25 @@ namespace ARLib {
     template <bool cond, class TrueType, class FalseType>
     using ConditionalT = typename Conditional<cond, TrueType, FalseType>::type;
 
-    // conjuction
-    template <class...>
+    // conjunction
+    template <bool FirstVal, class First, class... Rest>
+    struct ConjunctionImpl { // handle false trait or last trait
+        using type = First;
+    };
+
+    template <class True, class Next, class... Rest>
+    struct ConjunctionImpl<true, True, Next, Rest...> { // the first trait is true, try the next one
+        using type = typename ConjunctionImpl<Next::value, Next, Rest...>::type;
+    };
+
+    template <class... Traits>
     struct Conjunction : TrueType {};
-    template <class B1>
-    struct Conjunction<B1> : B1 {};
-    template <class B1, class... Bn>
-    struct Conjunction<B1, Bn...> : Conditional<bool(B1::value), Conjunction<Bn...>, B1> {};
+
+    template <class First, class... Rest>
+    struct Conjunction<First, Rest...> : ConjunctionImpl<First::value, First, Rest...>::type {};
+
+    template <class... Traits>
+    inline constexpr bool ConjunctionV = Conjunction<Traits...>::value;
 
     // disjunction
     template <bool FirstValue, class First, class... Rest>
