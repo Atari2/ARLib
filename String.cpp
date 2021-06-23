@@ -3,14 +3,13 @@
 
 namespace ARLib {
     [[nodiscard]] StringView String::substringview(size_t first, size_t last) const {
-        if (last == npos)
-            last = length();
-        return StringView{ get_buf_internal() + first, last - first };
+        if (last == npos) last = length();
+        return StringView{get_buf_internal() + first, last - first};
     }
 
     [[nodiscard]] StringView String::view() {
         auto ptr = get_buf_internal();
-        return StringView{ ptr, ptr + m_size };
+        return StringView{ptr, ptr + m_size};
     }
 
     String::String(StringView other) : m_size(other.length()) {
@@ -18,8 +17,7 @@ namespace ARLib {
         if (local) {
             strcpy(m_local_buf, other.data());
             m_data_buf = local_data_internal();
-        }
-        else {
+        } else {
             m_data_buf = new char[m_size + 1];
             strcpy(m_data_buf, other.data());
         }
@@ -38,7 +36,5 @@ namespace ARLib {
         return vec;
     }
 
-    String operator""_s(const char* source, size_t len) {
-        return String{ source, len + 1 };
-    }
-}
+    String operator""_s(const char* source, size_t len) { return String{source, len + 1}; }
+} // namespace ARLib

@@ -13,7 +13,8 @@ namespace ARLib {
     inline constexpr size_t fn_prime = 16777619U;
 #endif
 
-    [[nodiscard]] inline size_t fn_append_bytes(size_t val, const unsigned char* const first, const size_t count) noexcept { 
+    [[nodiscard]] inline size_t fn_append_bytes(size_t val, const unsigned char* const first,
+                                                const size_t count) noexcept {
         for (size_t i = 0; i < count; ++i) {
             val ^= static_cast<size_t>(first[i]);
             val *= fn_prime;
@@ -26,14 +27,14 @@ namespace ARLib {
         static_assert(IsTrivialV<Key>, "Only trivial types can be directly hashed.");
         return fn_append_bytes(val, &reinterpret_cast<const unsigned char&>(key), sizeof(Key));
     }
-    
+
     template <class Key>
-    [[nodiscard]] size_t hash_representation(const Key& key) noexcept { 
+    [[nodiscard]] size_t hash_representation(const Key& key) noexcept {
         return fnv_append_value(offset_basis, key);
     }
 
     template <class Key>
-    [[nodiscard]] size_t hash_array_representation(const Key* const first, const size_t count) noexcept { 
+    [[nodiscard]] size_t hash_array_representation(const Key* const first, const size_t count) noexcept {
         static_assert(IsTrivialV<Key>, "Only trivial types can be directly hashed.");
         return fn_append_bytes(offset_basis, reinterpret_cast<const unsigned char*>(first), count * sizeof(Key));
     }
@@ -58,10 +59,10 @@ namespace ARLib {
     };
 
     template <class Key>
-    struct Hash : ConditionallyEnabledHash<Key, !IsConstV<Key> && !IsVolatileV<Key> && (IsEnumV<Key> || IsIntegralV<Key> || IsPointerV<Key>)> {
-        static size_t do_hash(const Key& key) noexcept {
-            return hash_representation(key);
-        }
+    struct Hash :
+        ConditionallyEnabledHash<Key, !IsConstV<Key> && !IsVolatileV<Key> &&
+                                      (IsEnumV<Key> || IsIntegralV<Key> || IsPointerV<Key>)> {
+        static size_t do_hash(const Key& key) noexcept { return hash_representation(key); }
     };
 
     template <>
@@ -92,4 +93,4 @@ namespace ARLib {
             return hash_representation(null);
         }
     };
-}
+} // namespace ARLib

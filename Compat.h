@@ -1,36 +1,36 @@
 #pragma once
 
-#ifdef _MSC_VER		// MSVC
+#ifdef _MSC_VER // MSVC
 #include <intrin.h>
 #define unreachable __assume(0);
 #define forceinline __forceinline
-#define noop		__noop
+#define noop        __noop
 #ifdef _WIN64
-	#define ENVIRON64 1
+#define ENVIRON64 1
 #else
-	#define ENVIRON32 1
+#define ENVIRON32 1
 #endif
 
-#elif __clang__		// CLANG
+#elif __clang__ // CLANG
 #define unreachable __builtin_unreachable();
-#define forceinline __attribute__ ((always_inline))
-#define noop ((void)0)
+#define forceinline __attribute__((always_inline))
+#define noop        ((void)0)
 #if __x86_64__ || __ppc64__
-	#define ENVIRON64 1
+#define ENVIRON64 1
 #else
-	#define ENVIRON32 1
+#define ENVIRON32 1
 #endif
 
-#elif __GNUG__		// GCC
+#elif __GNUG__ // GCC
 #define unreachable __builtin_unreachable();
-#define forceinline __attribute__ ((always_inline))
-#define noop ((void)0)
+#define forceinline __attribute__((always_inline))
+#define noop        ((void)0)
 #if __x86_64__ || __ppc64__
-	#define ENVIRON64 1
+#define ENVIRON64 1
 #else
-	#define ENVIRON32 1
+#define ENVIRON32 1
 #endif
-#else				// OTHER
+#else // OTHER
 #error "Unsupported compiler"
 #endif
 
@@ -48,11 +48,11 @@
 #endif
 
 #ifdef ENVIRON64
-	#ifdef WINDOWS
-		static_assert(sizeof(void*) == 8 && sizeof(unsigned __int64) == 8);
-	#else
-		static_assert(sizeof(void*) == 8 && sizeof(unsigned long long) == 8);
-	#endif
+#ifdef WINDOWS
+static_assert(sizeof(void*) == 8 && sizeof(unsigned __int64) == 8);
+#else
+static_assert(sizeof(void*) == 8 && sizeof(unsigned long long) == 8);
+#endif
 #else
 #error "This library is 64-bit only"
 #endif

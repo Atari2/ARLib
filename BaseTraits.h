@@ -1,6 +1,6 @@
 #pragma once
-#include <type_traits>
 #include "Types.h"
+#include <type_traits>
 
 namespace ARLib {
     // the overwhelming majority of the type traits are copy-pasted from msvc's implementation
@@ -30,6 +30,8 @@ namespace ARLib {
     template <class T>
     inline constexpr bool IsEnumV = IsEnum<T>::value;
 
+    template <typename...>
+    using VoidT = void;
 
     // type traits
 
@@ -41,15 +43,10 @@ namespace ARLib {
         using value_type = T;
         using type = IntegralConstant;
 
-        constexpr operator value_type() const noexcept {
-            return value;
-        }
+        constexpr operator value_type() const noexcept { return value; }
 
-        [[nodiscard]] constexpr value_type operator()() const noexcept {
-            return value;
-        }
+        [[nodiscard]] constexpr value_type operator()() const noexcept { return value; }
     };
-
 
     template <bool V>
     using BoolConstant = IntegralConstant<bool, V>;
@@ -58,72 +55,103 @@ namespace ARLib {
     using FalseType = BoolConstant<false>;
 
     template <class T>
-    struct IsTriviallyCopiable : BoolConstant<__is_trivially_copyable(T)> {
-
-    };
+    struct IsTriviallyCopiable : BoolConstant<__is_trivially_copyable(T)> {};
 
     template <class T>
     inline constexpr bool IsTriviallyCopiableV = __is_trivially_copyable(T);
 
     template <class T>
-    struct IsTrivial : BoolConstant<__is_trivially_constructible(T) && __is_trivially_copyable(T)> {
-
-    };
-
+    struct IsTrivial : BoolConstant<__is_trivially_constructible(T) && __is_trivially_copyable(T)> {};
 
     template <class T>
     inline constexpr bool IsTrivialV = __is_trivially_constructible(T) && __is_trivially_copyable(T);
 
-    template<class T> struct IsConst : FalseType {};
-    template<class T> struct IsConst<const T> : TrueType {};
+    template <class T>
+    struct IsConst : FalseType {};
+    template <class T>
+    struct IsConst<const T> : TrueType {};
 
+    template <class T>
+    struct IsReference : FalseType {};
+    template <class T>
+    struct IsReference<T&> : TrueType {};
+    template <class T>
+    struct IsReference<T&&> : TrueType {};
 
-    template <class T> struct IsReference : FalseType {};
-    template <class T> struct IsReference<T&> : TrueType {};
-    template <class T> struct IsReference<T&&> : TrueType {};
-
-    template<class T>
+    template <class T>
     struct IsArray : FalseType {};
 
-    template<class T>
+    template <class T>
     struct IsArray<T[]> : TrueType {};
 
-    template<class T, size_t N>
+    template <class T, size_t N>
     struct IsArray<T[N]> : TrueType {};
 
+    template <class T>
+    struct IsFunction : IntegralConstant<bool, !IsConst<const T>::value && !IsReference<T>::value> {};
 
-    template<class T>
-    struct IsFunction : IntegralConstant<
-        bool,
-        !IsConst<const T>::value && !IsReference<T>::value
-    > {};
+    template <class T>
+    struct RemoveReference {
+        typedef T type;
+    };
+    template <class T>
+    struct RemoveReference<T&> {
+        typedef T type;
+    };
+    template <class T>
+    struct RemoveReference<T&&> {
+        typedef T type;
+    };
 
-    template< class T > struct RemoveReference { typedef T type; };
-    template< class T > struct RemoveReference<T&> { typedef T type; };
-    template< class T > struct RemoveReference<T&&> { typedef T type; };
+    template <class T, class = void>
+    struct AddReference {
+        using LValue = T;
+        using RValue = T;
+    };
+
+    template <class T>
+    struct AddReference<T, VoidT<T&>> {
+        using LValue = T&;
+        using RValue = T&&;
+    };
+
+    template <class T>
+    struct AddLvalueReference {
+        using type = typename AddReference<T>::LValue;
+    };
+    template <class T>
+    struct AddRvalueReference {
+        using type = typename AddReference<T>::RValue;
+    };
+
+    // declval
+    template <class T>
+    typename AddRvalueReference<T>::type declval() noexcept;
 
     // details
     namespace detail {
         template <class T>
-        struct TypeIdentity { using type = T; };
+        struct TypeIdentity {
+            using type = T;
+        };
 
         template <class T>
-        auto TryAddLvalueReference(int)->TypeIdentity<T&>;
+        auto TryAddLvalueReference(int) -> TypeIdentity<T&>;
         template <class T>
-        auto TryAddLvalueReference(...)->TypeIdentity<T>;
+        auto TryAddLvalueReference(...) -> TypeIdentity<T>;
 
         template <class T>
-        auto TryAddRvalueReference(int)->TypeIdentity<T&&>;
+        auto TryAddRvalueReference(int) -> TypeIdentity<T&&>;
         template <class T>
-        auto TryAddRvalueReference(...)->TypeIdentity<T>;
+        auto TryAddRvalueReference(...) -> TypeIdentity<T>;
 
         template <typename B>
-        TrueType  TestPrePtrConvertible(const volatile B*);
+        TrueType TestPrePtrConvertible(const volatile B*);
         template <typename>
         FalseType TestPrePtrConvertible(const volatile void*);
 
         template <typename, typename>
-        auto TestPreIsBaseOf(...)->TrueType;
+        auto TestPreIsBaseOf(...) -> TrueType;
 
         template <typename B, typename D>
         auto TestPreIsBaseOf(int) -> decltype(TestPrePtrConvertible<B>(static_cast<D*>(nullptr)));
@@ -134,133 +162,167 @@ namespace ARLib {
         template <class>
         FalseType Test(...);
 
-        template<class T>
-        auto TestReturnable(int) -> decltype(
-            void(static_cast<T(*)()>(nullptr)), TrueType{}
-        );
-        template<class>
-        auto TestReturnable(...)->FalseType;
-
-        template<class From, class To>
-        auto TestImplicitlyConvertible(int) -> decltype(
-            void(std::declval<void(&)(To)>()(std::declval<From>())), TrueType{}
-        );
-        template<class, class>
-        auto TestImplicitlyConvertible(...)->FalseType;
-
         template <class T>
-        auto TryAddPointer(int)-> TypeIdentity<typename RemoveReference<T>::type*>;
-        template <class T>
-        auto TryAddPointer(...)-> TypeIdentity<T>;
+        auto TestReturnable(int) -> decltype(void(static_cast<T (*)()>(nullptr)), TrueType{});
+        template <class>
+        auto TestReturnable(...) -> FalseType;
+
+        template <class From, class To>
+        auto TestImplicitlyConvertible(int) -> decltype(void(declval<void (&)(To)>()(declval<From>())), TrueType{});
+        template <class, class>
+        auto TestImplicitlyConvertible(...) -> FalseType;
 
         template <class T>
         struct ReferenceWrapper : FalseType {};
         template <class U>
         struct ReferenceWrapper<ReferenceWrapper<U>> : TrueType {};
-        
-    }
+
+    } // namespace detail
 
     // remove/add qualifiers
 
-    template< class T > struct RemoveCv { 
-        typedef T type; 
+    template <class T>
+    struct RemoveCv {
+        typedef T type;
         template <template <class> class Fn>
         using Apply = Fn<T>;
     };
-    template< class T > struct RemoveCv<const T> {
-        typedef T type; 
+    template <class T>
+    struct RemoveCv<const T> {
+        typedef T type;
 
         template <template <class> class Fn>
         using Apply = const Fn<T>;
     };
-    template< class T > struct RemoveCv<volatile T> { 
-        typedef T type; 
+    template <class T>
+    struct RemoveCv<volatile T> {
+        typedef T type;
 
         template <template <class> class Fn>
         using Apply = volatile Fn<T>;
     };
-    template< class T > struct RemoveCv<const volatile T> { 
-        typedef T type; 
+    template <class T>
+    struct RemoveCv<const volatile T> {
+        typedef T type;
 
         template <template <class> class Fn>
         using Apply = const volatile Fn<T>;
     };
 
-    template< class T > struct RemoveConst { typedef T type; };
-    template< class T > struct RemoveConst<const T> { typedef T type; };
+    template <class T>
+    struct RemoveConst {
+        typedef T type;
+    };
+    template <class T>
+    struct RemoveConst<const T> {
+        typedef T type;
+    };
 
-    template< class T > struct RemoveVolatile { typedef T type; };
-    template< class T > struct RemoveVolatile<volatile T> { typedef T type; };
+    template <class T>
+    struct RemoveVolatile {
+        typedef T type;
+    };
+    template <class T>
+    struct RemoveVolatile<volatile T> {
+        typedef T type;
+    };
 
-    template<class T>
-    struct RemoveExtent { typedef T type; };
+    template <class T>
+    struct RemoveExtent {
+        typedef T type;
+    };
 
-    template<class T>
-    struct RemoveExtent<T[]> { typedef T type; };
+    template <class T>
+    struct RemoveExtent<T[]> {
+        typedef T type;
+    };
 
-    template<class T, size_t N>
-    struct RemoveExtent<T[N]> { typedef T type; };
+    template <class T, size_t N>
+    struct RemoveExtent<T[N]> {
+        typedef T type;
+    };
 
     template <class T>
     using RemoveReferenceT = typename RemoveReference<T>::type;
 
-    template<class T> struct AddCv { typedef const volatile T type; };
-    template<class T> struct AddConst { typedef const T type; };
-    template<class T> struct AddVolatile { typedef volatile T type; };
+    template <class T>
+    struct AddCv {
+        typedef const volatile T type;
+    };
+    template <class T>
+    struct AddConst {
+        typedef const T type;
+    };
+    template <class T>
+    struct AddVolatile {
+        typedef volatile T type;
+    };
+
+    template <class T, class = void>
+    struct AddPointerImpl {
+        using type = T;
+    };
 
     template <class T>
-    struct AddLvalueReference : decltype(detail::TryAddLvalueReference<T>(0)) {};
-    template <class T>
-    struct AddRvalueReference : decltype(detail::TryAddRvalueReference<T>(0)) {};
+    struct AddPointerImpl<T, VoidT<typename RemoveReference<T>::type*>> {
+        using type = typename RemoveReference<T>::type*;
+    };
 
     template <class T>
-    struct AddPointer : decltype(detail::TryAddPointer<T>(0)) {};
+    struct AddPointer {
+        using type = typename AddPointerImpl<T>::type;
+    };
 
     // is same
-    template<class T, class U>
+    template <class T, class U>
     struct IsSame : FalseType {};
 
-    template<class T>
+    template <class T>
     struct IsSame<T, T> : TrueType {};
 
     // isvoid
-    template< class T >
+    template <class T>
     struct IsVoid : IsSame<void, typename RemoveCv<T>::type> {};
 
     // is lvalue reference
-    template<class T> struct IsLvalueReference : FalseType {};
-    template<class T> struct IsLvalueReference<T&> : TrueType {};
+    template <class T>
+    struct IsLvalueReference : FalseType {};
+    template <class T>
+    struct IsLvalueReference<T&> : TrueType {};
 
     // enable if
-    template<bool B, class T = void>
+    template <bool B, class T = void>
     struct EnableIf {};
 
-    template<class T>
-    struct EnableIf<true, T> { typedef T type; };
+    template <class T>
+    struct EnableIf<true, T> {
+        typedef T type;
+    };
 
     template <bool B, class T = void>
     using EnableIfT = typename EnableIf<B, T>::type;
 
     // conditional
-    template<bool cond, class TrueT, class FalseT>
+    template <bool cond, class TrueT, class FalseT>
     struct Conditional {
         using type = TrueT;
     };
 
-    template<class TrueT, class FalseT>
+    template <class TrueT, class FalseT>
     struct Conditional<false, TrueT, FalseT> {
         using type = FalseT;
     };
 
-    template<bool cond, class TrueType, class FalseType>
+    template <bool cond, class TrueType, class FalseType>
     using ConditionalT = typename Conditional<cond, TrueType, FalseType>::type;
 
     // conjuction
-    template<class...> struct Conjunction : TrueType { };
-    template<class B1> struct Conjunction<B1> : B1 { };
-    template<class B1, class... Bn>
-    struct Conjunction<B1, Bn...>
-        : Conditional<bool(B1::value), Conjunction<Bn...>, B1> {};
+    template <class...>
+    struct Conjunction : TrueType {};
+    template <class B1>
+    struct Conjunction<B1> : B1 {};
+    template <class B1, class... Bn>
+    struct Conjunction<B1, Bn...> : Conditional<bool(B1::value), Conjunction<Bn...>, B1> {};
 
     // disjunction
     template <bool FirstValue, class First, class... Rest>
@@ -274,18 +336,13 @@ namespace ARLib {
     };
 
     template <class... Traits>
-    struct Disjunction : FalseType {}; // If _Traits is empty, false_type
+    struct Disjunction : FalseType {}; // If Traits is empty, false_type
 
     template <class First, class... Rest>
-    struct Disjunction<First, Rest...> : DisjunctionBase<First::value, First, Rest...>::type {
-    };
+    struct Disjunction<First, Rest...> : DisjunctionBase<First::value, First, Rest...>::type {};
 
     template <class... Traits>
     inline constexpr bool DisjunctionV = Disjunction<Traits...>::value;
-
-    // declval
-    template<class T>
-    typename AddRvalueReference<T>::type declval() noexcept;
 
     template <class T>
     [[nodiscard]] constexpr T* addressof(T& val) noexcept {
@@ -295,17 +352,16 @@ namespace ARLib {
     template <class T, class... Types>
     inline constexpr bool IsAnyOfV = DisjunctionV<IsSame<T, Types>...>;
 
-    [[nodiscard]] constexpr bool is_constant_evaluated() noexcept {
-        return __builtin_is_constant_evaluated();
-    }
+    [[nodiscard]] constexpr bool is_constant_evaluated() noexcept { return __builtin_is_constant_evaluated(); }
 
     template <class T>
-    inline constexpr bool IsIntegralV = IsAnyOfV<typename RemoveCv<T>::type, bool, char, signed char, unsigned char,
-        wchar_t,
-        char16_t, char32_t, short, unsigned short, int, unsigned int, long, unsigned long, long long, unsigned long long>;
+    inline constexpr bool IsIntegralV =
+    IsAnyOfV<typename RemoveCv<T>::type, bool, char, signed char, unsigned char, wchar_t, char16_t, char32_t, short,
+             unsigned short, int, unsigned int, long, unsigned long, long long, unsigned long long>;
 
     template <class T>
-    inline constexpr bool IsSizeV = IsAnyOfV<typename RemoveCv<T>::type, unsigned int, unsigned long, unsigned long long>;
+    inline constexpr bool IsSizeV =
+    IsAnyOfV<typename RemoveCv<T>::type, unsigned int, unsigned long, unsigned long long>;
 
     template <class T>
     struct IsIntegral : BoolConstant<IsIntegralV<T>> {};
@@ -318,69 +374,53 @@ namespace ARLib {
 
     // ptrsize
     using PtrSize = ConditionalT<sizeof(void*) == 8, uint64_t, uint32_t>;
-    
-    template<typename...> using VoidT = void;
-    
+
     class Undefined;
 
     // Given Template<T, ...> return T, otherwise invalid.
-    template<typename T>
-    struct GetFirstArg
-    {
+    template <typename T>
+    struct GetFirstArg {
         using type = Undefined;
     };
 
-    template<template<typename, typename...> class Template, typename T,
-        typename... Types>
-        struct GetFirstArg<Template<T, Types...>>
-    {
+    template <template <typename, typename...> class Template, typename T, typename... Types>
+    struct GetFirstArg<Template<T, Types...>> {
         using type = T;
     };
 
-    template<typename T>
+    template <typename T>
     using GetFirstArgT = typename GetFirstArg<T>::type;
 
     // Given Template<T, ...> and U return Template<U, ...>, otherwise invalid.
-    template<typename T, typename U>
-    struct ReplaceFirstArg
-    { };
+    template <typename T, typename U>
+    struct ReplaceFirstArg {};
 
-    template<template<typename, typename...> class Template, typename U,
-        typename T, typename... Types>
-        struct ReplaceFirstArg<Template<T, Types...>, U>
-    {
+    template <template <typename, typename...> class Template, typename U, typename T, typename... Types>
+    struct ReplaceFirstArg<Template<T, Types...>, U> {
         using type = Template<U, Types...>;
     };
 
-    template<typename T, typename U>
+    template <typename T, typename U>
     using ReplaceFirstArgT = typename ReplaceFirstArg<T, U>::type;
 
-    template<typename T>
+    template <typename T>
     using MakeNotVoid = typename Conditional<IsVoid<T>::value, Undefined, T>::type;
 
-
-    template<typename Default, typename _AlwaysVoid,
-        template<typename...> class Op, typename... Args>
-    struct Detector
-    {
+    template <typename Default, typename AlwaysVoid, template <typename...> class Op, typename... Args>
+    struct Detector {
         using value_t = FalseType;
         using type = Default;
     };
 
-    template<typename Default, template<typename...> class Op,
-        typename... Args>
-        struct Detector<Default, VoidT<Op<Args...>>, Op, Args...>
-    {
+    template <typename Default, template <typename...> class Op, typename... Args>
+    struct Detector<Default, VoidT<Op<Args...>>, Op, Args...> {
         using value_t = TrueType;
         using type = Op<Args...>;
     };
 
-    template<typename Default, template<typename...> class Op,
-        typename... Args>
-        using DetectedOr = Detector<Default, void, Op, Args...>;
+    template <typename Default, template <typename...> class Op, typename... Args>
+    using DetectedOr = Detector<Default, void, Op, Args...>;
 
-    template<typename Default, template<typename...> class Op,
-        typename... Args>
-        using DetectedOrT
-        = typename DetectedOr<Default, Op, Args...>::type;
-}
+    template <typename Default, template <typename...> class Op, typename... Args>
+    using DetectedOrT = typename DetectedOr<Default, Op, Args...>::type;
+} // namespace ARLib
