@@ -44,6 +44,7 @@ namespace ARLib {
             m_storage = other.m_storage;
             m_count = other.m_count;
             (*m_count)++;
+            return *this;
         }
         T* release() {
             T* ptr = m_storage;

@@ -1,5 +1,7 @@
 #pragma once
+#include "Concepts.h"
 #include "Utility.h"
+#include "Macros.h"
 
 namespace ARLib {
     struct DefaultErr {};
@@ -79,6 +81,17 @@ namespace ARLib {
             T_ok ok{args...};
             Result res{Forward<T_ok>(ok)};
             return res;
+        }
+
+        template <typename... Args>
+        static Result from(Args... args) {
+            if constexpr (Constructable<T_ok, Args...>) {
+                return from_ok(args...);
+            } else if constexpr (Constructable<T_err, Args...>) {
+                return from_error(args...);
+            } else {
+                COMPTIME_ASSERT("Invalid types for constructor of T_ok or T_err");
+            }
         }
         CurrType type() const { return m_type; }
         bool is_error() const { return m_type == CurrType::Error; }
