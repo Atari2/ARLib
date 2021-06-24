@@ -5,10 +5,27 @@
 
 namespace ARLib {
 
+    constexpr inline size_t npos_ = static_cast<size_t>(-1);
+
     template <typename C, size_t N>
     consteval size_t sizeof_array(C (&)[N]) {
         return N;
     }
+
+    template <IteratorConcept Iter>
+    requires EqualityComparable<typename Iter::Type> size_t find(Iter begin, Iter end, const typename Iter::Type& elem) {
+        if (begin == end) return npos_;
+        size_t index = 0; 
+        for (; begin != end; begin++, index++)
+            if (*begin == elem) return index;
+        return npos_;
+    }
+
+    template <typename C, typename T>
+    requires Iterable<C> auto find(const C& cont, const T& elem) {
+        return find(cont.begin(), cont.end(), elem);
+    }
+
 
     template <IteratorConcept Iter>
     requires MoreComparable<typename Iter::Type> Iter max(Iter begin, Iter end) {
@@ -141,3 +158,4 @@ using ARLib::max;
 using ARLib::min;
 using ARLib::prime_generator;
 using ARLib::sort;
+using ARLib::find;

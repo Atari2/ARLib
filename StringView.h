@@ -53,6 +53,9 @@ namespace ARLib {
         [[nodiscard]] size_t size() const { return m_end - m_start; }
         [[nodiscard]] size_t length() const { return m_end - m_start; }
         [[nodiscard]] const char* data() const { return m_start; }
+        // this const_cast is safe because the original buffer is not const
+        // String's internal buffers are not const'ed
+        [[nodiscard]] char* rawptr() { return const_cast<char*>(m_start); }
         [[nodiscard]] ConstIterator<char> begin() { return {m_start}; }
         [[nodiscard]] ConstIterator<char> end() { return {m_end}; }
         [[nodiscard]] String extract_string() const { return String(m_start, length()); }
