@@ -249,14 +249,25 @@ namespace ARLib {
     struct AddCv {
         typedef const volatile T type;
     };
+
+    template <class T>
+    using AddCvT = typename AddCv<T>::type;
+
     template <class T>
     struct AddConst {
         typedef const T type;
     };
+
+    template <class T>
+    using AddConstT = typename AddConst<T>::type;
+
     template <class T>
     struct AddVolatile {
         typedef volatile T type;
     };
+
+    template <class T>
+    using AddVolatileT = typename AddVolatile<T>::type;
 
     template <class T, class = void>
     struct AddPointerImpl {
