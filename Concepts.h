@@ -192,6 +192,11 @@ namespace ARLib {
     };
 
     template <typename T>
+    concept EnumerableC = Iterable<T>&& requires(T a) {
+        {a.size()};
+    };
+
+    template <typename T>
     concept Stringable = requires(T a) {
         {a.to_string()};
     };

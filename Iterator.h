@@ -1,6 +1,8 @@
 #pragma once
 #include "BaseTraits.h"
 #include "Types.h"
+#include "Pair.h"
+#include "RefBox.h"
 
 namespace ARLib {
     template <typename T>
@@ -229,9 +231,37 @@ namespace ARLib {
         ConstReverseIterator<Ct> operator-(int offset) { return {m_current + offset}; }
     };
 #undef m_current
+
+    template <typename T>
+    class Enumerator {
+        Iterator<T> m_iter;
+        size_t m_index;
+
+        using Unit = Pair<size_t,T&>;
+
+        public:
+        using Type = T;
+        Enumerator(T* begin) : m_iter(begin), m_index(0) {}
+        Enumerator(T* begin, size_t index) : m_iter(begin), m_index(index){}
+        Enumerator(Iterator<T> iter, size_t index) : m_iter(iter), m_index(index) {}
+        Unit operator*() { return {m_index, *m_iter}; }
+
+        Enumerator& operator++() {
+            m_index++;
+            m_iter++;
+            return *this;
+        }
+
+        Enumerator operator++(int) { return {m_iter++, m_index++}; }
+        bool operator==(const Enumerator& other) const { return m_index == other.m_index; }
+        bool operator!=(const Enumerator& other) const { return m_index != other.m_index; }
+        bool operator<(const Enumerator& other) { return m_index < other.m_index; }
+        bool operator>(const Enumerator& other) { return m_index > other.m_index; }
+    };
 } // namespace ARLib
 
 using ARLib::ConstIterator;
 using ARLib::ConstReverseIterator;
 using ARLib::Iterator;
 using ARLib::ReverseIterator;
+using ARLib::Enumerator;

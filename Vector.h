@@ -18,6 +18,7 @@ namespace ARLib {
         using ConstIter = ConstIterator<T>;
         using ReverseIter = ReverseIterator<T>;
         using ConstReverseIter = ConstReverseIterator<T>;
+        using Enumer = Enumerator<T>;
 
         T* m_storage = nullptr;
         T* m_end_of_storage = nullptr;
@@ -132,9 +133,9 @@ namespace ARLib {
             round_to_capacity_(capacity);
         }
 
-        void resize(size_t capacity) requires DefaultConstructible<T> {
-            reserve(capacity);
-            for (size_t i = 0; i < capacity; i++)
+        void resize(size_t size) requires DefaultConstructible<T> {
+            reserve(size);
+            for (size_t i = 0; i < size; i++)
                 append({});
         }
 
@@ -149,6 +150,49 @@ namespace ARLib {
         void append(T&& value) {
             ensure_capacity_();
             append_internal_single_(Forward<T>(value));
+        }
+
+        template <typename... Args>
+        requires Constructible<T, Args...> void emplace(Args... args) {
+            ensure_capacity_();
+            T val{args...};
+            append_internal_single_(Forward<T>(val));
+        }
+
+        void insert(size_t index, const T& value) {
+            if constexpr (DefaultConstructible<T>) {
+                if (index < m_size) {
+                    // index is replacing an element
+                    m_storage[index] = value;
+                } else {
+                    // index is outside of size
+                    resize(index);
+                    append(value);
+                }
+            } else {
+                SOFT_ASSERT_FMT(assert_size_(index),
+                                "Index %lu was out of bounds in vector of size %lu and T was not default constructible",
+                                index, m_size);
+                m_storage[index] = value;
+            }
+        }
+
+        void insert(size_t index, T&& value) {
+            if constexpr (DefaultConstructible<T>) {
+                if (index < m_size) {
+                    // index is replacing an element
+                    m_storage[index] = move(value);
+                } else {
+                    // index is outside of size
+                    resize(index);
+                    append(Forward<T>(value));
+                }
+            } else {
+                SOFT_ASSERT_FMT(assert_size_(index),
+                                "Index %lu was out of bounds in vector of size %lu and T was not default constructible",
+                                index, m_size);
+                m_storage[index] = move(value);
+            }
         }
 
         void push_back(const T& value) { append(value); }
@@ -209,6 +253,10 @@ namespace ARLib {
         bool empty() const { return m_size == 0; }
 
         const T* data() { return m_storage; }
+
+        Enumer enumerate_begin() const { return {m_storage}; }
+
+        Enumer enumerate_end() const { return {m_storage + m_size, m_size}; }
 
         Iter begin() const { return {m_storage}; }
 
