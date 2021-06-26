@@ -85,9 +85,9 @@ namespace ARLib {
 
         template <typename... Args>
         static Result from(Args... args) {
-            if constexpr (Constructable<T_ok, Args...>) {
+            if constexpr (Constructible<T_ok, Args...>) {
                 return from_ok(args...);
-            } else if constexpr (Constructable<T_err, Args...>) {
+            } else if constexpr (Constructible<T_err, Args...>) {
                 return from_error(args...);
             } else {
                 COMPTIME_ASSERT("Invalid types for constructor of T_ok or T_err");
