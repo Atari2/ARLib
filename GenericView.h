@@ -9,8 +9,8 @@ namespace ARLib {
         T* m_end_view = nullptr;
 
         public:
-        GenericView(T* begin, T* end) : m_begin_view(begin), m_end_view(m_end_view) {}
-        GenericView(T* begin, size_t size) : m_begin_view(begin), m_end_view(begin + size) {}
+        GenericView(T* begin, T* end) : m_begin_view(begin), m_end_view(end) {}
+        GenericView(T* begin, size_t size) : m_begin_view(begin), m_end_view(begin + size - 1) {}
 
         // this constructor works only if the container operates on contiguous memory (e.g. not a linked list)
         // actually this whole class only operates on contiguous memory

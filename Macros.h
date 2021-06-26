@@ -20,3 +20,6 @@
 #define DEBUGMSG(msg)         noop;
 #define DEBUGFMTMSG(msg, ...) noop;
 #endif
+
+
+#define COMPTIME_ASSERT(msg) []<bool flag = false>() { static_assert(flag, msg); }();

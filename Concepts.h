@@ -217,4 +217,12 @@ namespace ARLib {
 
     template <typename T>
     concept Enum = IsEnumV<T>;
+
+    template <class T, typename... Args>
+    concept Constructable = requires(Args... a) {
+        {
+            T { a... }
+        }
+        ->SameAs<T>;
+    };
 } // namespace ARLib

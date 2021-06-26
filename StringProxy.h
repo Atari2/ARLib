@@ -14,10 +14,10 @@ namespace ARLib {
         size_t m_size = 0;
 
         public:
-        StringProxy(StringProxy&&) = delete;
-        StringProxy(const StringProxy&) = delete;
-        StringProxy& operator=(const StringProxy&) = delete;
-        StringProxy& operator=(StringProxy&&) = delete;
+        StringProxy(StringProxy&&) = default;
+        StringProxy(const StringProxy&) = default;
+        StringProxy& operator=(const StringProxy&) = default;
+        StringProxy& operator=(StringProxy&&) = default;
 
         StringProxy(String&);
         StringProxy(StringView);
