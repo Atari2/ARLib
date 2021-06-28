@@ -1,10 +1,12 @@
 #pragma once
 #include "Concepts.h"
-#include "Utility.h"
 #include "Macros.h"
+#include "Utility.h"
 
 namespace ARLib {
     struct DefaultErr {};
+
+    struct DefaultOk {};
 
     enum class CurrType : bool { Ok, Error };
 
@@ -16,9 +18,6 @@ namespace ARLib {
             T_err m_err;
         };
 
-        Result(T_ok&& ok) : m_type(CurrType::Ok), m_ok(move(ok)) {}
-        Result(T_err&& err) : m_type(CurrType::Error), m_err(move(err)) {}
-
         Result(const Result& other) : m_type(other.m_type) {
             if (other.is_error()) {
                 m_err = other.m_err;
@@ -26,7 +25,7 @@ namespace ARLib {
                 m_ok = other.m_ok;
             }
         }
-        Result(Result&& other) : m_type(other.m_type) {
+        Result(Result&& other) noexcept : m_type(other.m_type) {
             if (other.is_error()) {
                 m_err = move(other.m_err);
             } else {
@@ -69,6 +68,9 @@ namespace ARLib {
         }
 
         public:
+        Result(T_ok&& ok) : m_type(CurrType::Ok), m_ok(move(ok)) {}
+        Result(T_err&& err) : m_type(CurrType::Error), m_err(move(err)) {}
+
         template <typename... Args>
         static Result from_error(Args... args) {
             T_err err{args...};
@@ -107,9 +109,19 @@ namespace ARLib {
 
         operator bool() const { return is_ok(); }
 
-        ~Result() {}
+        ~Result() { 
+            if (m_type == CurrType::Ok) {
+                m_ok.~T_ok();
+            } else {
+                m_err.~T_err();
+            }
+        }
     };
+
+    template <typename T_err>
+    using DiscardResult = class Result<DefaultOk, T_err>;
 
 } // namespace ARLib
 
+using ARLib::DiscardResult;
 using ARLib::Result;
