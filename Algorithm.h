@@ -5,6 +5,11 @@
 
 namespace ARLib {
 
+    template <typename T>
+    constexpr inline auto sum_default = [](const T& elem) {
+        return elem;
+    };
+
     constexpr inline size_t npos_ = static_cast<size_t>(-1);
 
     template <typename C, size_t N>
@@ -45,8 +50,8 @@ namespace ARLib {
         return value;
     }
 
-    template <IteratorConcept Iter, typename Functor>
-    auto sum(Iter begin, Iter end, Functor&& func) {
+    template <IteratorConcept Iter, typename Functor = decltype(sum_default<typename Iter::Type>)>
+    auto sum(Iter begin, Iter end, Functor func = sum_default<typename Iter::Type>) {
         if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
         auto total = func(*begin);
         begin++;
@@ -66,8 +71,8 @@ namespace ARLib {
     }
 
     template <typename C, typename Functor>
-    requires Iterable<C> auto sum(const C& cont, Functor&& func) {
-        return sum(cont.begin(), cont.end(), Forward<Functor>(func));
+    requires Iterable<C> auto sum(const C& cont, Functor func) {
+        return sum(cont.begin(), cont.end(), func);
     }
 
     // follows very naive quicksort implementation
@@ -154,6 +159,7 @@ namespace ARLib {
     size_t prime_generator(size_t n);
 } // namespace ARLib
 
+using ARLib::sum;
 using ARLib::max;
 using ARLib::min;
 using ARLib::prime_generator;
