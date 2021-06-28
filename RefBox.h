@@ -13,10 +13,7 @@ namespace ARLib {
         public:
         RefBox(TRef obj) : m_boxed(obj) {}
         RefBox(const RefBox& other) : m_boxed(other.m_boxed) { }
-        RefBox& operator=(const RefBox& other) {
-            m_boxed = other.m_boxed;
-            return *this;
-        }
+        RefBox(RefBox&& other) : m_boxed(move(other.m_boxed)) { }
 
         TRef operator*() { return m_boxed; }
         const TRef operator*() const { return m_boxed; }
