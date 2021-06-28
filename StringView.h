@@ -69,7 +69,7 @@ namespace ARLib {
         bool is_empty() const { return !m_start; }
     };
 
-    StringView operator""_sv(const char* source, size_t len);
+    constexpr StringView operator""_sv(const char* source, size_t len) { return StringView{source, len + 1}; }
 
     template <>
     struct Hash<StringView> {
