@@ -21,6 +21,10 @@ namespace ARLib {
 
     long ftell(FILE* fp) { return ::ftell(fp); }
 
+    size_t fread(void* buffer, size_t size, size_t count, FILE* fp) { return ::fread(buffer, size, count, fp); }
+
+    size_t fwrite(const void* buffer, size_t size, size_t count, FILE* fp) { return ::fwrite(buffer, size, count, fp); }
+
     int puts(const char* buf) { return ::puts(buf); }
 
     int fputs(const char* buf, FILE* fp) { return ::fputs(buf, fp); }
