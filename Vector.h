@@ -91,6 +91,22 @@ namespace ARLib {
             other.m_size = 0;
             other.m_capacity = 0;
         }
+        Vector(const Vector& other) noexcept {
+            reserve(other.capacity());
+            for (auto& val : other) {
+                append(val);
+            }
+        }
+
+        Vector& operator=(const Vector& other) {
+            clear_();
+            reserve(other.capacity());
+            for (auto& val : other) {
+                append(val);
+            }
+            return *this;
+        }
+
         Vector(size_t capacity) { round_to_capacity_(capacity); }
 
         Vector(std::initializer_list<T> list) {

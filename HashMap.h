@@ -59,6 +59,11 @@ namespace ARLib {
 
         public:
         HashMap() = default;
+        HashMap(const HashMap& other) { m_table = other.m_table; }
+        HashMap& operator=(const HashMap& other) {
+            m_table = other.m_table;
+            return *this;
+        }
         double load() { return m_table.load(); };
 
         InsertionResult add(Key key, Val value) {

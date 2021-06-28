@@ -133,8 +133,21 @@ namespace ARLib {
         static constexpr size_t table_sizes[3] = {13, 19, 31};
         Hash<T> hasher{};
         HashTable() { m_storage.resize(m_bucket_count); }
+        HashTable(const HashTable& other) {
+            m_storage = other.m_storage;
+            m_bucket_count = other.m_bucket_count;
+            m_size = other.m_size;
+            hasher = other.hasher;
+        }
         HashTable(size_t initial_bucket_count) : m_size(initial_bucket_count) {
             m_storage.resize(initial_bucket_count);
+        }
+        HashTable& operator=(const HashTable& other) {
+            m_storage = other.m_storage;
+            m_bucket_count = other.m_bucket_count;
+            m_size = other.m_size;
+            hasher = other.hasher;
+            return *this;
         }
         template <typename... Args>
         HashTable(T&& a, T&& b, Args&&... args) {
@@ -167,7 +180,6 @@ namespace ARLib {
             // this is not good, calculating load() every time is costy
             double ld = load();
             if (ld >= load_factor) {
-                printf("Rehashing because load is %lf...\n", ld);
                 rehash_internal_();
             }
             auto hs = hasher(entry);
