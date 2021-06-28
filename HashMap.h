@@ -21,6 +21,12 @@ namespace ARLib {
         HashMapEntry(const HashMapEntry& other) : m_key(other.m_key), m_value(other.m_value) {
             m_hashval = other.m_hashval;
         }
+        HashMapEntry& operator=(const HashMapEntry& other) {
+            m_key = other.m_key;
+            m_value = other.m_value;
+            m_hashval = other.m_hashval;
+            return *this;
+        }
 
         HashMapEntry& operator=(HashMapEntry&& other) noexcept {
             m_key = move(other.m_key);
