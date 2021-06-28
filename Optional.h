@@ -59,6 +59,7 @@ namespace ARLib {
             return *this;
         }
 
+        bool operator!() { return !m_exists; }
         operator bool() { return m_exists; }
         operator T() {
             assert_not_null_();
