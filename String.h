@@ -292,6 +292,10 @@ namespace ARLib {
         }
         [[nodiscard]] Ordering operator<=>(const StringView& other) const;
 
+        void set_size(size_t size) { 
+            m_size = size;
+            get_buf_internal()[m_size] = '\0';
+        }
         [[nodiscard]] size_t size() const { return m_size; }
         [[nodiscard]] size_t length() const { return m_size; }
         [[nodiscard]] size_t capacity() const { return is_local() ? SMALL_STRING_CAP : m_allocated_capacity; }
@@ -370,8 +374,10 @@ namespace ARLib {
 
         // iterator support
         [[nodiscard]] Iterator<char> begin() { return {get_buf_internal()}; }
+        [[nodiscard]] Iterator<const char> begin() const { return {get_buf_internal()}; }
         [[nodiscard]] Iterator<char> rbegin() { return end() - 1; }
         [[nodiscard]] Iterator<char> end() { return {get_buf_internal() + m_size}; }
+        [[nodiscard]] Iterator<const char> end() const { return {get_buf_internal() + m_size}; }
         [[nodiscard]] Iterator<char> rend() { return begin() - 1; }
         [[nodiscard]] char front() const { return get_buf_internal()[0]; }
         [[nodiscard]] char back() const { return get_buf_internal()[m_size - 1]; }
