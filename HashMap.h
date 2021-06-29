@@ -56,16 +56,18 @@ namespace ARLib {
 
     template <Hashable Key, typename Val, size_t TBL_SIZE_INDEX = 0>
     class HashMap {
-        // TODO: make it expandable at runtime
-        // should be easy? needs a rehash
-        // rehash based on load()
         using MapEntry = HashMapEntry<Key, Val>;
         using Iter = HashTableIterator<MapEntry>;
         HashTable<MapEntry, TBL_SIZE_INDEX> m_table{};
 
         public:
         HashMap() = default;
-        HashMap(const HashMap& other) { m_table = other.m_table; }
+        HashMap(const HashMap& other) : m_table(other.m_table) {}
+        HashMap(HashMap&& other) : m_table(move(other.m_table)) {}
+        HashMap& operator=(HashMap&& other) {
+            m_table = move(other.m_table);
+            return *this;
+        }
         HashMap& operator=(const HashMap& other) {
             m_table = other.m_table;
             return *this;

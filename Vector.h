@@ -93,17 +93,32 @@ namespace ARLib {
         }
         Vector(const Vector& other) noexcept {
             reserve(other.capacity());
-            for (auto& val : other) {
-                append(val);
+            if constexpr (IsTriviallyCopiableV<T>) {
+                memcpy(m_storage, other.m_storage, sizeof(T) * other.m_size);
+            } else {
+                for (auto& val : other) {
+                    append(val);
+                }
             }
         }
 
         Vector& operator=(const Vector& other) {
-            clear_();
             reserve(other.capacity());
-            for (auto& val : other) {
-                append(val);
+            for (size_t i = 0; i < other.m_size; i++) {
+                m_storage[i] = other.m_storage[i];
             }
+            m_size = other.m_size;
+            return *this;
+        }
+        Vector& operator=(Vector&& other) noexcept {
+            m_storage = other.m_storage;
+            m_end_of_storage = other.m_end_of_storage;
+            m_capacity = other.m_capacity;
+            m_size = other.m_size;
+            other.m_storage = nullptr;
+            other.m_end_of_storage = nullptr;
+            other.m_size = 0;
+            other.m_capacity = 0;
             return *this;
         }
 
@@ -130,18 +145,6 @@ namespace ARLib {
             }
             round_to_capacity_(sizeof...(values) + 2);
             append_internal_(Forward<T>(val1), Forward<T>(val2), Forward<Values>(values)...);
-        }
-
-        Vector& operator=(Vector&& other) noexcept {
-            m_storage = other.m_storage;
-            m_end_of_storage = other.m_end_of_storage;
-            m_capacity = other.m_capacity;
-            m_size = other.m_size;
-            other.m_storage = nullptr;
-            other.m_end_of_storage = nullptr;
-            other.m_size = 0;
-            other.m_capacity = 0;
-            return *this;
         }
 
         void reserve(size_t capacity) {

@@ -139,11 +139,24 @@ namespace ARLib {
             m_size = other.m_size;
             hasher = other.hasher;
         }
+        HashTable(HashTable&& other) {
+            m_storage = move(other.m_storage);
+            m_bucket_count = other.m_bucket_count;
+            m_size = other.m_size;
+            hasher = other.hasher;
+        }
         HashTable(size_t initial_bucket_count) : m_size(initial_bucket_count) {
             m_storage.resize(initial_bucket_count);
         }
         HashTable& operator=(const HashTable& other) {
             m_storage = other.m_storage;
+            m_bucket_count = other.m_bucket_count;
+            m_size = other.m_size;
+            hasher = other.hasher;
+            return *this;
+        }
+        HashTable& operator=(HashTable&& other) {
+            m_storage = move(other.m_storage);
             m_bucket_count = other.m_bucket_count;
             m_size = other.m_size;
             hasher = other.hasher;
