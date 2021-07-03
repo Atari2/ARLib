@@ -233,8 +233,13 @@ namespace ARLib {
         }
 
         template <typename Functor>
-        void for_each(Functor&& func) {
+        void for_each(Functor&& func) const {
             for (auto& v : *this)
+                func(v);
+        }
+
+        void for_each(void (*func)(const T&)) const {
+            for (const auto& v : *this)
                 func(v);
         }
 

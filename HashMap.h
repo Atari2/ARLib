@@ -14,7 +14,9 @@ namespace ARLib {
 
         public:
         HashMapEntry() : m_key(), m_value(), m_hashval(static_cast<size_t>(-1)) {}
-        HashMapEntry(Key key, Val value) : m_key(move(key)), m_value(move(value)) { m_hashval = Hash<Key>{}(m_key); }
+        HashMapEntry(Key&& key, Val&& value) : m_key(move(key)), m_value(move(value)) {
+            m_hashval = Hash<Key>{}(m_key);
+        }
         HashMapEntry(HashMapEntry&& other) noexcept : m_key(move(other.m_key)), m_value(move(other.m_value)) {
             m_hashval = other.m_hashval;
         }
@@ -82,14 +84,17 @@ namespace ARLib {
 
         template <typename Functor>
         void for_each(Functor func) {
-            m_table.for_each([&func](const MapEntry& entry) { func(entry); });
+            m_table.for_each(func);
         }
 
-        auto find(const Key& key) {
+        void for_each(void (*func)(const MapEntry&)) const { m_table.for_each(func); }
+
+        auto find(const Key& key) const {
             return m_table.find_if(Hash<Key>{}(key), [&key](const auto& entry) { return entry.key() == key; });
         }
 
         Val& operator[](const Key& key) { return (*find(key)).value(); }
+        const Val& operator[](const Key& key) const { return (*find(key)).value(); }
 
         Iter begin() { return m_table.tbegin(); }
 

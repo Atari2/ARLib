@@ -133,18 +133,16 @@ namespace ARLib {
         static constexpr size_t table_sizes[3] = {13, 19, 31};
         Hash<T> hasher{};
         HashTable() { m_storage.resize(m_bucket_count); }
-        HashTable(const HashTable& other) {
-            m_storage = other.m_storage;
-            m_bucket_count = other.m_bucket_count;
-            m_size = other.m_size;
-            hasher = other.hasher;
-        }
-        HashTable(HashTable&& other) {
-            m_storage = move(other.m_storage);
-            m_bucket_count = other.m_bucket_count;
-            m_size = other.m_size;
-            hasher = other.hasher;
-        }
+        HashTable(const HashTable& other) :
+            m_storage(other.m_storage),
+            m_bucket_count(other.m_bucket_count),
+            m_size(other.m_size),
+            hasher(other.hasher) {}
+        HashTable(HashTable&& other) :
+            m_storage(move(other.m_storage)),
+            m_bucket_count(other.m_bucket_count),
+            m_size(other.m_size),
+            hasher(move(other.hasher)) {}
         HashTable(size_t initial_bucket_count) : m_size(initial_bucket_count) {
             m_storage.resize(initial_bucket_count);
         }
@@ -180,8 +178,11 @@ namespace ARLib {
 
         template <typename Functor>
         void for_each(Functor func) {
-            int i = 0;
             m_storage.for_each([&func](auto& bkt) { bkt.for_each(func); });
+        }
+
+        void for_each(void (*func)(const T&)) const {
+            m_storage.for_each([&func](const auto& bkt) { bkt.for_each(func); });
         }
 
         InsertionResult insert(const T& val) {
@@ -192,9 +193,7 @@ namespace ARLib {
         InsertionResult insert(T&& entry) {
             // this is not good, calculating load() every time is costy
             double ld = load();
-            if (ld >= load_factor) {
-                rehash_internal_();
-            }
+            if (ld >= load_factor) { rehash_internal_(); }
             auto hs = hasher(entry);
             auto iter = find(entry);
             if (iter == end(hs)) {
@@ -219,7 +218,7 @@ namespace ARLib {
         }
 
         template <typename Functor>
-        auto find_if(size_t hash, Functor func) {
+        auto find_if(size_t hash, Functor func) const {
             const auto& bucket = m_storage[hash % m_bucket_count];
             for (auto it = bucket.begin(); it != bucket.end(); it++) {
                 auto& item = *it;
