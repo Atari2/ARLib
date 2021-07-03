@@ -3,7 +3,7 @@ import os
 from sys import argv
 import math
 
-patt = re.compile(r"(\w*)\((\w*)\)\[(.*)\]")
+patt = re.compile(r"(\w*)(<>)?\((\w*)\)\[(.*)\]")
 
 folder = argv[1]
 
@@ -22,8 +22,9 @@ for line in filter(lambda x: x.strip() and x.strip()[0] != '#', lines):
 	match = patt.match(line)
 	if match:
 		cls_name = match.group(1)
-		cls_type = match.group(2)
-		cls_members = match.group(3).split(',')
+		is_not_bitfield = match.group(2)
+		cls_type = match.group(3)
+		cls_members = match.group(4).split(',')
 		if not cls_type:
 			required_bytes = math.ceil(len(cls_members) / 8)
 			if required_bytes > 8:
@@ -35,5 +36,6 @@ for line in filter(lambda x: x.strip() and x.strip()[0] != '#', lines):
 			for i, member in enumerate(cls_members):
 				f.write(f'\t\t{member.strip()} = {1 << (i - 1) if i > 0 else 0},\n')
 			f.write('\t};\n')
-			f.write(f'\tMAKE_BITFIELD_ENUM({cls_name})\n')
+			if not is_not_bitfield:
+				f.write(f'\tMAKE_BITFIELD_ENUM({cls_name})\n')
 			f.write('}\n')

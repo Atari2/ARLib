@@ -2,12 +2,12 @@
 #include "Concepts.h"
 namespace ARLib {
     template <Enum T>
-    auto ToUnderlying(T value) {
+    constexpr auto ToUnderlying(T value) {
         return static_cast<UnderlyingTypeT<T>>(value);
     }
 
     template <Enum T>
-    auto UpCast(auto value) {
+    constexpr auto UpCast(auto value) {
         return static_cast<T>(value);
     }
 
