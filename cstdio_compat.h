@@ -54,7 +54,5 @@ namespace ARLib {
     int fprintf(FILE* fp, const char* fmt, ...);
     int sprintf(char* str, const char* format, ...);
     int snprintf(char* str, size_t n, const char* format, ...);
-#ifdef WINDOWS
     int scprintf(const char* format, ...);
-#endif
 } // namespace ARLib

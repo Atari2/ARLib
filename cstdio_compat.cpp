@@ -59,13 +59,15 @@ namespace ARLib {
         va_end(argptr);
         return ret;
     }
-#ifdef WINDOWS
     int scprintf(const char* format, ...) {
         va_list argptr;
         va_start(argptr, format);
+        #ifdef WINDOWS
         auto ret = ::_vscprintf_l(format, nullptr, argptr);
+        #else
+        auto ret = ::vsnprintf(nullptr, 0, format, argptr);
+        #endif
         va_end(argptr);
         return ret;
     }
-#endif
 } // namespace ARLib
