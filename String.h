@@ -66,11 +66,11 @@ namespace ARLib {
             }
         }
 
-        Vector<size_t> all_indexes(const char* any) const {
+        Vector<size_t> all_indexes(const char* any, size_t start_size = 0ull) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             for (size_t i = 0; i < size; i++) {
-                auto index = index_of(any[i]);
+                auto index = index_of(any[i], start_size);
                 while (index != npos) {
                     indexes.push_back(index);
                     index = index_of(any[i], index + 1);
@@ -243,6 +243,16 @@ namespace ARLib {
             }
             return *this;
         }
+
+        template <typename... Args>
+        static String formatted(const char* format, Args... args) {
+            String str{};
+            size_t len = scprintf(format, args...);
+            str.reserve(len);
+            str.set_size(sprintf(str.rawptr(), format, args...));
+            return str;
+        }
+
         ~String() {
             m_size = 0;
             if (!is_local()) {
@@ -471,8 +481,8 @@ namespace ARLib {
             }
             return npos;
         }
-        [[nodiscard]] size_t index_of_any(const char* any) const {
-            auto indexes = all_indexes(any);
+        [[nodiscard]] size_t index_of_any(const char* any, size_t start_size = 0ull) const {
+            auto indexes = all_indexes(any, start_size);
             return *min(indexes);
         }
         [[nodiscard]] size_t last_index_of_any(const char* any) const {

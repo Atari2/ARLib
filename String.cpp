@@ -64,5 +64,5 @@ namespace ARLib {
         return vec;
     }
 
-    String operator""_s(const char* source, size_t len) { return String{source, len + 1}; }
+    String operator""_s(const char* source, size_t len) { return String{source, len}; }
 } // namespace ARLib
