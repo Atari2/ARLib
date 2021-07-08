@@ -7,6 +7,7 @@ namespace ARLib {
     typedef int errno_t;
 #if defined(ENVIRON64)
     typedef unsigned __int64 size_t;
+    typedef signed __int64 ssize_t;
     typedef unsigned __int64 uintptr_t;
     typedef __int64 ptrdiff_t;
     typedef __int64 intptr_t;
@@ -28,6 +29,7 @@ namespace ARLib {
     static_assert(sizeof(long long) == sizeof(void*));
     typedef SIZED size_t;
     typedef SIZED uintptr_t;
+    typedef signed long long ssize_t;
     typedef long long ptrdiff_t;
     typedef long long intptr_t;
 #else
