@@ -2,9 +2,54 @@
 #include "Compat.h"
 #include "Macros.h"
 #include "cstdio_compat.h"
+#include "TypeTraits.h"
 
 void abort_arlib();
 void assertion_failed__(const char* msg);
+
+namespace ARLib {
+    enum class AssertWhat {
+        Eq,
+        NonEq,
+        PtrEq,
+        PtrNonEq
+    };
+
+    template <typename T1, typename T2, AssertWhat T3, typename = EnableIfT<ConvertibleV<T1, T2>>>
+    bool assert_test(const T1& first, const T2& second) {
+        if constexpr (T3 == AssertWhat::Eq) {
+            return first == second;
+        } else if constexpr (T3 == AssertWhat::NonEq) {
+            return first != second;
+        } else if constexpr (T3 == AssertWhat::PtrEq) {
+            return &first == &second;
+        } else if constexpr (T3 == AssertWhat::PtrNonEq) {
+            return &first != &second;
+        } else {
+            COMPTIME_ASSERT("Invalid Assert Test")
+        }
+    }
+
+    template <typename T1, typename T2, typename = EnableIfT<ConvertibleV<T1, T2>>>
+    bool assert_eq(const T1& first, const T2& second) {
+        return assert_test<T1, T2, AssertWhat::Eq>(first, second);
+    }
+
+    template <typename T1, typename T2, typename = EnableIfT<ConvertibleV<T1, T2>>>
+    bool assert_non_eq(const T1& first, const T2& second) {
+        return assert_test<T1, T2, AssertWhat::NonEq>(first, second);
+    }
+
+    template <typename T1, typename T2, typename = EnableIfT<ConvertibleV<T1, T2>>>
+    bool assert_ptr_eq(const T1& first, const T2& second) {
+        return assert_test<T1, T2, AssertWhat::PtrEq>(first, second);
+    }
+
+    template <typename T1, typename T2, typename = EnableIfT<ConvertibleV<T1, T2>>>
+    bool assert_ptr_non_eq(const T1& first, const T2& second) {
+        return assert_test<T1, T2, AssertWhat::PtrNonEq>(first, second);
+    }
+} // namespace ARLib
 
 #define HARD_ASSERT(val, msg)                                                                                          \
     if (!val) {                                                                                                        \
