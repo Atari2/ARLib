@@ -57,4 +57,25 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-      
+    - name: Test
+      shell: bash
+      run: ${{github.workspace}}/build/Tests/ARLibTestSuite
+      if: matrix.os == 'ubuntu-latest'
+    
+    - name: Test
+      shell: bash
+      run: ${{github.workspace}}/build/Tests/Release/ARLibTestSuite.exe
+    
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: ARLib
+        path: ${{github.workspace}}/build/Release/ARLib.lib
+      if: matrix.os == 'windows-latest'
+    
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: ARLib
+        path: ${{github.workspace}}/build/libARLib.a
+      if: matrix.os == 'ubuntu-latest'
