@@ -24,6 +24,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Setup compilers
+      run:  |
+            sudo apt update
+            sudo apt install gcc-10 g++-10
+      shell: bash
+      if: matrix.os == 'ubuntu-latest'
+    
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
 
@@ -33,6 +40,9 @@ jobs:
       shell: bash
       working-directory: ${{github.workspace}}/build
       run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      env:
+        CC: gcc-10
+        CXX: g++-10
       if: matrix.os == 'ubuntu-latest'
       
     - name: Configure CMake
