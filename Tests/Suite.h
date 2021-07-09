@@ -18,11 +18,12 @@ namespace ARLib {
         printf("Running test %llu, named \"%s\"\n", test_count, message);                                              \
         auto res = RUN_TEST(lambda, ##__VA_ARGS__);                                                                    \
         if (!res)                                                                                                      \
-            printf("Failed test %llu, named \"%s\"", test_count, message);                                             \
+            printf("Failed test %llu, named \"%s\"\n", test_count, message);                                           \
         else                                                                                                           \
             printf("Passed test %llu, named \"%s\"\n", test_count, message);                                           \
         if (res) passed_count++;                                                                                       \
         test_count++;                                                                                                  \
     } // namespace ARLib
-    void run_all_tests();
+#define RETURN_IF_NOT(x, y) if (!assert_eq(x, y)) return false;
+    bool run_all_tests();
 } // namespace ARLib

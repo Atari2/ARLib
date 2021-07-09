@@ -8,17 +8,19 @@ list(
 	APPEND TEST_SOURCE_FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/Suite.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Suite.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Runner.cpp"
 	)
 
-add_library(ARLibTestSuite ${TEST_SOURCE_FILES})
+add_executable(ARLibTestSuite ${TEST_SOURCE_FILES})
 if (WIN32 AND NOT CMAKE_COMPILER_IS_GNUCXX)
 	target_compile_options(ARLibTestSuite PRIVATE /std:c++latest /arch:AVX2)
 else()
 	if (WIN32)
 		target_compile_options(ARLibTestSuite PRIVATE -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra)
 	else()
+		message(STATUS "Building test runner")
 		target_compile_options(ARLibTestSuite PRIVATE -fsanitize=address,undefined,leak -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra)
 		target_link_options(ARLibTestSuite PRIVATE -fsanitize=address,undefined,leak)
-		target_link_libraries(ARLibTestSuite ARLib_asm_ext -fsanitize=address,undefined,leak)
+		target_link_libraries(ARLibTestSuite PRIVATE ARLib)
 	endif()
 endif()
