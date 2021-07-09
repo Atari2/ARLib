@@ -7,6 +7,7 @@
 #include "../Set.h"
 #include "../Optional.h"
 #include "../Result.h"
+#include "../Stack.h"
 
 namespace ARLib {
     bool run_all_tests() {
@@ -100,6 +101,20 @@ namespace ARLib {
             RETURN_IF_NOT(res2.is_error(), true);
             return true;
         };
+        auto stack = []() -> bool {
+            Stack<String> stack{};
+            RETURN_IF_NOT(stack.size(), 0ull);
+            stack.push("hello"_s);
+            stack.push("world"_s);
+            stack.push("testing"_s);
+            RETURN_IF_NOT(stack.size(), 3ull);
+            RETURN_IF_NOT(stack.peek(), "testing"_s);
+            RETURN_IF_NOT(stack.pop(), "testing"_s);
+            RETURN_IF_NOT(stack.peek(), "world"_s);
+            RETURN_IF_NOT(stack.pop(), "world"_s);
+            RETURN_IF_NOT(stack.size(), 1ull);
+            return true;
+        };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
         ASSERT_TEST("Vector equality", vec, Vector{"hello"_s}, Vector{"hello"_s});
         ASSERT_TEST("String length", strlen, "hello"_s, ARLib::strlen("hello"));
@@ -109,6 +124,7 @@ namespace ARLib {
         ASSERT_TEST("Set correctness, uniqueness", set);
         ASSERT_TEST("Optional correctness", optional);
         ASSERT_TEST("Result correctness", result);
+        ASSERT_TEST("Stack correctness", stack);
         printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }
