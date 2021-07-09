@@ -129,7 +129,7 @@ namespace ARLib {
         if (integral_part < 0) sign = -1.0;
         integral_part = abs(integral_part);
         auto fract_part = static_cast<double>(StrViewToI64(parts[1]));
-        fract_part /= pow(10.0, parts[1].length());
+        fract_part /= pow(10.0, static_cast<double>(parts[1].length()));
         return (integral_part + fract_part) * sign;
     }
 

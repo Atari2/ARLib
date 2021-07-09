@@ -66,7 +66,7 @@ namespace ARLib {
             return *m_object;
         }
 
-        bool empty() const { return m_exists; }
+        bool empty() const { return !m_exists; }
         bool has_value() const { return m_exists; };
         const T& value() const {
             assert_not_null_();
