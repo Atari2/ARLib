@@ -2,7 +2,6 @@
 #include "BaseTraits.h"
 #include "Types.h"
 #include "Pair.h"
-#include "RefBox.h"
 
 namespace ARLib {
     template <typename T>
