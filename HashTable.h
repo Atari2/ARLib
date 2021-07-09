@@ -9,6 +9,7 @@
 
 namespace ARLib {
     enum class InsertionResult { New, Replace };
+    enum class DeletionResult { Success, Failure };
 
     template <typename T>
     class HashTableIterator {
@@ -222,19 +223,26 @@ namespace ARLib {
             const auto& bucket = m_storage[hash % m_bucket_count];
             for (auto it = bucket.begin(); it != bucket.end(); it++) {
                 auto& item = *it;
-                if (hash == hasher(*it))
-                    if (func(*it)) return it;
+                if (hash == hasher(item))
+                    if (func(item)) return it;
             }
             return bucket.end();
         }
 
-        const auto end(size_t hash) { return m_storage[hash % m_bucket_count].end(); }
+        auto end(size_t hash) { return m_storage[hash % m_bucket_count].end(); }
 
         HashTableIterator<T> tbegin() { return {m_storage}; }
 
         HashTableIterator<T> tend() { return {m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos}; }
 
-        void remove(const T& val) { m_storage[hash(val) % m_bucket_count].remove(val); }
+        DeletionResult remove(const T& val) {
+            auto hs = hasher(val);
+            auto iter = find(val);
+            if (iter == end(hs)) { return DeletionResult::Failure; }
+            m_storage[hs % m_bucket_count].remove(val);
+            m_size--;
+            return DeletionResult::Success;
+        }
 
         size_t size() { return m_size; }
         size_t bucket_count() { return m_bucket_count; }

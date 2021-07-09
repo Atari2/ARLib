@@ -82,6 +82,11 @@ namespace ARLib {
         }
         InsertionResult add(MapEntry entry) { return m_table.insert(Forward<MapEntry>(entry)); }
 
+        DeletionResult remove(Key key) {
+            MapEntry entry{Forward<Key>(key), Val()};
+            return m_table.remove(entry);
+        }
+
         template <typename Functor>
         void for_each(Functor func) {
             m_table.for_each(func);
