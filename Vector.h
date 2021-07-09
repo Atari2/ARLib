@@ -3,6 +3,7 @@
 #include "Assertion.h"
 #include "Concepts.h"
 #include "Iterator.h"
+#include "Memory.h"
 #include "cstring_compat.h"
 #include "std_includes.h"
 
@@ -13,7 +14,6 @@ namespace ARLib {
     // https://godbolt.org/z/hnYj99MPc
     template <typename T>
     class Vector {
-        static_assert(MoveAssignableV<T>);
         using Iter = Iterator<T>;
         using ConstIter = ConstIterator<T>;
         using ReverseIter = ReverseIterator<T>;
@@ -25,19 +25,30 @@ namespace ARLib {
         size_t m_capacity = 0;
         size_t m_size = 0;
 
-        void append_internal_single_(T&& value) { m_storage[m_size++] = move(value); }
+        void append_internal_single_(T&& value) requires MoveAssignable<T> { m_storage[m_size++] = move(value); }
+        void append_internal_single_(const T& value) requires CopyAssignable<T> { m_storage[m_size++] = value; }
 
         void ensure_capacity_() {
             if (m_size == m_capacity) { round_to_capacity_(m_capacity); }
         }
 
         template <typename... Values>
-        void append_internal_(T&& value, Values&&... values) {
+        void append_internal_(T&& value, Values&&... values) requires MoveAssignable<T> {
             if constexpr (sizeof...(values) == 0) {
                 append_internal_single_(Forward<T>(value));
             } else {
                 append_internal_single_(Forward<T>(value));
                 append_internal_(Forward<Values>(values)...);
+            }
+        }
+
+        template <typename... Values>
+        void append_internal_(const T& value, const Values&... values) requires CopyAssignable<T> {
+            if constexpr (sizeof...(values) == 0) {
+                append_internal_single_(value);
+            } else {
+                append_internal_single_(value);
+                append_internal_(values...);
             }
         }
 
@@ -65,12 +76,10 @@ namespace ARLib {
         void resize_to_capacity_(size_t capacity) {
             m_capacity = capacity;
             T* new_storage = new T[m_capacity];
-            if constexpr (IsTriviallyCopiableV<T>) {
-                memcpy(new_storage, m_storage, sizeof(T) * m_size);
+            if constexpr (MoveAssignableV<T>) {
+                ConditionalBitMove(new_storage, m_storage, m_size);
             } else {
-                for (size_t i = 0; i < m_size; i++) {
-                    new_storage[i] = move(m_storage[i]);
-                }
+                ConditionalBitCopy(new_storage, m_storage, m_size);
             }
             delete[] m_storage;
             m_storage = new_storage;
@@ -160,13 +169,12 @@ namespace ARLib {
 
         void shrink_to_fit() { shrink_to_size_(); }
 
-        void append(const T& value) {
+        void append(const T& value) requires CopyAssignable<T> {
             ensure_capacity_();
-            T val = value;
-            append_internal_single_(Forward<T>(val));
+            append_internal_single_(value);
         }
 
-        void append(T&& value) {
+        void append(T&& value) requires MoveAssignable<T> {
             ensure_capacity_();
             append_internal_single_(Forward<T>(value));
         }
@@ -175,10 +183,14 @@ namespace ARLib {
         requires Constructible<T, Args...> void emplace(Args... args) {
             ensure_capacity_();
             T val{args...};
-            append_internal_single_(Forward<T>(val));
+            if constexpr (MoveAssignable<T>) {
+                append_internal_single_(Forward<T>(val));
+            } else {
+                append_internal_single_(val);
+            }
         }
 
-        void insert(size_t index, const T& value) {
+        void insert(size_t index, const T& value) requires CopyAssignable<T> {
             if constexpr (DefaultConstructible<T>) {
                 if (index < m_size) {
                     // index is replacing an element
@@ -196,7 +208,7 @@ namespace ARLib {
             }
         }
 
-        void insert(size_t index, T&& value) {
+        void insert(size_t index, T&& value) requires MoveAssignable<T> {
             if constexpr (DefaultConstructible<T>) {
                 if (index < m_size) {
                     // index is replacing an element
@@ -214,12 +226,12 @@ namespace ARLib {
             }
         }
 
-        void push_back(const T& value) { append(value); }
-        void push_back(T&& value) { append(Forward<T>(value)); }
+        void push_back(const T& value) requires CopyAssignable<T> { append(value); }
+        void push_back(T&& value) requires MoveAssignable<T> { append(Forward<T>(value)); }
 
-        T&& pop() {
+        T pop() {
             m_size--;
-            return move(m_storage[m_size]);
+            return m_storage[m_size];
         }
 
         T& operator[](size_t index) const {
