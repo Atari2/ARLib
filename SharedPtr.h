@@ -19,8 +19,18 @@ namespace ARLib {
 
         public:
         constexpr SharedPtr() = default;
-        SharedPtr(SharedPtr&&) = delete;
-        SharedPtr& operator=(SharedPtr&&) = delete;
+        SharedPtr(SharedPtr&& other) : m_storage(other.m_storage), m_count(other.m_count) {
+            other.m_storage = nullptr;
+            other.m_count = nullptr;
+        }
+        SharedPtr& operator=(SharedPtr&& other) {
+            if (decrease_instance_count_()) { delete m_storage; }
+            m_storage = other.m_storage;
+            m_count = other.m_count;
+            other.m_storage = nullptr;
+            other.m_count = nullptr;
+            return *this;
+        }
 
         SharedPtr(T* ptr) : m_storage(ptr), m_count(new size_t{1}) {}
         SharedPtr(T&& storage) {

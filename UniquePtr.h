@@ -9,8 +9,14 @@ namespace ARLib {
 
         public:
         constexpr UniquePtr() = default;
-        UniquePtr(const UniquePtr&) = delete;
-        UniquePtr& operator=(const UniquePtr&) = delete;
+        UniquePtr(const UniquePtr& other) {
+            if (other.m_storage) { m_storage = new T(*other.m_storage); }
+        }
+        UniquePtr& operator=(const UniquePtr& other) {
+            delete m_storage;
+            if (other.m_storage) { m_storage = new T(*other.m_storage); }
+            return *this;
+        }
 
         UniquePtr(T* ptr) : m_storage(ptr) {}
         UniquePtr(T&& storage) { m_storage = new T{move(storage)}; }
