@@ -71,10 +71,9 @@ else()
 	set(pyexe "python3")
 endif()
 
-add_custom_target(
-					run ALL
+execute_process(
 					COMMAND ${pyexe} ${CMAKE_CURRENT_SOURCE_DIR}/genenums.py ${CMAKE_CURRENT_SOURCE_DIR}
-					COMMENT "Generating enums"
+					COMMAND_ECHO STDOUT
 				 )
 add_library(ARLib ${LIB_SOURCE_FILES})
 add_subdirectory(Tests)

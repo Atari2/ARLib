@@ -7,6 +7,8 @@ patt = re.compile(r"(\w*)(<>)?\((\w*)\)\[(.*)\]")
 
 folder = argv[1]
 
+print("Generating enums")
+
 with open(f'{folder}/enum_definitions.impl', 'r') as f:
 	lines = f.readlines()
 
@@ -31,6 +33,7 @@ for line in filter(lambda x: x.strip() and x.strip()[0] != '#', lines):
 				raise ValueError("Can't fit these many members in 8 bytes (which is the max)")
 			cls_type = f'uint{power_bit_length(required_bytes) * 8}_t'
 		with open(f'{folder}/GeneratedEnums/{cls_name}.h', 'w') as f:
+			print(f"Generating {cls_name}")
 			f.write('#pragma once\n#include "../Types.h"\n#include "../EnumHelpers.h"\nnamespace ARLib {\n')
 			f.write(f'\tenum class {cls_name} : {cls_type} {{\n')
 			for i, member in enumerate(cls_members):
@@ -39,3 +42,5 @@ for line in filter(lambda x: x.strip() and x.strip()[0] != '#', lines):
 			if not is_not_bitfield:
 				f.write(f'\tMAKE_BITFIELD_ENUM({cls_name})\n')
 			f.write('}\n')
+
+print("Generated enums")
