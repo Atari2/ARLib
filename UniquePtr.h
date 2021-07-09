@@ -1,5 +1,7 @@
 #pragma once
+#include "Algorithm.h"
 #include "HashBase.h"
+#include "Memory.h"
 #include "Utility.h"
 
 namespace ARLib {
@@ -59,15 +61,34 @@ namespace ARLib {
 
     template <class T>
     class UniquePtr<T[]> {
-        T* m_storage;
+        T* m_storage = nullptr;
+        size_t m_size = 0ull;
 
         public:
         constexpr UniquePtr() = default;
-        UniquePtr(const UniquePtr&) = delete;
-        UniquePtr& operator=(const UniquePtr&) = delete;
+        UniquePtr(const UniquePtr& other) : m_storage(new T[other.m_size]), m_size(other.m_size) {
+            if (other.m_storage) { ConditionalBitCopy(m_storage, other.m_storage, m_size); }
+        }
+        UniquePtr& operator=(const UniquePtr& other) {
+            delete[] m_storage;
+            m_size = other.m_size;
+            if (other.m_storage) {
+                m_storage = new T[m_size];
+                ConditionalBitCopy(m_storage, other.m_storage, m_size);
+            }
+            return *this;
+        }
 
-        UniquePtr(size_t size) { m_storage = new T[size]; }
-        UniquePtr(T* ptr) : m_storage(ptr) {}
+        UniquePtr(size_t size) : m_storage(new T[size]), m_size(size) {}
+
+        template <size_t N>
+        UniquePtr(T (&src)[N]) : m_storage(new T[N]), m_size(N) {
+            ConditionalBitCopy(m_storage, src, N);
+        }
+
+        UniquePtr(T* ptr, size_t size) : m_storage(new T[size]), m_size(size) {
+            ConditionalBitCopy(m_storage, ptr, m_size);
+        }
         UniquePtr(UniquePtr&& ptr) {
             m_storage = ptr.m_storage;
             ptr.m_storage = nullptr;
@@ -88,6 +109,8 @@ namespace ARLib {
             delete[] m_storage;
             m_storage = nullptr;
         }
+
+        size_t size() { return m_size; }
 
         T* get() { return m_storage; }
 
