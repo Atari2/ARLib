@@ -63,7 +63,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
     
     - name: Test
-      shell: bash
+      shell: powershell
       run: ${{github.workspace}}/build/Tests/Release/ARLibTestSuite.exe
       if: matrix.os == 'windows-latest'
     
