@@ -8,6 +8,7 @@
 #include "../Optional.h"
 #include "../Result.h"
 #include "../Stack.h"
+#include "../Tuple.h"
 
 namespace ARLib {
     bool run_all_tests() {
@@ -115,6 +116,27 @@ namespace ARLib {
             RETURN_IF_NOT(stack.size(), 1ull);
             return true;
         };
+        auto tuple = []() -> bool {
+            Tuple<int, String, double, Vector<String>> tup{0, "hello"_s, 10.0, Vector{"a"_s, "b"_s, "c"_s}};
+            RETURN_IF_NOT(tup.get<0>(), 0);
+            RETURN_IF_NOT(tup.get<1>(), "hello"_s);
+            RETURN_IF_NOT(tup.get<2>(), 10.0);
+            RETURN_IF_NOT(tup.get<3>()[0], "a"_s);
+            RETURN_IF_NOT(tup.get<3>().size(), 3ull);
+            tup.get<3>().push_back("k"_s);
+            RETURN_IF_NOT(tup.get<3>().size(), 4ull);
+            tup.set_typed("world"_s);
+            tup.set_typed(54.4);
+            RETURN_IF_NOT(tup.get<1>(), "world"_s);
+            RETURN_IF_NOT(tup.get<2>(), 54.4);
+            auto tup_2 = move(tup);
+            RETURN_IF_NOT(tup_2.get<0>(), 0);
+            RETURN_IF_NOT(tup_2.get<1>(), "world"_s);
+            RETURN_IF_NOT(tup_2.get<2>(), 54.4);
+            RETURN_IF_NOT(tup_2.get<3>()[3], "k"_s);
+            RETURN_IF_NOT(tup_2.get<3>().size(), 4ull);
+            return true;
+        };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
         ASSERT_TEST("Vector equality", vec, Vector{"hello"_s}, Vector{"hello"_s});
         ASSERT_TEST("String length", strlen, "hello"_s, ARLib::strlen("hello"));
@@ -125,6 +147,7 @@ namespace ARLib {
         ASSERT_TEST("Optional correctness", optional);
         ASSERT_TEST("Result correctness", result);
         ASSERT_TEST("Stack correctness", stack);
+        ASSERT_TEST("Tuple correctness", tuple);
         printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }
