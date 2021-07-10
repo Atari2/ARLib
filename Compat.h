@@ -1,6 +1,7 @@
 #pragma once
 
 #ifdef _MSC_VER // MSVC
+#define COMPILER_MSVC
 #include <intrin.h>
 #define unreachable __assume(0);
 #define forceinline __forceinline
@@ -11,7 +12,8 @@
 #define ENVIRON32 1
 #endif
 
-#elif __clang__ // CLANG
+#elif defined(__GNUG__)		// GCC
+#define COMPILER_GCC
 #define unreachable __builtin_unreachable();
 #define forceinline __attribute__((always_inline))
 #define noop        ((void)0)
@@ -21,7 +23,8 @@
 #define ENVIRON32 1
 #endif
 
-#elif __GNUG__ // GCC
+#elif defined(__clang__)	// CLANG
+#define COMPILER_CLANG
 #define unreachable __builtin_unreachable();
 #define forceinline __attribute__((always_inline))
 #define noop        ((void)0)
@@ -31,6 +34,7 @@
 #define ENVIRON32 1
 #endif
 #else // OTHER
+
 #error "Unsupported compiler"
 #endif
 
