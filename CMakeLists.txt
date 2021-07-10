@@ -11,6 +11,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Ordering.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Ordering.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CircularList.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Coroutine.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Iterator.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/String.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/String.cpp"
@@ -84,14 +85,14 @@ else()
 	add_subdirectory(ASM_GCC)
 	if (WIN32)
 		if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-			target_compile_options(ARLib PRIVATE -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra)
+			target_compile_options(ARLib PRIVATE -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra -fcoroutines)
 		else()
-			target_compile_options(ARLib PRIVATE -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra -Wno-unused-const-variable)
+			target_compile_options(ARLib PRIVATE -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra -Wno-unused-const-variable -fcoroutines)
 		endif()
 	else()
 		if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 			message(STATUS "Building debug lib")
-			target_compile_options(ARLib PRIVATE -fsanitize=address,undefined,leak -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra)
+			target_compile_options(ARLib PRIVATE -fsanitize=address,undefined,leak -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra -fcoroutines)
 			target_link_options(ARLib PRIVATE -fsanitize=address,undefined,leak)
 			target_link_libraries(ARLib ARLib_asm_ext -fsanitize=address,undefined,leak)
 		else()
