@@ -156,6 +156,15 @@ namespace ARLib {
             append_internal_(Forward<T>(val1), Forward<T>(val2), Forward<Values>(values)...);
         }
 
+        bool operator==(const Vector& other) const { 
+            if (size() != other.size()) return false;
+            for (size_t i = 0; i < size(); i++) {
+                if (m_storage[i] == other[i]) continue;
+                return false;
+            }
+            return true;
+        }
+
         void reserve(size_t capacity) {
             if (capacity < m_capacity) return;
             round_to_capacity_(capacity);
