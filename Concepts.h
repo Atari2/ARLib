@@ -209,6 +209,12 @@ namespace ARLib {
         ->SameAs<Badge<T>>;
     };
 
+    template <typename Callable, typename... Args>
+    concept CallableWith = requires(Callable func, Args... args) {
+        { func(args...) }
+        ->SameAs<ResultOfT<Callable(Args...)>>;
+    };
+
     template <typename T>
     concept Integral = IsIntegralV<T>;
 
