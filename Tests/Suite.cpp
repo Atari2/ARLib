@@ -9,8 +9,12 @@
 #include "../Result.h"
 #include "../Stack.h"
 #include "../Tuple.h"
+#include "../Functional.h"
+
+
 
 namespace ARLib {
+    auto test_partial_func(int a, String b, Tuple<String, int> c) { return a + b.size() + c.get<0>().size() + c.get<1>(); };
     bool run_all_tests() {
         size_t test_count = 0;
         size_t passed_count = 0;
@@ -118,6 +122,8 @@ namespace ARLib {
         };
         auto tuple = []() -> bool {
             Tuple<int, String, double, Vector<String>> tup{0, "hello"_s, 10.0, Vector{"a"_s, "b"_s, "c"_s}};
+            Tuple<int, String, double, Vector<String>> tup3{0, "hello"_s, 10.0, Vector{"a"_s, "b"_s, "c"_s}};
+            RETURN_IF_NOT(tup, tup3);
             RETURN_IF_NOT(tup.get<0>(), 0);
             RETURN_IF_NOT(tup.get<1>(), "hello"_s);
             RETURN_IF_NOT(tup.get<2>(), 10.0);
@@ -137,8 +143,23 @@ namespace ARLib {
             RETURN_IF_NOT(tup_2.get<3>().size(), 4ull);
             return true;
         };
+        auto partial_func = []() -> bool {
+            auto decl = [](int a, String b, Tuple<String, int> c) {
+                return a + b.size() + c.get<0>().size() + c.get<1>();
+            };
+            PartialFunction func1{test_partial_func, 10, "hello"_s};
+            PartialFunction func2{decl, 10, "hello"_s};
+            auto res1 = func1(Tuple<String, int>{"world"_s, 10});
+            auto res2 = func2(Tuple<String, int>{"world"_s, 10});
+            RETURN_IF_NOT(res1, res2);
+            RETURN_IF_NOT(res1, 30ull);
+            RETURN_IF_NOT(res2, 30ull);
+            RETURN_IF_NOT(res1, test_partial_func(10, "hello"_s, {"world"_s, 10}));
+            RETURN_IF_NOT(res2, decl(10, "hello"_s, {"world"_s, 10}));
+            return true;
+        };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
-        ASSERT_TEST("Vector equality", vec, Vector{"hello"_s}, Vector{"hello"_s});
+        ASSERT_TEST("Vector equality", vec, Vector{"hello"_s, "world"_s}, Vector{"hello"_s, "world"_s});
         ASSERT_TEST("String length", strlen, "hello"_s, ARLib::strlen("hello"));
         ASSERT_TEST("Hashmap tests", hashmap);
         ASSERT_TEST("String to integer/float conversions", charconv);
@@ -148,6 +169,7 @@ namespace ARLib {
         ASSERT_TEST("Result correctness", result);
         ASSERT_TEST("Stack correctness", stack);
         ASSERT_TEST("Tuple correctness", tuple);
+        ASSERT_TEST("PartialFunction correctness", partial_func);
         printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }

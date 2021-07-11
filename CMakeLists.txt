@@ -12,6 +12,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Ordering.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/CircularList.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Coroutine.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Functional.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Tuple.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Iterator.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/String.h"
