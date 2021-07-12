@@ -1,20 +1,20 @@
 #include "Suite.h"
-#include "../String.h"
-#include "../Vector.h"
-#include "../HashMap.h"
 #include "../CharConv.h"
-#include "../SortedVector.h"
-#include "../Set.h"
+#include "../Functional.h"
+#include "../HashMap.h"
 #include "../Optional.h"
 #include "../Result.h"
+#include "../Set.h"
+#include "../SortedVector.h"
 #include "../Stack.h"
+#include "../String.h"
 #include "../Tuple.h"
-#include "../Functional.h"
-
-
+#include "../Vector.h"
 
 namespace ARLib {
-    auto test_partial_func(int a, String b, Tuple<String, int> c) { return a + b.size() + c.get<0>().size() + c.get<1>(); };
+    auto test_partial_func(int a, String b, Tuple<String, int> c) {
+        return a + b.size() + c.get<0>().size() + c.get<1>();
+    };
     bool run_all_tests() {
         size_t test_count = 0;
         size_t passed_count = 0;
@@ -33,7 +33,7 @@ namespace ARLib {
             return assert_eq(a.size(), b);
         };
         auto hashmap = []() -> bool {
-            HashMap<String, int> map {};
+            HashMap<String, int> map{};
             auto val = map.add("hello"_s, 10);
             auto ex = map.add("world"_s, 20);
             RETURN_IF_NOT(val, InsertionResult::New);
@@ -173,4 +173,4 @@ namespace ARLib {
         printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }
-}
+} // namespace ARLib

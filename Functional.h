@@ -1,7 +1,7 @@
 #pragma once
-#include "Utility.h"
-#include "TypeTraits.h"
 #include "Concepts.h"
+#include "TypeTraits.h"
+#include "Utility.h"
 
 namespace ARLib {
 
@@ -76,7 +76,8 @@ namespace ARLib {
         }
 
         template <typename... Rest>
-        constexpr ResultOfT<Func(Args..., Rest...)> operator()(Rest... rest) requires CallableWith<Func, Args..., Rest...> {
+        constexpr ResultOfT<Func(Args..., Rest...)>
+        operator()(Rest... rest) requires CallableWith<Func, Args..., Rest...> {
             return run_impl<sizeof...(Args) - 1>(rest...);
         }
     };
