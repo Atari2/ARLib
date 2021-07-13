@@ -27,17 +27,17 @@ namespace ARLib {
 
     // dst and src may not overlap
     template <MoveAssignable T>
-    void ConditionalBitMove(T* dst, T* src, size_t count) {
+    void ConditionalBitMove(T* dst, T*& src, size_t count) {
         if (!dst || !src || count == 0) return;
         if constexpr (IsTriviallyCopiableV<T>) {
             memcpy(dst, src, count * sizeof(T));
-            delete[] src;
-            src = nullptr;
         } else {
             for (size_t i = 0; i < count; i++) {
                 dst[i] = move(src[i]);
             }
         }
+        delete[] src;
+        src = nullptr;
     }
 } // namespace ARLib
 

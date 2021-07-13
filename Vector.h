@@ -172,7 +172,7 @@ namespace ARLib {
 
         void resize(size_t size) requires DefaultConstructible<T> {
             reserve(size);
-            for (size_t i = 0; i < size; i++)
+            for (size_t i = m_size; i < size; i++)
                 append({});
         }
 
@@ -294,6 +294,11 @@ namespace ARLib {
         size_t capacity() const { return m_capacity; }
 
         size_t size() const { return m_size; }
+
+        void set_size(size_t size) {
+            reserve(size);
+            m_size = size;
+        }
 
         bool empty() const { return m_size == 0; }
 
