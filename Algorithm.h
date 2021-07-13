@@ -18,9 +18,10 @@ namespace ARLib {
     }
 
     template <IteratorConcept Iter>
-    requires EqualityComparable<typename Iter::Type> size_t find(Iter begin, Iter end, const typename Iter::Type& elem) {
+    requires EqualityComparable<typename Iter::Type> size_t find(Iter begin, Iter end,
+                                                                 const typename Iter::Type& elem) {
         if (begin == end) return npos_;
-        size_t index = 0; 
+        size_t index = 0;
         for (; begin != end; begin++, index++)
             if (*begin == elem) return index;
         return npos_;
@@ -30,7 +31,6 @@ namespace ARLib {
     requires Iterable<C> auto find(const C& cont, const T& elem) {
         return find(cont.begin(), cont.end(), elem);
     }
-
 
     template <IteratorConcept Iter>
     requires MoreComparable<typename Iter::Type> Iter max(Iter begin, Iter end) {
@@ -157,11 +157,49 @@ namespace ARLib {
             return requested_size + 2048;
     }
     size_t prime_generator(size_t n);
+
+    template <typename T, Container<T> Cont, size_t N>
+    constexpr void fill(Cont& container) requires DefaultConstructible<T> {
+        if (container.size() >= N) return;
+        if constexpr (Resizeable<Cont>) {
+            container.resize(N);
+        } else {
+            size_t prev_size = container.size();
+            container.set_size(N);
+            for (size_t i = prev_size; i < N; i++)
+                container[i] = {};
+        }
+    }
+
+    template <typename T, Container<T> Cont>
+    constexpr void fill(Cont& container, size_t num) requires DefaultConstructible<T> {
+        if (container.size() >= num) return;
+        if constexpr (Resizeable<Cont>) {
+            container.resize(num);
+        } else {
+            size_t prev_size = container.size();
+            container.set_size(num);
+            for (size_t i = prev_size; i < num; i++)
+                container[i] = {};
+        }
+    }
+
+    template <typename T, Container<T> Cont, typename... Args>
+    constexpr void fill_with(Cont& container, size_t num,
+                             Args... args) requires MoveAssignable<T>&& Constructible<T, Args...> {
+        if (container.size() >= num) return;
+        size_t prev_size = container.size();
+        container.set_size(num);
+        for (size_t i = prev_size; i < num; i++)
+            container[i] = move(T{args...});
+    }
 } // namespace ARLib
 
-using ARLib::sum;
+using ARLib::fill;
+using ARLib::fill_with;
+using ARLib::find;
 using ARLib::max;
 using ARLib::min;
 using ARLib::prime_generator;
 using ARLib::sort;
-using ARLib::find;
+using ARLib::sum;

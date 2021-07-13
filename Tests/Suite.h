@@ -24,6 +24,6 @@ namespace ARLib {
         if (res) passed_count++;                                                                                       \
         test_count++;                                                                                                  \
     } // namespace ARLib
-#define RETURN_IF_NOT(x, y) if (!assert_eq(x, y)) return false;
+#define RETURN_IF_NOT(x, y) if (!assert_eq(x, y)) { puts(ERRINFO); return false; }
     bool run_all_tests();
 } // namespace ARLib

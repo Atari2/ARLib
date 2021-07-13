@@ -10,6 +10,8 @@
 #include "../String.h"
 #include "../Tuple.h"
 #include "../Vector.h"
+#include "../Algorithm.h"
+#include "../Enumerate.h"
 
 namespace ARLib {
     auto test_partial_func(int a, String b, Tuple<String, int> c) {
@@ -158,6 +160,31 @@ namespace ARLib {
             RETURN_IF_NOT(res2, decl(10, "hello"_s, {"world"_s, 10}));
             return true;
         };
+        auto fill_test = []() -> bool {
+            Vector<String> vec{};
+            fill_with<String, Vector<String>>(vec, 10, 5ull, 'a');
+            RETURN_IF_NOT(vec.size(), 10ull);
+            for (auto& str : vec) {
+                RETURN_IF_NOT(str, "aaaaa"_s);
+            }
+            return true;
+        };
+
+        auto math_algos = []() -> bool {
+            Vector<int> vec{};
+            for (int i = 0; i < 100; i++)
+                vec.insert(99 - i, i);
+            sort(vec);
+            for (const auto& [i, v] : Enumerate{vec})
+                RETURN_IF_NOT(static_cast<int>(i), v);
+            auto s = sum(vec, [](int a) { return a; });
+            auto m = min(vec);
+            auto x = max(vec);
+            RETURN_IF_NOT(s, 4950);
+            RETURN_IF_NOT(*m, 0);
+            RETURN_IF_NOT(*x, 99);
+            return true;
+        };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
         ASSERT_TEST("Vector equality", vec, Vector{"hello"_s, "world"_s}, Vector{"hello"_s, "world"_s});
         ASSERT_TEST("String length", strlen, "hello"_s, ARLib::strlen("hello"));
@@ -170,6 +197,8 @@ namespace ARLib {
         ASSERT_TEST("Stack correctness", stack);
         ASSERT_TEST("Tuple correctness", tuple);
         ASSERT_TEST("PartialFunction correctness", partial_func);
+        ASSERT_TEST("Fill algorihtm correctness", fill_test);
+        ASSERT_TEST("Sum, min, max, sort algorithm correctness", math_algos);
         printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }
