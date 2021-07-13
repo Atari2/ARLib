@@ -209,11 +209,31 @@ namespace ARLib {
         ->SameAs<Badge<T>>;
     };
 
+    template <typename C>
+    concept Resizeable = requires(C a) {
+        {a.resize()};
+    };
+
+    template <typename C>
+    concept Reservable = requires(C a) {
+        {a.reserve(0ull)};
+    };
+
     template <typename Callable, typename... Args>
     concept CallableWith = requires(Callable func, Args... args) {
         { func(args...) }
         ->SameAs<ResultOfT<Callable(Args...)>>;
     };
+
+    template <typename Cont, typename T>
+    concept Container = requires(Cont container) {
+        { container[0ull] }
+        ->SameAs<T&>;
+        { container.size() }
+        ->SameAs<size_t>;
+        { container.set_size(0ull) };
+    }
+    &&Reservable<Cont>;
 
     template <typename T>
     concept Integral = IsIntegralV<T>;
