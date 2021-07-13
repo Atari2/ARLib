@@ -19,7 +19,7 @@ namespace ARLib {
 
     int fseek(FILE* fp, long off, int whence) { return ::fseek(fp, off, whence); }
 
-    long ftell(FILE* fp) { return ::ftell(fp); }
+    size_t ftell(FILE* fp) { return static_cast<size_t>(::ftell(fp)); }
 
     size_t fread(void* buffer, size_t size, size_t count, FILE* fp) { return ::fread(buffer, size, count, fp); }
 

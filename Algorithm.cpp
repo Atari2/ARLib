@@ -4,7 +4,9 @@ namespace ARLib {
     namespace detail {
         constexpr inline size_t max_int32 = 2147483647;
 
-        size_t legendre(size_t a, size_t m) { return static_cast<size_t>(pow(a, (m - 1) >> 1)) % m; }
+        size_t legendre(size_t a, size_t m) {
+            return static_cast<size_t>(pow(static_cast<double>(a), static_cast<double>((m - 1ull) >> 1ull))) % m;
+        }
 
         bool is_sprp(size_t n, size_t b = 2) {
             size_t d = n - 1;
@@ -14,7 +16,7 @@ namespace ARLib {
                 d >>= 1;
             }
 
-            size_t x = static_cast<size_t>(pow(b, d)) % n;
+            size_t x = static_cast<size_t>(pow(static_cast<double>(b), static_cast<double>(d))) % n;
             if (x == 1 || x == n - 1) return true;
 
             for (size_t r = 1; r < s; r++) {
@@ -130,7 +132,7 @@ namespace ARLib {
             intptr_t s = 2;
             while (legendre(a, n) != n - 1) {
                 s = -s;
-                a = s - a;
+                a = static_cast<size_t>(s) - a;
                 return is_lucas_prp(n, a);
             }
             unreachable
@@ -150,7 +152,7 @@ namespace ARLib {
             }
 
             // find our position in the sieve rotation via binary search
-            size_t x = static_cast<size_t>(n % 210);
+            size_t x = n % 210ull;
             size_t s = 0;
             size_t e = 47;
             size_t m = 24;
@@ -163,7 +165,7 @@ namespace ARLib {
                     m = (s + e) >> 1;
                 }
             }
-            size_t l = static_cast<size_t>(n + (indices[m] - x));
+            size_t l = n + (indices[m] - x);
             // adjust offsets
             while (true) {
                 for (size_t i = m; i < sizeof_array(offsets); i++) {

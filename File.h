@@ -83,7 +83,7 @@ namespace ARLib {
             line.reserve(len);
             line.set_size(fread(line.rawptr(), sizeof(char), len, m_ptr));
 #ifndef WINDOWS
-            if (line.size() != static_cast<size_t>(len)) { return Result<String, ReadFileError>::from_error(); }
+            if (line.size() != len) { return Result<String, ReadFileError>::from_error(); }
 #endif
             return Result<String, ReadFileError>{Forward<String>(line)};
         }

@@ -171,9 +171,9 @@ namespace ARLib {
         }
 
         double load() {
-            double avg_load = (double)m_size / (double)m_bucket_count;
-            double sr = sum(m_storage, [avg_load](const auto& item) { return pow(item.size() - avg_load, 2); });
-            double res = sqrt(sr / (double)m_size);
+            double avg_load = static_cast<double>(m_size) / static_cast<double>(m_bucket_count);
+            double sr = sum(m_storage, [avg_load](const auto& item) { return pow(static_cast<double>(item.size()) - avg_load, 2.0); });
+            double res = sqrt(sr / static_cast<double>(m_size));
             return res;
         }
 

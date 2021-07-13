@@ -50,8 +50,8 @@ namespace ARLib {
 
         [[nodiscard]] StringView substring(size_t size) { return StringView{m_start, size}; }
         void print_view() { printf("%.*s\n", size(), m_start); }
-        [[nodiscard]] size_t size() const { return m_end - m_start; }
-        [[nodiscard]] size_t length() const { return m_end - m_start; }
+        [[nodiscard]] size_t size() const { return static_cast<size_t>(m_end - m_start); }
+        [[nodiscard]] size_t length() const { return static_cast<size_t>(m_end - m_start); }
         [[nodiscard]] const char* data() const { return m_start; }
         // this const_cast is safe because the original buffer is not const
         // String's internal buffers are not const'ed

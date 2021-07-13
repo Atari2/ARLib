@@ -130,12 +130,13 @@ namespace ARLib {
         explicit String(size_t size, char c) {
             if (size <= SMALL_STRING_CAP) m_data_buf = local_data_internal();
             grow_if_needed(size);
-            memset(get_buf_internal(), c, size);
+            memset(get_buf_internal(), static_cast<uint8_t>(c), size);
             m_size = size;
             get_buf_internal()[m_size] = '\0';
         }
         explicit constexpr String(const char* begin, const char* end) {
-            m_size = end - begin;
+            HARD_ASSERT((end >= begin), "End pointer must not be before begin pointer")
+            m_size = static_cast<size_t>(end - begin);
             bool local = m_size <= SMALL_STRING_CAP;
             if (local) {
                 strncpy(m_local_buf, begin, m_size);
@@ -414,9 +415,10 @@ namespace ARLib {
         [[nodiscard]] size_t last_index_of(char c) const {
             if (m_size == 0) return npos;
             const char* buf = get_buf_internal();
-            for (ptrdiff_t i = m_size - 1; i >= 0; i--) {
+            for (size_t i = m_size - 1; i > 0; i--) {
                 if (buf[i] == c) return i;
             }
+            if (buf[0] == c) return 0ull;
             return npos;
         }
         [[nodiscard]] size_t index_not_of(char c, size_t start_index = 0) const {
@@ -454,8 +456,8 @@ namespace ARLib {
             auto o_len = strlen(c);
             if (o_len > m_size) return npos;
             if (o_len == m_size && strcmp(buf, c) == 0) return 0;
-            for (ptrdiff_t i = m_size - o_len; i >= 0; i--) {
-                if (strncmp(buf + i, c, o_len) == 0) return i;
+            for (ptrdiff_t i = static_cast<ptrdiff_t>(m_size - o_len); i >= 0; i--) {
+                if (strncmp(buf + static_cast<size_t>(i), c, o_len) == 0) return static_cast<size_t>(i);
             }
             return npos;
         }
@@ -476,8 +478,8 @@ namespace ARLib {
             auto o_len = strlen(c);
             if (o_len > m_size) return npos;
             if (o_len == m_size && strcmp(buf, c) != 0) return 0;
-            for (ptrdiff_t i = m_size - o_len; i >= 0; i--) {
-                if (strncmp(buf + i, c, o_len) != 0) return i;
+            for (ptrdiff_t i = static_cast<ptrdiff_t>(m_size - o_len); i >= 0; i--) {
+                if (strncmp(buf + static_cast<size_t>(i), c, o_len) != 0) return static_cast<size_t>(i);
             }
             return npos;
         }
@@ -503,7 +505,7 @@ namespace ARLib {
         // trim
         void irtrim() {
             if (is_local()) {
-                int count = 0;
+                size_t count = 0;
                 while (isspace(m_local_buf[count++]))
                     ;
                 count--;
@@ -512,7 +514,7 @@ namespace ARLib {
                     memmove(m_local_buf, m_local_buf + count, m_size);
                 }
             } else {
-                int count = 0;
+                size_t count = 0;
                 while (isspace(m_data_buf[count++]))
                     ;
                 count--;

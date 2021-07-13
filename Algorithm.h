@@ -79,7 +79,7 @@ namespace ARLib {
     template <IteratorConcept Iter>
     requires MoreComparable<typename Iter::Type>&& LessComparable<typename Iter::Type> Iter partition(Iter lo,
                                                                                                       Iter hi) {
-        auto pivot = lo + ((hi - lo) / 2);
+        auto pivot = lo + static_cast<int>(((hi - lo) / 2));
         auto i = lo - 1;
         auto j = hi + 1;
         for (;;) {

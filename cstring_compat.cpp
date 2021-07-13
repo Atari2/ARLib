@@ -11,8 +11,13 @@ namespace ARLib {
         const char* src = static_cast<const char*>(src0);
         size_t rem = num % 32;
         for (size_t offset = 0; offset < (num - rem); offset += 32) {
+#ifdef COMPILER_MSVC
             __m256i buffer = _mm256_loadu_si256((const __m256i*)(src + offset));
             _mm256_storeu_si256((__m256i*)(dst + offset), buffer);
+#else
+            __m256i buffer = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(src + offset));
+            _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(dst + offset), buffer);
+#endif
         }
         dst += (num - rem);
         src += (num - rem);
@@ -26,8 +31,12 @@ namespace ARLib {
         uint8_t* dst = static_cast<uint8_t*>(dst0);
         size_t rem = size % 32;
         for (size_t offset = 0; offset < (size - rem); offset += 32) {
-            __m256i buffer = _mm256_set1_epi8(val);
+            __m256i buffer = _mm256_set1_epi8(static_cast<char>(val));
+#ifdef COMPILER_MSVC
             _mm256_storeu_si256((__m256i*)(dst + offset), buffer);
+#else
+            _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(dst + offset), buffer);
+#endif
         }
         dst += (size - rem);
         for (size_t i = 0; i < rem; i++) {
@@ -48,11 +57,11 @@ namespace ARLib {
         uint8_t* dst = static_cast<uint8_t*>(dst0);
         const uint8_t* src = static_cast<const uint8_t*>(src0);
         if (length == 0 || dst == src) return dst;
-        if ((uintptr_t)dst < (uintptr_t)src) {
+        if (reinterpret_cast<uintptr_t>(dst) < reinterpret_cast<uintptr_t>(src)) {
             // copy forward
-            size_t t = (size_t)src;
-            if ((t | (size_t)dst) & wmask) {
-                if ((t ^ (size_t)dst) & wmask || length < wsize)
+            size_t t = reinterpret_cast<size_t>(src);
+            if ((t | reinterpret_cast<size_t>(dst)) & wmask) {
+                if ((t ^ reinterpret_cast<size_t>(dst)) & wmask || length < wsize)
                     t = length;
                 else
                     t = wsize - (t & wmask);
@@ -64,7 +73,7 @@ namespace ARLib {
             t = length / wsize;
             if (t) {
                 do {
-                    *(word*)dst = *(word*)src;
+                    *reinterpret_cast<word*>(dst) = *reinterpret_cast<const word*>(src);
                     src += wsize;
                     dst += wsize;
                 } while (--t);
@@ -78,9 +87,9 @@ namespace ARLib {
         } else {
             src += length;
             dst += length;
-            size_t t = (size_t)src;
-            if ((t | (size_t)dst) & wmask) {
-                if ((t ^ (size_t)dst) & wmask || length <= wsize)
+            size_t t = reinterpret_cast<size_t>(src);
+            if ((t | reinterpret_cast<size_t>(dst)) & wmask) {
+                if ((t ^ reinterpret_cast<size_t>(dst)) & wmask || length <= wsize)
                     t = length;
                 else
                     t &= wmask;
@@ -94,7 +103,7 @@ namespace ARLib {
                 do {
                     src -= wsize;
                     dst -= wsize;
-                    *(word*)dst = *(const word*)src;
+                    *reinterpret_cast<word*>(dst) = *reinterpret_cast<const word*>(src);
                 } while (--t);
             }
             t = length & wmask;

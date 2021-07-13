@@ -15,7 +15,7 @@
 
 namespace ARLib {
     auto test_partial_func(int a, String b, Tuple<String, int> c) {
-        return a + b.size() + c.get<0>().size() + c.get<1>();
+        return static_cast<size_t>(a) + b.size() + c.get<0>().size() + static_cast<size_t>(c.get<1>());
     };
     bool run_all_tests() {
         size_t test_count = 0;
@@ -23,7 +23,7 @@ namespace ARLib {
         auto streq = [](String a, String b) -> bool {
             return assert_eq(a, b);
         };
-        auto vec = [](const Vector<String>& a, const Vector<String>& b) -> bool {
+        auto vec_test = [](const Vector<String>& a, const Vector<String>& b) -> bool {
             bool len = assert_eq(a.size(), b.size());
             if (!len) return false;
             for (size_t i = 0; i < a.size(); i++) {
@@ -69,14 +69,14 @@ namespace ARLib {
             String a{"aaa"};
             String b{"bbb"};
             String c{"ccc"};
-            SortedVector<String> vec{};
-            vec.insert(c);
-            vec.insert(b);
-            vec.insert(a);
-            RETURN_IF_NOT(vec.size(), 3ull);
-            RETURN_IF_NOT(vec[0], "aaa"_s);
-            RETURN_IF_NOT(vec[1], "bbb"_s);
-            RETURN_IF_NOT(vec[2], "ccc"_s);
+            SortedVector<String> sortedv{};
+            sortedv.insert(c);
+            sortedv.insert(b);
+            sortedv.insert(a);
+            RETURN_IF_NOT(sortedv.size(), 3ull);
+            RETURN_IF_NOT(sortedv[0], "aaa"_s);
+            RETURN_IF_NOT(sortedv[1], "bbb"_s);
+            RETURN_IF_NOT(sortedv[2], "ccc"_s);
             return true;
         };
         auto set = []() -> bool {
@@ -91,7 +91,7 @@ namespace ARLib {
         auto optional = []() -> bool {
             Optional<String> opt{};
             RETURN_IF_NOT(opt.empty(), true);
-            opt.emplace("hello", 5);
+            opt.emplace("hello", 5ull);
             RETURN_IF_NOT(opt.has_value(), true);
             delete opt.detach();
             RETURN_IF_NOT(opt.empty(), true);
@@ -108,7 +108,7 @@ namespace ARLib {
             RETURN_IF_NOT(res2.is_error(), true);
             return true;
         };
-        auto stack = []() -> bool {
+        auto stack_test = []() -> bool {
             Stack<String> stack{};
             RETURN_IF_NOT(stack.size(), 0ull);
             stack.push("hello"_s);
@@ -147,7 +147,7 @@ namespace ARLib {
         };
         auto partial_func = []() -> bool {
             auto decl = [](int a, String b, Tuple<String, int> c) {
-                return a + b.size() + c.get<0>().size() + c.get<1>();
+                return static_cast<size_t>(a) + b.size() + c.get<0>().size() + static_cast<size_t>(c.get<1>());
             };
             PartialFunction func1{test_partial_func, 10, "hello"_s};
             PartialFunction func2{decl, 10, "hello"_s};
@@ -173,7 +173,7 @@ namespace ARLib {
         auto math_algos = []() -> bool {
             Vector<int> vec{};
             for (int i = 0; i < 100; i++)
-                vec.insert(99 - i, i);
+                vec.insert(static_cast<size_t>(99 - i), i);
             sort(vec);
             for (const auto& [i, v] : Enumerate{vec})
                 RETURN_IF_NOT(static_cast<int>(i), v);
@@ -186,7 +186,7 @@ namespace ARLib {
             return true;
         };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
-        ASSERT_TEST("Vector equality", vec, Vector{"hello"_s, "world"_s}, Vector{"hello"_s, "world"_s});
+        ASSERT_TEST("Vector equality", vec_test, Vector{"hello"_s, "world"_s}, Vector{"hello"_s, "world"_s});
         ASSERT_TEST("String length", strlen, "hello"_s, ARLib::strlen("hello"));
         ASSERT_TEST("Hashmap tests", hashmap);
         ASSERT_TEST("String to integer/float conversions", charconv);
@@ -194,7 +194,7 @@ namespace ARLib {
         ASSERT_TEST("Set correctness, uniqueness", set);
         ASSERT_TEST("Optional correctness", optional);
         ASSERT_TEST("Result correctness", result);
-        ASSERT_TEST("Stack correctness", stack);
+        ASSERT_TEST("Stack correctness", stack_test);
         ASSERT_TEST("Tuple correctness", tuple);
         ASSERT_TEST("PartialFunction correctness", partial_func);
         ASSERT_TEST("Fill algorihtm correctness", fill_test);

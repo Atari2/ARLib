@@ -21,12 +21,14 @@ namespace ARLib {
         constexpr auto HugeValF = ((float)Infinity);
         constexpr auto HugeValL = ((long double)Infinity);
         constexpr auto Nan = ((float)(Infinity * 0.0f));
+        constexpr auto NanD = ((double)Nan);
 #else
         constexpr auto Infinity = __builtin_inff();
-        constexpr auto HugeVal = ((double)Infinity);
-        constexpr auto HugeValF = ((float)Infinity);
-        constexpr auto HugeValL = ((long double)Infinity);
+        constexpr auto HugeVal = static_cast<double>(Infinity);
+        constexpr auto HugeValF = static_cast<float>(Infinity);
+        constexpr auto HugeValL = static_cast<long double>(Infinity);
         constexpr auto Nan = __builtin_nanf("");
+        constexpr auto NanD = static_cast<double>(Nan);
 #endif
     } // namespace NumericLimits
 
@@ -116,31 +118,31 @@ namespace ARLib {
         inline constexpr float PhiV<float> = static_cast<float>(PhiV<double>);
 
         template <>
-        inline constexpr long double EV<long double> = EV<double>;
+        inline constexpr long double EV<long double> = static_cast<long double>(EV<double>);
         template <>
-        inline constexpr long double Log2EV<long double> = Log2EV<double>;
+        inline constexpr long double Log2EV<long double> = static_cast<long double>(Log2EV<double>);
         template <>
-        inline constexpr long double Log10EV<long double> = Log10EV<double>;
+        inline constexpr long double Log10EV<long double> = static_cast<long double>(Log10EV<double>);
         template <>
-        inline constexpr long double PiV<long double> = PiV<double>;
+        inline constexpr long double PiV<long double> = static_cast<long double>(PiV<double>);
         template <>
-        inline constexpr long double InvPiV<long double> = InvPiV<double>;
+        inline constexpr long double InvPiV<long double> = static_cast<long double>(InvPiV<double>);
         template <>
-        inline constexpr long double InvSqrtPiV<long double> = InvSqrtPiV<double>;
+        inline constexpr long double InvSqrtPiV<long double> = static_cast<long double>(InvSqrtPiV<double>);
         template <>
-        inline constexpr long double Ln2V<long double> = Ln2V<double>;
+        inline constexpr long double Ln2V<long double> = static_cast<long double>(Ln2V<double>);
         template <>
-        inline constexpr long double Ln10V<long double> = Ln10V<double>;
+        inline constexpr long double Ln10V<long double> = static_cast<long double>(Ln10V<double>);
         template <>
-        inline constexpr long double Sqrt2V<long double> = Sqrt2V<double>;
+        inline constexpr long double Sqrt2V<long double> = static_cast<long double>(Sqrt2V<double>);
         template <>
-        inline constexpr long double Sqrt3V<long double> = Sqrt3V<double>;
+        inline constexpr long double Sqrt3V<long double> = static_cast<long double>(Sqrt3V<double>);
         template <>
-        inline constexpr long double InvSqrt3V<long double> = InvSqrt3V<double>;
+        inline constexpr long double InvSqrt3V<long double> = static_cast<long double>(InvSqrt3V<double>);
         template <>
-        inline constexpr long double EGammaV<long double> = EGammaV<double>;
+        inline constexpr long double EGammaV<long double> = static_cast<long double>(EGammaV<double>);
         template <>
-        inline constexpr long double PhiV<long double> = PhiV<double>;
+        inline constexpr long double PhiV<long double> = static_cast<long double>(PhiV<double>);
 
         inline constexpr double e = EV<double>;
         inline constexpr double log2e = Log2EV<double>;

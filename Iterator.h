@@ -16,13 +16,11 @@ namespace ARLib {
 
         public:
         using Type = T;
-        virtual bool operator==(const IteratorBase<T>& other) const { return m_current == other.m_current; }
-        virtual bool operator!=(const IteratorBase<T>& other) const { return m_current != other.m_current; }
-        virtual bool operator<(const IteratorBase<T>& other) { return m_current < other.m_current; }
-        virtual bool operator>(const IteratorBase<T>& other) { return m_current > other.m_current; }
-        virtual size_t operator-(const IteratorBase<T>& other) { return m_current - other.m_current; }
-
-        virtual ~IteratorBase() {}
+        bool operator==(const IteratorBase<T>& other) const { return m_current == other.m_current; }
+        bool operator!=(const IteratorBase<T>& other) const { return m_current != other.m_current; }
+        bool operator<(const IteratorBase<T>& other) { return m_current < other.m_current; }
+        bool operator>(const IteratorBase<T>& other) { return m_current > other.m_current; }
+        size_t operator-(const IteratorBase<T>& other) { return static_cast<size_t>(m_current - other.m_current); }
     };
 
     // for some god forsaken reason
@@ -77,12 +75,9 @@ namespace ARLib {
         }
 
         Iterator<T> operator-(int offset) { return {m_current - offset}; }
-
-        bool operator==(const Iterator<T>& other) const { return m_current == other.m_current; }
-        bool operator!=(const Iterator<T>& other) const { return m_current != other.m_current; }
-        bool operator<(const Iterator<T>& other) { return m_current < other.m_current; }
-        bool operator>(const Iterator<T>& other) { return m_current > other.m_current; }
-        size_t operator-(const Iterator<T>& other) { return m_current - other.m_current; }
+        size_t operator-(const Iterator<T>& other) {
+            return static_cast<size_t>(m_current - other.m_current);
+        }
     };
 
     template <typename Ct>

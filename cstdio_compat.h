@@ -45,7 +45,7 @@ namespace ARLib {
     FILE* fopen(const char* filename, const char* mode);
     int fclose(FILE* fp);
     int fseek(FILE* fp, long off, int whence);
-    long ftell(FILE* fp);
+    size_t ftell(FILE* fp);
     size_t fread(void* buffer, size_t size, size_t count, FILE* fp);
     size_t fwrite(const void* buffer, size_t size, size_t count, FILE* fp);
     int puts(const char* buf);

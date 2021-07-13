@@ -123,7 +123,7 @@ namespace ARLib {
         auto parts = str.split_view(".,");
         auto len = parts.size();
         if (len == 1) return static_cast<double>(StrToI64(str));
-        if (len > 2) return NumericLimits::Nan;
+        if (len > 2) return NumericLimits::NanD;
         auto integral_part = static_cast<double>(StrViewToI64(parts[0]));
         double sign = 1.0;
         if (integral_part < 0) sign = -1.0;
@@ -154,7 +154,7 @@ namespace ARLib {
 #else
         const int n = 38 /* numeric limits length for flt */ + 20;
         String str{n};
-        snprintf(str.rawptr(), n, "%f", value);
+        snprintf(str.rawptr(), n, "%f", static_cast<double>(value));
         return str;
 #endif
     }

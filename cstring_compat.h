@@ -1,4 +1,5 @@
 #pragma once
+#include "Compat.h"
 #include "Concepts.h"
 #include "CpuInfo.h"
 #include <immintrin.h>
@@ -27,8 +28,13 @@ namespace ARLib {
     char* strncpy_vectorized(char* dest, const char* src) {
         static_assert(NUM % 32 == 0, "Size of strncpy vectorized must be a multiple of 32");
         for (size_t base = 0; base < NUM; base += 32) {
+#ifdef COMPILER_MSVC
             __m256i buffer = _mm256_loadu_si256((const __m256i*)(src + base));
             _mm256_storeu_si256((__m256i*)(dest + base), buffer);
+#else
+            __m256i buffer = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(src + base));
+            _mm256_storeu_si256(reinterpret_cast<__m256i*>(dest + base), buffer);
+#endif
         }
         return dest;
     }
@@ -115,11 +121,11 @@ namespace ARLib {
         }
     }
     void* memset(void* ptr, uint8_t value, size_t size);
-    constexpr int toupper(int c) {
+    constexpr char toupper(char c) {
         if (c >= 96 && c <= 122) return c - 32;
         return c;
     }
-    constexpr int tolower(int c) {
+    constexpr char tolower(char c) {
         if (c >= 65 && c <= 90) return c + 32;
         return c;
     }
