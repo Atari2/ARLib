@@ -103,12 +103,107 @@ namespace ARLib {
         }
     };
 
+    template <typename T>
+    class ConstHashTableIterator {
+        const Vector<Vector<T>>& m_backing_store;
+        size_t m_current_bucket = 0;
+        size_t m_current_vector_index = 0;
+        size_t m_bkt_size = 0;
+
+        public:
+        static constexpr size_t npos = static_cast<size_t>(-1);
+        ConstHashTableIterator(const Vector<Vector<T>>& backing_store) :
+            m_backing_store(backing_store), m_bkt_size(backing_store.size()) {
+            while (m_backing_store[m_current_bucket].empty()) {
+                m_current_bucket++;
+            }
+        }
+
+        ConstHashTableIterator(const Vector<Vector<T>>& backing_store, size_t bucket_index, size_t vector_index) :
+            m_backing_store(backing_store),
+            m_current_bucket(bucket_index),
+            m_current_vector_index(vector_index),
+            m_bkt_size(backing_store.size()) {}
+
+        ConstHashTableIterator(ConstHashTableIterator<T>&& other) = default;
+        ConstHashTableIterator(const ConstHashTableIterator<T>& other) = default;
+        ConstHashTableIterator& operator=(ConstHashTableIterator<T>&& other) = default;
+        ConstHashTableIterator& operator=(const ConstHashTableIterator<T>& other) = default;
+
+        bool operator==(const ConstHashTableIterator<T>& other) const {
+            return &m_backing_store == &other.m_backing_store && m_current_bucket == other.m_current_bucket &&
+                   m_current_vector_index == other.m_current_vector_index;
+        }
+
+        bool operator!=(const ConstHashTableIterator<T>& other) const {
+            return &m_backing_store != &other.m_backing_store || m_current_bucket != other.m_current_bucket ||
+                   m_current_vector_index != other.m_current_vector_index;
+        }
+
+        const T& operator*() { return m_backing_store[m_current_bucket][m_current_vector_index]; }
+
+        ConstHashTableIterator& operator++() {
+            if (m_backing_store[m_current_bucket].empty() ||
+                m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
+                if (m_current_bucket == m_bkt_size - 1 || m_backing_store[m_current_bucket + 1].empty()) {
+                    // end iterator has npos
+                    m_current_vector_index = npos;
+                    m_current_bucket = npos;
+                    return *this;
+                }
+                m_current_vector_index = 0;
+                m_current_bucket++;
+            } else {
+                m_current_vector_index++;
+            }
+            return *this;
+        }
+
+        ConstHashTableIterator operator++(int) {
+            if (m_backing_store[m_current_bucket].empty() ||
+                m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
+                return {m_backing_store, m_current_bucket == m_bkt_size - 1 ? npos : m_current_bucket + 1,
+                        m_current_bucket == m_bkt_size - 1 ? npos : 0};
+            } else {
+                return {m_backing_store, m_current_bucket, m_current_vector_index + 1};
+            }
+        }
+
+        ConstHashTableIterator& operator--() {
+            if (m_backing_store[m_current_bucket].empty() || m_current_vector_index == 0) {
+                if (m_current_bucket == 0 || m_backing_store[m_current_bucket - 1].empty()) {
+                    // end iterator has npos
+                    m_current_vector_index = npos;
+                    m_current_bucket = npos;
+                    return *this;
+                }
+                m_current_vector_index = m_backing_store[m_current_bucket - 1].size() - 1;
+                m_current_bucket--;
+            } else {
+                m_current_vector_index--;
+            }
+            return *this;
+        }
+
+        ConstHashTableIterator operator--(int) {
+            if (m_backing_store[m_current_bucket].empty() || m_current_vector_index == 0) {
+                return {m_backing_store, m_current_bucket == 0 ? npos : m_current_bucket - 1,
+                        m_current_bucket == 0 ? npos : m_backing_store[m_current_bucket - 1].size() - 1};
+            } else {
+                return {m_backing_store, m_current_bucket, m_current_vector_index - 1};
+            }
+        }
+    };
+
     template <typename T, size_t TBL_SIZE_INDEX = 0>
     requires Hashable<T>&& EqualityComparable<T> class HashTable {
         static constexpr inline double load_factor = 3.0;
         Vector<Vector<T>> m_storage;
         size_t m_bucket_count = table_sizes[TBL_SIZE_INDEX];
         size_t m_size = 0;
+
+        using Iter = HashTableIterator<T>;
+        using ConstIter = ConstHashTableIterator<T>;
 
         template <typename... Args>
         void internal_append(T&& arg, Args&&... args) {
@@ -171,8 +266,10 @@ namespace ARLib {
         }
 
         double load() {
+            if (m_size == 0) return 0.0;
             double avg_load = static_cast<double>(m_size) / static_cast<double>(m_bucket_count);
-            double sr = sum(m_storage, [avg_load](const auto& item) { return pow(static_cast<double>(item.size()) - avg_load, 2.0); });
+            double sr = sum(
+            m_storage, [avg_load](const auto& item) { return pow(static_cast<double>(item.size()) - avg_load, 2.0); });
             double res = sqrt(sr / static_cast<double>(m_size));
             return res;
         }
@@ -197,7 +294,7 @@ namespace ARLib {
             if (ld >= load_factor) { rehash_internal_(); }
             auto hs = hasher(entry);
             auto iter = find(entry);
-            if (iter == end(hs)) {
+            if (iter == tend()) {
                 m_storage[hs % m_bucket_count].append(Forward<T>(entry));
                 m_size++;
                 return InsertionResult::New;
@@ -207,26 +304,52 @@ namespace ARLib {
             }
         }
 
-        auto find(const T& val) {
+        HashTableIterator<T> find(const T& val) {
             auto hash = hasher(val);
-            const auto& bucket = m_storage[hash % m_bucket_count];
-            for (auto it = bucket.begin(); it != bucket.end(); it++) {
-                auto& item = *it;
+            size_t bucket_index = hash % m_bucket_count;
+            const auto& bucket = m_storage[bucket_index];
+            for (size_t i = 0; i < bucket.size(); i++) {
+                auto& item = bucket[i];
                 if (hash == hasher(item))
-                    if (item.key() == val.key()) return it;
+                    if (item.key() == val.key()) return {m_storage, bucket_index, i};
             }
-            return bucket.end();
+            return tend();
+        }
+
+        ConstHashTableIterator<T> find(const T& val) const {
+            auto hash = hasher(val);
+            size_t bucket_index = hash % m_bucket_count;
+            const auto& bucket = m_storage[bucket_index];
+            for (size_t i = 0; i < bucket.size(); i++) {
+                auto& item = bucket[i];
+                if (hash == hasher(item))
+                    if (item.key() == val.key()) return {m_storage, bucket_index, i};
+            }
+            return tend();
         }
 
         template <typename Functor>
-        auto find_if(size_t hash, Functor func) const {
-            const auto& bucket = m_storage[hash % m_bucket_count];
-            for (auto it = bucket.begin(); it != bucket.end(); it++) {
-                auto& item = *it;
+        HashTableIterator<T> find_if(size_t hash, Functor func) {
+            size_t bucket_index = hash % m_bucket_count;
+            const auto& bucket = m_storage[bucket_index];
+            for (size_t i = 0; i < bucket.size(); i++) {
+                auto& item = bucket[i];
                 if (hash == hasher(item))
-                    if (func(item)) return it;
+                    if (func(item)) return {m_storage, bucket_index, i};
             }
-            return bucket.end();
+            return tend();
+        }
+
+        template <typename Functor>
+        ConstHashTableIterator<T> find_if(size_t hash, Functor func) const {
+            size_t bucket_index = hash % m_bucket_count;
+            const auto& bucket = m_storage[bucket_index];
+            for (size_t i = 0; i < bucket.size(); i++) {
+                auto& item = bucket[i];
+                if (hash == hasher(item))
+                    if (func(item)) return {m_storage, bucket_index, i};
+            }
+            return tend();
         }
 
         auto end(size_t hash) { return m_storage[hash % m_bucket_count].end(); }
@@ -235,10 +358,16 @@ namespace ARLib {
 
         HashTableIterator<T> tend() { return {m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos}; }
 
+        ConstHashTableIterator<T> tbegin() const { return {m_storage}; }
+
+        ConstHashTableIterator<T> tend() const {
+            return {m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos};
+        }
+
         DeletionResult remove(const T& val) {
             auto hs = hasher(val);
             auto iter = find(val);
-            if (iter == end(hs)) { return DeletionResult::Failure; }
+            if (iter == tend()) { return DeletionResult::Failure; }
             m_storage[hs % m_bucket_count].remove(val);
             m_size--;
             return DeletionResult::Success;

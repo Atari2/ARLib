@@ -60,6 +60,7 @@ namespace ARLib {
     class HashMap {
         using MapEntry = HashMapEntry<Key, Val>;
         using Iter = HashTableIterator<MapEntry>;
+        using ConstIter = ConstHashTableIterator<MapEntry>;
         HashTable<MapEntry, TBL_SIZE_INDEX> m_table{};
 
         public:
@@ -94,7 +95,11 @@ namespace ARLib {
 
         void for_each(void (*func)(const MapEntry&)) const { m_table.for_each(func); }
 
-        auto find(const Key& key) const {
+        Iter find(const Key& key) {
+            return m_table.find_if(Hash<Key>{}(key), [&key](const auto& entry) { return entry.key() == key; });
+        }
+
+        ConstIter find(const Key& key) const {
             return m_table.find_if(Hash<Key>{}(key), [&key](const auto& entry) { return entry.key() == key; });
         }
 
@@ -104,6 +109,10 @@ namespace ARLib {
         Iter begin() { return m_table.tbegin(); }
 
         Iter end() { return m_table.tend(); }
+
+        ConstIter begin() const { return m_table.tbegin(); }
+
+        ConstIter end() const { return m_table.tend(); }
 
         size_t size() { return m_table.size(); }
         size_t bucket_count() { return m_table.bucket_count(); }
