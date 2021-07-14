@@ -1,86 +1,48 @@
 #pragma once
 
 #include "Assertion.h"
-#include "Utility.h"
+#include "Iterator.h"
+#include "TypeTraits.h"
 
 namespace ARLib {
     template <typename T, size_t S>
     class Array {
-        T m_storage[S];
-        const size_t m_capacity = S;
-        size_t m_size = 0;
+        public:
+        T _m_storage_[S];
 
+        private:
         void assert_size_(size_t index) {
-            SOFT_ASSERT_FMT((index < m_size), "Index %lu out of bounds in array of size %lu", index, m_size)
+            SOFT_ASSERT_FMT((index < S), "Index %lu out of bounds in array of size %lu", index, S)
         }
-
-        void assert_capacity_() {
-            HARD_ASSERT_FMT((m_size < m_capacity), "Size %lu can't be higher than capacity %lu", m_size + 1, m_capacity)
-        }
-
-        template <typename... Args>
-        void append_internal_(T&& value, Args&&... args) {
-            m_storage[m_size++] = move(value);
-            append_internal_(Forward<Args>(args)...);
-        }
-
-        void append_internal_(T&& value) { m_storage[m_size++] = move(value); }
 
         public:
-        Array() = default;
-
-        template <typename... Args>
-        Array(Args&&... args) {
-            HARD_ASSERT_FMT((sizeof...(args) <= S), "More arguments %lu than size of array %lu", sizeof...(args), S);
-            append_internal_(Forward<Args>(args)...);
-        }
-
-        constexpr size_t capacity() const { return m_capacity; }
-        size_t size() const { return m_size; }
+        constexpr size_t size() const { return S; }
 
         T& index(size_t index) {
             assert_size_(index);
-            return m_storage[index];
+            return _m_storage_[index];
         }
 
         const T& index(size_t index) const {
             assert_size_(index);
-            return m_storage[index];
+            return _m_storage_[index];
         }
 
         T& operator[](size_t index) {
             assert_size_(index);
-            return m_storage[index];
+            return _m_storage_[index];
         }
 
         const T& operator[](size_t index) const {
             assert_size_(index);
-            return m_storage[index];
+            return _m_storage_[index];
         }
 
-        void append(T&& value) {
-            assert_capacity_();
-            m_storage[m_size++] = move(value);
-        }
+        Iterator<T> begin() { return {PointerTraits<T*>::pointer_to(*_m_storage_)}; }
+        Iterator<T> end() { return {PointerTraits<T*>::pointer_to(*_m_storage_) + S}; }
 
-        void append(const T& value) {
-            assert_capacity_();
-            m_storage[m_size++] = value;
-        }
-
-        template <typename... Args>
-        void emplace(Args... args) {
-            assert_capacity_();
-            m_storage[m_size++] = T{args...};
-        }
-
-        void clear() {
-            for (size_t i = 0; i < m_size; i++)
-                m_storage[i].~T();
-            m_size = 0;
-        }
-
-        ~Array() { clear(); }
+        ConstIterator<T> begin() const { return {PointerTraits<const T*>::pointer_to(*_m_storage_)}; }
+        ConstIterator<T> end() const { return {PointerTraits<const T*>::pointer_to(*_m_storage_) + S}; }
     };
 } // namespace ARLib
 

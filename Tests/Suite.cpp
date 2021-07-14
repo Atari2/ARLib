@@ -12,6 +12,7 @@
 #include "../Vector.h"
 #include "../Algorithm.h"
 #include "../Enumerate.h"
+#include "../Array.h"
 
 namespace ARLib {
     auto test_partial_func(int a, String b, Tuple<String, int> c) {
@@ -185,6 +186,20 @@ namespace ARLib {
             RETURN_IF_NOT(*x, 99);
             return true;
         };
+        auto array_test = []() -> bool {
+            Array<String, 3> arr{{"hello"_s, "world"_s, "testing"_s}};
+            RETURN_IF_NOT(arr.size(), 3ull);
+            RETURN_IF_NOT(arr[0], "hello"_s);
+            RETURN_IF_NOT(arr[1], "world"_s);
+            RETURN_IF_NOT(arr[2], "testing"_s);
+            Array<String, 10> arr2{};
+            for (auto& str : arr2) {
+                RETURN_IF_NOT(str, ""_s);
+            }
+            arr2[5] = "this is a very long string eheheheh"_s;
+            RETURN_IF_NOT(arr2[5], "this is a very long string eheheheh"_s);
+            return true;
+        };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
         ASSERT_TEST("Vector equality", vec_test, Vector{"hello"_s, "world"_s}, Vector{"hello"_s, "world"_s});
         ASSERT_TEST("String length", strlen, "hello"_s, ARLib::strlen("hello"));
@@ -199,6 +214,7 @@ namespace ARLib {
         ASSERT_TEST("PartialFunction correctness", partial_func);
         ASSERT_TEST("Fill algorihtm correctness", fill_test);
         ASSERT_TEST("Sum, min, max, sort algorithm correctness", math_algos);
+        ASSERT_TEST("Array tests", array_test);
         printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }
