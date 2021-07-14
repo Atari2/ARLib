@@ -1,6 +1,7 @@
 #pragma once
-#include "TypeTraits.h"
+#include "HashBase.h"
 #include "Memory.h"
+#include "TypeTraits.h"
 
 namespace ARLib {
     template <typename T>
@@ -58,6 +59,10 @@ namespace ARLib {
             (*m_count)++;
             return *this;
         }
+
+        bool operator==(const SharedPtr& other) const { return m_storage == other.m_storage; }
+        bool operator==(const T* other_ptr) const { return m_storage == other_ptr; }
+
         T* release() {
             T* ptr = m_storage;
             decrease_instance_count_();
@@ -144,6 +149,9 @@ namespace ARLib {
             (*m_count)++;
             return *this;
         }
+
+        bool operator==(const SharedPtr& other) const { return m_storage == other.m_storage; }
+
         T* release() {
             T* ptr = m_storage;
             decrease_instance_count_();
@@ -176,6 +184,13 @@ namespace ARLib {
 
         ~SharedPtr() {
             if (decrease_instance_count_()) { delete[] m_storage; }
+        }
+    };
+
+    template <class T>
+    struct Hash<SharedPtr<T>> {
+        [[nodiscard]] size_t operator()(const SharedPtr<T>& ptr) const noexcept {
+            return reinterpret_cast<uintptr_t>(ptr.get());
         }
     };
 } // namespace ARLib

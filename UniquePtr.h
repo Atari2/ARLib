@@ -122,8 +122,10 @@ namespace ARLib {
     };
 
     template <class T>
-    class Hash<UniquePtr<T>> {
-        [[nodiscard]] size_t operator()(const UniquePtr<T>& key) const noexcept { return Hash<T>{}(*key.get()); }
+    struct Hash<UniquePtr<T>> {
+        [[nodiscard]] size_t operator()(const UniquePtr<T>& ptr) const noexcept {
+            return reinterpret_cast<uintptr_t>(ptr.get());
+        }
     };
 
 } // namespace ARLib
