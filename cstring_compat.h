@@ -46,6 +46,7 @@ namespace ARLib {
     }
 
     constexpr char* strncpy(char* dest, const char* src, size_t num) {
+        if (num == 0) { return dest; }
         while (num--) {
             *dest++ = *src++;
             if (*src == '\0') break;
@@ -63,6 +64,7 @@ namespace ARLib {
         return *first - *second;
     }
     constexpr int strncmp(const char* first, const char* second, size_t num) {
+        if (num == 0) return true;
         for (; *first == *second && --num; first++, second++)
             if (*first == '\0') return 0;
         return *first - *second;
