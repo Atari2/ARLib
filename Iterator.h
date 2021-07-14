@@ -1,11 +1,29 @@
 #pragma once
 #include "BaseTraits.h"
-#include "Types.h"
 #include "Pair.h"
+#include "Types.h"
 
 namespace ARLib {
+
     template <typename T>
-    class IteratorBase {
+    struct IteratorType {
+        using Type = T;
+    };
+
+    template <typename Iter>
+    class IteratorOperators {
+        public:
+        virtual bool operator==(const Iter&) const = 0;
+        virtual bool operator!=(const Iter&) const = 0;
+        virtual bool operator<(const Iter&) = 0;
+        virtual bool operator>(const Iter&) = 0;
+        virtual size_t operator-(const Iter& other) = 0;
+
+        virtual ~IteratorOperators() = default;
+    };
+
+    template <typename T>
+    class IteratorBase : public IteratorOperators<IteratorBase<T>> {
         protected:
         T* m_current;
         IteratorBase(T* ptr) : m_current(ptr) {}
@@ -16,11 +34,14 @@ namespace ARLib {
 
         public:
         using Type = T;
-        bool operator==(const IteratorBase<T>& other) const { return m_current == other.m_current; }
-        bool operator!=(const IteratorBase<T>& other) const { return m_current != other.m_current; }
-        bool operator<(const IteratorBase<T>& other) { return m_current < other.m_current; }
-        bool operator>(const IteratorBase<T>& other) { return m_current > other.m_current; }
-        size_t operator-(const IteratorBase<T>& other) { return static_cast<size_t>(m_current - other.m_current); }
+        virtual bool operator==(const IteratorBase<T>& other) const override { return m_current == other.m_current; }
+        virtual bool operator!=(const IteratorBase<T>& other) const override { return m_current != other.m_current; }
+        virtual bool operator<(const IteratorBase<T>& other) override { return m_current < other.m_current; }
+        virtual bool operator>(const IteratorBase<T>& other) override { return m_current > other.m_current; }
+        virtual size_t operator-(const IteratorBase<T>& other) override {
+            return static_cast<size_t>(m_current - other.m_current);
+        }
+        virtual ~IteratorBase() = default;
     };
 
     // for some god forsaken reason
@@ -75,9 +96,7 @@ namespace ARLib {
         }
 
         Iterator<T> operator-(int offset) { return {m_current - offset}; }
-        size_t operator-(const Iterator<T>& other) {
-            return static_cast<size_t>(m_current - other.m_current);
-        }
+        size_t operator-(const Iterator<T>& other) { return static_cast<size_t>(m_current - other.m_current); }
     };
 
     template <typename Ct>
@@ -227,16 +246,15 @@ namespace ARLib {
 #undef m_current
 
     template <typename T>
-    class Enumerator {
+    class Enumerator : public IteratorOperators<Enumerator<T>>, IteratorType<T> {
         Iterator<T> m_iter;
         size_t m_index;
 
-        using Unit = Pair<size_t,T&>;
+        using Unit = Pair<size_t, T&>;
 
         public:
-        using Type = T;
         Enumerator(T* begin) : m_iter(begin), m_index(0) {}
-        Enumerator(T* begin, size_t index) : m_iter(begin), m_index(index){}
+        Enumerator(T* begin, size_t index) : m_iter(begin), m_index(index) {}
         Enumerator(Iterator<T> iter, size_t index) : m_iter(iter), m_index(index) {}
         Unit operator*() { return {m_index, *m_iter}; }
 
@@ -247,15 +265,16 @@ namespace ARLib {
         }
 
         Enumerator operator++(int) { return {m_iter++, m_index++}; }
-        bool operator==(const Enumerator& other) const { return m_index == other.m_index; }
-        bool operator!=(const Enumerator& other) const { return m_index != other.m_index; }
-        bool operator<(const Enumerator& other) { return m_index < other.m_index; }
-        bool operator>(const Enumerator& other) { return m_index > other.m_index; }
+        virtual bool operator==(const Enumerator& other) const override { return m_index == other.m_index; }
+        virtual bool operator!=(const Enumerator& other) const override { return m_index != other.m_index; }
+        virtual bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
+        virtual bool operator>(const Enumerator& other) override { return m_index > other.m_index; }
+        virtual size_t operator-(const Enumerator& other) override { return m_iter - other.m_iter; }
     };
 } // namespace ARLib
 
 using ARLib::ConstIterator;
 using ARLib::ConstReverseIterator;
+using ARLib::Enumerator;
 using ARLib::Iterator;
 using ARLib::ReverseIterator;
-using ARLib::Enumerator;

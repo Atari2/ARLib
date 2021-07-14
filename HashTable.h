@@ -12,7 +12,7 @@ namespace ARLib {
     enum class DeletionResult { Success, Failure };
 
     template <typename T>
-    class HashTableIterator {
+    class HashTableIterator : public IteratorType<T> {
         Vector<Vector<T>>& m_backing_store;
         size_t m_current_bucket = 0;
         size_t m_current_vector_index = 0;

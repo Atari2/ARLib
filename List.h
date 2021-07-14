@@ -69,6 +69,7 @@ namespace ARLib {
         bool operator!=(const LinkedListIteratorBase<T>& other) const { return m_current != other.m_current; }
 
         T& operator*() const { return m_current->entry__(); }
+        virtual ~LinkedListIteratorBase() = default;
     };
 
 #define m_current LinkedListIteratorBase<T>::m_current
@@ -97,6 +98,7 @@ namespace ARLib {
             internal_advance_();
             return prev;
         }
+        virtual ~LinkedListIterator() = default;
     };
 #undef m_current
     // LIFO
@@ -151,6 +153,18 @@ namespace ARLib {
             other.m_head = nullptr;
             other.m_size = 0;
             return *this;
+        }
+
+        
+        void prepend(const T& value) { internal_single_prepend_(Forward<T>(T{value})); }
+
+        void append(const T& value) {
+            auto* curr = m_head;
+            while (curr->next() != nullptr) {
+                curr = curr->next__();
+            }
+            curr->swap_next(new Entry(value, nullptr));
+            m_size++;
         }
 
         void prepend(T&& value) { internal_single_prepend_(Forward<T>(value)); }
