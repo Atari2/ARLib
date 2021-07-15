@@ -96,6 +96,9 @@ namespace ARLib {
         }
 
         Iterator<T> operator-(int offset) { return {m_current - offset}; }
+        size_t operator-(const Iterator<T>& other) {
+            return static_cast<size_t>(m_current - other.m_current);
+        }
     };
 
     template <typename Ct>
