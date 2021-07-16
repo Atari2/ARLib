@@ -248,9 +248,9 @@ namespace ARLib {
         template <typename... Args>
         static String formatted(const char* format, Args... args) {
             String str{};
-            size_t len = scprintf(format, args...);
+            size_t len = static_cast<size_t>(scprintf(format, args...));
             str.reserve(len);
-            str.set_size(sprintf(str.rawptr(), format, args...));
+            str.set_size(static_cast<size_t>(sprintf(str.rawptr(), format, args...)));
             return str;
         }
 
