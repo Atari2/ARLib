@@ -224,7 +224,7 @@ namespace ARLib {
             RETURN_IF_NOT_EQ(sub, "world"_s);
             StringView view{str};
             RETURN_IF_NOT_EQ(str, view);
-            RETURN_IF_NOT_EQ(sub.index_of('w'), 0);
+            RETURN_IF_NOT_EQ(sub.index_of('w'), 0ull);
             return true;
         };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
