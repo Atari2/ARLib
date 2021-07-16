@@ -1,5 +1,5 @@
 #pragma once
-#include "BaseTraits.h"
+#include "TypeTraits.h"
 #include "Pair.h"
 #include "Types.h"
 
@@ -96,9 +96,7 @@ namespace ARLib {
         }
 
         Iterator<T> operator-(int offset) { return {m_current - offset}; }
-        size_t operator-(const Iterator<T>& other) {
-            return static_cast<size_t>(m_current - other.m_current);
-        }
+        size_t operator-(const Iterator<T>& other) { return static_cast<size_t>(m_current - other.m_current); }
     };
 
     template <typename Ct>
@@ -272,6 +270,46 @@ namespace ARLib {
         virtual bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
         virtual bool operator>(const Enumerator& other) override { return m_index > other.m_index; }
         virtual size_t operator-(const Enumerator& other) override { return m_iter - other.m_iter; }
+    };
+
+    template <typename F, typename S>
+    class PairIterator {
+        using IterUnit = Pair<F, S>;
+        IterUnit m_current_pair;
+        using FT = decltype(*m_current_pair.template get<0>());
+        using ST = decltype(*m_current_pair.template get<1>());
+
+        public:
+        PairIterator(F first, S second) : m_current_pair(first, second) {}
+        PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
+        Pair<FT, ST> operator*() {
+            return {*m_current_pair.template get<0>(), *m_current_pair.template get<1>()};
+        }
+        PairIterator& operator++() {
+            m_current_pair.template get<0>()++;
+            m_current_pair.template get<1>()++;
+            return *this;
+        }
+
+        PairIterator operator++(int) {
+            return {m_current_pair.template get<0>()++, m_current_pair.template get<1>()++};
+        }
+        bool operator==(const PairIterator& other) const {
+            return m_current_pair.template get<0>() == other.m_current_pair.template get<0>() &&
+                   m_current_pair.template get<1>() == other.m_current_pair.template get<1>();
+        }
+        bool operator!=(const PairIterator& other) const {
+            return m_current_pair.template get<0>() != other.m_current_pair.template get<0>() &&
+                   m_current_pair.template get<1>() != other.m_current_pair.template get<1>();
+        }
+        bool operator<(const PairIterator& other) {
+            return m_current_pair.template get<0>() < other.m_current_pair.template get<0>() &&
+                   m_current_pair.template get<1>() < other.m_current_pair.template get<1>();
+        }
+        bool operator>(const PairIterator& other) {
+            return m_current_pair.template get<0>() > other.m_current_pair.template get<0>() &&
+                   m_current_pair.template get<1>() > other.m_current_pair.template get<1>();
+        }
     };
 } // namespace ARLib
 
