@@ -1,6 +1,7 @@
 #pragma once
 #include "Algorithm.h"
 #include "Assertion.h"
+#include "Enumerate.h"
 #include "Iterator.h"
 #include "Ordering.h"
 #include "Types.h"
@@ -303,7 +304,7 @@ namespace ARLib {
         }
         [[nodiscard]] Ordering operator<=>(const StringView& other) const;
 
-        void set_size(size_t size) { 
+        void set_size(size_t size) {
             m_size = size;
             get_buf_internal()[m_size] = '\0';
         }
@@ -371,7 +372,7 @@ namespace ARLib {
             return new_str;
         }
         String& operator+=(const String& other) {
-            this->concat(other);
+            concat(other);
             return *this;
         }
 
@@ -385,10 +386,10 @@ namespace ARLib {
 
         // iterator support
         [[nodiscard]] Iterator<char> begin() { return {get_buf_internal()}; }
-        [[nodiscard]] Iterator<const char> begin() const { return {get_buf_internal()}; }
+        [[nodiscard]] ConstIterator<char> begin() const { return {get_buf_internal()}; }
         [[nodiscard]] Iterator<char> rbegin() { return end() - 1; }
         [[nodiscard]] Iterator<char> end() { return {get_buf_internal() + m_size}; }
-        [[nodiscard]] Iterator<const char> end() const { return {get_buf_internal() + m_size}; }
+        [[nodiscard]] ConstIterator<char> end() const { return {get_buf_internal() + m_size}; }
         [[nodiscard]] Iterator<char> rend() { return begin() - 1; }
         [[nodiscard]] char front() const { return get_buf_internal()[0]; }
         [[nodiscard]] char back() const { return get_buf_internal()[m_size - 1]; }
@@ -604,6 +605,65 @@ namespace ARLib {
         [[nodiscard]] String lower() const {
             String str(*this);
             str.ilower();
+            return str;
+        }
+
+        // replace
+        void ireplace(char n, char s, size_t times = String::npos) {
+            char* buf = get_buf_internal();
+            for (size_t i = 0, j = 0; i < m_size && j < times; i++) {
+                if (buf[i] == n) {
+                    buf[i] = s;
+                    j++;
+                }
+            }
+        }
+
+        String replace(char n, char s, size_t times = String::npos) {
+            String cp{*this};
+            cp.ireplace(n, s, times);
+            return cp;
+        }
+
+        void ireplace(const char* n, const char* s, size_t times = String::npos) {
+            size_t orig_len = strlen(n);
+            if (static_cast<size_t>(orig_len) > m_size) return;
+            Vector<size_t> indexes{};
+            size_t cur_pos = 0;
+            char* buf = get_buf_internal();
+            while (cur_pos < m_size && indexes.size() <= times) {
+                if (strncmp(buf + cur_pos, n, orig_len) == 0) {
+                    indexes.push_back(cur_pos);
+                    cur_pos += orig_len;
+                } else {
+                    cur_pos++;
+                }
+            }
+            auto n_occurr = indexes.size();
+            if (n_occurr == 0ull) return;
+            size_t repl_len = strlen(s);
+            bool repl_is_bigger = repl_len > orig_len;
+            size_t diff_len = repl_is_bigger ? repl_len - orig_len : orig_len - repl_len;
+            if (diff_len > 0) {
+                // this cast is safe because diff_len is for sure > 0 (could still overflow but who has a string of 2^63
+                // length?)
+                reserve(m_size + n_occurr * diff_len);
+                buf = get_buf_internal();
+            }
+            for (auto [count, index] : Enumerate{indexes}) {
+                auto new_index = repl_is_bigger ? index + (count * diff_len) : index - (count * diff_len);
+                if (repl_is_bigger)
+                    memmove(buf + new_index + diff_len, buf + new_index, m_size - index + 1ull);
+                else if (diff_len != 0)
+                    memmove(buf + new_index, buf + new_index + diff_len, m_size - index + 1ull);
+                memcpy(buf + new_index, s, repl_len);
+            }
+            set_size(repl_is_bigger ? m_size + diff_len * n_occurr : m_size - diff_len * n_occurr);
+        }
+
+        String replace(const char* n, const char* s, size_t times = String::npos) {
+            String str{*this};
+            str.ireplace(n, s, times);
             return str;
         }
 

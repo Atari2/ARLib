@@ -225,6 +225,9 @@ namespace ARLib {
             StringView view{str};
             RETURN_IF_NOT_EQ(str, view);
             RETURN_IF_NOT_EQ(sub.index_of('w'), 0ull);
+            String repls = str.replace("l", "foo");
+            RETURN_IF_NOT_EQ(repls, "hefoofooo worfood"_s);
+            RETURN_IF_NOT_EQ(repls.replace("foo", "te"), "heteteo worted"_s);
             return true;
         };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
