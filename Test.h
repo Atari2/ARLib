@@ -1,6 +1,7 @@
 #pragma once
 #include "Assertion.h"
 #include "Concepts.h"
+#include "SourceLocation.h"
 
 namespace ARLib {
     template <typename Fn, typename... Args>

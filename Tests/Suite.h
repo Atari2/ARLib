@@ -24,14 +24,14 @@ namespace ARLib {
         if (res) passed_count++;                                                                                       \
         test_count++;                                                                                                  \
     } // namespace ARLib
-#define RETURN_IF_NOT_EQ(x, y)                                                                                            \
+#define RETURN_IF_NOT_EQ(x, y)                                                                                         \
     if (!assert_eq(x, y)) {                                                                                            \
-        puts(ERRINFO);                                                                                                 \
+        PRINT_SOURCE_LOCATION                                                                                          \
         return false;                                                                                                  \
     }
-#define RETURN_IF_EQ(x, y)                                                                                                \
+#define RETURN_IF_EQ(x, y)                                                                                             \
     if (assert_eq(x, y)) {                                                                                             \
-        puts(ERRINFO);                                                                                                 \
+        PRINT_SOURCE_LOCATION                                                                                          \
         return false;                                                                                                  \
     }
     bool run_all_tests();
