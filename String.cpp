@@ -17,7 +17,7 @@ namespace ARLib {
 
     [[nodiscard]] bool String::operator<(const StringView& other) const {
         // we use the size() of the stringview cause it's not guaranteed to be null terminated
-        return strncmp(get_buf_internal(), other.data(), other.size());     
+        return strncmp(get_buf_internal(), other.data(), other.size());
     }
 
     [[nodiscard]] Ordering String::operator<=>(const StringView& other) const {
@@ -31,7 +31,8 @@ namespace ARLib {
     }
 
     [[nodiscard]] StringView String::substringview(size_t first, size_t last) const {
-        if (last == npos) last = length();
+        if (first >= m_size) return StringView{get_buf_internal(), 0ull};
+        if (last == npos || last >= m_size) last = m_size;
         return StringView{get_buf_internal() + first, last - first};
     }
 
@@ -62,6 +63,15 @@ namespace ARLib {
         }
         vec.append(substringview(prev_index));
         return vec;
+    }
+
+    void String::concat(StringView other) {
+        auto other_size = other.size();
+        if (other_size == 0) return;
+        auto new_size = m_size + other_size;
+        grow_if_needed(new_size);
+        memcpy(get_buf_internal() + m_size, other.data(), other_size);
+        set_size(new_size);
     }
 
     String operator""_s(const char* source, size_t len) { return String{source, len}; }

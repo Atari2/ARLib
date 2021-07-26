@@ -359,8 +359,9 @@ namespace ARLib {
             auto new_size = m_size + other.m_size;
             grow_if_needed(new_size);
             strcat_eff(get_buf_internal() + m_size, other.get_buf_internal());
-            m_size += other.m_size;
+            set_size(m_size + other.m_size);
         }
+        void concat(StringView other);
         void concat(const char* other) {
             String sother(other);
             concat(sother);
@@ -440,13 +441,13 @@ namespace ARLib {
             }
             return npos;
         }
-        [[nodiscard]] size_t index_of(const char* c) const {
-            if (m_size == 0) return npos;
+        [[nodiscard]] size_t index_of(const char* c, size_t start = 0) const {
+            if (m_size == 0 || start >= m_size) return npos;
             const char* buf = get_buf_internal();
             auto o_len = strlen(c);
             if (o_len > m_size) return npos;
-            if (o_len == m_size && strcmp(buf, c) == 0) return 0;
-            for (size_t i = 0; i < m_size; i++) {
+            if (o_len == m_size && start == 0 && strcmp(buf, c) == 0) return 0;
+            for (size_t i = start; i < m_size; i++) {
                 if (strncmp(buf + i, c, o_len) == 0) return i;
             }
             return npos;
