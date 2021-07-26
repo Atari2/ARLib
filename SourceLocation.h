@@ -25,11 +25,6 @@ namespace ARLib {
             return res;
         }
 
-#define PRINT_SOURCE_LOCATION                                                                                          \
-    SourceLocation loc = SourceLocation::current();                                                                    \
-    printf("Function %s in file %s, at line %u and column %u\n", loc.function_name(), loc.file_name(), loc.line(),     \
-           loc.column());
-
         constexpr SourceLocation() noexcept = default;
 
         [[nodiscard]] constexpr uint32_t line() const noexcept { return line_; }
@@ -44,3 +39,8 @@ namespace ARLib {
         const char* function_ = "";
     };
 } // namespace ARLib
+
+#define PRINT_SOURCE_LOCATION                                                                                          \
+    ARLib::SourceLocation loc = ARLib::SourceLocation::current();                                                      \
+    ARLib::printf("Function %s in file %s, at line %u and column %u\n", loc.function_name(), loc.file_name(),          \
+                  loc.line(), loc.column());
