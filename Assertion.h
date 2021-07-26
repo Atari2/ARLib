@@ -1,19 +1,15 @@
 #pragma once
 #include "Compat.h"
 #include "Macros.h"
-#include "cstdio_compat.h"
+#include "SourceLocation.h"
 #include "TypeTraits.h"
+#include "cstdio_compat.h"
 
 void abort_arlib();
-void assertion_failed__(const char* msg);
+void assertion_failed__();
 
 namespace ARLib {
-    enum class AssertWhat {
-        Eq,
-        NonEq,
-        PtrEq,
-        PtrNonEq
-    };
+    enum class AssertWhat { Eq, NonEq, PtrEq, PtrNonEq };
 
     template <typename T1, typename T2, AssertWhat T3>
     bool assert_test(const T1& first, const T2& second) {
@@ -54,25 +50,27 @@ namespace ARLib {
 #define HARD_ASSERT(val, msg)                                                                                          \
     if (!val) {                                                                                                        \
         ARLib::puts(msg);                                                                                              \
-        assertion_failed__(ERRINFO);                                                                                   \
+        PRINT_SOURCE_LOCATION                                                                                          \
+        assertion_failed__();                                                                                          \
         unreachable                                                                                                    \
     }
 #define HARD_ASSERT_FMT(val, fmt, ...)                                                                                 \
     if (!val) {                                                                                                        \
         ARLib::printf(fmt "\n", __VA_ARGS__);                                                                          \
-        assertion_failed__(ERRINFO);                                                                                   \
+        PRINT_SOURCE_LOCATION                                                                                          \
+        assertion_failed__();                                                                                          \
         unreachable                                                                                                    \
     }
 
 #define SOFT_ASSERT(val, msg)                                                                                          \
     if (!val) {                                                                                                        \
         ARLib::puts(msg);                                                                                              \
-        ARLib::puts(ERRINFO);                                                                                          \
+        PRINT_SOURCE_LOCATION                                                                                          \
     }
 #define SOFT_ASSERT_FMT(val, fmt, ...)                                                                                 \
     if (!val) {                                                                                                        \
         ARLib::printf(fmt "\n", __VA_ARGS__);                                                                          \
-        ARLib::puts(ERRINFO);                                                                                          \
+        PRINT_SOURCE_LOCATION                                                                                          \
     }
 
 #define TODO_CLS(cls)                                                                                                  \
