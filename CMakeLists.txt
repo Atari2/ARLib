@@ -45,7 +45,7 @@ endif()
 
 #detecting build type
 if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-	list(APPEND COMPILE_TIME_HELPERS DEBUG)
+	list(APPEND ARLIB_COMPILE_DEFINITIONS DEBUG)
 	set(DEBUG_BUILD true)
 	set(RELEASE_BUILD false)
 	message(STATUS "In debug mode")
