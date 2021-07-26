@@ -31,7 +31,7 @@ namespace ARLib {
     }
 
     [[nodiscard]] StringView String::substringview(size_t first, size_t last) const {
-        if (first >= m_size) return StringView{get_buf_internal(), 0ull};
+        if (first >= m_size) return StringView{get_buf_internal(), static_cast<size_t>(0)};
         if (last == npos || last >= m_size) last = m_size;
         return StringView{get_buf_internal() + first, last - first};
     }

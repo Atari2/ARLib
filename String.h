@@ -628,7 +628,7 @@ namespace ARLib {
 
         void ireplace(const char* n, const char* s, size_t times = String::npos) {
             size_t orig_len = strlen(n);
-            if (static_cast<size_t>(orig_len) > m_size) return;
+            if (orig_len > m_size) return;
             Vector<size_t> indexes{};
             size_t cur_pos = 0;
             char* buf = get_buf_internal();

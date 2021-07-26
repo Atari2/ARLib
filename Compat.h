@@ -1,4 +1,5 @@
 #pragma once
+#include "std_includes.h"
 
 #ifdef COMPILER_MSVC // MSVC
 #include <intrin.h>

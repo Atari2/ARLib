@@ -18,7 +18,6 @@ namespace ARLib {
         virtual bool operator!=(const Iter&) const = 0;
         virtual bool operator<(const Iter&) = 0;
         virtual bool operator>(const Iter&) = 0;
-        virtual size_t operator-(const Iter& other) = 0;
 
         virtual ~IteratorOperators() = default;
     };
@@ -39,9 +38,6 @@ namespace ARLib {
         virtual bool operator!=(const IteratorBase<T>& other) const override { return m_current != other.m_current; }
         virtual bool operator<(const IteratorBase<T>& other) override { return m_current < other.m_current; }
         virtual bool operator>(const IteratorBase<T>& other) override { return m_current > other.m_current; }
-        virtual size_t operator-(const IteratorBase<T>& other) override {
-            return static_cast<size_t>(m_current - other.m_current);
-        }
         virtual ~IteratorBase() = default;
     };
 
@@ -269,7 +265,7 @@ namespace ARLib {
         virtual bool operator!=(const LoopIterator& other) const override { return m_cmp.compare(m_current, other.m_current); }
         virtual bool operator<(const LoopIterator& other) override { return m_current < other.m_current; }
         virtual bool operator>(const LoopIterator& other) override { return m_current > other.m_current; }
-        virtual size_t operator-(const LoopIterator& other) override {
+        size_t operator-(const LoopIterator& other) {
             return static_cast<size_t>(m_current) - static_cast<size_t>(other.m_current);
         }
     };
@@ -298,7 +294,7 @@ namespace ARLib {
         virtual bool operator!=(const Enumerator& other) const override { return m_index != other.m_index; }
         virtual bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
         virtual bool operator>(const Enumerator& other) override { return m_index > other.m_index; }
-        virtual size_t operator-(const Enumerator& other) override { return m_iter - other.m_iter; }
+        size_t operator-(const Enumerator& other) { return m_iter - other.m_iter; }
     };
 
     template <typename F, typename S>
