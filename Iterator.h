@@ -1,7 +1,8 @@
 #pragma once
-#include "TypeTraits.h"
 #include "Pair.h"
+#include "TypeTraits.h"
 #include "Types.h"
+#include "Comparator.h"
 
 namespace ARLib {
 
@@ -245,6 +246,34 @@ namespace ARLib {
     };
 #undef m_current
 
+    template <typename T, ComparatorType CMP, typename = EnableIfT<IsNonboolIntegral<T>>>
+    class LoopIterator : public IteratorOperators<LoopIterator<T, CMP>>, IteratorType<T> {
+        T m_current;
+        T m_step;
+        Comparator<T, CMP> m_cmp{};
+
+        public:
+        LoopIterator(T current, T step) : m_current(current), m_step(step) {}
+        LoopIterator(const LoopIterator& other) = default;
+        LoopIterator(LoopIterator&& other) = default;
+        LoopIterator& operator=(LoopIterator&& other) = default;
+        LoopIterator& operator=(const LoopIterator& other) = default;
+
+        T operator*() { return m_current; }
+        LoopIterator& operator++() {
+            m_current += m_step;
+            return *this;
+        }
+        LoopIterator operator++(int) { return {m_current + m_step, m_step}; }
+        virtual bool operator==(const LoopIterator& other) const override { return m_current == other.m_current; }
+        virtual bool operator!=(const LoopIterator& other) const override { return m_cmp.compare(m_current, other.m_current); }
+        virtual bool operator<(const LoopIterator& other) override { return m_current < other.m_current; }
+        virtual bool operator>(const LoopIterator& other) override { return m_current > other.m_current; }
+        virtual size_t operator-(const LoopIterator& other) override {
+            return static_cast<size_t>(m_current) - static_cast<size_t>(other.m_current);
+        }
+    };
+
     template <typename T>
     class Enumerator : public IteratorOperators<Enumerator<T>>, IteratorType<T> {
         Iterator<T> m_iter;
@@ -282,9 +311,7 @@ namespace ARLib {
         public:
         PairIterator(F first, S second) : m_current_pair(first, second) {}
         PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
-        Pair<FT, ST> operator*() {
-            return {*m_current_pair.template get<0>(), *m_current_pair.template get<1>()};
-        }
+        Pair<FT, ST> operator*() { return {*m_current_pair.template get<0>(), *m_current_pair.template get<1>()}; }
         PairIterator& operator++() {
             m_current_pair.template get<0>()++;
             m_current_pair.template get<1>()++;

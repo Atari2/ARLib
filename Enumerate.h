@@ -3,6 +3,31 @@
 #include "Iterator.h"
 
 namespace ARLib {
+    template <typename T, ComparatorType CMP = ComparatorType::NotEqual, typename = EnableIfT<IsNonboolIntegral<T>>>
+    class Iterate {
+        T m_begin;
+        T m_end;
+        T m_step;
+
+        public:
+        Iterate(T begin, T end, T step = T{1}) : m_begin(begin), m_end(end), m_step(step) {
+            T diff = end - begin;
+            HARD_ASSERT_FMT(!(diff < T{0} && step > T{0}),
+                            "This loop that starts from %d and arrives to %d with step %d will never stop", begin, end,
+                            step);
+            if constexpr (CMP == ComparatorType::NotEqual || CMP == ComparatorType::Equal) {
+                HARD_ASSERT_FMT(((diff % step) == 0),
+                                "This loop that starts from %d and arrives to %d with step %d will never stop because "
+                                "the comparator type is checking for strict equality or inequality and the gap between "
+                                "begin and end is not divisible by the step",
+                                begin, end, step);
+            }
+        }
+
+        auto begin() const { return LoopIterator<T, CMP>{m_begin, m_step}; }
+        auto end() const { return LoopIterator<T, CMP>{m_end, m_step}; }
+    };
+
     template <EnumerableC T>
     class Enumerate {
         using TRef = typename RemoveReference<T>::type&;
