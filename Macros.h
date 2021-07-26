@@ -14,8 +14,8 @@
 #define ERRINFO CONCAT_NL(LINEINFO, FILEINFO)
 
 #ifdef DEBUG
-#define DEBUGMSG(msg)         puts(msg);
-#define DEBUGFMTMSG(msg, ...) printf(msg, __VA_ARGS__);
+#define DEBUGMSG(msg)         ARLib::puts(msg);
+#define DEBUGFMTMSG(msg, ...) ARLib::printf(msg, __VA_ARGS__);
 #else
 #define DEBUGMSG(msg)         noop;
 #define DEBUGFMTMSG(msg, ...) noop;
