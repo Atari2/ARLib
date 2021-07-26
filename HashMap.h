@@ -66,8 +66,8 @@ namespace ARLib {
         public:
         HashMap() = default;
         HashMap(const HashMap& other) : m_table(other.m_table) {}
-        HashMap(HashMap&& other) : m_table(move(other.m_table)) {}
-        HashMap& operator=(HashMap&& other) {
+        HashMap(HashMap&& other) noexcept : m_table(move(other.m_table)) {}
+        HashMap& operator=(HashMap&& other) noexcept {
             m_table = move(other.m_table);
             return *this;
         }

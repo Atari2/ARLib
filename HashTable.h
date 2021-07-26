@@ -234,7 +234,7 @@ namespace ARLib {
             m_bucket_count(other.m_bucket_count),
             m_size(other.m_size),
             hasher(other.hasher) {}
-        HashTable(HashTable&& other) :
+        HashTable(HashTable&& other) noexcept :
             m_storage(move(other.m_storage)),
             m_bucket_count(other.m_bucket_count),
             m_size(other.m_size),
@@ -249,7 +249,7 @@ namespace ARLib {
             hasher = other.hasher;
             return *this;
         }
-        HashTable& operator=(HashTable&& other) {
+        HashTable& operator=(HashTable&& other) noexcept {
             m_storage = move(other.m_storage);
             m_bucket_count = other.m_bucket_count;
             m_size = other.m_size;
