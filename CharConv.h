@@ -140,6 +140,7 @@ namespace ARLib {
         const auto len = static_cast<size_t>(scprintf("%f", value));
         String str{len};
         sprintf(str.rawptr(), "%f", value);
+        str.set_size(len);
         return str;
 #else
         const int n = 308 /* numeric limits length for dbl */ + 20;
