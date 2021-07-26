@@ -5,11 +5,10 @@
 
 namespace ARLib {
     template <EqualityComparable Key, typename Val>
-    class MapEntry {
+    struct MapEntry {
         Key m_key;
         Val m_value;
 
-        public:
         MapEntry() : m_key(), m_value() {}
         MapEntry(Key key, Val value) : m_key(move(key)), m_value(move(value)) {}
         MapEntry(MapEntry&& other) noexcept : m_key(move(other.m_key)), m_value(move(other.m_value)) {}
@@ -78,10 +77,12 @@ namespace ARLib {
         size_t size() { return m_storage.size(); }
 
         Iterator<Entry> begin() { return m_storage.begin(); }
+        ConstIterator<Entry> begin() const { return m_storage.cbegin(); }
 
         ConstIterator<Entry> cbegin() const { return m_storage.cbegin(); }
 
         Iterator<Entry> end() { return m_storage.end(); }
+        ConstIterator<Entry> end() const { return m_storage.cend(); }
 
         ConstIterator<Entry> cend() { return m_storage.cend(); }
     };
