@@ -1,19 +1,21 @@
 #include "Suite.h"
+#include "../Algorithm.h"
+#include "../Array.h"
 #include "../CharConv.h"
+#include "../Enumerate.h"
 #include "../Functional.h"
 #include "../HashMap.h"
+#include "../Map.h"
 #include "../Optional.h"
+#include "../Printer.h"
 #include "../Result.h"
 #include "../Set.h"
 #include "../SortedVector.h"
 #include "../Stack.h"
 #include "../String.h"
 #include "../Tuple.h"
-#include "../Vector.h"
-#include "../Algorithm.h"
-#include "../Enumerate.h"
-#include "../Array.h"
 #include "../UniqueString.h"
+#include "../Vector.h"
 
 namespace ARLib {
     auto test_partial_func(int a, String b, Tuple<String, int> c) {
@@ -230,6 +232,19 @@ namespace ARLib {
             RETURN_IF_NOT_EQ(repls.replace("foo", "te"), "heteteo worted"_s);
             return true;
         };
+
+        auto format_test = []() -> bool {
+            Vector<double> vec{1.0, 2.0, 3.0};
+            Map<String, int> map{};
+            map.add("Hello"_s, 1);
+            map.add("World"_s, 2);
+            auto ret =
+            Printer::format("My name is {}, I'm {} years old, vector: {}, map: {}", "Alessio"_s, 22, vec, map);
+            RETURN_IF_NOT_EQ(
+            ret,
+            "My name is Alessio, I'm 22 years old, vector: [1.000000], [2.000000], [3.000000], map: { Hello: 1, World: 2 }"_s);
+            return true;
+        };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
         ASSERT_TEST("Vector equality", vec_test, Vector{"hello"_s, "world"_s}, Vector{"hello"_s, "world"_s});
         ASSERT_TEST("String length", strlen_test, "hello"_s, ARLib::strlen("hello"));
@@ -247,6 +262,7 @@ namespace ARLib {
         ASSERT_TEST("Array tests", array_test);
         ASSERT_TEST("Unique string test", unique_str);
         ASSERT_TEST("String tests", string_test);
+        ASSERT_TEST("Formatting tests on strings", format_test);
         printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }
