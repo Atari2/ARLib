@@ -5,7 +5,6 @@ namespace ARLib {
     // anything that wants to be printed from this function has to specialize PrintInfo
 
     class Printer {
-        const size_t fmt_len;
         size_t current_index = 0;
         Vector<size_t> indexes{};
         String format_string{};
@@ -25,7 +24,7 @@ namespace ARLib {
         void print_puts() { puts(builder.data()); }
 
         template <size_t N, typename... Args>
-        Printer(const char (&format)[N], const Args&... args) : fmt_len(N), format_string{format} {
+        Printer(const char (&format)[N], const Args&... args) : format_string{format} {
             static_assert(sizeof...(args) > 0);
             size_t index = format_string.index_of("{}");
             while (index != String::npos) {
