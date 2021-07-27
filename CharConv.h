@@ -145,7 +145,9 @@ namespace ARLib {
 #else
         const int n = 308 /* numeric limits length for dbl */ + 20;
         String str{n};
-        snprintf(str.rawptr(), n, "%f", value);
+        int written = snprintf(str.rawptr(), n, "%f", value);
+        HARD_ASSERT((written > 0), "Failed to write double to string");
+        str.set_size(static_cast<size_t>(written));
         return str;
 #endif
     }
@@ -155,7 +157,9 @@ namespace ARLib {
 #else
         const int n = 38 /* numeric limits length for flt */ + 20;
         String str{n};
-        snprintf(str.rawptr(), n, "%f", static_cast<double>(value));
+        int written = snprintf(str.rawptr(), n, "%f", static_cast<double>(value));
+        HARD_ASSERT((written > 0), "Failed to write float to string");
+        str.set_size(static_cast<size_t>(written));
         return str;
 #endif
     }
