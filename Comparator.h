@@ -7,7 +7,7 @@ namespace ARLib {
 
     template <typename A, ComparatorType T>
     struct Comparator {
-        bool compare(const A& a, const A& b) const {
+        bool compare(const A&, const A&) const {
             COMPTIME_ASSERT("Don't manually override the ComparatorType template parameter");
         }
     };
