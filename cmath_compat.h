@@ -16,6 +16,7 @@ namespace ARLib {
 #ifdef _MSC_VER
         constexpr double HugeEnough = 1e+300; // must overflow
 
+        constexpr auto InfinityD = (HugeEnough * HugeEnough);
         constexpr auto Infinity = ((float)(HugeEnough * HugeEnough));
         constexpr auto HugeVal = ((double)Infinity);
         constexpr auto HugeValF = ((float)Infinity);
@@ -23,12 +24,13 @@ namespace ARLib {
         constexpr auto Nan = ((float)(Infinity * 0.0f));
         constexpr auto NanD = ((double)Nan);
 #else
+        constexpr auto InfinityD = __builtin_inf();
         constexpr auto Infinity = __builtin_inff();
-        constexpr auto HugeVal = static_cast<double>(Infinity);
-        constexpr auto HugeValF = static_cast<float>(Infinity);
-        constexpr auto HugeValL = static_cast<long double>(Infinity);
+        constexpr auto HugeVal = __builtin_huge_val();
+        constexpr auto HugeValF = __builtin_huge_valf();
+        constexpr auto HugeValL = __builtin_huge_vall();
         constexpr auto Nan = __builtin_nanf("");
-        constexpr auto NanD = static_cast<double>(Nan);
+        constexpr auto NanD = __builtin_nan("");
 #endif
     } // namespace NumericLimits
 
