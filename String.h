@@ -353,7 +353,7 @@ namespace ARLib {
             auto new_size = m_size + 1;
             grow_if_needed(new_size);
             get_buf_internal()[m_size] = c;
-            get_buf_internal()[++m_size] = '\0';
+            set_size(m_size + 1);
         }
         void concat(const String& other) {
             auto new_size = m_size + other.m_size;
