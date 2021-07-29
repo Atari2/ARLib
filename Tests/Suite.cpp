@@ -15,6 +15,7 @@
 #include "../String.h"
 #include "../Tuple.h"
 #include "../UniqueString.h"
+#include "../Variant.h"
 #include "../Vector.h"
 
 namespace ARLib {
@@ -245,6 +246,30 @@ namespace ARLib {
             "My name is Alessio, I'm 22 years old, vector: [1.000000], [2.000000], [3.000000], map: { Hello: 1, World: 2 }"_s);
             return true;
         };
+
+        auto variant_test = []() -> bool {
+            String a{"hello"};
+            Variant<int, String, float> variant{};
+            RETURN_IF_NOT_EQ(variant.is_active(), false);
+            variant = a;
+            RETURN_IF_NOT_EQ(variant.is_active(), true);
+            RETURN_IF_NOT_EQ(variant.contains_type<String>(), true);
+            RETURN_IF_NOT_EQ(variant.get<String>(), "hello"_s);
+            variant = 10.0f;
+            RETURN_IF_NOT_EQ(variant.contains_type<String>(), false);
+            RETURN_IF_NOT_EQ(variant.contains_type<float>(), true);
+            RETURN_IF_NOT_EQ(variant.get<float>(), 10.0f);
+            variant = 10;
+            RETURN_IF_NOT_EQ(variant.contains_type<float>(), false);
+            RETURN_IF_NOT_EQ(variant.contains_type<int>(), true);
+            RETURN_IF_NOT_EQ(variant.get<int>(), 10);
+            Variant<Monostate> mono{};
+            RETURN_IF_NOT_EQ(mono.is_active(), false);
+            mono = Monostate{};
+            RETURN_IF_NOT_EQ(mono.is_active(), true);
+            RETURN_IF_NOT_EQ(mono.get<Monostate>(), Monostate{});
+            return true;
+        };
         ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s);
         ASSERT_TEST("Vector equality", vec_test, Vector{"hello"_s, "world"_s}, Vector{"hello"_s, "world"_s});
         ASSERT_TEST("String length", strlen_test, "hello"_s, ARLib::strlen("hello"));
@@ -263,6 +288,7 @@ namespace ARLib {
         ASSERT_TEST("Unique string test", unique_str);
         ASSERT_TEST("String tests", string_test);
         ASSERT_TEST("Formatting tests on strings", format_test);
+        ASSERT_TEST("Variant correctness test", variant_test);
         printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }
