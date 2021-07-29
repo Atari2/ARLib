@@ -25,3 +25,5 @@
     []<bool flag = false>() { static_assert(flag, msg); }                                                              \
     ();                                                                                                                \
     unreachable
+
+#define TYPENAME_TO_STRING(type) typeid(type).name()
