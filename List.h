@@ -35,12 +35,13 @@ namespace ARLib {
         const ListEntry<T>* next() const { return m_next; }
 
         ListEntry<T>& operator=(const ListEntry<T>& other) requires CopyAssignable<T> {
+            if (this == &other) return *this;
             m_entry = other.m_entry;
             m_next = other.m_next;
             return *this;
         }
 
-        ListEntry<T>& operator=(ListEntry<T>&& other) requires MoveAssignable<T> {
+        ListEntry<T>& operator=(ListEntry<T>&& other)  noexcept requires MoveAssignable<T> {
             m_entry = move(other.m_entry);
             m_next = other.m_next;
             other.m_next = nullptr;
@@ -84,7 +85,7 @@ namespace ARLib {
         public:
         LinkedListIterator(Entry* current) : LinkedListIteratorBase<T>(current) {}
         LinkedListIterator<T>& operator=(const LinkedListIterator<T>& other) { m_current = other.m_current; }
-        LinkedListIterator<T>& operator=(LinkedListIterator<T>&& other) {
+        LinkedListIterator<T>& operator=(LinkedListIterator<T>&& other)  noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
         }
@@ -138,11 +139,11 @@ namespace ARLib {
                 internal_single_prepend_(Forward<T>(v));
         }
 
-        LinkedList() {}
+        LinkedList() = default;
 
         LinkedList(const LinkedList<T>& other) : m_head(other.m_head), m_size(other.m_size) {}
 
-        LinkedList(LinkedList<T>&& other) : m_head(other.m_head), m_size(other.m_size) {
+        LinkedList(LinkedList<T>&& other) noexcept : m_head(other.m_head), m_size(other.m_size) {
             other.m_head = nullptr;
             other.m_size = 0;
         }

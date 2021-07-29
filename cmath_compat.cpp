@@ -41,7 +41,7 @@ namespace ARLib {
         if (x == 0.0f || x == -0.0f) {
             *iptr = x;
             return x;
-        } else if (x == NumericLimits::Infinity || x == -NumericLimits::Infinity) {
+        } else if (x == NumericLimits::Infinity) {
             *iptr = x;
             return 0.0f;
         }

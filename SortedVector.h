@@ -101,7 +101,7 @@ namespace ARLib {
         }
 
         void remove(size_t index) {
-            SOFT_ASSERT_FMT((index < m_size), "Index %lu was out of bounds in vector of size %lu", index, m_size);
+            SOFT_ASSERT_FMT((index < m_size), "Index %lu was out of bounds in vector of size %lu", index, m_size)
             m_storage[index].~T();
             m_size--;
             if constexpr (IsTriviallyCopiableV<T>) {

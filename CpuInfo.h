@@ -28,7 +28,7 @@ namespace ARLib {
         uint32_t cpuinfo[3] = {0};
 
         public:
-        CPUInfo();
+        CPUInfo() noexcept;
         constexpr uint32_t operator[](size_t index) {
             if (index > 2) return 0xFFFF;
             return cpuinfo[index];

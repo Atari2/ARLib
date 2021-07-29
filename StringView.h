@@ -26,7 +26,7 @@ namespace ARLib {
             m_end = buf + strlen(buf);
         }
         StringView(const String& ref) : m_start(ref.data()) { m_end = m_start + ref.length(); }
-        StringView(const StringView& view) : m_start(view.m_start), m_end(view.m_end) {}
+        StringView(const StringView& view) = default;
         StringView(StringView&& view) noexcept {
             m_start = view.m_start;
             m_end = view.m_end;
@@ -34,6 +34,7 @@ namespace ARLib {
             view.m_end = nullptr;
         }
         StringView& operator=(const StringView& view) noexcept {
+            if (this == &view) return *this;
             m_start = view.m_start;
             m_end = view.m_end;
             return *this;
@@ -58,7 +59,7 @@ namespace ARLib {
         [[nodiscard]] char* rawptr() { return const_cast<char*>(m_start); }
         [[nodiscard]] ConstIterator<char> begin() { return {m_start}; }
         [[nodiscard]] ConstIterator<char> end() { return {m_end}; }
-        [[nodiscard]] String extract_string() const { return String(m_start, length()); }
+        [[nodiscard]] String extract_string() const { return {m_start, length()}; }
         operator String() const { return extract_string(); }
         StringView substringview(size_t first = 0, size_t last = npos) {
             size_t ssize = size();

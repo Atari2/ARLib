@@ -112,6 +112,7 @@ namespace ARLib {
         }
 
         Vector& operator=(const Vector& other) {
+            if (this == &other) return *this;
             reserve(other.capacity());
             for (size_t i = 0; i < other.m_size; i++) {
                 m_storage[i] = other.m_storage[i];
@@ -212,7 +213,7 @@ namespace ARLib {
             } else {
                 SOFT_ASSERT_FMT(assert_size_(index),
                                 "Index %lu was out of bounds in vector of size %lu and T was not default constructible",
-                                index, m_size);
+                                index, m_size)
                 m_storage[index] = value;
             }
         }
@@ -230,7 +231,7 @@ namespace ARLib {
             } else {
                 SOFT_ASSERT_FMT(assert_size_(index),
                                 "Index %lu was out of bounds in vector of size %lu and T was not default constructible",
-                                index, m_size);
+                                index, m_size)
                 m_storage[index] = move(value);
             }
         }

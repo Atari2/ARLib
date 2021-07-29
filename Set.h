@@ -33,7 +33,7 @@ namespace ARLib {
         }
 
         void assert_index_(size_t index) {
-            SOFT_ASSERT_FMT((index < m_size), "Index %lu was higher than size %lu", index, m_size);
+            SOFT_ASSERT_FMT((index < m_size), "Index %lu was higher than size %lu", index, m_size)
         }
 
         void append_internal_(T&& elem) {

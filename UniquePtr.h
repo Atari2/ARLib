@@ -15,6 +15,7 @@ namespace ARLib {
             if (other.m_storage) { m_storage = new T(*other.m_storage); }
         }
         UniquePtr& operator=(const UniquePtr& other) {
+            if (this == &other) return *this;
             delete m_storage;
             if (other.m_storage) { m_storage = new T(*other.m_storage); }
             return *this;
@@ -22,7 +23,7 @@ namespace ARLib {
 
         UniquePtr(T* ptr) : m_storage(ptr) {}
         UniquePtr(T&& storage) { m_storage = new T{move(storage)}; }
-        UniquePtr(UniquePtr&& ptr) {
+        UniquePtr(UniquePtr&& ptr)  noexcept {
             m_storage = ptr.m_storage;
             ptr.m_storage = nullptr;
         }
@@ -31,7 +32,7 @@ namespace ARLib {
             m_storage = new T{Forward<Args>(args)...};
         }
 
-        UniquePtr& operator=(UniquePtr&& other) {
+        UniquePtr& operator=(UniquePtr&& other) noexcept {
             m_storage = other.m_storage;
             other.m_storage = nullptr;
             return *this;
@@ -70,6 +71,7 @@ namespace ARLib {
             if (other.m_storage) { ConditionalBitCopy(m_storage, other.m_storage, m_size); }
         }
         UniquePtr& operator=(const UniquePtr& other) {
+            if (this == &other) return *this;
             delete[] m_storage;
             m_size = other.m_size;
             if (other.m_storage) {
@@ -89,11 +91,11 @@ namespace ARLib {
         UniquePtr(T* ptr, size_t size) : m_storage(new T[size]), m_size(size) {
             ConditionalBitCopy(m_storage, ptr, m_size);
         }
-        UniquePtr(UniquePtr&& ptr) {
+        UniquePtr(UniquePtr&& ptr) noexcept {
             m_storage = ptr.m_storage;
             ptr.m_storage = nullptr;
         }
-        UniquePtr& operator=(UniquePtr&& other) {
+        UniquePtr& operator=(UniquePtr&& other) noexcept {
             m_storage = other.m_storage;
             other.m_storage = nullptr;
             return *this;

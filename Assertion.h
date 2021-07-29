@@ -48,7 +48,7 @@ namespace ARLib {
 } // namespace ARLib
 
 #define HARD_ASSERT(val, msg)                                                                                          \
-    if (!val) {                                                                                                        \
+    if (!(val)) {                                                                                                      \
         ARLib::puts(msg);                                                                                              \
         PRINT_SOURCE_LOCATION                                                                                          \
         assertion_failed__();                                                                                          \
@@ -63,7 +63,7 @@ namespace ARLib {
     }
 
 #define SOFT_ASSERT(val, msg)                                                                                          \
-    if (!val) {                                                                                                        \
+    if (!(val)) {                                                                                                      \
         ARLib::puts(msg);                                                                                              \
         PRINT_SOURCE_LOCATION                                                                                          \
     }

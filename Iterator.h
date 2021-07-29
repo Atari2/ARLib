@@ -30,14 +30,14 @@ namespace ARLib {
 
         IteratorBase(const IteratorBase<T>& other) : m_current(other.m_current) {}
 
-        IteratorBase(IteratorBase<T>&& other) : m_current(other.m_current) { other.m_current = nullptr; }
+        IteratorBase(IteratorBase<T>&& other)  noexcept : m_current(other.m_current) { other.m_current = nullptr; }
 
         public:
         using Type = T;
-        virtual bool operator==(const IteratorBase<T>& other) const override { return m_current == other.m_current; }
-        virtual bool operator!=(const IteratorBase<T>& other) const override { return m_current != other.m_current; }
-        virtual bool operator<(const IteratorBase<T>& other) override { return m_current < other.m_current; }
-        virtual bool operator>(const IteratorBase<T>& other) override { return m_current > other.m_current; }
+        bool operator==(const IteratorBase<T>& other) const override { return m_current == other.m_current; }
+        bool operator!=(const IteratorBase<T>& other) const override { return m_current != other.m_current; }
+        bool operator<(const IteratorBase<T>& other) override { return m_current < other.m_current; }
+        bool operator>(const IteratorBase<T>& other) override { return m_current > other.m_current; }
         virtual ~IteratorBase() = default;
     };
 
@@ -105,7 +105,7 @@ namespace ARLib {
 
         ConstIterator(const ConstIterator<Ct>& other) : IteratorBase<T>(other) {}
 
-        ConstIterator(ConstIterator<Ct>&& other) : IteratorBase<T>(other) { other.m_current = nullptr; }
+        ConstIterator(ConstIterator<Ct>&& other)  noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
 
         ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) { m_current = other.m_current; }
 
@@ -152,13 +152,13 @@ namespace ARLib {
 
         ReverseIterator(const ReverseIterator<T>& other) : IteratorBase<T>(other.m_current) {}
 
-        ReverseIterator(ReverseIterator<T>&& other) : IteratorBase<T>(other) { other.m_current = nullptr; }
+        ReverseIterator(ReverseIterator<T>&& other)  noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
 
         T& operator*() { return *m_current; }
 
         ReverseIterator& operator=(const ReverseIterator<T>& other) { m_current = other.m_current; }
 
-        ReverseIterator& operator=(ReverseIterator<T>&& other) {
+        ReverseIterator& operator=(ReverseIterator<T>&& other)  noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
         }
@@ -201,13 +201,13 @@ namespace ARLib {
 
         ConstReverseIterator(const ConstReverseIterator<Ct>& other) : IteratorBase<T>(other.m_current) {}
 
-        ConstReverseIterator(ConstReverseIterator<Ct>&& other) : IteratorBase<T>(other) { other.m_current = nullptr; }
+        ConstReverseIterator(ConstReverseIterator<Ct>&& other)  noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
 
         const T& operator*() { return *m_current; }
 
         ConstReverseIterator<Ct>& operator=(const ConstReverseIterator<Ct>& other) { m_current = other.m_current; }
 
-        ConstReverseIterator<Ct>& operator=(ConstReverseIterator<Ct>&& other) {
+        ConstReverseIterator<Ct>& operator=(ConstReverseIterator<Ct>&& other)  noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
         }
@@ -251,8 +251,8 @@ namespace ARLib {
         public:
         LoopIterator(T current, T step) : m_current(current), m_step(step) {}
         LoopIterator(const LoopIterator& other) = default;
-        LoopIterator(LoopIterator&& other) = default;
-        LoopIterator& operator=(LoopIterator&& other) = default;
+        LoopIterator(LoopIterator&& other)  noexcept = default;
+        LoopIterator& operator=(LoopIterator&& other)  noexcept = default;
         LoopIterator& operator=(const LoopIterator& other) = default;
 
         T operator*() { return m_current; }
@@ -261,10 +261,10 @@ namespace ARLib {
             return *this;
         }
         LoopIterator operator++(int) { return {m_current + m_step, m_step}; }
-        virtual bool operator==(const LoopIterator& other) const override { return m_current == other.m_current; }
-        virtual bool operator!=(const LoopIterator& other) const override { return m_cmp.compare(m_current, other.m_current); }
-        virtual bool operator<(const LoopIterator& other) override { return m_current < other.m_current; }
-        virtual bool operator>(const LoopIterator& other) override { return m_current > other.m_current; }
+        bool operator==(const LoopIterator& other) const override { return m_current == other.m_current; }
+        bool operator!=(const LoopIterator& other) const override { return m_cmp.compare(m_current, other.m_current); }
+        bool operator<(const LoopIterator& other) override { return m_current < other.m_current; }
+        bool operator>(const LoopIterator& other) override { return m_current > other.m_current; }
         size_t operator-(const LoopIterator& other) {
             return static_cast<size_t>(m_current) - static_cast<size_t>(other.m_current);
         }
@@ -290,10 +290,10 @@ namespace ARLib {
         }
 
         Enumerator operator++(int) { return {m_iter++, m_index++}; }
-        virtual bool operator==(const Enumerator& other) const override { return m_index == other.m_index; }
-        virtual bool operator!=(const Enumerator& other) const override { return m_index != other.m_index; }
-        virtual bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
-        virtual bool operator>(const Enumerator& other) override { return m_index > other.m_index; }
+        bool operator==(const Enumerator& other) const override { return m_index == other.m_index; }
+        bool operator!=(const Enumerator& other) const override { return m_index != other.m_index; }
+        bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
+        bool operator>(const Enumerator& other) override { return m_index > other.m_index; }
         size_t operator-(const Enumerator& other) { return m_iter - other.m_iter; }
     };
 

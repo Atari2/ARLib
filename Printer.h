@@ -35,7 +35,7 @@ namespace ARLib {
             HARD_ASSERT_FMT(
             (indexes.size() == num_args),
             "Format arguments are not the same number as formats to fill, arguments are %d, to fill there are %d",
-            num_args, indexes.size());
+            num_args, indexes.size())
             builder.reserve(N);
             builder.concat(format_string.substringview(0, indexes[current_index]));
             print_impl(args...);

@@ -13,7 +13,7 @@ namespace ARLib {
         return true;
     }
 
-    [[nodiscard]] bool String::operator!=(const StringView& other) const { return !(*this == other); };
+    [[nodiscard]] bool String::operator!=(const StringView& other) const { return !(*this == other); }
 
     [[nodiscard]] bool String::operator<(const StringView& other) const {
         // we use the size() of the stringview cause it's not guaranteed to be null terminated

@@ -16,21 +16,21 @@ namespace ARLib {
     struct PrintInfo<int> {
         const int m_int;
         PrintInfo(const int num) : m_int(num) {}
-        String repr() { return IntToStr(m_int); }
+        String repr() const { return IntToStr(m_int); }
     };
 
     template <>
     struct PrintInfo<double> {
         const double m_double;
         PrintInfo(const double num) : m_double(num) {}
-        String repr() { return DoubleToStr(m_double); }
+        String repr() const { return DoubleToStr(m_double); }
     };
 
     template <>
     struct PrintInfo<String> {
         const String& m_str;
         PrintInfo(const String& str) : m_str(str) {}
-        String repr() { return m_str; }
+        String repr() const { return m_str; }
     };
 
     template <Printable T>
@@ -52,7 +52,7 @@ namespace ARLib {
     struct PrintInfo<Map<A, B>> {
         const Map<A, B>& m_map;
         PrintInfo(const Map<A, B>& map) : m_map(map) {}
-        String repr() {
+        String repr() const {
             String con{};
             con.concat("{ ");
             for (const auto& [key, val] : m_map) {

@@ -80,11 +80,11 @@ namespace ARLib {
                 if constexpr (IsSameV<Type, First>) {
                     HARD_ASSERT_FMT(is_active,
                                     "Bad variant access, requested type is `%s` but this type is not active.",
-                                    TYPENAME_TO_STRING(Type));
+                                    TYPENAME_TO_STRING(Type))
                     return head;
                 } else {
                     HARD_ASSERT_FMT(!is_active, "Bad variant access, requested type is `%s` but active type is `%s`",
-                                    TYPENAME_TO_STRING(Type), TYPENAME_TO_STRING(First));
+                                    TYPENAME_TO_STRING(Type), TYPENAME_TO_STRING(First))
                     return tail.template get<Type>();
                 }
             }
@@ -94,11 +94,11 @@ namespace ARLib {
                 if constexpr (IsSameV<Type, First>) {
                     HARD_ASSERT_FMT(is_active,
                                     "Bad variant access, requested type is `%s` but this type is not active.",
-                                    TYPENAME_TO_STRING(Type));
+                                    TYPENAME_TO_STRING(Type))
                     return head;
                 } else {
                     HARD_ASSERT_FMT(!is_active, "Bad variant access, requested type is `%s` but active type is `%s`",
-                                    TYPENAME_TO_STRING(Type), TYPENAME_TO_STRING(First));
+                                    TYPENAME_TO_STRING(Type), TYPENAME_TO_STRING(First))
                     return tail.template get<Type>();
                 }
             }
@@ -169,14 +169,14 @@ namespace ARLib {
             template <class T, typename = EnableIfT<IsSameV<T, Type>>>
             auto& get() const {
                 HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is `%s` but this type is not active.",
-                                TYPENAME_TO_STRING(Type));
+                                TYPENAME_TO_STRING(Type))
                 return head;
             }
 
             template <class T, typename = EnableIfT<IsSameV<T, Type>>>
             auto& get() {
                 HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is `%s` but this type is not active.",
-                                TYPENAME_TO_STRING(Type));
+                                TYPENAME_TO_STRING(Type))
                 return head;
             }
 
@@ -219,13 +219,13 @@ namespace ARLib {
 
             auto& get() const {
                 HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is `%s` but this type is not active.",
-                                TYPENAME_TO_STRING(MonostateT));
+                                TYPENAME_TO_STRING(MonostateT))
                 return head;
             }
 
             auto& get() {
                 HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is `%s` but this type is not active.",
-                                TYPENAME_TO_STRING(MonostateT));
+                                TYPENAME_TO_STRING(MonostateT))
                 return head;
             }
 

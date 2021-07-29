@@ -10,7 +10,7 @@ namespace ARLib {
     } // namespace detail
 
     class UniqueString {
-        String* m_ref;
+        String* m_ref = nullptr;
 
         void construct(const String& s) {
             auto end = detail::s_interned_strings.end();

@@ -14,13 +14,13 @@ namespace ARLib {
             T diff = end - begin;
             HARD_ASSERT_FMT(!(diff < T{0} && step > T{0}),
                             "This loop that starts from %d and arrives to %d with step %d will never stop", begin, end,
-                            step);
+                            step)
             if constexpr (CMP == ComparatorType::NotEqual || CMP == ComparatorType::Equal) {
                 HARD_ASSERT_FMT(((diff % step) == 0),
                                 "This loop that starts from %d and arrives to %d with step %d will never stop because "
                                 "the comparator type is checking for strict equality or inequality and the gap between "
                                 "begin and end is not divisible by the step",
-                                begin, end, step);
+                                begin, end, step)
             }
         }
 

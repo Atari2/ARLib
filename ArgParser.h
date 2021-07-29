@@ -8,8 +8,8 @@ namespace ARLib {
     class ArgParser {
         public:
         enum class ExecPath : bool {
-            Keep = 0,
-            Skip = 1,
+            Keep = false,
+            Skip = true,
         };
         struct CmdOption {
             private:
@@ -45,7 +45,7 @@ namespace ARLib {
             m_options.append(Forward<CmdOption>(option));
         }
 
-        String strip_prefix(const String& arg) {
+        static String strip_prefix(const String& arg) {
             if (arg.starts_with("--"))
                 return arg.substring(2);
             else if (arg.starts_with("-")) {
@@ -63,7 +63,7 @@ namespace ARLib {
         void parse() {
             for (auto& arg : m_args) {
                 auto name_value = strip_prefix(arg).split("=");
-                SOFT_ASSERT((name_value.size() == 2), "Name=value pair of command line arguments isn't respected");
+                SOFT_ASSERT((name_value.size() == 2), "Name=value pair of command line arguments isn't respected")
                 for (auto& cmd : m_options) {
                     if (cmd == name_value[0]) cmd.set_value(name_value[1]);
                 }

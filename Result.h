@@ -32,7 +32,7 @@ namespace ARLib {
                 m_ok = move(other.m_ok);
             }
         }
-        Result& operator=(Result&& other) {
+        Result& operator=(Result&& other) noexcept {
             if (other.is_error() && is_error()) {
                 m_err = move(other.m_err);
             } else if (other.is_ok() && is_ok()) {

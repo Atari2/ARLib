@@ -63,7 +63,7 @@ namespace ARLib {
 #define XSTATE_ZMM    0x40
 #define XSTATE_HI_ZMM 0x80
 
-    CPUInfo::CPUInfo() {
+    CPUInfo::CPUInfo() noexcept {
 #ifdef COMPILER_CLANG
         uint32_t cpuid_max = static_cast<uint32_t>(get_cpuid_max(0u, nullptr));
 #else

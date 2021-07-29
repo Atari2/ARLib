@@ -22,11 +22,11 @@ namespace ARLib {
 
         public:
         constexpr SharedPtr() = default;
-        SharedPtr(SharedPtr&& other) : m_storage(other.m_storage), m_count(other.m_count) {
+        SharedPtr(SharedPtr&& other)  noexcept : m_storage(other.m_storage), m_count(other.m_count) {
             other.m_storage = nullptr;
             other.m_count = nullptr;
         }
-        SharedPtr& operator=(SharedPtr&& other) {
+        SharedPtr& operator=(SharedPtr&& other) noexcept {
             if (decrease_instance_count_()) { delete m_storage; }
             m_storage = other.m_storage;
             m_count = other.m_count;
@@ -53,6 +53,7 @@ namespace ARLib {
         }
 
         SharedPtr& operator=(const SharedPtr& other) {
+            if (this == &other) return *this;
             reset();
             m_storage = other.m_storage;
             m_count = other.m_count;
@@ -115,11 +116,11 @@ namespace ARLib {
 
         public:
         constexpr SharedPtr() = default;
-        SharedPtr(SharedPtr&& other) : m_storage(other.m_storage), m_count(other.m_count) {
+        SharedPtr(SharedPtr&& other) noexcept : m_storage(other.m_storage), m_count(other.m_count) {
             other.m_storage = nullptr;
             other.m_count = nullptr;
         }
-        SharedPtr& operator=(SharedPtr&& other) {
+        SharedPtr& operator=(SharedPtr&& other) noexcept {
             if (decrease_instance_count_()) { delete m_storage; }
             m_storage = other.m_storage;
             m_count = other.m_count;
@@ -143,6 +144,7 @@ namespace ARLib {
         }
 
         SharedPtr& operator=(const SharedPtr& other) {
+            if (this == &other) return *this;
             reset();
             m_storage = other.m_storage;
             m_count = other.m_count;

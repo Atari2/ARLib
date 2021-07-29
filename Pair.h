@@ -13,8 +13,8 @@ namespace ARLib {
         Pair(T&& first, U&& second) : m_first(move(first)), m_second(move(second)) {}
 
         Pair(const Pair&) = default;
-        Pair(Pair&&) = default;
-        Pair& operator=(Pair&&) = default;
+        Pair(Pair&&) noexcept = default;
+        Pair& operator=(Pair&&) noexcept = default;
         Pair& operator=(const Pair&) = default;
 
         T& first() { return m_first; }
@@ -61,7 +61,7 @@ namespace ARLib {
         Pair(T& first, U& second) : m_first(first), m_second(second) {}
 
         Pair(const Pair& other) : m_first(other.m_first), m_second(other.m_second){};
-        Pair(Pair&& other) : m_first(other.m_first), m_second(other.m_second){};
+        Pair(Pair&& other) noexcept : m_first(other.m_first), m_second(other.m_second){};
 
         T& first() { return m_first; }
         U& second() { return m_second; }

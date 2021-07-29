@@ -33,9 +33,9 @@ namespace ARLib {
             m_current_vector_index(vector_index),
             m_bkt_size(backing_store.size()) {}
 
-        HashTableIterator(HashTableIterator<T>&& other) = default;
+        HashTableIterator(HashTableIterator<T>&& other)  noexcept = default;
         HashTableIterator(const HashTableIterator<T>& other) = default;
-        HashTableIterator& operator=(HashTableIterator<T>&& other) = default;
+        HashTableIterator& operator=(HashTableIterator<T>&& other)  noexcept = default;
         HashTableIterator& operator=(const HashTableIterator<T>& other) = default;
 
         bool operator==(const HashTableIterator<T>& other) const {
@@ -125,9 +125,9 @@ namespace ARLib {
             m_current_vector_index(vector_index),
             m_bkt_size(backing_store.size()) {}
 
-        ConstHashTableIterator(ConstHashTableIterator<T>&& other) = default;
+        ConstHashTableIterator(ConstHashTableIterator<T>&& other)  noexcept = default;
         ConstHashTableIterator(const ConstHashTableIterator<T>& other) = default;
-        ConstHashTableIterator& operator=(ConstHashTableIterator<T>&& other) = default;
+        ConstHashTableIterator& operator=(ConstHashTableIterator<T>&& other)  noexcept = default;
         ConstHashTableIterator& operator=(const ConstHashTableIterator<T>& other) = default;
 
         bool operator==(const ConstHashTableIterator<T>& other) const {

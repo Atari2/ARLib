@@ -21,7 +21,7 @@ namespace ARLib {
             if (other.m_exists) { m_object = new T{*other.m_object}; }
             m_exists = other.m_exists;
         }
-        Optional(Optional<T>&& other) {
+        Optional(Optional<T>&& other) noexcept {
             m_object = other.m_object;
             m_exists = other.m_exists;
             other.m_object = nullptr;

@@ -62,13 +62,14 @@ namespace ARLib {
         const CircularListEntry<T>* next() const { return m_next; }
 
         CircularListEntry<T>& operator=(const CircularListEntry<T>& other) requires CopyAssignable<T> {
+            if (this == &other) return *this;
             m_entry = other.m_entry;
             m_prev = other.m_prev;
             m_next = other.m_next;
             return *this;
         }
 
-        CircularListEntry<T>& operator=(CircularListEntry<T>&& other) requires MoveAssignable<T> {
+        CircularListEntry<T>& operator=(CircularListEntry<T>&& other)  noexcept requires MoveAssignable<T> {
             m_entry = move(other.m_entry);
             m_prev = other.m_prev;
             m_next = other.m_next;
@@ -117,13 +118,13 @@ namespace ARLib {
     template <typename T>
     class CircularListIterator final : public CircularListIteratorBase<T> {
         using Entry = CircularListEntry<T>;
-        virtual void internal_advance_() override {
+        void internal_advance_() override {
             if (at_end) return;
             m_current = m_current->next();
             if (m_current == m_begin) { at_end = true; }
         }
 
-        virtual void internal_revert_() override {
+        void internal_revert_() override {
             if (at_end) return;
             m_current = m_current->prev();
             if (m_current == m_begin) { at_end = true; }
@@ -133,9 +134,9 @@ namespace ARLib {
         CircularListIterator(const Entry* current) : CircularListIteratorBase<T>(current) {}
         CircularListIterator(const Entry* current, bool end) : CircularListIteratorBase<T>(current, end) {}
 
-        CircularListIterator<T>& operator=(const CircularListIterator<T>& other) { m_current = other.m_current; }
+        CircularListIterator<T>& operator=(const CircularListIterator<T>& other) { m_current = other.m_current; return *this; }
 
-        CircularListIterator<T>& operator=(CircularListIterator<T>&& other) {
+        CircularListIterator<T>& operator=(CircularListIterator<T>&& other)  noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
         }
@@ -193,9 +194,10 @@ namespace ARLib {
             m_current = other.m_current;
         }
 
-        ReverseCircularListIterator<T>& operator=(ReverseCircularListIterator<T>&& other) {
+        ReverseCircularListIterator<T>& operator=(ReverseCircularListIterator<T>&& other) noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
+            return *this;
         }
 
         ReverseCircularListIterator<T>& operator++() {
@@ -278,12 +280,12 @@ namespace ARLib {
                 internal_single_append_(Forward<T>(v));
         }
 
-        CircularDoublyLinkedList() {}
+        CircularDoublyLinkedList() = default;
 
         CircularDoublyLinkedList(const CircularDoublyLinkedList<T>& other) :
             m_first(other.m_first), m_last(other.m_last), m_size(other.m_size) {}
 
-        CircularDoublyLinkedList(CircularDoublyLinkedList<T>&& other) :
+        CircularDoublyLinkedList(CircularDoublyLinkedList<T>&& other)  noexcept :
             m_first(other.m_first), m_last(other.m_last), m_size(other.m_size) {
             other.m_first = nullptr;
             other.m_last = nullptr;
