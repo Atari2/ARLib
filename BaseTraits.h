@@ -21,6 +21,11 @@ namespace ARLib {
     template <class T, class U>
     using NothrowAssignableImpl = std::is_nothrow_assignable<T, U>;
 
+#ifndef COMPILER_MSVC
+    template <class T>
+    using IsDestructibleSafe = std::__is_destructible_safe<T>;
+#endif
+
     template <class T>
     using IsUnion = std::is_union<T>;
 
@@ -54,8 +59,57 @@ namespace ARLib {
     using TrueType = BoolConstant<true>;
     using FalseType = BoolConstant<false>;
 
+    // conditional
+    template <bool cond, class TrueT, class FalseT>
+    struct Conditional {
+        using type = TrueT;
+    };
+
+    template <class TrueT, class FalseT>
+    struct Conditional<false, TrueT, FalseT> {
+        using type = FalseT;
+    };
+
+    template <bool cond, class TrueType, class FalseType>
+    using ConditionalT = typename Conditional<cond, TrueType, FalseType>::type;
+
+    namespace detail {
+        template <typename...>
+        struct And;
+
+        template <>
+        struct And<> : public TrueType {};
+
+        template <typename B1>
+        struct And<B1> : public B1 {};
+
+        template <typename B1, typename B2>
+        struct And<B1, B2> : public Conditional<B1::value, B2, B1>::type {};
+
+        template <typename B1, typename B2, typename B3, typename... Bn>
+        struct And<B1, B2, B3, Bn...> : public Conditional<B1::value, And<B2, B3, Bn...>, B1>::type {};
+    } // namespace detail
+
     template <class T>
     struct IsTriviallyCopiable : BoolConstant<__is_trivially_copyable(T)> {};
+
+#ifdef COMPILER_MSVC
+
+    template <class T>
+    struct IsTriviallyDestructible : BoolConstant<__is_trivially_destructible(T)> {};
+
+    template <class T>
+    inline constexpr bool IsTriviallyDestructibleV = __is_trivially_destructible(T);
+
+#else
+
+    template <class T>
+    struct IsTriviallyDestructible : detail::And<IsDestructibleSafe<T>, BoolConstant<__has_trivial_destructor(T)>> {};
+
+    template <class T>
+    inline constexpr bool IsTriviallyDestructibleV = IsTriviallyDestructible<T>::value;
+
+#endif
 
     template <class T>
     inline constexpr bool IsTriviallyCopiableV = __is_trivially_copyable(T);
@@ -312,20 +366,6 @@ namespace ARLib {
 
     template <bool B, class T = void>
     using EnableIfT = typename EnableIf<B, T>::type;
-
-    // conditional
-    template <bool cond, class TrueT, class FalseT>
-    struct Conditional {
-        using type = TrueT;
-    };
-
-    template <class TrueT, class FalseT>
-    struct Conditional<false, TrueT, FalseT> {
-        using type = FalseT;
-    };
-
-    template <bool cond, class TrueType, class FalseType>
-    using ConditionalT = typename Conditional<cond, TrueType, FalseType>::type;
 
     // conjunction
     template <bool FirstVal, class First, class... Rest>
