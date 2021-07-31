@@ -22,7 +22,7 @@ namespace ARLib {
         }
 
         UniquePtr(T* ptr) : m_storage(ptr) {}
-        UniquePtr(T&& storage) { m_storage = new T{move(storage)}; }
+        UniquePtr(T&& storage) : m_storage(new T{move(storage)}) {}
         UniquePtr(UniquePtr&& ptr)  noexcept {
             m_storage = ptr.m_storage;
             ptr.m_storage = nullptr;
@@ -54,8 +54,10 @@ namespace ARLib {
         bool exists() { return m_storage != nullptr; }
 
         T* operator->() { return m_storage; }
+        const T* operator->() const { return m_storage; }
 
         T& operator*() { return *m_storage; }
+        const T& operator*() const { return *m_storage; }
 
         ~UniquePtr() { delete m_storage; }
     };
