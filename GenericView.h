@@ -10,7 +10,7 @@ namespace ARLib {
 
         public:
         GenericView(T* begin, T* end) : m_begin_view(begin), m_end_view(end) {}
-        GenericView(T* begin, size_t size) : m_begin_view(begin), m_end_view(begin + size - 1) {}
+        GenericView(T* begin, size_t size) : m_begin_view(begin), m_end_view(begin + size) {}
 
         // this constructor works only if the container operates on contiguous memory (e.g. not a linked list)
         // actually this whole class only operates on contiguous memory
@@ -23,17 +23,17 @@ namespace ARLib {
 
         Iterator<T> begin() { return {m_begin_view}; }
 
-        Iterator<T> end() { return {m_end_view + 1}; }
+        Iterator<T> end() { return {m_end_view}; }
 
-        ReverseIterator<T> rbegin() { return {m_end_view}; }
+        ReverseIterator<T> rbegin() { return {m_end_view - 1}; }
 
         ReverseIterator<T> rend() { return {m_begin_view - 1}; }
 
         ConstIterator<T> begin() const { return {m_begin_view}; }
 
-        ConstIterator<T> end() const { return {m_end_view + 1}; }
+        ConstIterator<T> end() const { return {m_end_view}; }
 
-        ConstReverseIterator<T> rbegin() const { return {m_end_view}; }
+        ConstReverseIterator<T> rbegin() const { return {m_end_view - 1}; }
 
         ConstReverseIterator<T> rend() const { return {m_begin_view - 1}; }
 
