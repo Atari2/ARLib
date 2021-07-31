@@ -30,11 +30,34 @@ namespace ARLib {
             template <class... Args>
             VariantStorage(Args&&... args) : tail(Forward<Args>(args)...), is_active(false) {}
 
+            VariantStorage(const VariantStorage& other) : is_active(other.is_active) {
+                if (other.is_active)
+                    new (&head) First(other.head);
+                else
+                    new (&tail) VariantStorage<Rest...>(other.tail);
+            }
+
+            VariantStorage(VariantStorage&& other) noexcept : is_active(other.is_active) {
+                if (other.is_active)
+                    new (&head) First(other.head);
+                else
+                    new (&tail) VariantStorage<Rest...>(move(other.tail));
+            }
+
             VariantStorage& operator=(VariantStorage&& other) noexcept {
                 if (other.is_active)
-                    head = move(other.head);
+                    new (&head) First(other.head);
                 else
-                    tail = move(other.tail);
+                    new (&tail) VariantStorage<Rest...>(move(other.tail));
+                is_active = other.is_active;
+                return *this;
+            }
+
+            VariantStorage& operator=(const VariantStorage& other) {
+                if (other.is_active)
+                    new (&head) First(other.head);
+                else
+                    new (&tail) VariantStorage<Rest...>(other.tail);
                 is_active = other.is_active;
                 return *this;
             }
@@ -145,8 +168,24 @@ namespace ARLib {
 
             VariantStorage() : is_active(false) {}
 
+            VariantStorage(VariantStorage&& other) noexcept : is_active(other.is_active) {
+                if (other.is_active) new (&head) Type(move(other.head));
+                is_active = other.is_active;
+            }
+
+            VariantStorage(const VariantStorage& other) : is_active(other.is_active) {
+                if (other.is_active) new (&head) Type(other.head);
+                is_active = other.is_active;
+            }
+
             VariantStorage& operator=(VariantStorage&& other) noexcept {
-                if (other.is_active) head = move(other.head);
+                if (other.is_active) new (&head) Type(move(other.head));
+                is_active = other.is_active;
+                return *this;
+            }
+
+            VariantStorage& operator=(const VariantStorage& other) {
+                if (other.is_active) new (&head) Type(other.head);
                 is_active = other.is_active;
                 return *this;
             }
@@ -202,14 +241,20 @@ namespace ARLib {
 
             VariantStorage() : head(), is_active(false) {}
 
-            VariantStorage& operator=(Monostate) {
-                head = MonostateT{};
-                is_active = true;
+            VariantStorage& operator=(const VariantStorage& other) {
+                is_active = other.is_active;
+                head = other.head;
+                return *this;
+            }
+            VariantStorage& operator=(VariantStorage&& other) noexcept {
+                is_active = other.is_active;
+                head = move(other.head);
                 return *this;
             }
 
-            VariantStorage& operator=(VariantStorage&& other) noexcept {
-                is_active = other.is_active;
+            VariantStorage& operator=(Monostate) {
+                head = MonostateT{};
+                is_active = true;
                 return *this;
             }
 
@@ -248,10 +293,28 @@ namespace ARLib {
         template <typename... Args>
         Variant(Args&&... args) : m_storage(Forward<Args>(args)...) {}
 
+        Variant(const Variant& other) : m_storage(other.m_storage) { }
+        Variant(Variant&& other) noexcept : m_storage(move(other.m_storage)) { }
+        Variant& operator=(const Variant& other) {
+            m_storage.deactivate();
+            m_storage = other.m_storage;
+            return *this;
+        }
+        Variant& operator=(Variant&& other) noexcept {
+            m_storage.deactivate();
+            m_storage = move(other.m_storage);
+            return *this;
+        }
+
         template <typename... Args>
         Variant& operator=(Args&&... args) {
             m_storage.operator=(Forward<Args>(args)...);
             return *this;
+        }
+
+        template <typename... Args>
+        void set(Args&&... args) {
+            m_storage.operator=(Forward<Args>(args)...);
         }
 
         template <class T>
@@ -280,6 +343,17 @@ namespace ARLib {
 
         public:
         Variant(Monostate state) : m_storage(state) {}
+
+        Variant(const Variant& other) : m_storage() { m_storage = other.m_storage; }
+        Variant(Variant&& other) noexcept : m_storage() { m_storage = move(other.m_storage); }
+        Variant& operator=(const Variant& other) {
+            m_storage = other.m_storage;
+            return *this;
+        }
+        Variant& operator=(Variant&& other) noexcept {
+            m_storage = move(other.m_storage);
+            return *this;
+        }
 
         Variant& operator=(Monostate state) {
             m_storage.operator=(state);
