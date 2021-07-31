@@ -51,6 +51,7 @@ namespace ARLib {
                 m_allocated_capacity = requested_capacity;
             } else {
                 m_allocated_capacity = basic_growth(requested_capacity);
+                HARD_ASSERT(m_allocated_capacity > requested_capacity && m_allocated_capacity > m_size, "Allocated capacity failure")
                 char* new_buf = new char[m_allocated_capacity];
                 new_buf[m_size] = '\0';
                 if (m_size != 0) memmove(new_buf, m_data_buf, m_size + 1);
@@ -236,7 +237,7 @@ namespace ARLib {
                     memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
                     m_data_buf = local_data_internal();
                 } else {
-                    if (m_allocated_capacity != 0) delete[] m_data_buf;
+                    if (!is_local()) delete[] m_data_buf;
                     m_data_buf = other.m_data_buf;
                     m_allocated_capacity = other.m_allocated_capacity;
                     other.m_data_buf = nullptr;

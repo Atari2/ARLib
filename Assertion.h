@@ -55,7 +55,7 @@ namespace ARLib {
         unreachable                                                                                                    \
     }
 #define HARD_ASSERT_FMT(val, fmt, ...)                                                                                 \
-    if (!val) {                                                                                                        \
+    if (!(val)) {                                                                                                      \
         ARLib::printf(fmt "\n", __VA_ARGS__);                                                                          \
         PRINT_SOURCE_LOCATION                                                                                          \
         assertion_failed__();                                                                                          \
@@ -68,7 +68,7 @@ namespace ARLib {
         PRINT_SOURCE_LOCATION                                                                                          \
     }
 #define SOFT_ASSERT_FMT(val, fmt, ...)                                                                                 \
-    if (!val) {                                                                                                        \
+    if (!(val)) {                                                                                                      \
         ARLib::printf(fmt "\n", __VA_ARGS__);                                                                          \
         PRINT_SOURCE_LOCATION                                                                                          \
     }

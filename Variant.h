@@ -72,7 +72,7 @@ namespace ARLib {
                 } else {
                     // current variant is active with another type, destroy type and replace
                     tail.deactivate();
-                    head = First{Forward<Args>(args)...};
+                    new (&head) First{Forward<Args>(args)...};
                     is_active = true;
                 }
                 return *this;
@@ -83,7 +83,7 @@ namespace ARLib {
                 if (is_active) {
                     head.~First();
                     is_active = false;
-                    tail = VariantStorage<Rest...>{Forward<Args>(args)...};
+                    new (&tail) VariantStorage<Rest...>{Forward<Args>(args)...};
                 } else
                     tail.operator=(Forward<Args>(args)...);
                 return *this;
