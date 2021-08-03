@@ -11,6 +11,21 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Runner.cpp"
 	)
 
+include(FetchContent)
+
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY "https://github.com/google/googletest"
+    GIT_TAG        master
+)
+
+enable_testing()
+
+include (GoogleTest)
+
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
 add_executable(ARLibTestSuite ${TEST_SOURCE_FILES})
 if (WIN32 AND NOT CMAKE_COMPILER_IS_GNUCXX)
 	target_compile_options(ARLibTestSuite PRIVATE /std:c++latest /arch:AVX2)
@@ -23,4 +38,6 @@ else()
 		target_link_options(ARLibTestSuite PRIVATE -fsanitize=address,undefined,leak)
 	endif()
 endif()
-target_link_libraries(ARLibTestSuite PRIVATE ARLib)
+target_include_directories(ARLibTestSuite PRIVATE ${googletest_SOURCE_DIR})
+target_link_libraries(ARLibTestSuite PRIVATE ARLib gtest_main)
+gtest_discover_tests(ARLibTestSuite)

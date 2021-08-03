@@ -58,14 +58,9 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Test
+      working-directory: ${{github.workspace}}/build/Tests
       shell: bash
-      run: ${{github.workspace}}/build/Tests/ARLibTestSuite
-      if: matrix.os == 'ubuntu-latest'
-    
-    - name: Test
-      shell: powershell
-      run: ${{github.workspace}}/build/Tests/Release/ARLibTestSuite.exe
-      if: matrix.os == 'windows-latest'
+      run: ctest -C $BUILD_TYPE
     
     - name: Upload
       uses: actions/upload-artifact@v2

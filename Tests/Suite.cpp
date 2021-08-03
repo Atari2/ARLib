@@ -1,28 +1,10 @@
 #include "Suite.h"
-#include "../Algorithm.h"
-#include "../Array.h"
-#include "../CharConv.h"
-#include "../Enumerate.h"
-#include "../Functional.h"
-#include "../HashMap.h"
-#include "../Map.h"
-#include "../Optional.h"
-#include "../Printer.h"
-#include "../Result.h"
-#include "../Set.h"
-#include "../SortedVector.h"
-#include "../Stack.h"
-#include "../String.h"
-#include "../Tuple.h"
-#include "../UniqueString.h"
-#include "../Variant.h"
-#include "../Vector.h"
 
 namespace ARLib {
-    auto test_partial_func(int a, String b, Tuple<String, int> c) {
+    size_t test_partial_func(int a, String b, Tuple<String, int> c) {
         return static_cast<size_t>(a) + b.size() + c.get<0>().size() + static_cast<size_t>(c.get<1>());
     };
-    bool run_all_tests() {
+    bool run_all_legacy_tests() {
         size_t test_count = 0;
         size_t passed_count = 0;
         auto streq = [](String a, String b) -> bool {
@@ -178,7 +160,7 @@ namespace ARLib {
         auto math_algos = []() -> bool {
             Vector<int> vec{};
             for (int i = 0; i < 100; i++)
-                vec.insert(static_cast<size_t>(99 - i), i);
+                vec.insert(99ull - i, i);
             sort(vec);
             for (const auto& [i, v] : Enumerate{vec})
                 RETURN_IF_NOT_EQ(static_cast<int>(i), v);

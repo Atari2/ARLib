@@ -1,8 +1,26 @@
 #pragma once
+#include "../Algorithm.h"
+#include "../Array.h"
+#include "../Enumerate.h"
+#include "../Functional.h"
+#include "../HashMap.h"
+#include "../Map.h"
+#include "../Optional.h"
+#include "../Printer.h"
+#include "../Result.h"
+#include "../Set.h"
+#include "../SortedVector.h"
+#include "../Stack.h"
+#include "../String.h"
 #include "../Test.h"
+#include "../Tuple.h"
+#include "../UniqueString.h"
+#include "../Variant.h"
+#include "../Vector.h"
 #include "../cstdio_compat.h"
 
 namespace ARLib {
+    size_t test_partial_func(int a, String b, Tuple<String, int> c);
 #define TEST_DECL_NAMED(name, lambda, ...)                                                                             \
     Test<decltype(lambda), ##__VA_ARGS__> name { lambda }
 #define TEST_DECL(type, ...) Test<type, ##__VA_ARGS__>
@@ -34,5 +52,5 @@ namespace ARLib {
         PRINT_SOURCE_LOCATION                                                                                          \
         return false;                                                                                                  \
     }
-    bool run_all_tests();
+    bool run_all_legacy_tests();
 } // namespace ARLib
