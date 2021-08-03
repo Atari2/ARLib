@@ -5,13 +5,15 @@
 #include "TypeTraits.h"
 
 // this doesn't compile because... reasons?
-// I can't use co_await & friends because (according to gcc)
+// I can't use co_await & friends because:
 // `error: coroutines require a handle class template; cannot find "std::coroutine_handle"`
-// even thought I declared it below aliasing to my implementation
-// probably something funky is going on in the compiler, probably it's hardcoded to expect std:: stuff
-// funnily enough I can get msvc to straight up give me an internal compiler error, which is always fun
+// (that's according to gcc, other compilers give similar errors)
+// Even thought my class isn't tied to the std:: at all (I even tried stubbing out and aliasing the std:: classes as can
+// be seen below, but no dice, more info in the other comment)
+// Probably something funky is going on in the compiler, e.g. it's hardcoded to expect std:: stuff.
+// I really feel like this shouldn't be the case but I'm not a compiler writer so what do I know.
 
-// uncommenting this define whenever I make this code work, for now, leaving it like this will make it so 
+// uncommenting this define whenever I make this code work, for now, leaving it like this will make it so
 // the compiler will error whenever you try to include this file
 // #define WORKING_COROUTINES
 
@@ -162,25 +164,17 @@ namespace ARLib {
         }
     };
 } // namespace ARLib
-#ifndef COMPILER_CLANG
+
+// the following is my naive attempt at tricking the compiler into thinking that std::coroutine_traits exists.
+// Surprise: it doesn't work, as per comment at the top of file.
+// This changes the error that gcc gives, it's now totally non-sensical (to be expected, as I'm messing with std:: and
+// that's UB) and generates an ICE in MSVC's compiler. Sad times. Also apparently the version of clang that I'm using
+// still has coroutines in std::experimental:: which is even more sad.
+
 namespace std {
-    template <class Result, class...>
-    struct coroutine_traits : ARLib::CoroutineTraitsImpl<Result> {};
-
-    template <class Promise = void>
-    using coroutine_handle = ARLib::CoroutineHandle<Promise>;
-
-    using noop_coroutine_promise = ARLib::NoopCoroutinePromise;
-    using noop_coroutine_handle = ARLib::NoopCoroutineHandle;
-
-    using suspend_never = ARLib::SuspendNever;
-    using suspend_always = ARLib::SuspendAlways;
-
-} // namespace std
-#else
-namespace std {
-    // clang still has this stuff in std::experimental::, not that it works anyway...
+#ifdef COMPILER_CLANG
     namespace experimental {
+#endif
         template <class Result, class...>
         struct coroutine_traits : ARLib::CoroutineTraitsImpl<Result> {};
 
@@ -192,9 +186,10 @@ namespace std {
 
         using suspend_never = ARLib::SuspendNever;
         using suspend_always = ARLib::SuspendAlways;
-    } // namespace experimental
-} // namespace std
+#ifdef COMPILER_CLANG
+    }
 #endif
+} // namespace std
 #else
 #error "Don't include coroutines, they don't work yet."
 #endif
