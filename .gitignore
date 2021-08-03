@@ -2,3 +2,5 @@ GeneratedEnums/
 .vs
 build
 out
+html/
+latex/
