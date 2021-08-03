@@ -28,9 +28,8 @@ namespace ARLib {
     }
 
     template <typename C, typename T>
-    requires Iterable<C> auto find(const C& cont, const T& elem) {
-        return find(cont.begin(), cont.end(), elem);
-    }
+    requires Iterable<C>
+    auto find(const C& cont, const T& elem) { return find(cont.begin(), cont.end(), elem); }
 
     template <IteratorConcept Iter>
     requires MoreComparable<typename Iter::Type> Iter max(Iter begin, Iter end) {
@@ -61,24 +60,33 @@ namespace ARLib {
     }
 
     template <typename C>
-    requires Iterable<C> auto max(const C& cont) {
-        return max(cont.begin(), cont.end());
-    }
+    requires Iterable<C>
+    auto max(const C& cont) { return max(cont.begin(), cont.end()); }
 
     template <typename C>
-    requires Iterable<C> auto min(const C& cont) {
-        return min(cont.begin(), cont.end());
-    }
+    requires Iterable<C>
+    auto min(const C& cont) { return min(cont.begin(), cont.end()); }
 
     template <typename C, typename Functor>
-    requires Iterable<C> auto sum(const C& cont, Functor func) {
-        return sum(cont.begin(), cont.end(), func);
+    requires Iterable<C>
+    auto sum(const C& cont, Functor func) { return sum(cont.begin(), cont.end(), func); }
+
+    template <typename C, typename Functor>
+    requires Iterable<C> && Pushable<C, decltype(*C{}.begin())> &&
+    ConvertibleTo<decltype(*C{}.begin()), ResultOfT<Functor(decltype(*C{}.begin()))>>
+    auto transform(const C& cont, Functor func) {
+        C copy{};
+        if constexpr (Reservable<C> && CanKnowSize<C>) { copy.reserve(cont.size()); }
+        for (auto& i : cont) {
+            copy.push_back(move(func(i)));
+        }
+        return copy;
     }
 
     // follows very naive quicksort implementation
     template <IteratorConcept Iter>
-    requires MoreComparable<typename Iter::Type>&& LessComparable<typename Iter::Type> Iter partition(Iter lo,
-                                                                                                      Iter hi) {
+    requires MoreComparable<typename Iter::Type> && LessComparable<typename Iter::Type> Iter partition(Iter lo,
+                                                                                                       Iter hi) {
         auto pivot = lo + static_cast<int>(((hi - lo) / 2));
         auto i = lo - 1;
         auto j = hi + 1;
@@ -97,8 +105,8 @@ namespace ARLib {
     }
 
     template <IteratorConcept Iter>
-    requires MoreComparable<typename Iter::Type>&& LessComparable<typename Iter::Type> void
-    quicksort_internal(Iter lo, Iter hi) {
+    requires MoreComparable<typename Iter::Type> && LessComparable<typename Iter::Type>
+    void quicksort_internal(Iter lo, Iter hi) {
         if (lo < hi) {
             auto p = partition(lo, hi);
             quicksort_internal(lo, p);
@@ -108,9 +116,8 @@ namespace ARLib {
 
     // in-place sorting
     template <typename C>
-    requires Iterable<C> void sort(const C& cont) {
-        quicksort_internal(cont.begin(), cont.end() - 1);
-    }
+    requires Iterable<C>
+    void sort(const C& cont) { quicksort_internal(cont.begin(), cont.end() - 1); }
 
     template <Iterable C>
     auto begin(const C& cont) {
@@ -186,7 +193,7 @@ namespace ARLib {
 
     template <typename T, Container<T> Cont, typename... Args>
     constexpr void fill_with(Cont& container, size_t num,
-                             Args... args) requires MoveAssignable<T>&& Constructible<T, Args...> {
+                             Args... args) requires MoveAssignable<T> && Constructible<T, Args...> {
         if (container.size() >= num) return;
         size_t prev_size = container.size();
         container.set_size(num);

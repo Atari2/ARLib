@@ -159,8 +159,9 @@ namespace ARLib {
 
         auto math_algos = []() -> bool {
             Vector<int> vec{};
-            for (int i = 0; i < 100; i++)
-                vec.insert(99ull - i, i);
+            int j = 0;
+            for (size_t i = 0; i < 100; i++, j++)
+                vec.insert(99ull - i, j);
             sort(vec);
             for (const auto& [i, v] : Enumerate{vec})
                 RETURN_IF_NOT_EQ(static_cast<int>(i), v);

@@ -33,12 +33,7 @@ namespace ARLib {
 #define RUN_TEST(lambda, ...) decl_and_run(lambda, ##__VA_ARGS__)
 #define ASSERT_TEST(message, lambda, ...)                                                                              \
     {                                                                                                                  \
-        printf("Running test %llu, named \"%s\"\n", test_count, message);                                              \
         auto res = RUN_TEST(lambda, ##__VA_ARGS__);                                                                    \
-        if (!res)                                                                                                      \
-            printf("Failed test %llu, named \"%s\"\n", test_count, message);                                           \
-        else                                                                                                           \
-            printf("Passed test %llu, named \"%s\"\n", test_count, message);                                           \
         if (res) passed_count++;                                                                                       \
         test_count++;                                                                                                  \
     } // namespace ARLib

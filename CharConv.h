@@ -46,14 +46,13 @@ namespace ARLib {
         return next;
     }
 
-    template <class Integral, SupportedBase Base = SupportedBase::Decimal>
-    String IntToStr(Integral value) {
-        static_assert(IsIntegralV<Integral>, "IntToStr type must be integral type");
+    template <SupportedBase Base = SupportedBase::Decimal>
+    String IntToStr(Integral auto value) {
         if constexpr (Base == SupportedBase::Decimal) {
             char buf[22] = {0};
             char* const buf_end = end(buf) - 1;
             char* next = buf_end;
-            const auto uvalue = static_cast<MakeUnsignedT<Integral>>(value);
+            const auto uvalue = static_cast<MakeUnsignedT<decltype(value)>>(value);
             if (value < 0) {
                 next = unsigned_to_buffer(next, 0 - uvalue);
                 *--next = '-';
@@ -66,11 +65,11 @@ namespace ARLib {
             if constexpr (Base == SupportedBase::Hexadecimal) {
                 if (value == 0) rev.append('0');
                 while (value > 0) {
-                    Integral rem = value % 16;
+                    Integral auto rem = value % 16;
                     if (rem > 9)
-                        rev.append(rem + 55);
+                        rev.append(static_cast<char>(rem) + '7');
                     else
-                        rev.append(rem + 48);
+                        rev.append(static_cast<char>(rem) + '0');
                     value >>= 4;
                 }
                 rev.append('x');
@@ -78,8 +77,8 @@ namespace ARLib {
             } else if constexpr (Base == SupportedBase::Binary) {
                 if (value == 0) rev.append('0');
                 while (value > 0) {
-                    Integral rem = value % 2;
-                    rev.append(rem + 48);
+                    Integral auto rem = value % 2;
+                    rev.append(static_cast<char>(rem) + '0');
                     value >>= 1;
                 }
                 rev.append('b');

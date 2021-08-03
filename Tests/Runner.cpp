@@ -161,14 +161,22 @@ TEST(ARLibTests, FillTest) {
 
 TEST(ARLibTests, MathAlgorithmTest) {
     Vector<int> vec{};
-    for (int i = 0; i < 100; i++)
-        vec.insert(99ull - i, i);
+    int j = 0;
+    for (size_t i = 0; i < 100; i++, j++)
+        vec.insert(99ull - i, j);
     sort(vec);
     for (const auto& [i, v] : Enumerate{vec})
         EXPECT_EQ(static_cast<int>(i), v);
     auto s = sum(vec, [](int a) { return a; });
     auto m = min(vec);
     auto x = max(vec);
+    auto copy = transform(vec, [](int a) { return a * 2; });
+    auto cs = sum(copy, [](int a) { return a; });
+    auto cm = min(copy);
+    auto cx = max(copy);
+    EXPECT_EQ(cs, 9900);
+    EXPECT_EQ(*cm, 0);
+    EXPECT_EQ(*cx, 99 * 2);
     EXPECT_EQ(s, 4950);
     EXPECT_EQ(*m, 0);
     EXPECT_EQ(*x, 99);

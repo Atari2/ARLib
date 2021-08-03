@@ -235,6 +235,16 @@ namespace ARLib {
     }
     &&Reservable<Cont>;
 
+    template <typename Cont>
+    concept CanKnowSize = requires(Cont container) {
+        { container.size() } -> SameAs<size_t>;
+    };
+
+    template <typename Cont, typename T>
+    concept Pushable = requires(Cont container, T elem) {
+        { container.push_back(elem) } -> SameAs<void>;
+    };
+
     template <typename T>
     concept Integral = IsIntegralV<T>;
 

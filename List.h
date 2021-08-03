@@ -78,7 +78,7 @@ namespace ARLib {
     class LinkedListIterator final : public LinkedListIteratorBase<T> {
         using Entry = ListEntry<T>;
         virtual void internal_advance_() override {
-            SOFT_ASSERT(m_current, "m_current must not be nullptr")
+            HARD_ASSERT(m_current, "m_current must not be nullptr")
             m_current = m_current->next__();
         }
 
