@@ -15,7 +15,7 @@ with open(f'{folder}/enum_definitions.impl', 'r') as f:
 try:
     os.mkdir(f'{folder}/GeneratedEnums')
 except Exception as exc:
-    print(str(exc))
+    pass
 
 
 def power_bit_length(x):
