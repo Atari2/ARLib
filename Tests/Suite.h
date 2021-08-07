@@ -17,6 +17,7 @@
 #include "../UniqueString.h"
 #include "../Variant.h"
 #include "../Vector.h"
+#include "../SSOVector.h"
 #include "../cstdio_compat.h"
 
 namespace ARLib {

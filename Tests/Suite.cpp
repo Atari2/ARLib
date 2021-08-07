@@ -272,7 +272,6 @@ namespace ARLib {
         ASSERT_TEST("String tests", string_test);
         ASSERT_TEST("Formatting tests on strings", format_test);
         ASSERT_TEST("Variant correctness test", variant_test);
-        printf("Passed %llu tests on %llu total\n", passed_count, test_count);
         return passed_count == test_count;
     }
 } // namespace ARLib

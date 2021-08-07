@@ -4,7 +4,7 @@
 using namespace ARLib;
 
 TEST(LegacyARLibTests, AllTests) {
-    EXPECT_EQ(run_all_legacy_tests(), true);
+    EXPECT_TRUE(run_all_legacy_tests());
 }
 
 TEST(ARLibTests, StringEquality) {
@@ -255,4 +255,23 @@ TEST(ARLibTests, VariantTests) {
     mono = Monostate{};
     EXPECT_EQ(mono.is_active(), true);
     EXPECT_EQ(mono.get<Monostate>(), Monostate{});
+}
+
+TEST(ARLibTests, SSOVectorTests) {
+    SSOVector vec{"hello"_s, "world"_s};
+    EXPECT_TRUE(vec.is_in_situ());
+    auto sz = vec.size();
+    for (size_t i = 0; i < vec.sso() - sz; i++) {
+        vec.push_back("a"_s);
+    }
+    EXPECT_TRUE(vec.is_in_situ());
+    vec.push_back("b"_s);
+    EXPECT_FALSE(vec.is_in_situ());
+    EXPECT_EQ(vec[0], "hello"_s);
+    SSOVector<int, 25> sso1{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    SSOVector<int, 100> sso2{};
+    sso2 = sso1;
+    EXPECT_EQ(sso1.size(), sso2.size());
+    for (size_t i = 0; i < sso1.size(); i++)
+        EXPECT_EQ(sso1[i], sso2[i]);
 }
