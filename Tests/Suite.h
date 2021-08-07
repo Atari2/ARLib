@@ -18,6 +18,7 @@
 #include "../Variant.h"
 #include "../Vector.h"
 #include "../SSOVector.h"
+#include "../LinkedSet.h"
 #include "../cstdio_compat.h"
 
 namespace ARLib {

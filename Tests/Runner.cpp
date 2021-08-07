@@ -275,3 +275,21 @@ TEST(ARLibTests, SSOVectorTests) {
     for (size_t i = 0; i < sso1.size(); i++)
         EXPECT_EQ(sso1[i], sso2[i]);
 }
+
+TEST(ARLibTests, LinkedSetTests) {
+    LinkedSet lset{"hello"_s, "hello"_s};
+    EXPECT_EQ(lset.size(), 1ull);
+    auto& lhs = lset.append("hello"_s);
+    EXPECT_EQ(lhs, "hello"_s);
+    EXPECT_EQ(lset.size(), 1ull);
+    auto& rhs = lset.prepend("world"_s);
+    EXPECT_EQ(rhs, "world"_s);
+    EXPECT_EQ(lset.size(), 2ull);
+    auto& ths = lset.prepend("world"_s);
+    EXPECT_EQ(ths, "world"_s);
+    EXPECT_EQ(lset.size(), 2ull);
+    lset.remove(lset.find("hello"_s).current());
+    EXPECT_EQ(lset.size(), 1ull);
+    lset.prepend("hello"_s);
+    EXPECT_EQ(lset.size(), 2ull);
+}
