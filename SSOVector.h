@@ -197,7 +197,7 @@ namespace ARLib {
         void resize(size_t new_size) requires DefaultConstructible<T> {
             if (new_size < m_size) return;
             if (new_size > m_capacity) { grow_to_capacity(new_size); }
-            for (int i = m_size; i < new_size; i++) {
+            for (size_t i = m_size; i < new_size; i++) {
                 m_storage[i] = move(T{});
             }
             m_size = new_size;
