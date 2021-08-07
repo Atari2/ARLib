@@ -1,44 +1,33 @@
 #pragma once
-#include "List.h"
+#include "LinkedSet.h"
 #include "SharedPtr.h"
 #include "String.h"
 #include "Types.h"
 
 namespace ARLib {
     namespace detail {
-        static inline LinkedList<String> s_interned_strings{};
+        static inline LinkedSet<String> s_interned_strings{};
     } // namespace detail
 
     class UniqueString {
-        String* m_ref = nullptr;
+        String* m_ref;
 
-        void construct(const String& s) {
-            auto end = detail::s_interned_strings.end();
-            auto f = detail::s_interned_strings.find(s);
-            if (f == end) {
-                detail::s_interned_strings.prepend(s);
-                m_ref = &(*detail::s_interned_strings.find(s));
-            } else {
-                m_ref = &(*f);
-            }
-        }
+        static String* construct(const String& s) { return &ARLib::detail::s_interned_strings.prepend(s); }
 
         public:
-        UniqueString(const String& str) { construct(str); }
-        UniqueString(const char* ptr) {
-            String s{ptr};
-            construct(s);
+        UniqueString(const String& str) : m_ref(construct(str)) {  }
+        UniqueString(const char* ptr) : m_ref(construct(String{ptr})) {
         }
         UniqueString(const UniqueString& other) = default;
         UniqueString(UniqueString&& other) = default;
         UniqueString& operator=(const UniqueString& other) = default;
         UniqueString& operator=(UniqueString&& other) = default;
         UniqueString& operator=(const String& other) {
-            construct(other);
+            m_ref = construct(other);
             return *this;
         }
         UniqueString& operator=(String&& other) {
-            construct(other);
+            m_ref = construct(other);
             return *this;
         }
         bool operator==(const UniqueString& other) const { return m_ref == other.m_ref; }
