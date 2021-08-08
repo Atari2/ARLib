@@ -293,3 +293,23 @@ TEST(ARLibTests, LinkedSetTests) {
     lset.prepend("hello"_s);
     EXPECT_EQ(lset.size(), 2ull);
 }
+
+TEST(ARLibTests, LinkedListTests) {
+    LinkedList list{1, 2, 3, 4};
+    EXPECT_EQ(list.size(), 4ull);
+    list.prepend(5);
+    list.append(6);
+    EXPECT_EQ(list.size(), 6ull);
+    EXPECT_EQ(list.find(7), list.end());
+    list.remove(6);
+    EXPECT_EQ(list.size(), 5ull);
+    int i = 5;
+    for (auto val : list) {
+        EXPECT_EQ(val, i);
+        i--;
+    }
+    EXPECT_EQ(list.pop(), 1);
+    EXPECT_EQ(list.size(), 4ull);
+    LinkedList list2{"hello"_s};
+    EXPECT_EQ(list2.pop(), "hello"_s);
+}

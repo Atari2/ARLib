@@ -3,118 +3,84 @@
 #include "Concepts.h"
 #include "Utility.h"
 namespace ARLib {
-
-    template <typename T>
-    class LinkedList;
-
-    template <typename T>
-    class LinkedListIteratorBase;
-
-    template <typename T>
-    class LinkedListIterator;
-
-    template <typename T>
-    requires CopyConstructible<T> || MoveConstructible<T> || CopyAssignable<T> || MoveAssignable<T> class ListEntry {
-        T m_entry;
-        ListEntry<T>* m_next;
-        friend class LinkedList<T>;
-        friend class LinkedListIteratorBase<T>;
-        friend class LinkedListIterator<T>;
-
-        ListEntry(T&& entry, ListEntry<T>* next) requires MoveConstructible<T> : m_entry(move(entry)), m_next(next) {}
-
-        ListEntry(const T& entry, ListEntry<T>* next) requires CopyConstructible<T> : m_entry(entry), m_next(next) {}
-
-        T& entry__() { return m_entry; }
-        ListEntry<T>* next__() const { return m_next; }
-
-        void swap_next(ListEntry<T>* new_next) { m_next = new_next; }
-
-        public:
-        const T& entry() const { return m_entry; }
-        const ListEntry<T>* next() const { return m_next; }
-
-        ListEntry<T>& operator=(const ListEntry<T>& other) requires CopyAssignable<T> {
-            if (this == &other) return *this;
-            m_entry = other.m_entry;
-            m_next = other.m_next;
-            return *this;
-        }
-
-        ListEntry<T>& operator=(ListEntry<T>&& other)  noexcept requires MoveAssignable<T> {
-            m_entry = move(other.m_entry);
-            m_next = other.m_next;
-            other.m_next = nullptr;
-            return *this;
-        }
-
-        ~ListEntry() { m_entry.~T(); }
-    };
-
-    template <typename T>
-    class LinkedListIteratorBase {
-        using Entry = ListEntry<T>;
-        friend LinkedList<T>;
-
-        protected:
-        Entry* m_current;
-        virtual void internal_advance_() = 0;
-
-        public:
-        using Type = T;
-        LinkedListIteratorBase(Entry* current) : m_current(current) {}
-
-        const Entry* current() const { return m_current; }
-        bool is_done() const { return m_current->next() == nullptr; }
-        bool operator==(const LinkedListIteratorBase<T>& other) const { return m_current == other.m_current; }
-        bool operator!=(const LinkedListIteratorBase<T>& other) const { return m_current != other.m_current; }
-
-        T& operator*() const { return m_current->entry__(); }
-        virtual ~LinkedListIteratorBase() = default;
-    };
-
-#define m_current LinkedListIteratorBase<T>::m_current
-    template <typename T>
-    class LinkedListIterator final : public LinkedListIteratorBase<T> {
-        using Entry = ListEntry<T>;
-        virtual void internal_advance_() override {
-            HARD_ASSERT(m_current, "m_current must not be nullptr")
-            m_current = m_current->next__();
-        }
-
-        public:
-        LinkedListIterator(Entry* current) : LinkedListIteratorBase<T>(current) {}
-        LinkedListIterator<T>& operator=(const LinkedListIterator<T>& other) { m_current = other.m_current; }
-        LinkedListIterator<T>& operator=(LinkedListIterator<T>&& other)  noexcept {
-            m_current = other.m_current;
-            other.m_current = nullptr;
-        }
-        LinkedListIterator<T>& operator++() {
-            internal_advance_();
-            return *this;
-        }
-
-        LinkedListIterator<T> operator++(int) {
-            LinkedListIterator<T> prev{m_current};
-            internal_advance_();
-            return prev;
-        }
-        virtual ~LinkedListIterator() = default;
-    };
-#undef m_current
     // LIFO
     template <typename T>
     class LinkedList {
-        public:
-        using Entry = ListEntry<T>;
-        using Iter = LinkedListIterator<T>;
+        struct ListEntry {
+            T m_entry;
+            ListEntry* m_next;
 
-        private:
-        Entry* m_head = nullptr;
+            ListEntry(T&& entry, ListEntry* next) requires MoveConstructible<T> :
+                m_entry(move(entry)),
+                m_next(next) {}
+
+            ListEntry(const T& entry, ListEntry* next) requires CopyConstructible<T> :
+                m_entry(entry),
+                m_next(next) {}
+
+            T& entry_mut() { return m_entry; }
+            ListEntry* next_mut() const { return m_next; }
+
+            void swap_next(ListEntry* new_next) { m_next = new_next; }
+
+            const T& entry() const { return m_entry; }
+            const ListEntry* next() const { return m_next; }
+
+            ListEntry& operator=(const ListEntry& other) requires CopyAssignable<T> {
+                if (this == &other) return *this;
+                m_entry = other.m_entry;
+                m_next = other.m_next;
+                return *this;
+            }
+
+            ListEntry& operator=(ListEntry&& other) noexcept requires MoveAssignable<T> {
+                if (this == &other) return *this;
+                m_entry = move(other.m_entry);
+                m_next = other.m_next;
+                other.m_next = nullptr;
+                return *this;
+            }
+        };
+        class LinkedListIterator {
+            friend LinkedList<T>;
+
+            ListEntry* m_current;
+            void internal_advance_() {
+                HARD_ASSERT(m_current, "m_current must not be nullptr")
+                m_current = m_current->next_mut();
+            }
+
+            public:
+            LinkedListIterator(ListEntry* current) : m_current(current) {}
+            LinkedListIterator& operator=(const LinkedListIterator& other) { m_current = other.m_current; }
+            LinkedListIterator& operator=(LinkedListIterator&& other) noexcept {
+                m_current = other.m_current;
+                other.m_current = nullptr;
+            }
+
+            const ListEntry* current() const { return m_current; }
+            bool is_done() const { return m_current->next() == nullptr; }
+            bool operator==(const LinkedListIterator& other) const { return m_current == other.m_current; }
+            bool operator!=(const LinkedListIterator& other) const { return m_current != other.m_current; }
+
+            T& operator*() const { return m_current->entry_mut(); }
+
+            LinkedListIterator& operator++() {
+                internal_advance_();
+                return *this;
+            }
+
+            LinkedListIterator operator++(int) {
+                LinkedListIterator prev{m_current};
+                internal_advance_();
+                return prev;
+            }
+        };
+        ListEntry* m_head = nullptr;
         size_t m_size = 0;
 
         void internal_single_prepend_(T&& value) {
-            m_head = new Entry(Forward<T>(value), m_head);
+            m_head = new ListEntry(Forward<T>(value), m_head);
             m_size++;
         }
 
@@ -162,9 +128,9 @@ namespace ARLib {
         void append(const T& value) {
             auto* curr = m_head;
             while (curr->next() != nullptr) {
-                curr = curr->next__();
+                curr = curr->next_mut();
             }
-            curr->swap_next(new Entry(value, nullptr));
+            curr->swap_next(new ListEntry(value, nullptr));
             m_size++;
         }
 
@@ -173,64 +139,70 @@ namespace ARLib {
         void append(T&& value) {
             auto* curr = m_head;
             while (curr->next() != nullptr) {
-                curr = curr->next__();
+                curr = curr->next_mut();
             }
-            curr->swap_next(new Entry(value, nullptr));
+            curr->swap_next(new ListEntry(value, nullptr));
             m_size++;
         }
 
-        void pop_head() {
-            if (!m_head) return;
+        T pop_head() {
+            HARD_ASSERT(m_head, "Calling pop_head() on empty list")
             auto* rem = m_head;
-            m_head = m_head->next__();
+            m_head = m_head->next_mut();
             m_size--;
+            T ret{move(rem->entry_mut())};
             delete rem;
+            return ret;
         }
 
-        void pop() {
+        T pop() {
             auto* curr = m_head;
-            if (!curr) return;
+            HARD_ASSERT(curr, "Calling pop() on empty list")
             if (curr->next() == nullptr) {
+                m_size--;
                 m_head = nullptr;
+                T ret{move(curr->entry_mut())};
                 delete curr;
-                return;
+                return ret;
             }
             while (curr->next()->next() != nullptr) {
-                curr = curr->next();
+                curr = curr->next_mut();
             }
+            T ret_next{move(curr->next_mut()->entry_mut())};
             delete curr->next();
             curr->swap_next(nullptr);
             m_size--;
+            return ret_next;
         }
 
-        void remove(const Entry* entry) {
+        void remove(const ListEntry* entry) {
             if (!m_head) return;
             if (entry == m_head) {
                 auto* del = m_head;
-                m_head = m_head->next__();
+                m_head = m_head->next_mut();
                 m_size--;
                 delete del;
             } else {
                 auto* prev = m_head;
-                auto* del = prev->next__();
+                auto* del = prev->next_mut();
                 while (del) {
                     if (del == entry) {
-                        prev->swap_next(del->next__());
+                        prev->swap_next(del->next_mut());
                         delete del;
                         m_size--;
                         break;
                     }
                     prev = del;
-                    del = prev->next__();
+                    del = prev->next_mut();
                 }
             }
         }
 
         void remove(const T& item) {
             if (!m_head) return;
-            Iter iter = find(item);
+            LinkedListIterator iter = find(item);
             if (iter == end()) return;
-            const Entry* entry = iter.current();
+            const ListEntry* entry = iter.current();
             remove(entry);
         }
 
@@ -244,15 +216,15 @@ namespace ARLib {
                 pop_head();
         }
 
-        Iter begin() const { return {m_head}; }
-        Iter end() const { return {nullptr}; }
+        LinkedListIterator begin() const { return {m_head}; }
+        LinkedListIterator end() const { return {nullptr}; }
 
         size_t size() const { return m_size; }
 
         template <typename Functor>
         void for_each(Functor&& func) {
             if (!m_head) return;
-            Entry* curr = m_head;
+            ListEntry* curr = m_head;
             while (curr) {
                 func(curr->entry());
                 curr = curr->next__();
@@ -266,9 +238,9 @@ namespace ARLib {
             return false;
         }
 
-        Iter find(const T& value) const requires EqualityComparable<T> {
+        LinkedListIterator find(const T& value) const requires EqualityComparable<T> {
             if (m_size == 0) return {nullptr};
-            for (Iter beg = begin(); beg != end(); ++beg) {
+            for (LinkedListIterator beg = begin(); beg != end(); ++beg) {
                 if (*beg == value) return {beg.m_current};
             }
             return {nullptr};
