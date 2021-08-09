@@ -33,6 +33,13 @@ namespace ARLib {
         String repr() const { return m_str; }
     };
 
+    template <>
+    struct PrintInfo<size_t> {
+        const size_t m_size;
+        PrintInfo(const size_t num) : m_size(num) {}
+        String repr() const { return IntToStr(m_size); }
+    };
+
     template <Printable T>
     struct PrintInfo<Vector<T>> {
         const Vector<T>& m_vec;
