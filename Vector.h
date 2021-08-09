@@ -29,7 +29,7 @@ namespace ARLib {
         void append_internal_single_(const T& value) requires CopyAssignable<T> { m_storage[m_size++] = value; }
 
         void ensure_capacity_() {
-            if (m_size == m_capacity) { round_to_capacity_(m_capacity); }
+            if (m_size == m_capacity) { round_to_capacity_(m_capacity + 1); }
         }
 
         template <typename... Values>
@@ -90,6 +90,10 @@ namespace ARLib {
 
         public:
         Vector() = default;
+        Vector(T*& storage_ptr, size_t size) :
+            m_storage(storage_ptr), m_end_of_storage(storage_ptr + size), m_capacity(size), m_size(size) {
+            storage_ptr = nullptr;
+        }
         Vector(Vector&& other) noexcept {
             m_storage = other.m_storage;
             m_end_of_storage = other.m_end_of_storage;
@@ -157,7 +161,7 @@ namespace ARLib {
             append_internal_(Forward<T>(val1), Forward<T>(val2), Forward<Values>(values)...);
         }
 
-        bool operator==(const Vector& other) const { 
+        bool operator==(const Vector& other) const {
             if (size() != other.size()) return false;
             for (size_t i = 0; i < size(); i++) {
                 if (m_storage[i] == other[i]) continue;
@@ -190,7 +194,8 @@ namespace ARLib {
         }
 
         template <typename... Args>
-        requires Constructible<T, Args...> void emplace(Args... args) {
+        requires Constructible<T, Args...>
+        void emplace(Args... args) {
             ensure_capacity_();
             T val{args...};
             if constexpr (MoveAssignable<T>) {
@@ -198,6 +203,13 @@ namespace ARLib {
             } else {
                 append_internal_single_(val);
             }
+        }
+
+        T* release() {
+            T* ptr = m_storage;
+            m_storage = nullptr;
+            clear_();
+            return ptr;
         }
 
         void insert(size_t index, const T& value) requires CopyAssignable<T> {

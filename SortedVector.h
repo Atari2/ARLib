@@ -29,6 +29,7 @@ namespace ARLib {
         size_t m_capacity = 0;
 
         void grow_to_capacity_(size_t capacity) {
+            HARD_ASSERT(capacity >= m_size, "Capacity should be bigger or equal than size");
             T* new_storage = new T[capacity];
             if constexpr (IsTriviallyCopiableV<T>) {
                 memmove(new_storage, m_storage, sizeof(T) * m_size);
@@ -45,9 +46,9 @@ namespace ARLib {
         void ensure_capacity_() {
             if (m_size == m_capacity) {
                 if constexpr (IsTriviallyCopiableV<T>) {
-                    grow_to_capacity_(basic_growth(m_capacity));
+                    grow_to_capacity_(basic_growth(m_capacity + 1));
                 } else {
-                    grow_to_capacity_(bit_round_growth(m_capacity));
+                    grow_to_capacity_(bit_round_growth(m_capacity + 1));
                 }
             }
         }
