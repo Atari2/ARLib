@@ -27,6 +27,11 @@ else()
 	message(FATAL_ERROR "Unsupported platform")
 endif()
 
+if (DEBUG_NEW_DELETE)
+	message(STATUS "Enabling debug new/delete functions")
+	list(APPEND ARLIB_COMPILE_DEFINITIONS DEBUG_NEW_DELETE)
+endif()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	set(ON_CLANG true)
 	list(APPEND ARLIB_COMPILE_DEFINITIONS COMPILER_CLANG)
