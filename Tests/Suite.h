@@ -20,6 +20,7 @@
 #include "../SSOVector.h"
 #include "../LinkedSet.h"
 #include "../List.h"
+#include "../GenericView.h"
 #include "../cstdio_compat.h"
 
 namespace ARLib {
