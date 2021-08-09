@@ -8,7 +8,7 @@ namespace ARLib {
         T* m_object = nullptr;
         bool m_exists = false;
 
-        void assert_not_null_() const { SOFT_ASSERT(m_object, "Null deref in Optional") }
+        void assert_not_null_() const { HARD_ASSERT(m_object, "Null deref in Optional") }
 
         void evict_() {
             if (m_exists) delete m_object;
