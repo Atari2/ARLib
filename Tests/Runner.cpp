@@ -313,3 +313,36 @@ TEST(ARLibTests, LinkedListTests) {
     LinkedList list2{"hello"_s};
     EXPECT_EQ(list2.pop(), "hello"_s);
 }
+
+TEST(ARLibTests, GenericViewTests) {
+    Vector<int> vec{};
+    vec.reserve(1000);
+    for (int i = 0; i < 1000; i++) {
+        vec.push_back(i);
+    }
+    Vector veccp{vec};
+    IteratorView view{vec};
+    IteratorView view2{veccp};
+    view.transform([](int a) { return a * 2; });
+    for (auto [index, item] : Enumerate{vec}) {
+        EXPECT_EQ(item, index * 2);
+    }
+    auto vec2 = view.map([](int) { return 0; });
+    auto vec3 = view.transform_map<Vector<String>>([](int a) { return IntToStr(a); });
+    for (const auto& [index, item] : Enumerate{vec3}) {
+        EXPECT_EQ(item, IntToStr(index * 2));
+    }
+    for (auto item : vec2) {
+        EXPECT_EQ(item, 0);
+    }
+    auto lam = [](int c) {
+        return IntToStr(c * 4);
+    };
+    auto vec4 = view2.map_view([](int a) { return a * 2; })
+                .map_view([](int b) { return b * 2; })
+                .map_view<decltype(lam), Vector<String>>(lam)
+                .collect();
+    for (const auto& [index, item] : Enumerate{vec4}) {
+        EXPECT_EQ(item, IntToStr(index * 8));
+    }
+}

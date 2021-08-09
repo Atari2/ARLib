@@ -1,8 +1,10 @@
 #pragma once
+#include "BaseTraits.h"
 #include "Concepts.h"
 #include "Iterator.h"
 
 namespace ARLib {
+
     template <typename T>
     class GenericView {
         T* m_begin_view = nullptr;
@@ -51,6 +53,93 @@ namespace ARLib {
                 func(item);
             }
         }
+    };
+
+    template <Iterable Cont>
+    class IteratorView {
+        using Iter = decltype(Cont{}.begin());
+        Iter m_begin;
+        Iter m_end;
+        using ItemType = RemoveReferenceT<decltype(*m_begin)>;
+        ItemType* m_stolen_storage = nullptr;
+
+        public:
+        IteratorView(ItemType* storage, size_t size) :
+            m_begin(storage), m_end(storage + size), m_stolen_storage(storage) {}
+        IteratorView(const Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
+        Iter begin() { return m_begin; }
+        Iter end() { return m_end; }
+        size_t size() { return m_end - m_begin; }
+
+        // in-place transform
+        template <typename Functor, typename = EnableIfT<IsSameV<ResultOfT<Functor(ItemType)>, ItemType>>>
+        IteratorView transform(Functor&& func) {
+            for (auto it = m_begin; it != m_end; ++it) {
+                *it = func(*it);
+            }
+            return *this;
+        }
+        Cont collect() requires Pushable<Cont, ItemType> {
+            if (m_stolen_storage != nullptr) {
+                return Cont{m_stolen_storage, size()};
+            } else {
+                Cont copy{};
+                if constexpr (Reservable<Cont>) { copy.reserve(size()); }
+                for (auto it = m_begin; it != m_end; ++it) {
+                    copy.push_back(*it);
+                }
+                return copy;
+            }
+        }
+
+        template <typename Functor, typename NewCont = Cont, typename Type = ResultOfT<Functor(ItemType)>>
+        auto map_view(Functor func) {
+            if constexpr (IsSameV<Type, ItemType>) {
+                static_assert(IsSameV<Cont, NewCont>);
+                Type* new_storage = m_stolen_storage != nullptr ? m_stolen_storage : new Type[size()];
+                size_t index = 0;
+                for (auto it = m_begin; it != m_end; ++it) {
+                    new_storage[index] = move(func(*it));
+                    index++;
+                }
+                if (m_stolen_storage != nullptr) m_stolen_storage = nullptr;
+                return IteratorView<NewCont>{new_storage, size()};
+            } else {
+                Type* new_storage = new Type[size()];
+                size_t index = 0;
+                for (auto it = m_begin; it != m_end; ++it) {
+                    new_storage[index] = move(func(*it));
+                    index++;
+                }
+                if (m_stolen_storage != nullptr) {
+                    delete[] m_stolen_storage;
+                    m_stolen_storage = nullptr;
+                }
+                return IteratorView<NewCont>{new_storage, size()};
+            }
+        }
+
+        template <typename Functor, typename = EnableIfT<IsSameV<ResultOfT<Functor(ItemType)>, ItemType>>>
+        Cont map(Functor func) requires Pushable<Cont, ItemType> {
+            Cont copy{};
+            if constexpr (Reservable<Cont>) { copy.reserve(size()); }
+            for (auto it = m_begin; it != m_end; ++it) {
+                copy.push_back(func(*it));
+            }
+            return copy;
+        }
+
+        template <Iterable OtherCont, typename Functor>
+        OtherCont transform_map(Functor func) requires Pushable<OtherCont, ResultOfT<Functor(ItemType)>> {
+            OtherCont cont{};
+            if constexpr (Reservable<Cont>) { cont.reserve(size()); }
+            for (auto it = m_begin; it != m_end; ++it) {
+                cont.push_back(func(*it));
+            }
+            return cont;
+        }
+
+        ~IteratorView() { delete[] m_stolen_storage; }
     };
 } // namespace ARLib
 
