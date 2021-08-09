@@ -153,7 +153,6 @@ namespace ARLib {
     auto bit_round_growth(Sized auto requested_size) {
         if (requested_size == 0) return static_cast<decltype(requested_size)>(2);
         size_t ret = bit_round(requested_size);
-        if (ret == requested_size) return ret * 2;
         return ret;
     }
 
