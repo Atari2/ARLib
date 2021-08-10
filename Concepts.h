@@ -92,6 +92,11 @@ namespace ARLib {
         Supports<NothrowCopyConstructibleV<Cls>>::value;
     };
 
+    template <typename Cls>
+    concept Trivial = requires {
+        Supports<IsTrivialV<Cls>>::value;
+    };
+
     // assignable concepts
     template <typename Cls>
     concept Assignable = requires {

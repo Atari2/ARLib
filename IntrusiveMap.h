@@ -4,7 +4,7 @@
 #include "Types.h"
 
 namespace ARLib {
-    template <EqualityComparable Key, typename Val, size_t SIZE>
+    template <EqualityComparable Key, typename Val, size_t SIZE> requires Trivial<Key> && Trivial<Val>
     class IntrusiveMap {
         Key m_keys[SIZE]{};
         Val m_vals[SIZE]{};
@@ -35,7 +35,7 @@ namespace ARLib {
 
         public:
         void insert(Key key, Val val) {
-            HARD_ASSERT(m_size <= SIZE, "Intrusive map is full");
+            HARD_ASSERT_FMT(m_size <= SIZE, "Intrusive map is full at size %zu", SIZE);
             auto index = search_internal(key);
             if (index == npos) {
                 index = search_tomb_internal();
