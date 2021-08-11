@@ -13,7 +13,7 @@ namespace ARLib {
     } // namespace detail
 
     namespace NumericLimits {
-#ifdef _MSC_VER
+#ifdef COMPILER_MSVC
         constexpr double HugeEnough = 1e+300; // must overflow
 
         constexpr auto InfinityD = (HugeEnough * HugeEnough);

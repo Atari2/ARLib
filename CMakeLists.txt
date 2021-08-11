@@ -79,7 +79,7 @@ execute_process(
 add_library(ARLib ${ARLIB_SOURCE_FILES})
 add_subdirectory(Tests)
 
-if (ON_MSVC)
+if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
 	list(APPEND ARLIB_COMPILE_OPTIONS /std:c++latest /arch:AVX2 /permissive-)
 	if (DEBUG_BUILD)
@@ -87,7 +87,7 @@ if (ON_MSVC)
 	else()
 		list(APPEND ARLIB_COMPILE_OPTIONS /O2)
 	endif()
-	list(APPEND ARLIB_COMPILE_WARNINGS 
+	list(APPEND ARLIB_COMPILE_WARNINGS
 		/W3 
 		/w14242 
 		/w14254 
@@ -108,6 +108,12 @@ if (ON_MSVC)
 		/w14906 
 		/w14928
 		)
+	if (ON_CLANG)
+	list(APPEND ARLIB_COMPILE_WARNINGS
+			-Wno-c++17-extensions
+			-Wno-deprecated-declarations
+		)
+	endif()
 	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 else()
 	add_subdirectory(ASM_GCC)
@@ -117,9 +123,10 @@ else()
 		list(APPEND ARLIB_LINK_OPTIONS -fsanitize=address,undefined,leak)
 		list(APPEND ARLIB_LINK_LIBRARIES -fsanitize=address,undefined,leak)
 	endif()
-	list(APPEND ARLIB_COMPILE_WARNINGS  
+	list(APPEND ARLIB_COMPILE_WARNINGS
 		-Wall 
-		-Wextra 
+		-Wextra
+		-Wpedantic
 		-Wshadow 
 		-Wnon-virtual-dtor
 		-Wold-style-cast

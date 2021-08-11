@@ -21,7 +21,7 @@ namespace ARLib {
     template <class T, class U>
     using NothrowAssignableImpl = std::is_nothrow_assignable<T, U>;
 
-#ifndef COMPILER_MSVC
+#if not(defined(COMPILER_MSVC) || (defined(WINDOWS) && defined(COMPILER_CLANG)))
     template <class T>
     using IsDestructibleSafe = std::__is_destructible_safe<T>;
 #endif
@@ -93,7 +93,7 @@ namespace ARLib {
     template <class T>
     struct IsTriviallyCopiable : BoolConstant<__is_trivially_copyable(T)> {};
 
-#ifdef COMPILER_MSVC
+#if defined(COMPILER_MSVC) || (defined(COMPILER_CLANG) && defined(WINDOWS))
 
     template <class T>
     struct IsTriviallyDestructible : BoolConstant<__is_trivially_destructible(T)> {};
