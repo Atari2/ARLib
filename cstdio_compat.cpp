@@ -30,7 +30,7 @@ namespace ARLib {
     int fputs(const char* buf, FILE* fp) { return ::fputs(buf, fp); }
 
     int printf(const char* fmt, ...) {
-        va_list argptr;
+        va_list argptr{};
         va_start(argptr, fmt);
         auto ret = ::vprintf(fmt, argptr);
         va_end(argptr);
@@ -38,7 +38,7 @@ namespace ARLib {
     }
 
     int fprintf(FILE* fp, const char* fmt, ...) {
-        va_list argptr;
+        va_list argptr{};
         va_start(argptr, fmt);
         auto ret = ::vfprintf(fp, fmt, argptr);
         va_end(argptr);
@@ -46,21 +46,21 @@ namespace ARLib {
     }
 
     int sprintf(char* str, const char* format, ...) {
-        va_list argptr;
+        va_list argptr{};
         va_start(argptr, format);
         auto ret = ::vsprintf(str, format, argptr);
         va_end(argptr);
         return ret;
     }
     int snprintf(char* str, size_t n, const char* format, ...) {
-        va_list argptr;
+        va_list argptr{};
         va_start(argptr, format);
         auto ret = ::vsnprintf(str, n, format, argptr);
         va_end(argptr);
         return ret;
     }
     int scprintf(const char* format, ...) {
-        va_list argptr;
+        va_list argptr{};
         va_start(argptr, format);
         #ifdef WINDOWS
         auto ret = ::_vscprintf_l(format, nullptr, argptr);

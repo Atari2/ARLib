@@ -73,8 +73,8 @@ namespace ARLib {
         if (cpuid_max < 1) return; // comments in cpuid.h say x86_64 always has cpuid
 #endif
 
-        uint32_t dummy1, dummy2;
-        uint32_t l1ecx, l1edx;
+        uint32_t dummy1{0}, dummy2{0};
+        uint32_t l1ecx{0}, l1edx{0};
 
         cpuid(1, dummy1, dummy2, l1ecx, l1edx);
 
@@ -97,7 +97,7 @@ namespace ARLib {
         if (cpuid_max >= 7)
 #endif
         {
-            uint32_t l7ebx, l7ecx, l7edx;
+            uint32_t l7ebx{0}, l7ecx{0}, l7edx{0};
             cpuid_count(7, 0, dummy1, l7ebx, l7ecx, l7edx);
 
 #ifndef __AVX__
