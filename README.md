@@ -9,13 +9,15 @@ For now it relies on:
 - `<type_traits>` for `std::is_foo_constructible<T, Args...>`, `std::is_foo_assignable<T, Args...>`, `std::is_union<T>`, `std::is_enum<T>`
 - `<cstdio>` for file and console I/O, and for some number -> string conversions.
 - `<immintrin.h>`, `<intrin.h>` for vector instruction intrinsics.
-- global operator new/new[\]/delete/delete[\] because I'm not implementing my own malloc.
+- `<typeinfo>` for typeid(Cls).name()
+- `<new>` global operator new/new[\]/delete/delete[\] because I'm not implementing my own malloc and for placement new.
 
 This library has been compiled and tested with:
 - MSVC 19.29.30037.0
 - GCC 11
 - Clang 12
 - Mingw x64 with GCC 11
+- clang-cl 12
 
 ## How to build
 
