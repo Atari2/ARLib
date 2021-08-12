@@ -3,7 +3,7 @@
 namespace ARLib {
     // FIXME: avoid pow/round calls in Str{View}To{I64/int}
 
-    int64_t StrViewToI64(StringView view, int base) {
+    int64_t StrViewToI64(const StringView view, int base) {
         if (base < 2 || base > 36) return 0;
 
         size_t cur_index = 0;
@@ -22,7 +22,7 @@ namespace ARLib {
             cur_index++;
         }
 
-        if (cur_index == max_index) return 0 * sign;
+        if (cur_index == max_index) return 0ll * sign;
 
         if (base == 16) {
             if (view[cur_index] == '0' && tolower(view[cur_index + 1]) == 'x') cur_index += 2;
@@ -35,7 +35,7 @@ namespace ARLib {
             cur_index++;
         }
 
-        if (cur_index == max_index) return 0 * sign;
+        if (cur_index == max_index) return 0ll * sign;
 
         // 0-9 => 48-57
         // A-Z => 65-90
@@ -54,7 +54,7 @@ namespace ARLib {
         return total * sign;
     }
 
-    int StrViewToInt(StringView view, int base) { return static_cast<int>(StrViewToI64(view, base)); }
+    int StrViewToInt(const StringView view, int base) { return static_cast<int>(StrViewToI64(view, base)); }
 
     int64_t StrToI64(const String& str, int base) {
         if (base < 2 || base > 36) return 0;
@@ -75,7 +75,7 @@ namespace ARLib {
             cur_index++;
         }
 
-        if (cur_index == max_index) return 0 * sign;
+        if (cur_index == max_index) return 0ll * sign;
 
         if (base == 16) {
             if (str[cur_index] == '0' && tolower(str[cur_index + 1]) == 'x') cur_index += 2;
@@ -88,7 +88,7 @@ namespace ARLib {
             cur_index++;
         }
 
-        if (cur_index == max_index) return 0 * sign;
+        if (cur_index == max_index) return 0ll * sign;
 
         // 0-9 => 48-57
         // A-Z => 65-90
@@ -111,7 +111,7 @@ namespace ARLib {
 
     // FIXME: make this more efficient
     double StrToDouble(const String& str) {
-        auto parts = str.split_view(".,");
+        auto parts = str.split_view_at_any(".,");
         auto len = parts.size();
         if (len == 1) return static_cast<double>(StrToI64(str));
         if (len > 2) return NumericLimits::NanD;
