@@ -1,7 +1,7 @@
 #pragma once
 #include "CharConv.h"
 #include "Optional.h"
-#include "String.h"
+#include "StringView.h"
 #include "Vector.h"
 
 namespace ARLib {
@@ -25,6 +25,7 @@ namespace ARLib {
             void set_short_name(String short_name) { m_short_name = move(short_name); }
             void set_value(String value) { m_value.put(Forward<String>(value)); }
             bool operator==(const String& name) { return m_long_name == name || m_short_name == name; }
+            bool operator==(const StringView name) { return m_long_name == name || m_short_name == name; }
             String as_string() { return m_value.value_or(""); }
             int as_int() { return StrToInt(as_string()); }
             float as_float() { return StrToFloat(as_string()); }
@@ -70,7 +71,7 @@ namespace ARLib {
             }
         }
 
-        CmdOption& operator[](const char* name) {
+        CmdOption& operator[](StringView name) {
             static CmdOption blank_option{};
             for (auto& option : m_options) {
                 if (option == name) return option;
