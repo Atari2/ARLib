@@ -45,12 +45,22 @@ namespace ARLib {
         const Vector<T>& m_vec;
         PrintInfo(const Vector<T>& vec) : m_vec(vec) {}
         String repr() {
+            if (m_vec.size() == 0) { return "[]"_s; }
             String con{};
-            for (const auto& s : m_vec) {
-                con.append('[');
-                con.concat(PrintInfo<T>{s}.repr());
-                con.concat("], ");
+            if constexpr (IsSameV<T, String>) {
+                for (const auto& s : m_vec) {
+                    con.concat("[\"");
+                    con.concat(PrintInfo<T>{s}.repr());
+                    con.concat("\"], ");
+                }
+            } else {
+                for (const auto& s : m_vec) {
+                    con.append('[');
+                    con.concat(PrintInfo<T>{s}.repr());
+                    con.concat("], ");
+                }
             }
+
             return con.substring(0, con.size() - 2);
         }
     };
