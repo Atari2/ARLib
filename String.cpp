@@ -52,14 +52,28 @@ namespace ARLib {
         }
     }
 
-    Vector<StringView> String::split_view(const char* sep) const {
-        auto indexes = all_indexes(sep);
+    Vector<StringView> String::split_view_at_any(const char* sep) const {
+        auto indexes = all_indexes_internal(sep);
         Vector<StringView> vec{};
         vec.reserve(indexes.size() + 1);
         size_t prev_index = 0;
         for (auto index : indexes) {
             vec.append(substringview(prev_index, index));
             prev_index = index + 1;
+        }
+        vec.append(substringview(prev_index));
+        return vec;
+    }
+
+    Vector<StringView> String::split_view(const char* sep) const {
+        Vector<StringView> vec{};
+        size_t sep_len = strlen(sep);
+        size_t prev_index = 0ull;
+        size_t index = index_of(sep);
+        while (index != npos) {
+            vec.append(substringview(prev_index, index));
+            prev_index = index + sep_len;
+            index = index_of(sep, prev_index);
         }
         vec.append(substringview(prev_index));
         return vec;

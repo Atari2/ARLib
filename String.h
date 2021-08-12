@@ -17,7 +17,7 @@ namespace ARLib {
             char m_local_buf[SMALL_STRING_CAP + 1] = {0};
             size_t m_allocated_capacity;
         };
-        char* m_data_buf = nullptr;
+        char* m_data_buf = PointerTraits<char*>::pointer_to(*m_local_buf);
         size_t m_size = 0;
 
         constexpr char* data_internal() { return m_data_buf; }
@@ -32,17 +32,11 @@ namespace ARLib {
 
         constexpr bool is_local() const { return data_internal() == local_data_internal(); }
 
-        constexpr const char* get_buf_internal() const {
-            if (is_local()) { return local_data_internal(); }
-            return data_internal();
-        }
+        constexpr const char* get_buf_internal() const { return data_internal(); }
 
-        constexpr char* get_buf_internal() {
-            if (is_local()) { return local_data_internal(); }
-            return data_internal();
-        }
+        constexpr char* get_buf_internal() { return data_internal(); }
 
-        void grow_internal(size_t requested_capacity) {
+        constexpr void grow_internal(size_t requested_capacity) {
             if (is_local()) {
                 // grow outside of locality, copy buffer and change active member of union
                 requested_capacity = basic_growth(requested_capacity);
@@ -51,7 +45,8 @@ namespace ARLib {
                 m_allocated_capacity = requested_capacity;
             } else {
                 m_allocated_capacity = basic_growth(requested_capacity);
-                HARD_ASSERT(m_allocated_capacity > requested_capacity && m_allocated_capacity > m_size, "Allocated capacity failure")
+                HARD_ASSERT(m_allocated_capacity > requested_capacity && m_allocated_capacity > m_size,
+                            "Allocated capacity failure")
                 char* new_buf = new char[m_allocated_capacity];
                 new_buf[m_size] = '\0';
                 if (m_size != 0) memmove(new_buf, m_data_buf, m_size + 1);
@@ -60,7 +55,7 @@ namespace ARLib {
             }
         }
 
-        void grow_if_needed(size_t newsize) {
+        constexpr void grow_if_needed(size_t newsize) {
             if (is_local()) {
                 if (newsize > SMALL_STRING_CAP) grow_internal(newsize + 1);
             } else {
@@ -68,11 +63,11 @@ namespace ARLib {
             }
         }
 
-        Vector<size_t> all_indexes(const char* any, size_t start_size = 0ull) const {
+        Vector<size_t> all_indexes_internal(const char* any, size_t start_index = 0ull) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             for (size_t i = 0; i < size; i++) {
-                auto index = index_of(any[i], start_size);
+                auto index = index_of(any[i], start_index);
                 while (index != npos) {
                     indexes.push_back(index);
                     index = index_of(any[i], index + 1);
@@ -80,27 +75,39 @@ namespace ARLib {
             }
             return indexes;
         }
-        Vector<size_t> all_last_indexes(const char* any) const {
+        Vector<size_t> all_last_indexes_internal(const char* any, size_t end_index = npos) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             for (size_t i = 0; i < size; i++) {
-                indexes.push_back(last_index_of(any[i]));
+                auto index = last_index_of(any[i], end_index);
+                while (index != npos && index != 0) {
+                    indexes.push_back(index);
+                    index = last_index_of(any[i], index - 1);
+                }
             }
             return indexes;
         }
-        Vector<size_t> all_not_indexes(const char* any) const {
+        Vector<size_t> all_not_indexes_internal(const char* any, size_t start_index = 0ull) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             for (size_t i = 0; i < size; i++) {
-                indexes.push_back(index_not_of(any[i]));
+                auto index = index_not_of(any[i], start_index);
+                while (index != npos) {
+                    indexes.push_back(index);
+                    index = index_not_of(any[i], index + 1);
+                }
             }
             return indexes;
         }
-        Vector<size_t> all_last_not_indexes(const char* any) const {
+        Vector<size_t> all_last_not_indexes_internal(const char* any, size_t end_index = npos) const {
             auto size = strlen(any);
             Vector<size_t> indexes{};
             for (size_t i = 0; i < size; i++) {
-                indexes.push_back(last_index_not_of(any[i]));
+                auto index = last_index_not_of(any[i], end_index);
+                while (index != npos && index != 0) {
+                    indexes.push_back(index);
+                    index = last_index_not_of(any[i], index - 1);
+                }
             }
             return indexes;
         }
@@ -109,107 +116,54 @@ namespace ARLib {
         static constexpr auto npos = static_cast<size_t>(-1);
 
         // constructors, destructor equality operators
-        constexpr String() : m_data_buf(local_data_internal()){};
+        constexpr String() = default;
 
         template <size_t N>
-        constexpr String(const char (&src)[N]) {
-            if constexpr (N <= SMALL_STRING_CAP) {
-                m_data_buf = local_data_internal();
-                memcpy(m_data_buf, src, N);
-                m_size = N - 1;
-            } else {
-                m_allocated_capacity = N;
-                m_data_buf = new char[N];
-                memcpy(m_data_buf, src, N);
-                m_size = N - 1;
-            }
+        constexpr String(const char (&src)[N]) : m_size(N - 1) {
+            grow_if_needed(N);
+            strncpy(m_data_buf, src, N);
         }
 
-        explicit String(size_t size) {
-            if (size <= SMALL_STRING_CAP) m_data_buf = local_data_internal();
-            grow_if_needed(size);
-        }
+        explicit String(size_t size) { grow_if_needed(size); }
         explicit String(size_t size, char c) {
-            if (size <= SMALL_STRING_CAP) m_data_buf = local_data_internal();
             grow_if_needed(size);
             memset(get_buf_internal(), static_cast<uint8_t>(c), size);
             m_size = size;
             get_buf_internal()[m_size] = '\0';
         }
         explicit constexpr String(const char* begin, const char* end) {
-            HARD_ASSERT((end >= begin), "End pointer must not be before begin pointer")
+            HARD_ASSERT_FMT((end >= begin), "End pointer (%p) must not be before begin pointer (%p)", end, begin)
             m_size = static_cast<size_t>(end - begin);
-            bool local = m_size <= SMALL_STRING_CAP;
-            if (local) {
-                strncpy(m_local_buf, begin, m_size);
-                m_data_buf = local_data_internal();
-            } else {
-                m_allocated_capacity = m_size + 1;
-                m_data_buf = new char[m_allocated_capacity];
-                strncpy(m_data_buf, begin, m_size);
-                m_data_buf[m_size] = '\0';
-            }
+            grow_if_needed(m_size);
+            strncpy(m_data_buf, begin, m_size);
+            m_data_buf[m_size] = '\0';
         }
         constexpr String(const char* other, size_t size) : m_size(size) {
-            bool local = m_size <= SMALL_STRING_CAP;
-            auto real_len = strlen(other);
-            if (local) {
-                if (m_size > real_len) {
-                    strncpy(m_local_buf, other, real_len);
-                } else {
-                    strncpy(m_local_buf, other, m_size);
-                    m_local_buf[m_size] = '\0';
-                }
-                m_data_buf = local_data_internal();
-            } else {
-                // we always allocate the requested size, even if it's waaay bigger than actual size, we also always
-                // base m_small_string_opt on requested size and not actual size, this way the user can force a big
-                // String to be constructed even if the passed String would fit in SMALL_STRING_CAP
-                m_allocated_capacity = size;
-                m_data_buf = new char[m_size + 1];
-                if (m_size > real_len) {
-                    strcpy(m_data_buf, other);
-                } else {
-                    strncpy(m_data_buf, other, m_size);
-                    m_data_buf[m_size] = '\0';
-                }
-            }
+            grow_if_needed(size);
+            strncpy(m_data_buf, other, size);
+            m_data_buf[m_size] = '\0';
         }
         template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
-        constexpr String(T other) {
-            auto len = strlen(other);
-            m_size = len;
-            bool local = m_size <= SMALL_STRING_CAP;
-            if (local) {
-                strcpy(m_local_buf, other);
-                m_data_buf = local_data_internal();
-            } else {
-                m_allocated_capacity = m_size + 1;
-                m_data_buf = new char[m_size + 1];
-                strcpy(m_data_buf, other);
-            }
+        constexpr String(T other) : m_size(strlen(other)) {
+            grow_if_needed(m_size);
+            strncpy(m_data_buf, other, m_size);
+            m_data_buf[m_size] = '\0';
         }
         String(const String& other) noexcept : m_size(other.m_size) {
-            if (other.is_local()) {
-                memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
-                m_data_buf = local_data_internal();
-            } else {
-                m_allocated_capacity = other.m_allocated_capacity;
-                m_data_buf = new char[m_allocated_capacity];
-                memcpy(m_data_buf, other.m_data_buf, other.m_size + 1);
-            }
+            grow_if_needed(m_size);
+            strncpy(m_data_buf, other.m_data_buf, m_size + 1);
+            m_data_buf[m_size] = '\0';
         }
         String(String&& other) noexcept : m_size(other.m_size) {
             if (other.is_local()) {
                 memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
-                m_data_buf = local_data_internal();
             } else {
                 m_allocated_capacity = other.m_allocated_capacity;
                 m_size = other.m_size;
                 m_data_buf = other.m_data_buf;
-                other.m_allocated_capacity = 0;
+                other.m_allocated_capacity = SMALL_STRING_CAP;
             }
-            other.m_data_buf = nullptr;
+            other.m_data_buf = PointerTraits<char*>::pointer_to(*other.m_local_buf);
             other.m_size = 0;
         }
 
@@ -217,31 +171,25 @@ namespace ARLib {
 
         String& operator=(const String& other) {
             if (this != &other) {
+                if (!is_local()) delete[] m_data_buf;
                 m_size = other.m_size;
-                if (other.is_local()) {
-                    memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
-                    m_data_buf = local_data_internal();
-                } else {
-                    delete[] m_data_buf;
-                    m_data_buf = new char[m_size + 1];
-                    m_allocated_capacity = m_size + 1;
-                    memcpy(m_data_buf, other.m_data_buf, other.m_size + 1);
-                }
+                grow_if_needed(m_size);
+                memcpy(m_data_buf, other.m_data_buf, m_size + 1);
             }
             return *this;
         }
         String& operator=(String&& other) noexcept {
             if (this != &other) {
+                if (!is_local()) delete[] m_data_buf;
                 m_size = other.m_size;
                 if (other.is_local()) {
                     memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
-                    m_data_buf = local_data_internal();
                 } else {
-                    if (!is_local()) delete[] m_data_buf;
                     m_data_buf = other.m_data_buf;
                     m_allocated_capacity = other.m_allocated_capacity;
-                    other.m_data_buf = nullptr;
+                    other.m_data_buf = PointerTraits<char*>::pointer_to(*other.m_local_buf);
                     other.m_size = 0;
+                    other.m_allocated_capacity = SMALL_STRING_CAP;
                 }
             }
             return *this;
@@ -273,15 +221,7 @@ namespace ARLib {
 
         // comparison operators
         [[nodiscard]] bool operator==(const String& other) const {
-            if (other.m_size == m_size) {
-                // if is_local is true for *this, it's also true for other,
-                // due to the fact that they share length, therefor we don't need to check if other.is_local is true
-                if (is_local()) {
-                    return strcmp(m_local_buf, other.m_local_buf) == 0;
-                } else {
-                    return strcmp(m_data_buf, other.m_data_buf) == 0;
-                }
-            }
+            if (other.m_size == m_size) { return strncmp(m_data_buf, other.m_data_buf, m_size) == 0; }
             return false;
         }
         [[nodiscard]] bool operator==(const StringView& other) const;
@@ -406,6 +346,8 @@ namespace ARLib {
         [[nodiscard]] char operator[](size_t index) const { return get_buf_internal()[index]; }
 
         // various char checks
+
+        // single char [last_]index[_not]_of functions
         [[nodiscard]] size_t index_of(char c, size_t start_index = 0) const {
             if (m_size == 0) return npos;
             if (start_index >= m_size) return npos;
@@ -415,11 +357,12 @@ namespace ARLib {
             }
             return npos;
         }
-        [[nodiscard]] size_t last_index_of(char c) const {
+        [[nodiscard]] size_t last_index_of(char c, size_t end_index = npos) const {
             if (m_size == 0) return npos;
             const char* buf = get_buf_internal();
-            for (size_t i = m_size - 1; i > 0; i--) {
+            for (size_t i = (end_index > m_size - 1) ? m_size - 1 : end_index;; i--) {
                 if (buf[i] == c) return i;
+                if (i == 0) break;
             }
             if (buf[0] == c) return 0ull;
             return npos;
@@ -433,75 +376,86 @@ namespace ARLib {
             }
             return npos;
         }
-        [[nodiscard]] size_t last_index_not_of(char c) const {
+        [[nodiscard]] size_t last_index_not_of(char c, size_t end_index = npos) const {
             if (m_size == 0) return npos;
             const char* buf = get_buf_internal();
-            for (size_t i = m_size - 1;; i--) {
+            for (size_t i = (end_index > m_size - 1) ? m_size - 1 : end_index;; i--) {
                 if (buf[i] != c) return i;
                 if (i == 0) break;
             }
             return npos;
         }
+
+        // span [last_]index[_not]_of functions
         [[nodiscard]] size_t index_of(const char* c, size_t start = 0) const {
             if (m_size == 0 || start >= m_size) return npos;
             const char* buf = get_buf_internal();
             auto o_len = strlen(c);
             if (o_len > m_size) return npos;
+            if (start + o_len > m_size) return npos;
             if (o_len == m_size && start == 0 && strcmp(buf, c) == 0) return 0;
             for (size_t i = start; i < m_size; i++) {
                 if (strncmp(buf + i, c, o_len) == 0) return i;
             }
             return npos;
         }
-        [[nodiscard]] size_t last_index_of(const char* c) const {
+        [[nodiscard]] size_t last_index_of(const char* c, size_t end = npos) const {
             if (m_size == 0) return npos;
             const char* buf = get_buf_internal();
             auto o_len = strlen(c);
-            if (o_len > m_size) return npos;
-            if (o_len == m_size && strcmp(buf, c) == 0) return 0;
-            for (ptrdiff_t i = static_cast<ptrdiff_t>(m_size - o_len); i >= 0; i--) {
-                if (strncmp(buf + static_cast<size_t>(i), c, o_len) == 0) return static_cast<size_t>(i);
+            if (end < o_len || o_len > m_size) return npos;
+            if (end > m_size) end = m_size;
+            if (o_len == end && strncmp(buf, c, end) == 0) return 0;
+            for (size_t i = end - o_len;; i--) {
+                if (strncmp(buf + i, c, o_len) == 0) return i;
+                if (i == 0) break;
             }
             return npos;
         }
-        [[nodiscard]] size_t index_not_of(const char* c) const {
-            if (m_size == 0) return npos;
+        [[nodiscard]] size_t index_not_of(const char* c, size_t start = 0) const {
+            if (m_size == 0 || start >= m_size) return npos;
             const char* buf = get_buf_internal();
             auto o_len = strlen(c);
+            if (start + o_len > m_size) return npos;
             if (o_len > m_size) return npos;
-            if (o_len == m_size && strcmp(buf, c) != 0) return 0;
-            for (size_t i = 0; i < m_size; i++) {
+            if (o_len == m_size && start == 0 && strcmp(buf, c) != 0) return 0;
+            for (size_t i = start; i < m_size; i++) {
                 if (strncmp(buf + i, c, o_len) != 0) return i;
             }
             return npos;
         }
-        [[nodiscard]] size_t last_index_not_of(const char* c) const {
+        [[nodiscard]] size_t last_index_not_of(const char* c, size_t end = npos) const {
             if (m_size == 0) return npos;
             const char* buf = get_buf_internal();
             auto o_len = strlen(c);
-            if (o_len > m_size) return npos;
-            if (o_len == m_size && strcmp(buf, c) != 0) return 0;
-            for (ptrdiff_t i = static_cast<ptrdiff_t>(m_size - o_len); i >= 0; i--) {
-                if (strncmp(buf + static_cast<size_t>(i), c, o_len) != 0) return static_cast<size_t>(i);
+            if (end < o_len || o_len > m_size) return npos;
+            if (end > m_size) end = m_size;
+            if (o_len == end && strncmp(buf, c, end) != 0) return 0;
+            for (size_t i = end - o_len;; i--) {
+                if (strncmp(buf + i, c, o_len) != 0) return i;
+                if (i == 0) break;
             }
             return npos;
         }
-        [[nodiscard]] size_t index_of_any(const char* any, size_t start_size = 0ull) const {
-            auto indexes = all_indexes(any, start_size);
+
+        // any char in span
+        [[nodiscard]] size_t index_of_any(const char* any, size_t start_index = 0ull) const {
+            auto indexes = all_indexes_internal(any, start_index);
             return *min(indexes);
         }
-        [[nodiscard]] size_t last_index_of_any(const char* any) const {
-            auto indexes = all_last_indexes(any);
+        [[nodiscard]] size_t last_index_of_any(const char* any, size_t end_index = npos) const {
+            auto indexes = all_last_indexes_internal(any, end_index);
             return *max(indexes);
         }
-        [[nodiscard]] size_t index_not_of_any(const char* any) const {
-            auto indexes = all_not_indexes(any);
+        [[nodiscard]] size_t index_not_of_any(const char* any, size_t start_index = 0ull) const {
+            auto indexes = all_not_indexes_internal(any, start_index);
             return *min(indexes);
         }
-        [[nodiscard]] size_t last_index_not_of_any(const char* any) const {
-            auto indexes = all_last_not_indexes(any);
+        [[nodiscard]] size_t last_index_not_of_any(const char* any, size_t end_index = npos) const {
+            auto indexes = all_last_not_indexes_internal(any, end_index);
             return *max(indexes);
         }
+
         [[nodiscard]] bool contains(const char* other) const { return index_of(other) != npos; }
         [[nodiscard]] bool contains(char c) const { return index_of(c) != npos; }
 
@@ -571,20 +525,35 @@ namespace ARLib {
             return ret;
         }
 
-        Vector<String> split(const char* sep = " \n\t\v") const {
-            auto indexes = all_indexes(sep);
+        Vector<String> split_at_any(const char* sep = " \n\t\v") const {
+            auto indexes = all_indexes_internal(sep);
             Vector<String> vec{};
             vec.reserve(indexes.size() + 1);
             size_t prev_index = 0;
             for (auto index : indexes) {
+                if (prev_index > index) prev_index = 0;
                 vec.append(substring(prev_index, index));
                 prev_index = index + 1;
             }
             vec.append(substring(prev_index));
             return vec;
         }
+        Vector<StringView> split_view_at_any(const char* sep = " \n\t\v") const;
 
-        Vector<StringView> split_view(const char* sep = " \n\t\v") const;
+        Vector<String> split(const char* sep = " ") const { 
+            Vector<String> vec{};
+            size_t sep_len = strlen(sep);
+            size_t prev_index = 0ull;
+            size_t index = index_of(sep);
+            while (index != npos) {
+                vec.append(substring(prev_index, index));
+                prev_index = index + sep_len;
+                index = index_of(sep, prev_index);
+            }
+            vec.append(substring(prev_index));
+            return vec;
+        }
+        Vector<StringView> split_view(const char* sep = " ") const;
 
         // upper/lower
         void iupper() {
@@ -647,8 +616,6 @@ namespace ARLib {
             bool repl_is_bigger = repl_len > orig_len;
             size_t diff_len = repl_is_bigger ? repl_len - orig_len : orig_len - repl_len;
             if (diff_len > 0) {
-                // this cast is safe because diff_len is for sure > 0 (could still overflow but who has a string of 2^63
-                // length?)
                 reserve(m_size + n_occurr * diff_len);
                 buf = get_buf_internal();
             }
