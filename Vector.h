@@ -170,6 +170,17 @@ namespace ARLib {
             return true;
         }
 
+        template <typename C>
+        requires EqualityComparableWith<C, T>
+        bool operator==(const Vector<C>& other) const {
+            if (size() != other.size()) return false;
+            for (size_t i = 0; i < size(); i++) {
+                if (m_storage[i] == other[i]) continue;
+                return false;
+            }
+            return true;
+        }
+
         void reserve(size_t capacity) {
             if (capacity < m_capacity) return;
             round_to_capacity_(capacity);
@@ -257,12 +268,12 @@ namespace ARLib {
         }
 
         T& operator[](size_t index) const {
-            SOFT_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size)
+            HARD_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size)
             return m_storage[index];
         }
 
         T& index(size_t index) const {
-            SOFT_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size)
+            HARD_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size)
             return m_storage[index];
         }
 
