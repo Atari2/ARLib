@@ -36,7 +36,7 @@ namespace ARLib {
 
         constexpr char* get_buf_internal() { return data_internal(); }
 
-        constexpr void grow_internal(size_t requested_capacity) {
+        void grow_internal(size_t requested_capacity) {
             if (is_local()) {
                 // grow outside of locality, copy buffer and change active member of union
                 requested_capacity = basic_growth(requested_capacity);
