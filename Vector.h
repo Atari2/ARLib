@@ -264,7 +264,7 @@ namespace ARLib {
 
         T pop() {
             m_size--;
-            return m_storage[m_size];
+            return move(m_storage[m_size]);
         }
 
         T& operator[](size_t index) const {

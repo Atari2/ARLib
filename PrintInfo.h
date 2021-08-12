@@ -12,33 +12,18 @@ namespace ARLib {
         { PrintInfo<T>{a}.repr() } -> SameAs<String>;
     };
 
-    template <>
-    struct PrintInfo<int> {
-        const int m_int;
-        PrintInfo(const int num) : m_int(num) {}
-        String repr() const { return IntToStr(m_int); }
+#define BASIC_PRINT_IMPL(x, impl)                                                                                      \
+    template <>                                                                                                        \
+    struct PrintInfo<x> {                                                                                              \
+        const x& m_val;                                                                                                \
+        PrintInfo(const x& val) : m_val(val) {}                                                                        \
+        String repr() const { return impl(m_val); }                                                                    \
     };
 
-    template <>
-    struct PrintInfo<double> {
-        const double m_double;
-        PrintInfo(const double num) : m_double(num) {}
-        String repr() const { return DoubleToStr(m_double); }
-    };
-
-    template <>
-    struct PrintInfo<String> {
-        const String& m_str;
-        PrintInfo(const String& str) : m_str(str) {}
-        String repr() const { return m_str; }
-    };
-
-    template <>
-    struct PrintInfo<size_t> {
-        const size_t m_size;
-        PrintInfo(const size_t num) : m_size(num) {}
-        String repr() const { return IntToStr(m_size); }
-    };
+    BASIC_PRINT_IMPL(int, IntToStr)
+    BASIC_PRINT_IMPL(double, DoubleToStr)
+    BASIC_PRINT_IMPL(String, [](const String& a) { return a; })
+    BASIC_PRINT_IMPL(size_t, IntToStr)
 
     template <Printable T>
     struct PrintInfo<Vector<T>> {
