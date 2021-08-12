@@ -108,7 +108,7 @@ namespace ARLib {
         [[nodiscard]] ConstIterator<char> begin() { return {m_start}; }
         [[nodiscard]] ConstIterator<char> end() { return {m_end}; }
         [[nodiscard]] String extract_string() const { return {m_start, length()}; }
-        operator String() const { return extract_string(); }
+        explicit operator String() const { return extract_string(); }
         StringView substringview(size_t first = 0, size_t last = npos) {
             size_t ssize = size();
             if (first > ssize) return {};

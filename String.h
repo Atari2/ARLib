@@ -45,7 +45,7 @@ namespace ARLib {
                 m_allocated_capacity = requested_capacity;
             } else {
                 m_allocated_capacity = basic_growth(requested_capacity);
-                HARD_ASSERT(m_allocated_capacity > requested_capacity && m_allocated_capacity > m_size,
+                HARD_ASSERT(m_allocated_capacity >= requested_capacity && m_allocated_capacity > m_size,
                             "Allocated capacity failure")
                 char* new_buf = new char[m_allocated_capacity];
                 new_buf[m_size] = '\0';
