@@ -363,3 +363,16 @@ TEST(ARLibTests, StringTest2) {
     EXPECT_EQ(retv, vec);
     EXPECT_EQ(str.last_index_of_any("po"), str.size() - 1);
 }
+
+TEST(ARLibTests, PartialFuncTest2) {
+    auto func = [](int a, int b) {
+        return a + b;
+    };
+    PartialFunction partial{func, 10};
+    Map<ARLib::String, decltype(partial)> map{};
+    map.add("hello"_s, partial);
+    map.add("world"_s, partial);
+    EXPECT_EQ(map["hello"_s](10), 20);
+    EXPECT_EQ(map["world"_s](20), 30);
+    EXPECT_EQ(map["hello"_s](30), 40);
+}
