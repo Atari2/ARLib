@@ -2,6 +2,7 @@
 #include "CharConv.h"
 #include "Concepts.h"
 #include "Map.h"
+#include "Functional.h"
 
 namespace ARLib {
     template <typename T>
@@ -64,6 +65,31 @@ namespace ARLib {
                 con.concat(", ");
             }
             return con.substring(0, con.size() - 2) + " }"_s;
+        }
+    };
+
+    template <typename Arg, typename... Args>
+    struct PrintInfo<detail::PartialArguments<Arg, Args...>> {
+        const detail::PartialArguments<Arg, Args...>& m_partial;
+        PrintInfo(const detail::PartialArguments<Arg, Args...>& partial) : m_partial(partial) {}
+        String repr() {
+            if constexpr (sizeof...(Args) == 0) {
+                return String{typeid(Arg).name()};
+            } else {
+                using Inner = detail::PartialArguments<Args...>;
+                return String{typeid(Arg).name()} + ", "_s +
+                       PrintInfo<Inner>{static_cast<const Inner&>(m_partial)}.repr();
+            }
+        }
+    };
+
+    template <typename Func, typename... Args>
+    struct PrintInfo<PartialFunction<Func, Args...>> {
+        const PartialFunction<Func, Args...>& m_func;
+        PrintInfo(const PartialFunction<Func, Args...>& func) : m_func(func) {}
+        String repr() {
+            return "PartialFunction "_s + String{typeid(Func).name()} + " with partial arguments: ("_s +
+                   PrintInfo<detail::PartialArguments<Args...>>{m_func.partial_args()}.repr() + ")"_s;
         }
     };
 
