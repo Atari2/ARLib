@@ -1,10 +1,17 @@
 #pragma once
 #include "Compat.h"
+#include "Assertion.h"
 #include "Concepts.h"
 #include "CpuInfo.h"
 #include <immintrin.h>
 
 namespace ARLib {
+
+
+    consteval char operator ""_c(const unsigned long long num) {
+        HARD_ASSERT(num < 255, "Can't convert numbers over 255 to char");
+        return static_cast<char>(num);
+    }
 
     constexpr bool haszerobyte(Integral auto v) {
         if constexpr (sizeof(v) == 1)
@@ -64,7 +71,7 @@ namespace ARLib {
         return *first - *second;
     }
     constexpr int strncmp(const char* first, const char* second, size_t num) {
-        if (num == 0) return true;
+        if (num == 0) return 0;
         for (; *first == *second && --num; first++, second++)
             if (*first == '\0') return 0;
         return *first - *second;
@@ -89,11 +96,13 @@ namespace ARLib {
         return dst;
     }
 
-    constexpr int isspace(int c) { return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r'; }
+    constexpr bool isspace(const char c) {
+        return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
+    }
 
-    constexpr int isdigit(int c) { return c >= 48 && c <= 57; }
+    constexpr bool isdigit(const char c) { return c >= 48_c && c <= 57_c; }
 
-    constexpr int isalnum(int c) { return isdigit(c) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122); }
+    constexpr bool isalnum(const char c) { return isdigit(c) || (c >= 65_c && c <= 90_c) || (c >= 97_c && c <= 122_c); }
 
     template <size_t N>
     [[nodiscard]] constexpr bool constexpr_equality(const char (&arr1)[N], const char (&arr2)[N]) noexcept {
