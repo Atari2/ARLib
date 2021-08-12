@@ -139,6 +139,10 @@ TEST(ARLibTests, PartialFuncTests) {
     auto decl = [](int a, String b, Tuple<String, int> c) {
         return static_cast<size_t>(a) + b.size() + c.get<0>().size() + static_cast<size_t>(c.get<1>());
     };
+    auto decl2 = [](int a, int b) {
+        return a + b;
+    };
+    PartialFunction func3{decl2, 10};
     PartialFunction func1{test_partial_func, 10, "hello"_s};
     PartialFunction func2{decl, 10, "hello"_s};
     auto res1 = func1(Tuple<String, int>{"world"_s, 10});
@@ -148,6 +152,7 @@ TEST(ARLibTests, PartialFuncTests) {
     EXPECT_EQ(res2, 30ull);
     EXPECT_EQ(res1, test_partial_func(10, "hello"_s, {"world"_s, 10}));
     EXPECT_EQ(res2, decl(10, "hello"_s, {"world"_s, 10}));
+    EXPECT_EQ(func3(10), 20);
 }
 
 TEST(ARLibTests, FillTest) {

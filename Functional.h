@@ -43,7 +43,7 @@ namespace ARLib {
                 return m_arg;
             }
 
-            template <size_t N, typename _>
+            template <size_t N, typename = VoidT<>>
             constexpr void set(T&& f) {
                 static_assert(N == 0);
                 m_arg = move(f);
