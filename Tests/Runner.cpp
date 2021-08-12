@@ -127,7 +127,7 @@ TEST(ARLibTests, TupleTests) {
     tup.set_typed(54.4);
     EXPECT_EQ(tup.get<1>(), "world"_s);
     EXPECT_EQ(tup.get<2>(), 54.4);
-    auto tup_2 = move(tup);
+    auto&& tup_2 = move(tup);
     EXPECT_EQ(tup_2.get<0>(), 0);
     EXPECT_EQ(tup_2.get<1>(), "world"_s);
     EXPECT_EQ(tup_2.get<2>(), 54.4);
@@ -345,4 +345,16 @@ TEST(ARLibTests, GenericViewTests) {
     for (const auto& [index, item] : Enumerate{vec4}) {
         EXPECT_EQ(item, IntToStr(index * 8));
     }
+}
+
+TEST(ARLibTests, StringTest2) {
+    String str{"ciao come ciao io ciao sono ciao pippo"};
+    String str2{"ciao ciao"};
+    EXPECT_EQ(str2.last_index_not_of("ciao", str2.size() - 1), 4ull);
+    auto ret = str.split("ciao");
+    auto retv = str.split_view("ciao");
+    Vector vec{""_s, " come "_s, " io "_s, " sono "_s, " pippo"_s};
+    EXPECT_EQ(ret, vec);
+    EXPECT_EQ(retv, vec);
+    EXPECT_EQ(str.last_index_of_any("po"), str.size() - 1);
 }
