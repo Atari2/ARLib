@@ -17,13 +17,13 @@ namespace ARLib {
     }
 
     template <class T, class U>
-    concept SameAs = detail::SameHelper<T, U>&& detail::SameHelper<U, T>;
+    concept SameAs = detail::SameHelper<T, U> && detail::SameHelper<U, T>;
 
     template <class Derived, class Base>
-    concept DerivedFrom = BaseOfV<Base, Derived>&& ConvertibleV<const volatile Derived*, const volatile Base*>;
+    concept DerivedFrom = BaseOfV<Base, Derived> && ConvertibleV<const volatile Derived*, const volatile Base*>;
 
     template <class From, class To>
-    concept ConvertibleTo = ConvertibleV<From, To>&& requires(AddRvalueReferenceT<From> (&f)()) {
+    concept ConvertibleTo = ConvertibleV<From, To> && requires(AddRvalueReferenceT<From> (&f)()) {
         static_cast<To>(f());
     };
 
@@ -33,29 +33,25 @@ namespace ARLib {
     concept Constructible = requires(Args... args) {
         {
             Cls { args... }
-        }
-        ->SameAs<Cls>;
+            } -> SameAs<Cls>;
     };
     template <typename Cls>
     concept DefaultConstructible = requires() {
         {
             Cls {}
-        }
-        ->SameAs<Cls>;
+            } -> SameAs<Cls>;
     };
     template <typename Cls>
     concept MoveConstructible = requires(Cls&& a) {
         {
             Cls { Forward<Cls>(a) }
-        }
-        ->SameAs<Cls>;
+            } -> SameAs<Cls>;
     };
     template <typename Cls>
     concept CopyConstructible = requires(const Cls& a) {
         {
             Cls { a }
-        }
-        ->SameAs<Cls>;
+            } -> SameAs<Cls>;
     };
 
     template <typename Cls>
@@ -155,39 +151,39 @@ namespace ARLib {
     };
 
     template <typename T>
-    concept IteratorConcept = Incrementable<T>&& Decrementable<T>&& Dereferencable<T>;
+    concept IteratorConcept = Incrementable<T> && Decrementable<T> && Dereferencable<T>;
 
     template <typename T>
     concept EqualityComparable = requires(T a, T b) {
-        { a == b }
-        ->ConvertibleTo<bool>;
-        { a != b }
-        ->ConvertibleTo<bool>;
+        { a == b } -> ConvertibleTo<bool>;
+        { a != b } -> ConvertibleTo<bool>;
+    };
+
+    template <typename T, typename C>
+    concept EqualityComparableWith = requires(T a, C b) {
+        { a == b } -> ConvertibleTo<bool>;
+        { a != b } -> ConvertibleTo<bool>;
     };
 
     template <typename T>
     concept Hashable = requires(const T& a) {
-        { Hash<T>{}(a) }
-        ->SameAs<size_t>;
+        { Hash<T>{}(a) } -> SameAs<size_t>;
     }
     &&EqualityComparable<T>;
 
     template <typename T>
     concept LessComparable = requires(T a, T b) {
-        { a < b }
-        ->ConvertibleTo<bool>;
+        { a < b } -> ConvertibleTo<bool>;
     };
 
     template <typename T>
     concept MoreComparable = requires(T a, T b) {
-        { a > b }
-        ->ConvertibleTo<bool>;
+        { a > b } -> ConvertibleTo<bool>;
     };
 
     template <typename T>
     concept Orderable = requires(T a, T b) {
-        { a <=> b }
-        ->ConvertibleTo<bool>;
+        { a <=> b } -> ConvertibleTo<bool>;
     };
 
     template <typename T>
@@ -197,7 +193,7 @@ namespace ARLib {
     };
 
     template <typename T>
-    concept EnumerableC = Iterable<T>&& requires(T a) {
+    concept EnumerableC = Iterable<T> && requires(T a) {
         {a.size()};
     };
 
@@ -210,8 +206,7 @@ namespace ARLib {
     concept Badgeable = requires(T a) {
         {
             Badge<T> {}
-        }
-        ->SameAs<Badge<T>>;
+            } -> SameAs<Badge<T>>;
     };
 
     template <typename C>
@@ -226,17 +221,14 @@ namespace ARLib {
 
     template <typename Callable, typename... Args>
     concept CallableWith = requires(Callable func, Args... args) {
-        { func(args...) }
-        ->SameAs<ResultOfT<Callable(Args...)>>;
+        { func(args...) } -> SameAs<ResultOfT<Callable(Args...)>>;
     };
 
     template <typename Cont, typename T>
     concept Container = requires(Cont container) {
-        { container[0ull] }
-        ->SameAs<T&>;
-        { container.size() }
-        ->SameAs<size_t>;
-        { container.set_size(0ull) };
+        { container[0ull] } -> SameAs<T&>;
+        { container.size() } -> SameAs<size_t>;
+        {container.set_size(0ull)};
     }
     &&Reservable<Cont>;
 
