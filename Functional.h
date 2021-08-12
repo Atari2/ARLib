@@ -12,6 +12,12 @@ namespace ARLib {
             constexpr static auto NARGS = sizeof...(Args) + 1;
 
             public:
+            PartialArguments() = default;
+            PartialArguments(const PartialArguments&) = default;
+            PartialArguments(PartialArguments&&) noexcept = default;
+            PartialArguments& operator=(const PartialArguments&) = default;
+            PartialArguments& operator=(PartialArguments&&) noexcept = default;
+
             template <size_t N>
             constexpr auto& get() {
                 if constexpr (N == 0) {
@@ -37,6 +43,12 @@ namespace ARLib {
             T m_arg;
 
             public:
+            PartialArguments() = default;
+            PartialArguments(const PartialArguments&) = default;
+            PartialArguments(PartialArguments&&) noexcept = default;
+            PartialArguments& operator=(const PartialArguments&) = default;
+            PartialArguments& operator=(PartialArguments&&) noexcept = default;
+
             template <size_t N>
             constexpr T& get() {
                 static_assert(N == 0);
@@ -70,10 +82,17 @@ namespace ARLib {
         }
 
         public:
+        PartialFunction() = default;
+        PartialFunction(const PartialFunction&) = default;
+        PartialFunction(PartialFunction&&) noexcept = default;
+        PartialFunction& operator=(const PartialFunction&) = default;
+        PartialFunction& operator=(PartialFunction&&) noexcept = default;
         constexpr PartialFunction(Func func, Args... args) : m_function(move(func)) {
             MakeIndexSequence<sizeof...(Args)> seq{};
             apply_impl(Forward<Args>(args)..., seq);
         }
+
+        const auto& partial_args() const { return m_pargs; }
 
         template <typename... Rest>
         constexpr ResultOfT<Func(Args..., Rest...)>
