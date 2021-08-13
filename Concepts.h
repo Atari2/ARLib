@@ -224,6 +224,16 @@ namespace ARLib {
         { func(args...) } -> SameAs<ResultOfT<Callable(Args...)>>;
     };
 
+    template <typename Callable, typename Res, typename... Args>
+    concept CallableWithRes = requires(Callable func, Args... args) {
+        { func(args...) } -> SameAs<Res>;
+    };
+
+    template <typename T>
+    concept Swappable = requires(T a, T b) {
+        { swap(a, b) } -> SameAs<void>;
+    };
+
     template <typename Cont, typename T>
     concept Container = requires(Cont container) {
         { container[0ull] } -> SameAs<T&>;
