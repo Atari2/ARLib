@@ -32,26 +32,6 @@ namespace ARLib {
             if (m_size == m_capacity) { round_to_capacity_(m_capacity + 1); }
         }
 
-        template <typename... Values>
-        void append_internal_(T&& value, Values&&... values) requires MoveAssignable<T> {
-            if constexpr (sizeof...(values) == 0) {
-                append_internal_single_(Forward<T>(value));
-            } else {
-                append_internal_single_(Forward<T>(value));
-                append_internal_(Forward<Values>(values)...);
-            }
-        }
-
-        template <typename... Values>
-        void append_internal_(const T& value, const Values&... values) requires CopyAssignable<T> {
-            if constexpr (sizeof...(values) == 0) {
-                append_internal_single_(value);
-            } else {
-                append_internal_single_(value);
-                append_internal_(values...);
-            }
-        }
-
         void clear_() {
             delete[] m_storage;
             m_storage = nullptr;
@@ -138,27 +118,11 @@ namespace ARLib {
 
         Vector(size_t capacity) { round_to_capacity_(capacity); }
 
-        Vector(std::initializer_list<T> list) {
-            round_to_capacity_(list.size());
-            size_t i = 0;
-            for (T val : list) {
-                m_storage[i] = move(val);
-                i++;
-            }
-            m_size = list.size();
-        }
-
-        // these 2 first arguments are to force this constructor to be called only when there are 2+ arguments
         template <MoveAssignable... Values>
-        Vector(T&& val1, T&& val2, Values&&... values) {
-            if constexpr (sizeof...(values) == 0) {
-                round_to_capacity_(2);
-                append_internal_single_(Forward<T>(val1));
-                append_internal_single_(Forward<T>(val2));
-                return;
-            }
-            round_to_capacity_(sizeof...(values) + 2);
-            append_internal_(Forward<T>(val1), Forward<T>(val2), Forward<Values>(values)...);
+        Vector(T&& val, Values&&... values) requires AllOfV<T, Values...> {
+            reserve(sizeof...(values) + 1);
+            append(Forward<T>(val));
+            (append(Forward<Values>(values)), ...);
         }
 
         bool operator==(const Vector& other) const {

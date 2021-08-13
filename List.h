@@ -84,25 +84,11 @@ namespace ARLib {
             m_size++;
         }
 
-        template <typename... Args>
-        void internal_prepend_(T&& value, Args&&... values) {
-            if constexpr (sizeof...(values) == 0) {
-                internal_single_prepend_(Forward<T>(value));
-            } else {
-                internal_single_prepend_(Forward<T>(value));
-                internal_prepend_(Forward<Args>(values)...);
-            }
-        }
-
         public:
         template <typename... Args>
-        LinkedList(Args&&... values) {
-            internal_prepend_(Forward<Args>(values)...);
-        }
-
-        LinkedList(std::initializer_list<T> values) {
-            for (auto v : values)
-                internal_single_prepend_(Forward<T>(v));
+        LinkedList(T&& val, Args&&... values) requires AllOfV<T, Args...> {
+            internal_single_prepend_(Forward<T>(val));
+            (internal_single_prepend_(Forward<Args>(values)), ...);
         }
 
         LinkedList() = default;

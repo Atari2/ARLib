@@ -56,10 +56,12 @@ namespace ARLib {
         public:
         Set() = default;
         Set(size_t capacity) : m_capacity(capacity), m_storage(new T[capacity]) {}
-        Set(std::initializer_list<T> list) {
-            grow_internal_(list.size());
-            for (auto& item : list)
-                m_storage[m_size++] = item;
+
+        template <typename... Args>
+        Set(T&& val, Args&&... args) requires AllOfV<T, Args...> {
+            grow_internal_(sizeof...(args) + 1);
+            append_internal_(Forward<T>(val));
+            (append_internal_(Forward<Args>(args)), ...);
         }
 
         bool insert(const T& elem) requires CopyAssignable<T> {

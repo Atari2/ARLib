@@ -35,16 +35,14 @@ namespace ARLib {
 
         public:
         constexpr SSOVector() = default;
-        SSOVector(std::initializer_list<T> list) : m_size(list.size()) {
-            if (m_size > SSO) {
-                m_capacity = m_size;
-                m_storage = new T[m_capacity];
-            }
-            size_t i = 0;
-            for (auto elem : list) {
-                m_storage[i++] = move(elem);
-            }
+
+        template <MoveAssignable... Values>
+        SSOVector(T&& val, Values&&... values) requires AllOfV<T, Values...> {
+            reserve(sizeof...(values) + 1);
+            append(Forward<T>(val));
+            (append(Forward<Values>(values)), ...);
         }
+
         template <size_t OTHER_SSO>
         SSOVector(const SSOVector<T, OTHER_SSO>& other) requires(OTHER_SSO != SSO) : m_size(other.size()) {
             if (other.size() > SSO) {

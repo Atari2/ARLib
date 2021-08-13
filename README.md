@@ -5,7 +5,6 @@ Note: the developer of this library is not responsible for any error caused by i
 
 For now it relies on:
 - `<compare>` for `std::strong_ordering`
-- `<initializer_list>` for `std::initializer_list<T>`
 - `<type_traits>` for `std::is_foo_constructible<T, Args...>`, `std::is_foo_assignable<T, Args...>`, `std::is_union<T>`, `std::is_enum<T>`
 - `<cstdio>` for file and console I/O, and for some number -> string conversions.
 - `<immintrin.h>`, `<intrin.h>` for vector instruction intrinsics.

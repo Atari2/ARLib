@@ -89,10 +89,12 @@ namespace ARLib {
         public:
         SortedVector() = default;
         SortedVector(size_t capacity) : m_capacity(capacity) { m_storage = new T[m_capacity]; }
-        SortedVector(std::initializer_list<T> lst) {
-            grow_to_capacity_(lst.size());
-            for (auto elem : lst)
-                insert_single_element_(Forward<T>(elem));
+
+        template <typename... Args>
+        SortedVector(T&& val, Args&&... args) requires AllOfV<T, Args...> {
+            grow_to_capacity_(sizeof...(args) + 1);
+            insert_single_element_(Forward<T>(val));
+            (insert_single_element_(Forward<Args>(args)), ...);
         }
 
         template <typename Functor>
