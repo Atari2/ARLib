@@ -26,4 +26,8 @@
     ();                                                                                                                \
     unreachable
 
+namespace ARLib {
+    using TypeInfo = std::type_info;
+}
+
 #define TYPENAME_TO_STRING(type) typeid(type).name()
