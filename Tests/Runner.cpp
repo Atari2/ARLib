@@ -376,3 +376,23 @@ TEST(ARLibTests, PartialFuncTest2) {
     EXPECT_EQ(map["world"_s](20), 30);
     EXPECT_EQ(map["hello"_s](30), 40);
 }
+
+TEST(ARLibTests, FunctionalTest) {
+    struct TestStruct {
+        static bool ret() { return true; }
+        bool other_ret(bool b) { return b; }
+    };
+
+    TestStruct st{};
+
+    auto func = [](int a, int b) {
+        return a + b;
+    };
+
+    Function<int(int, int)> fn{func};
+    Function<bool(void)> fn2{TestStruct::ret};
+    Function<bool(TestStruct*, bool)> fn3{&TestStruct::other_ret};
+    EXPECT_EQ(fn(10, 10), 20);
+    EXPECT_EQ(fn2(), true);
+    EXPECT_EQ(fn3(&st, false), false);
+}
