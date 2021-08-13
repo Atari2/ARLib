@@ -407,6 +407,24 @@ namespace ARLib {
     template <class... Traits>
     inline constexpr bool DisjunctionV = Disjunction<Traits...>::value;
 
+    template <class T, class V, class... Others>
+    struct AllOfBase : FalseType {};
+
+    template <class T, class... Others>
+    struct AllOfBase<T, T, Others...> : AllOfBase<T, Others...> {};
+
+    template <class T>
+    struct AllOfBase<T, T> : TrueType {};
+
+    template <class T, class... Others>
+    struct AllOf : AllOfBase<T, Others...> {};
+
+    template <class T>
+    struct AllOf<T> : TrueType {};
+
+    template <class T, class... Others>
+    inline constexpr bool AllOfV = AllOf<T, Others...>::value;
+
     template <class T>
     [[nodiscard]] constexpr T* addressof(T& val) noexcept {
         return __builtin_addressof(val);
