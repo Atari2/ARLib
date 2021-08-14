@@ -26,6 +26,13 @@
     ();                                                                                                                \
     unreachable
 
+#define CONSTEVAL_STATIC_ASSERT(c, msg)                                                                                \
+    static_assert(is_constant_evaluated(),                                                                             \
+                  "Only use consteval static assert in constant evaluted contexts, it will leak memory otherwise");    \
+    do {                                                                                                               \
+        if (!(c)) new char[0];                                                                                         \
+    } while (false)
+
 namespace ARLib {
     using TypeInfo = std::type_info;
 }
