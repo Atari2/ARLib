@@ -396,3 +396,19 @@ TEST(ARLibTests, FunctionalTest) {
     EXPECT_EQ(fn2(), true);
     EXPECT_EQ(fn3(&st, false), false);
 }
+
+TEST(ARLibTests, MoreFormatTests) {
+    auto map_print = R"([{ hello: 10, cap: 10, world: 20 }, {}, {}])"_s;
+    auto vec_of_vecs_print = R"([["hello"], ["world"], ["name"], ["cap"], [], [], [], [], [], [], []])"_s;
+    auto mat_print =
+    "[\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\n]"_s;
+    auto row_print = R"([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])"_s;
+    int mat[10][10]{};
+    decltype(auto) val = mat[0];
+    Map<String, int> map[3]{{{"hello"_s, 10}, {"cap"_s, 10}, {"world"_s, 20}}};
+    Vector<String> vec[10] = {Vector{"hello"_s, "world"_s}, Vector{"name"_s}, Vector{"cap"_s}};
+    EXPECT_EQ(Printer::format("{}", map), map_print);
+    EXPECT_EQ(Printer::format("{}", vec), vec_of_vecs_print);
+    EXPECT_EQ(Printer::format("{}", val), row_print);
+    EXPECT_EQ(Printer::format("{}", mat), mat_print);
+}
