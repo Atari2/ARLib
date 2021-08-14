@@ -10,6 +10,7 @@ For now it relies on:
 - `<immintrin.h>`, `<intrin.h>` for vector instruction intrinsics.
 - `<typeinfo>` for typeid(Cls).name()
 - `<new>` global operator new/new[\]/delete/delete[\] because I'm not implementing my own malloc and for placement new.
+- `<initializer_list>` for `std::initializer_list<T>`
 
 This library has been compiled and tested with:
 - MSVC 19.29.30037.0
