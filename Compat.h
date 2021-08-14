@@ -60,3 +60,9 @@ static_assert(sizeof(void*) == 8 && sizeof(unsigned long long) == 8);
 #endif
 
 static_assert(sizeof(char) == 1);
+
+#ifdef COMPILER_MSVC
+#define HAS_BUILTIN(builtin) 0
+#else
+#define HAS_BUILTIN(builtin) __has_builtin(builtin)
+#endif
