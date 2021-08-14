@@ -433,7 +433,7 @@ namespace ARLib {
     template <class T, class... Types>
     inline constexpr bool IsAnyOfV = DisjunctionV<IsSame<T, Types>...>;
 
-    [[nodiscard]] constexpr bool is_constant_evaluated() noexcept { return __builtin_is_constant_evaluated(); }
+    [[nodiscard]] consteval bool is_constant_evaluated() noexcept { return __builtin_is_constant_evaluated(); }
 
     template <class T>
     inline constexpr bool IsIntegralV =
