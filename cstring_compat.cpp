@@ -51,6 +51,7 @@ namespace ARLib {
 #pragma warning(push)
 #pragma warning(disable : 4311 4302)
 #endif
+#if not HAS_BUILTIN(__builtin_memmove)
     // stolen from an old stdlib implementation
     // assumes that sizeof(char) == 1... should probably use uint8_t but eh
     void* memmove(void* dst0, const void* src0, size_t length) {
@@ -115,6 +116,7 @@ namespace ARLib {
         }
         return dst0;
     }
+#endif
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

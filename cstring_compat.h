@@ -1,15 +1,14 @@
 #pragma once
-#include "Compat.h"
 #include "Assertion.h"
+#include "Compat.h"
 #include "Concepts.h"
 #include "CpuInfo.h"
 #include <immintrin.h>
 
 namespace ARLib {
 
-
-    consteval char operator ""_c(const unsigned long long num) {
-        HARD_ASSERT(num < 255, "Can't convert numbers over 255 to char");
+    consteval char operator""_c(const unsigned long long num) {
+        CONSTEVAL_STATIC_ASSERT(num < 255, "Can't convert numbers over 255 to char");
         return static_cast<char>(num);
     }
 
@@ -111,8 +110,15 @@ namespace ARLib {
 
     void* memcpy_vectorized(void* dst0, const void* src0, size_t num);
     int memcmp(void* dst, const void* src, size_t num);
+#if HAS_BUILTIN(__builtin_memmove)
+    constexpr void* memmove(void* dst, const void* src, size_t num) { return __builtin_memmove(dst, src, num); }
+#else
     void* memmove(void* dst, const void* src, size_t num);
+#endif
     constexpr void* memcpy(void* dst0, const void* src0, size_t num) {
+#if HAS_BUILTIN(__builtin_memcpy)
+        return __builtin_memcpy(dst0, src0, num);
+#else
         if (is_constant_evaluated()) {
             uint8_t* dst = static_cast<uint8_t*>(dst0);
             const uint8_t* src = static_cast<const uint8_t*>(src0);
@@ -130,6 +136,7 @@ namespace ARLib {
             }
             return dst;
         }
+#endif
     }
     void* memset(void* ptr, uint8_t value, size_t size);
     constexpr char toupper(char c) {
