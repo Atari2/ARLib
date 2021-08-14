@@ -1,8 +1,8 @@
 #pragma once
 #include "CharConv.h"
 #include "Concepts.h"
-#include "Map.h"
 #include "Functional.h"
+#include "Map.h"
 
 namespace ARLib {
     template <typename T>
@@ -25,6 +25,43 @@ namespace ARLib {
     BASIC_PRINT_IMPL(double, DoubleToStr)
     BASIC_PRINT_IMPL(String, [](const String& a) { return a; })
     BASIC_PRINT_IMPL(size_t, IntToStr)
+
+    template <Printable T, size_t N>
+    struct PrintInfo<T[N]> {
+        const T (&m_vec)[N];
+        PrintInfo(const T (&vec)[N]) : m_vec(vec) {}
+        String repr() {
+            String str{"["};
+            for (size_t i = 0; i < N; i++) {
+                str.concat(PrintInfo<T>{m_vec[i]}.repr());
+                if (i != N - 1) {
+                    str.append(',');
+                    str.append(' ');
+                }
+            }
+            str.append(']');
+            return str;
+        }
+    };
+
+    template <Printable T, size_t N, size_t M>
+    struct PrintInfo<T[N][M]> {
+        const T (&m_matrix)[N][M];
+        PrintInfo(const T (&matrix)[N][M]) : m_matrix(matrix) {}
+        String repr() {
+            String str{"[\n"};
+            for (size_t i = 0; i < N; i++) {
+                str.append('\t');
+                str.concat(PrintInfo<T[M]>{m_matrix[i]}.repr());
+                if (i != N - 1) {
+                    str.append(',');
+                }
+                str.append('\n');
+            }
+            str.append(']');
+            return str;
+        }
+    };
 
     template <Printable T>
     struct PrintInfo<Vector<T>> {
@@ -56,6 +93,7 @@ namespace ARLib {
         const Map<A, B>& m_map;
         PrintInfo(const Map<A, B>& map) : m_map(map) {}
         String repr() const {
+            if (m_map.size() == 0) { return "{}"_s; }
             String con{};
             con.concat("{ ");
             for (const auto& [key, val] : m_map) {
