@@ -10,13 +10,22 @@ namespace ARLib {
         Val m_value;
 
         MapEntry() : m_key(), m_value() {}
-        MapEntry(Key key, Val value) : m_key(move(key)), m_value(move(value)) {}
+        MapEntry(const Key& key, const Val& value) : m_key(key), m_value(value) {}
+        MapEntry(Key&& key, Val&& value) : m_key(move(key)), m_value(move(value)) {}
         MapEntry(MapEntry&& other) noexcept : m_key(move(other.m_key)), m_value(move(other.m_value)) {}
         MapEntry(const MapEntry& other) : m_key(other.m_key), m_value(other.m_value) {}
 
         MapEntry& operator=(MapEntry&& other) noexcept {
+            if (this == &other) return *this;
             m_key = move(other.m_key);
             m_value = move(other.m_value);
+            return *this;
+        }
+
+        MapEntry& operator=(const MapEntry& other) {
+            if (this == &other) return *this;
+            m_key = other.m_key;
+            m_value = other.m_value;
             return *this;
         }
 
@@ -37,6 +46,13 @@ namespace ARLib {
 
         public:
         Map() = default;
+
+        Map(std::initializer_list<Entry> list) {
+            m_storage.reserve(list.size());
+            for (auto val : list) {
+                add(move(val));
+            }
+        }
 
         InsertionResult add(Key key, Val value) {
             Entry entry{key, value};
@@ -74,7 +90,7 @@ namespace ARLib {
 
         Val& operator[](const Key& key) { return (*find(key)).value(); }
 
-        size_t size() { return m_storage.size(); }
+        size_t size() const { return m_storage.size(); }
 
         Iterator<Entry> begin() { return m_storage.begin(); }
         ConstIterator<Entry> begin() const { return m_storage.cbegin(); }
