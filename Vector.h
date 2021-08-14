@@ -170,7 +170,7 @@ namespace ARLib {
 
         template <typename... Args>
         requires Constructible<T, Args...>
-        void emplace(Args... args) {
+        void emplace(Args&&... args) {
             ensure_capacity_();
             T val{args...};
             if constexpr (MoveAssignable<T>) {
