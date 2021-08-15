@@ -42,6 +42,9 @@ namespace ARLib {
             case OpenFileMode::Write:
                 m_ptr = fopen(m_filename.data(), "w");
                 break;
+            case OpenFileMode::ReadWrite:
+                m_ptr = fopen(m_filename.data(), "w+");
+                break;
             default:
                 break;
             }
