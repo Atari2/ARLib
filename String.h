@@ -224,6 +224,21 @@ namespace ARLib {
             if (other.m_size == m_size) { return strncmp(m_data_buf, other.m_data_buf, m_size) == 0; }
             return false;
         }
+        template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
+        [[nodiscard]] bool operator==(T other) const { return strcmp(get_buf_internal(), other) == 0; }
+        template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
+        [[nodiscard]] bool operator!=(T other) const { return strcmp(get_buf_internal(), other) != 0; }
+
+        template <size_t N>
+        [[nodiscard]] bool operator==(const char (&other)[N]) const {
+            if (N - 1 != m_size) return false;
+            return strncmp(get_buf_internal(), other, N - 1) == 0;
+        }
+        template <size_t N>
+        [[nodiscard]] bool operator!=(const char (&other)[N]) const {
+            if (N - 1 != m_size) return true;
+            return strncmp(get_buf_internal(), other, N - 1) != 0;
+        }
         [[nodiscard]] bool operator==(const StringView& other) const;
         [[nodiscard]] bool operator!=(const String& other) const { return !(*this == other); }
         [[nodiscard]] bool operator!=(const StringView& other) const;
@@ -540,7 +555,7 @@ namespace ARLib {
         }
         Vector<StringView> split_view_at_any(const char* sep = " \n\t\v") const;
 
-        Vector<String> split(const char* sep = " ") const { 
+        Vector<String> split(const char* sep = " ") const {
             Vector<String> vec{};
             size_t sep_len = strlen(sep);
             size_t prev_index = 0ull;
