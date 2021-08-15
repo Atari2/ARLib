@@ -142,6 +142,9 @@ namespace ARLib {
     struct IsArray<T[N]> : TrueType {};
 
     template <class T>
+    inline constexpr bool IsArrayV = IsArray<T>::value;
+
+    template <class T>
     struct IsFunction : IntegralConstant<bool, !IsConst<const T>::value && !IsReference<T>::value> {};
 
     template <class T>
