@@ -178,6 +178,19 @@ namespace ARLib {
         using type = typename AddReference<T>::RValue;
     };
 
+    template <class T>
+    struct AddLValueRefIfNotPtr {
+        using type = typename AddReference<T>::LValue;
+    };
+
+    template <typename T>
+    struct AddLValueRefIfNotPtr<T*> {
+        using type = T*;
+    };
+
+    template <typename T>
+    using AddLValueRefIfNotPtrT = typename AddLValueRefIfNotPtr<T>::type;
+
     // declval
     template <class T>
     typename AddRvalueReference<T>::type declval() noexcept;
@@ -310,6 +323,11 @@ namespace ARLib {
     template <class T>
     struct AddConst {
         typedef const T type;
+    };
+
+    template <class T>
+    struct AddConst<T&> {
+        typedef const T& type;
     };
 
     template <class T>
