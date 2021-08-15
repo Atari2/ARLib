@@ -58,7 +58,7 @@ namespace ARLib {
                 return String{format};
             } else {
                 Printer printer{format, args...};
-                return printer.builder;
+                return move(printer.builder);
             }
         }
     };

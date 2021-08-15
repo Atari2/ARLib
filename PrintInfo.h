@@ -2,6 +2,7 @@
 #include "CharConv.h"
 #include "Concepts.h"
 #include "Functional.h"
+#include "BaseTraits.h"
 #include "Map.h"
 
 namespace ARLib {
@@ -72,8 +73,8 @@ namespace ARLib {
         }
     };
 
-    template <Printable T, size_t N, size_t M>
-    struct PrintInfo<T[N][M]> {
+    template <Printable T, size_t N, size_t M> requires (!IsArrayV<T>)
+    struct PrintInfo<T[N][M]>  {
         const T (&m_matrix)[N][M];
         PrintInfo(const T (&matrix)[N][M]) : m_matrix(matrix) {}
         String repr() {
