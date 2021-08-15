@@ -411,4 +411,6 @@ TEST(ARLibTests, MoreFormatTests) {
     EXPECT_EQ(Printer::format("{}", vec), vec_of_vecs_print);
     EXPECT_EQ(Printer::format("{}", val), row_print);
     EXPECT_EQ(Printer::format("{}", mat), mat_print);
+    auto data = vec[0][0].data();
+    EXPECT_EQ(Printer::format("{}", data), "hello"_s);
 }
