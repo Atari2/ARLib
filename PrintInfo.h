@@ -13,18 +13,46 @@ namespace ARLib {
         { PrintInfo<T>{a}.repr() } -> SameAs<String>;
     };
 
-#define BASIC_PRINT_IMPL(x, impl)                                                                                      \
+#define BASIC_NOT_CONST_PRINT_IMPL(x, impl)                                                                            \
     template <>                                                                                                        \
     struct PrintInfo<x> {                                                                                              \
-        const x& m_val;                                                                                                \
-        PrintInfo(const x& val) : m_val(val) {}                                                                        \
+        using type_ = AddConstT<AddLValueRefIfNotPtrT<x>>;                                                             \
+        type_ m_val;                                                                                                   \
+        PrintInfo(type_ val) : m_val(val) {}                                                                           \
         String repr() const { return impl(m_val); }                                                                    \
     };
 
+#define BASIC_CONST_PRINT_IMPL(x, impl)                                                                                \
+    template <>                                                                                                        \
+    struct PrintInfo<const x> {                                                                                        \
+        using type_ = AddConstT<AddLValueRefIfNotPtrT<const x>>;                                                       \
+        type_ m_val;                                                                                                   \
+        PrintInfo(type_ val) : m_val(val) {}                                                                           \
+        String repr() const { return impl(m_val); }                                                                    \
+    };
+
+#define BASIC_PRINT_IMPL(x, impl)                                                                                      \
+    BASIC_NOT_CONST_PRINT_IMPL(x, impl)                                                                                \
+    BASIC_CONST_PRINT_IMPL(x, impl)
+
     BASIC_PRINT_IMPL(int, IntToStr)
     BASIC_PRINT_IMPL(double, DoubleToStr)
-    BASIC_PRINT_IMPL(String, [](const String& a) { return a; })
+    BASIC_PRINT_IMPL(String, )
     BASIC_PRINT_IMPL(size_t, IntToStr)
+    BASIC_PRINT_IMPL(char*, )
+
+    template <typename T>
+    struct PrintInfo<T*> {
+        const T* m_ptr;
+        PrintInfo(const T* ptr) : m_ptr(ptr) {}
+        String repr() {
+            if constexpr (Printable<T>) {
+                return String::formatted("0x%p -> ", m_ptr) + PrintInfo<T>{*m_ptr}.repr();
+            } else {
+                return String::formatted("0x%p (pointer to %s)", m_ptr, typeid(T).name());
+            }
+        }
+    };
 
     template <Printable T, size_t N>
     struct PrintInfo<T[N]> {
@@ -53,9 +81,7 @@ namespace ARLib {
             for (size_t i = 0; i < N; i++) {
                 str.append('\t');
                 str.concat(PrintInfo<T[M]>{m_matrix[i]}.repr());
-                if (i != N - 1) {
-                    str.append(',');
-                }
+                if (i != N - 1) { str.append(','); }
                 str.append('\n');
             }
             str.append(']');
