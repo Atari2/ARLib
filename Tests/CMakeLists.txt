@@ -11,6 +11,14 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/Runner.cpp"
 	)
 
+if (ENABLED_TIMING)
+	list(
+		APPEND TEST_SOURCE_FILES
+		"${CMAKE_CURRENT_SOURCE_DIR}/PerfTime.h"
+		"${CMAKE_CURRENT_SOURCE_DIR}/PerfTime.cpp"
+	)
+endif()
+
 include(FetchContent)
 
 FetchContent_Declare(
