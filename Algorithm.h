@@ -84,6 +84,12 @@ namespace ARLib {
     requires Iterable<C>
     auto sum(const C& cont, Functor func) { return sum(cont.begin(), cont.end(), func); }
 
+    template <typename C>
+    requires Iterable<C> && CanKnowSize<C>
+    auto avg(const C& cont) {
+        return static_cast<decltype(cont.size())>(sum(cont, [](auto& i) { return i; })) / cont.size();
+    }
+
     template <typename C, typename Functor>
     requires Iterable<C> && Pushable<C, decltype(*C{}.begin())> &&
     ConvertibleTo<decltype(*C{}.begin()), ResultOfT<Functor(decltype(*C{}.begin()))>>
