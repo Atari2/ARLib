@@ -3,7 +3,6 @@
 #include "Assertion.h"
 #include "Concepts.h"
 #include "HashBase.h"
-#include "List.h"
 #include "Vector.h"
 #include "cmath_compat.h"
 
@@ -12,8 +11,11 @@ namespace ARLib {
     enum class DeletionResult { Success, Failure };
 
     template <typename T>
+    using HashTableStorage = Vector<Vector<T>>;
+
+    template <typename T>
     class HashTableIterator : public IteratorType<T> {
-        Vector<Vector<T>>& m_backing_store;
+        HashTableStorage<T>& m_backing_store;
         size_t m_current_bucket = 0;
         size_t m_current_vector_index = 0;
         size_t m_bkt_size = 0;
@@ -33,9 +35,9 @@ namespace ARLib {
             m_current_vector_index(vector_index),
             m_bkt_size(backing_store.size()) {}
 
-        HashTableIterator(HashTableIterator<T>&& other)  noexcept = default;
+        HashTableIterator(HashTableIterator<T>&& other) noexcept = default;
         HashTableIterator(const HashTableIterator<T>& other) = default;
-        HashTableIterator& operator=(HashTableIterator<T>&& other)  noexcept = default;
+        HashTableIterator& operator=(HashTableIterator<T>&& other) noexcept = default;
         HashTableIterator& operator=(const HashTableIterator<T>& other) = default;
 
         bool operator==(const HashTableIterator<T>& other) const {
@@ -105,7 +107,7 @@ namespace ARLib {
 
     template <typename T>
     class ConstHashTableIterator {
-        const Vector<Vector<T>>& m_backing_store;
+        const HashTableStorage<T>& m_backing_store;
         size_t m_current_bucket = 0;
         size_t m_current_vector_index = 0;
         size_t m_bkt_size = 0;
@@ -125,9 +127,9 @@ namespace ARLib {
             m_current_vector_index(vector_index),
             m_bkt_size(backing_store.size()) {}
 
-        ConstHashTableIterator(ConstHashTableIterator<T>&& other)  noexcept = default;
+        ConstHashTableIterator(ConstHashTableIterator<T>&& other) noexcept = default;
         ConstHashTableIterator(const ConstHashTableIterator<T>& other) = default;
-        ConstHashTableIterator& operator=(ConstHashTableIterator<T>&& other)  noexcept = default;
+        ConstHashTableIterator& operator=(ConstHashTableIterator<T>&& other) noexcept = default;
         ConstHashTableIterator& operator=(const ConstHashTableIterator<T>& other) = default;
 
         bool operator==(const ConstHashTableIterator<T>& other) const {
@@ -195,12 +197,16 @@ namespace ARLib {
         }
     };
 
-    template <typename T, size_t TBL_SIZE_INDEX = 0>
-    requires Hashable<T>&& EqualityComparable<T> class HashTable {
-        static constexpr inline double load_factor = 3.0;
-        Vector<Vector<T>> m_storage;
-        size_t m_bucket_count = table_sizes[TBL_SIZE_INDEX];
+    template <typename T>
+    requires Hashable<T> && EqualityComparable<T>
+    class HashTable {
+        static constexpr inline size_t s_primes_bkt_sizes[] = {61, 97, 149, 223, 257, 281, 317, 379, 433, 503};
+        static constexpr inline size_t max_bucket_acceptable_size = 10;
+        HashTableStorage<T> m_storage;
+        size_t m_bucket_count = s_primes_bkt_sizes[0];
         size_t m_size = 0;
+        size_t m_max_bkt_size = 0;
+        uint8_t m_curr_bkts = 0;
 
         using Iter = HashTableIterator<T>;
         using ConstIter = ConstHashTableIterator<T>;
@@ -212,13 +218,20 @@ namespace ARLib {
         }
 
         void rehash_internal_() {
-            m_bucket_count = prime_generator(m_bucket_count);
-            auto new_storage = Vector<Vector<T>>{};
+#if not OLD_HASHTABLE
+            m_max_bkt_size = 0;
+#endif
+            if (m_curr_bkts == sizeof_array(s_primes_bkt_sizes) - 1) return;
+            m_bucket_count = s_primes_bkt_sizes[++m_curr_bkts];
+            auto new_storage = HashTableStorage<T>{};
             new_storage.resize(m_bucket_count);
             for (auto& vec : m_storage) {
-                for (auto& item : vec) {
+                for (auto&& item : vec) {
                     auto hs = hasher(item);
-                    new_storage[hs % m_bucket_count].append(Forward<T>(item));
+                    auto bkt_index = hs % m_bucket_count;
+                    new_storage[bkt_index].append(Forward<T>(item));
+                    auto bkt_size = new_storage[bkt_index].size();
+                    if (bkt_size > m_max_bkt_size) m_max_bkt_size = bkt_size;
                 }
             }
             m_storage.clear();
@@ -226,7 +239,6 @@ namespace ARLib {
         }
 
         public:
-        static constexpr size_t table_sizes[3] = {13, 19, 31};
         Hash<T> hasher{};
         HashTable() { m_storage.resize(m_bucket_count); }
         HashTable(const HashTable& other) :
@@ -265,11 +277,15 @@ namespace ARLib {
             m_size = sizeof...(args);
         }
 
+        size_t max_bucket_size() { return m_max_bkt_size; }
+
         double load() {
             if (m_size == 0) return 0.0;
             double avg_load = static_cast<double>(m_size) / static_cast<double>(m_bucket_count);
-            double sr = sum(
-            m_storage, [avg_load](const auto& item) { return pow(static_cast<double>(item.size()) - avg_load, 2.0); });
+            double sr = sum(m_storage, [avg_load](const auto& item) {
+                double ll = static_cast<double>(item.size()) - avg_load;
+                return ll * ll;
+            });
             double res = sqrt(sr / static_cast<double>(m_size));
             return res;
         }
@@ -289,13 +305,14 @@ namespace ARLib {
         }
 
         InsertionResult insert(T&& entry) {
-            // this is not good, calculating load() every time is costy
-            double ld = load();
-            if (ld >= load_factor) { rehash_internal_(); }
+            if (max_bucket_size() >= max_bucket_acceptable_size) { rehash_internal_(); }
             auto hs = hasher(entry);
             auto iter = find(entry);
             if (iter == tend()) {
-                m_storage[hs % m_bucket_count].append(Forward<T>(entry));
+                auto bkt_index = hs % m_bucket_count;
+                m_storage[bkt_index].append(Forward<T>(entry));
+                auto bkt_size = m_storage[bkt_index].size();
+                if (bkt_size > m_max_bkt_size) m_max_bkt_size = bkt_size;
                 m_size++;
                 return InsertionResult::New;
             } else {
@@ -373,8 +390,8 @@ namespace ARLib {
             return DeletionResult::Success;
         }
 
-        size_t size() { return m_size; }
-        size_t bucket_count() { return m_bucket_count; }
+        size_t size() const { return m_size; }
+        size_t bucket_count() const { return m_bucket_count; }
     };
 } // namespace ARLib
 

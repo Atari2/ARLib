@@ -56,12 +56,12 @@ namespace ARLib {
         }
     };
 
-    template <Hashable Key, typename Val, size_t TBL_SIZE_INDEX = 0>
+    template <Hashable Key, typename Val>
     class HashMap {
         using MapEntry = HashMapEntry<Key, Val>;
         using Iter = HashTableIterator<MapEntry>;
         using ConstIter = ConstHashTableIterator<MapEntry>;
-        HashTable<MapEntry, TBL_SIZE_INDEX> m_table{};
+        HashTable<MapEntry> m_table{};
 
         public:
         HashMap() = default;
@@ -114,8 +114,8 @@ namespace ARLib {
 
         ConstIter end() const { return m_table.tend(); }
 
-        size_t size() { return m_table.size(); }
-        size_t bucket_count() { return m_table.bucket_count(); }
+        size_t size() const { return m_table.size(); }
+        size_t bucket_count() const { return m_table.bucket_count(); }
     };
 
 } // namespace ARLib
