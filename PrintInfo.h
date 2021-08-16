@@ -1,9 +1,10 @@
 #pragma once
+#include "BaseTraits.h"
 #include "CharConv.h"
 #include "Concepts.h"
 #include "Functional.h"
-#include "BaseTraits.h"
 #include "Map.h"
+#include "HashMap.h"
 
 namespace ARLib {
     template <typename T>
@@ -73,8 +74,8 @@ namespace ARLib {
         }
     };
 
-    template <Printable T, size_t N, size_t M> requires (!IsArrayV<T>)
-    struct PrintInfo<T[N][M]>  {
+    template <Printable T, size_t N, size_t M>
+    requires(!IsArrayV<T>) struct PrintInfo<T[N][M]> {
         const T (&m_matrix)[N][M];
         PrintInfo(const T (&matrix)[N][M]) : m_matrix(matrix) {}
         String repr() {
@@ -127,6 +128,24 @@ namespace ARLib {
                 con.concat(PrintInfo<A>{key}.repr());
                 con.concat(": "_s);
                 con.concat(PrintInfo<B>{val}.repr());
+                con.concat(", ");
+            }
+            return con.substring(0, con.size() - 2) + " }"_s;
+        }
+    };
+
+    template <Printable A, Printable B>
+    struct PrintInfo<HashMap<A, B>> {
+        const HashMap<A, B>& m_map;
+        PrintInfo(const HashMap<A, B>& map) : m_map(map) {}
+        String repr() const {
+            if (m_map.size() == 0) { return "{}"_s; }
+            String con{};
+            con.concat("{ ");
+            for (const auto& entry : m_map) {
+                con.concat(PrintInfo<A>{entry.key()}.repr());
+                con.concat(": "_s);
+                con.concat(PrintInfo<B>{entry.value()}.repr());
                 con.concat(", ");
             }
             return con.substring(0, con.size() - 2) + " }"_s;
