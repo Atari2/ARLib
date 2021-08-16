@@ -128,6 +128,13 @@ namespace ARLib {
         }
 
         ListEntry* head() { return m_head; }
+        ListEntry* last() {
+            auto* curr = m_head;
+            while (curr->next() != nullptr) {
+                curr = curr->next_mut();
+            }
+            return curr;
+        }
 
         T pop_head() {
             HARD_ASSERT(m_head, "Calling pop_head() on empty list")
