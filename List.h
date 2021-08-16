@@ -10,13 +10,9 @@ namespace ARLib {
             T m_entry;
             ListEntry* m_next;
 
-            ListEntry(T&& entry, ListEntry* next) requires MoveConstructible<T> :
-                m_entry(move(entry)),
-                m_next(next) {}
+            ListEntry(T&& entry, ListEntry* next) requires MoveConstructible<T> : m_entry(move(entry)), m_next(next) {}
 
-            ListEntry(const T& entry, ListEntry* next) requires CopyConstructible<T> :
-                m_entry(entry),
-                m_next(next) {}
+            ListEntry(const T& entry, ListEntry* next) requires CopyConstructible<T> : m_entry(entry), m_next(next) {}
 
             T& entry_mut() { return m_entry; }
             ListEntry* next_mut() const { return m_next; }
@@ -85,6 +81,7 @@ namespace ARLib {
         }
 
         public:
+        using Entry = ListEntry;
         template <typename... Args>
         LinkedList(T&& val, Args&&... values) requires AllOfV<T, Args...> {
             internal_single_prepend_(Forward<T>(val));
@@ -108,7 +105,6 @@ namespace ARLib {
             return *this;
         }
 
-        
         void prepend(const T& value) { internal_single_prepend_(Forward<T>(T{value})); }
 
         void append(const T& value) {
@@ -130,6 +126,8 @@ namespace ARLib {
             curr->swap_next(new ListEntry(value, nullptr));
             m_size++;
         }
+
+        ListEntry* head() { return m_head; }
 
         T pop_head() {
             HARD_ASSERT(m_head, "Calling pop_head() on empty list")
