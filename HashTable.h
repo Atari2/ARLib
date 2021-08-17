@@ -218,9 +218,7 @@ namespace ARLib {
         }
 
         void rehash_internal_() {
-#if not OLD_HASHTABLE
             m_max_bkt_size = 0;
-#endif
             if (m_curr_bkts == sizeof_array(s_primes_bkt_sizes) - 1) return;
             m_bucket_count = s_primes_bkt_sizes[++m_curr_bkts];
             auto new_storage = HashTableStorage<T>{};
