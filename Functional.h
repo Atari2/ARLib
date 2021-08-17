@@ -4,6 +4,7 @@
 #include "Utility.h"
 #include "Algorithm.h"
 #include "Invoke.h"
+#include "Assertion.h"
 
 namespace ARLib {
     namespace fntraits {

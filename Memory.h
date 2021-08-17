@@ -14,7 +14,7 @@ namespace ARLib {
 
     // dst and src may not overlap
     template <CopyAssignable T>
-    void ConditionalBitCopy(T* dst, const T* src, size_t count) {
+    constexpr void ConditionalBitCopy(T* dst, const T* src, size_t count) {
         if (!dst || !src || count == 0) return;
         if constexpr (IsTriviallyCopiableV<T>) {
             memcpy(dst, src, count * sizeof(T));
@@ -27,7 +27,7 @@ namespace ARLib {
 
     // dst and src may not overlap
     template <MoveAssignable T>
-    void ConditionalBitMove(T* dst, T*& src, size_t count) {
+    constexpr void ConditionalBitMove(T* dst, T*& src, size_t count) {
         if (!dst || !src || count == 0) return;
         if constexpr (IsTriviallyCopiableV<T>) {
             memcpy(dst, src, count * sizeof(T));

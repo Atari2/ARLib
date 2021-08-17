@@ -19,8 +19,8 @@ namespace ARLib {
     int64_t PerfCounter::current_time() { return NOW; }
     RAIIPerfCounter::RAIIPerfCounter(Vector<int64_t>* vec) : m_start(m_counter.start()), m_vec(vec) {}
     RAIIPerfCounter::~RAIIPerfCounter() {
-        auto [end, diff] = m_counter.stop();
+        auto [_, diff] = m_counter.stop();
         if (m_vec) m_vec->append(diff);
-        ARLib::printf("Timer started at %lld and ended at %lld, total time spent: %lld nanoseconds\n", m_start, end, diff);
+        Console::print("%lld nanoseconds\n", diff);
     }
 } // namespace ARLib
