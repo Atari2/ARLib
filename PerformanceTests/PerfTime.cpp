@@ -1,4 +1,3 @@
-#ifdef ENABLED_TIMING
 #include "PerfTime.h"
 
 #include <chrono>
@@ -25,4 +24,3 @@ namespace ARLib {
         ARLib::printf("Timer started at %lld and ended at %lld, total time spent: %lld nanoseconds\n", m_start, end, diff);
     }
 } // namespace ARLib
-#endif

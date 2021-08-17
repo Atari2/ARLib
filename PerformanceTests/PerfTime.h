@@ -1,11 +1,10 @@
-#ifdef ENABLED_TIMING
 #pragma once
 #include "../Pair.h"
 #include "../Vector.h"
 
 #define TIMER_START(coll)                                                                                              \
     {                                                                                                                  \
-        RAIIPerfCounter __counter{coll};
+        ARLib::RAIIPerfCounter __counter{coll};
 
 #define TIMER_END }
 
@@ -28,7 +27,3 @@ namespace ARLib {
         ~RAIIPerfCounter();
     };
 } // namespace ARLib
-#else
-#define TIMER_START(coll)
-#define TIMER_END
-#endif

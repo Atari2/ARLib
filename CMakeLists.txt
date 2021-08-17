@@ -79,6 +79,11 @@ execute_process(
 add_library(ARLib ${ARLIB_SOURCE_FILES})
 add_subdirectory(Tests)
 
+if (PERF_TEST)
+	message(STATUS "Enabling perfomance runner")
+	add_subdirectory(PerformanceTests)
+endif()
+
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
 	list(APPEND ARLIB_COMPILE_OPTIONS /std:c++latest /arch:AVX2 /permissive-)
@@ -168,3 +173,10 @@ add_custom_target(
 	ARLibTestSuite
 	COMMENT "Running tests"
 )
+if (PERF_TEST)
+	add_custom_target(
+		RUN_PERF ALL
+		ARLibPerformanceSuite
+		COMMENT "Running performance tests"
+	)
+endif()
