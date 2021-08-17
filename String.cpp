@@ -88,5 +88,4 @@ namespace ARLib {
         set_size(new_size);
     }
 
-    String operator""_s(const char* source, size_t len) { return String{source, len}; }
 } // namespace ARLib

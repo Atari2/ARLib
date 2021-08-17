@@ -225,9 +225,13 @@ namespace ARLib {
             return false;
         }
         template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
-        [[nodiscard]] bool operator==(T other) const { return strcmp(get_buf_internal(), other) == 0; }
+        [[nodiscard]] bool operator==(T other) const {
+            return strcmp(get_buf_internal(), other) == 0;
+        }
         template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
-        [[nodiscard]] bool operator!=(T other) const { return strcmp(get_buf_internal(), other) != 0; }
+        [[nodiscard]] bool operator!=(T other) const {
+            return strcmp(get_buf_internal(), other) != 0;
+        }
 
         template <size_t N>
         [[nodiscard]] bool operator==(const char (&other)[N]) const {
@@ -654,7 +658,7 @@ namespace ARLib {
         void reserve(size_t new_capacity) { grow_if_needed(new_capacity); }
     };
 
-    String operator""_s(const char* source, size_t len);
+    inline String operator""_s(const char* source, size_t len) { return String{source, len}; }
 
     template <>
     struct Hash<String> {
