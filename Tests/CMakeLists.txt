@@ -12,6 +12,7 @@ list(
 	)
 
 if (ENABLED_TIMING)
+	message(STATUS "Enabling timing for test runner")
 	list(
 		APPEND TEST_SOURCE_FILES
 		"${CMAKE_CURRENT_SOURCE_DIR}/PerfTime.h"
@@ -58,6 +59,9 @@ else()
 			target_compile_options(ARLibTestSuite PRIVATE -std=c++20 -msse4.1 -mavx -fno-exceptions -Wall -Wextra)
 		endif()
 	endif()
+endif()
+if (ENABLED_TIMING)
+	target_compile_definitions(ARLibTestSuite PRIVATE ENABLED_TIMING)
 endif()
 target_include_directories(ARLibTestSuite PRIVATE ${googletest_SOURCE_DIR})
 target_link_libraries(ARLibTestSuite PRIVATE ARLib gtest_main)

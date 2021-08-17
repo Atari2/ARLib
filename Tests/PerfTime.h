@@ -28,4 +28,7 @@ namespace ARLib {
         ~RAIIPerfCounter();
     };
 } // namespace ARLib
+#else
+#define TIMER_START(coll)
+#define TIMER_END
 #endif
