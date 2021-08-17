@@ -185,6 +185,17 @@ TEST(ARLibTests, MathAlgorithmTest) {
     EXPECT_EQ(s, 4950);
     EXPECT_EQ(*m, 0);
     EXPECT_EQ(*x, 99);
+    auto res = avg(vec);
+    auto res2 = avg(vec.begin(), vec.end());
+    EXPECT_EQ(res, res2);
+    EXPECT_EQ(res, 49.5);
+    EXPECT_EQ(res2, 49.5);
+    EXPECT_EQ(avg(vec), avg(vec.begin(), vec.end()));
+    auto res_rounded = avg<decltype(vec), true>(vec);
+    auto res2_rounded = avg<decltype(vec.begin()), true>(vec.begin(), vec.end());
+    EXPECT_EQ(res_rounded, res2_rounded);
+    EXPECT_EQ(res_rounded, 49);
+    EXPECT_EQ(res2_rounded, 49);
 }
 
 TEST(ARLibTests, ArrayTest) {

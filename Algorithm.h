@@ -35,7 +35,7 @@ namespace ARLib {
                                                                  const typename Iter::Type& elem) {
         if (begin == end) return npos_;
         size_t index = 0;
-        for (; begin != end; begin++, index++)
+        for (; begin != end; ++begin, index++)
             if (*begin == elem) return index;
         return npos_;
     }
@@ -48,7 +48,7 @@ namespace ARLib {
     requires MoreComparable<typename Iter::Type> Iter max(Iter begin, Iter end) {
         if (begin == end) return begin;
         Iter value{begin};
-        for (; begin != end; begin++)
+        for (; begin != end; ++begin)
             if (*begin > *value) value = begin;
         return value;
     }
@@ -57,7 +57,7 @@ namespace ARLib {
     requires LessComparable<typename Iter::Type> Iter min(Iter begin, Iter end) {
         if (begin == end) return begin;
         Iter value{begin};
-        for (; begin != end; begin++)
+        for (; begin != end; ++begin)
             if (*begin < *value) value = begin;
         return value;
     }
@@ -67,9 +67,30 @@ namespace ARLib {
         if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
         auto total = func(*begin);
         begin++;
-        for (; begin != end; begin++)
+        for (; begin != end; ++begin)
             total += func(*begin);
         return total;
+    }
+
+    template <IteratorConcept Iter, bool ROUND = false>
+    auto avg(Iter begin, Iter end) {
+        size_t sz = 0;
+        if constexpr (ROUND) {
+            RemoveReferenceT<decltype(*begin)> total{0};
+            static_assert(IsIntegralV<decltype(total)>, "Average can only be called on containers of integral types");
+            for (; begin != end; ++begin, sz++) {
+                total += *begin;
+            }
+            return static_cast<size_t>(total) / sz;
+        } else {
+            double total{0.0};
+            for (; begin != end; ++begin, sz++) {
+                total += static_cast<double>(*begin);
+            }
+            return total / static_cast<double>(sz);
+        }
+
+
     }
 
     template <typename C>
@@ -84,10 +105,18 @@ namespace ARLib {
     requires Iterable<C>
     auto sum(const C& cont, Functor func) { return sum(cont.begin(), cont.end(), func); }
 
-    template <typename C>
-    requires Iterable<C> && CanKnowSize<C>
+    template <typename C, bool ROUND = false>
+    requires Iterable<C>
     auto avg(const C& cont) {
-        return static_cast<decltype(cont.size())>(sum(cont, [](auto& i) { return i; })) / cont.size();
+        if constexpr (CanKnowSize<C>) {
+            if constexpr (ROUND) {
+                return static_cast<decltype(cont.size())>(sum(cont, [](auto& i) { return i; })) / cont.size();
+            } else {
+                return static_cast<double>(sum(cont, [](auto& i) { return i; })) / static_cast<double>(cont.size());
+            }
+        } else {
+            return avg<decltype(cont.begin()), ROUND>(cont.begin(), cont.end());
+        }
     }
 
     template <typename C, typename Functor>
