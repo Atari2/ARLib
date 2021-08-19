@@ -4,7 +4,7 @@
 #include "cstdio_compat.h"
 #include <cstdlib>
 
-void* operator new(size_t count) {
+void* operator new(ARLib::size_t count) {
     if (count == 0) { ++count; }
     if (void* ptr = std::malloc(count)) {
         s_alloc_map.insert(ptr, count);
@@ -15,7 +15,7 @@ void* operator new(size_t count) {
     abort_arlib();
     unreachable
 }
-void* operator new[](size_t count) {
+void* operator new[](ARLib::size_t count) {
     if (count == 0) { ++count; }
     if (void* ptr = std::malloc(count)) {
         s_alloc_map.insert(ptr, count);
