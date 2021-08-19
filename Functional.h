@@ -1,5 +1,4 @@
 #pragma once
-#include "Algorithm.h"
 #include "Assertion.h"
 #include "Concepts.h"
 #include "Invoke.h"

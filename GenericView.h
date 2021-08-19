@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseTraits.h"
 #include "Concepts.h"
+#include "Enumerate.h"
 #include "Iterator.h"
 
 namespace ARLib {
@@ -57,19 +58,28 @@ namespace ARLib {
 
     template <Iterable Cont>
     class IteratorView {
-        using Iter = decltype(Cont{}.begin());
+        using Iter = decltype(declval<Cont>().begin());
         Iter m_begin;
         Iter m_end;
         using ItemType = RemoveReferenceT<decltype(*m_begin)>;
         ItemType* m_stolen_storage = nullptr;
 
+        ItemType* release_storage() {
+            ItemType* storage = m_stolen_storage;
+            m_stolen_storage = nullptr;
+            return storage;
+        }
+
         public:
+        IteratorView(ItemType* storage, Iter begin, Iter end) : m_begin(begin), m_end(end), m_stolen_storage(storage) {}
         IteratorView(ItemType* storage, size_t size) :
             m_begin(storage), m_end(storage + size), m_stolen_storage(storage) {}
         IteratorView(const Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
         Iter begin() { return m_begin; }
         Iter end() { return m_end; }
-        size_t size() { return m_end - m_begin; }
+        size_t size() requires IterCanSubtractForSize<Iter> {
+            return m_end - m_begin;
+        }
 
         // in-place transform
         template <typename Functor, typename = EnableIfT<IsSameV<ResultOfT<Functor(ItemType)>, ItemType>>>
@@ -79,17 +89,37 @@ namespace ARLib {
             }
             return *this;
         }
-        Cont collect() requires Pushable<Cont, ItemType> {
+
+        template <typename NewCont = Cont>
+        NewCont collect() requires Pushable<NewCont, ItemType> {
             if (m_stolen_storage != nullptr) {
-                return Cont{m_stolen_storage, size()};
+                if constexpr (SameAs<NewCont, Cont> && IterCanSubtractForSize<Iter>) {
+                    return NewCont{m_stolen_storage, size()};
+                } else {
+                    NewCont copy{};
+                    if constexpr (Reservable<NewCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
+                    for (auto it = m_begin; it != m_end; ++it) {
+                        copy.push_back(move(*it));
+                    }
+                    delete[] m_stolen_storage;
+                    m_stolen_storage = nullptr;
+                    return copy;
+                }
             } else {
-                Cont copy{};
-                if constexpr (Reservable<Cont>) { copy.reserve(size()); }
+                NewCont copy{};
+                if constexpr (Reservable<NewCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
                 for (auto it = m_begin; it != m_end; ++it) {
                     copy.push_back(*it);
                 }
                 return copy;
             }
+        }
+
+        template <typename Functor>
+        auto filter(Functor func) {
+            auto filter_iter = FilterIterate{m_begin, m_end, func};
+            return IteratorView<FilterIterate<Iter, Functor>>{release_storage(), filter_iter.begin(),
+                                                              filter_iter.end()};
         }
 
         template <typename Functor, typename NewCont = Cont, typename Type = ResultOfT<Functor(ItemType)>>

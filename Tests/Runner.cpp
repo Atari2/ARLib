@@ -332,19 +332,21 @@ TEST(ARLibTests, LinkedListTests) {
 
 TEST(ARLibTests, GenericViewTests) {
     Vector<int> vec{};
-    vec.reserve(1000);
-    for (int i = 0; i < 1000; i++) {
-        vec.push_back(i);
-    }
+    vec.fill_pattern([](int i) { return ++i; }, 1000);
     Vector veccp{vec};
     IteratorView view{vec};
     IteratorView view2{veccp};
-    view.transform([](int a) { return a * 2; });
+    String form_filtered{
+    R"(["112"], ["128"], ["144"], ["160"], ["176"], ["192"], ["208"], ["224"], ["240"], ["256"], ["272"], ["288"], ["304"], ["320"], ["336"], ["352"], ["368"], ["384"], ["400"], ["416"], ["432"], ["448"], ["464"], ["480"], ["496"], ["512"], ["528"], ["544"], ["560"], ["576"], ["592"], ["608"], ["624"], ["640"], ["656"], ["672"], ["688"], ["704"], ["720"], ["736"], ["752"], ["768"], ["784"], ["800"], ["816"], ["832"], ["848"], ["864"], ["880"], ["896"], ["912"], ["928"], ["944"], ["960"], ["976"], ["992"])"_s};
+    view.transform([](int a) {
+        return a * 2; });
     for (auto [index, item] : Enumerate{vec}) {
         EXPECT_EQ(item, index * 2);
     }
-    auto vec2 = view.map([](int) { return 0; });
-    auto vec3 = view.transform_map<Vector<String>>([](int a) { return IntToStr(a); });
+    auto vec2 = view.map([](int) {
+        return 0; });
+    auto vec3 = view.transform_map<Vector<String>>([](int a) {
+        return IntToStr(a); });
     for (const auto& [index, item] : Enumerate{vec3}) {
         EXPECT_EQ(item, IntToStr(index * 2));
     }
@@ -354,13 +356,16 @@ TEST(ARLibTests, GenericViewTests) {
     auto lam = [](int c) {
         return IntToStr(c * 4);
     };
-    auto vec4 = view2.map_view([](int a) { return a * 2; })
-                .map_view([](int b) { return b * 2; })
-                .map_view<decltype(lam), Vector<String>>(lam)
-                .collect();
-    for (const auto& [index, item] : Enumerate{vec4}) {
-        EXPECT_EQ(item, IntToStr(index * 8));
-    }
+    auto filtered = view2.map_view([](int a) {
+        return a * 2; })
+                    .map_view([](int b) {
+        return b * 2; })
+                    .map_view<decltype(lam), Vector<String>>(lam)
+                    .filter([](const String& str) {
+        return str.size() == 3; })
+                    .collect<Vector<String>>();
+    EXPECT_EQ(filtered.size(), 56ull);
+    EXPECT_EQ(Printer::format("{}", filtered), form_filtered);
 }
 
 TEST(ARLibTests, StringTest2) {

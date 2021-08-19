@@ -52,6 +52,21 @@ namespace ARLib {
         auto begin() const { return PairIterator{m_first.begin(), m_second.begin()}; }
         auto end() const { return PairIterator{m_first.end(), m_second.end()}; }
     };
+
+    template <typename Iter, typename Functor>
+    class FilterIterate {
+        Iter m_start;
+        Iter m_end;
+        Functor m_func;
+
+        using Type = RemoveReferenceT<decltype(*m_start)>;
+
+        public:
+        FilterIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
+
+        auto begin() const { return IfIterator<Type, Functor>{m_start, m_end, m_func}; }
+        auto end() const { return IfIterator<Type, Functor>{m_end, m_end, m_func, true}; }
+    };
 } // namespace ARLib
 
 using ARLib::Enumerate;

@@ -1,6 +1,5 @@
 #pragma once
 #include "Badge.h"
-#include "Iterator.h"
 #include "TypeTraits.h"
 #include "Types.h"
 
@@ -195,6 +194,11 @@ namespace ARLib {
     template <typename T>
     concept EnumerableC = Iterable<T> && requires(T a) {
         {a.size()};
+    };
+
+    template <typename T>
+    concept IterCanSubtractForSize = requires(T a, T b) {
+        { a - b } -> SameAs<size_t>;
     };
 
     template <typename T>

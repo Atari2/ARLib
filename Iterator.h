@@ -1,8 +1,9 @@
 #pragma once
+#include "Comparator.h"
+#include "Concepts.h"
 #include "Pair.h"
 #include "TypeTraits.h"
 #include "Types.h"
-#include "Comparator.h"
 
 namespace ARLib {
 
@@ -30,7 +31,7 @@ namespace ARLib {
 
         IteratorBase(const IteratorBase<T>& other) : m_current(other.m_current) {}
 
-        IteratorBase(IteratorBase<T>&& other)  noexcept : m_current(other.m_current) { other.m_current = nullptr; }
+        IteratorBase(IteratorBase<T>&& other) noexcept : m_current(other.m_current) { other.m_current = nullptr; }
 
         public:
         using Type = T;
@@ -105,7 +106,7 @@ namespace ARLib {
 
         ConstIterator(const ConstIterator<Ct>& other) : IteratorBase<T>(other) {}
 
-        ConstIterator(ConstIterator<Ct>&& other)  noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
+        ConstIterator(ConstIterator<Ct>&& other) noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
 
         ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) { m_current = other.m_current; }
 
@@ -152,13 +153,13 @@ namespace ARLib {
 
         ReverseIterator(const ReverseIterator<T>& other) : IteratorBase<T>(other.m_current) {}
 
-        ReverseIterator(ReverseIterator<T>&& other)  noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
+        ReverseIterator(ReverseIterator<T>&& other) noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
 
         T& operator*() { return *m_current; }
 
         ReverseIterator& operator=(const ReverseIterator<T>& other) { m_current = other.m_current; }
 
-        ReverseIterator& operator=(ReverseIterator<T>&& other)  noexcept {
+        ReverseIterator& operator=(ReverseIterator<T>&& other) noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
         }
@@ -201,13 +202,15 @@ namespace ARLib {
 
         ConstReverseIterator(const ConstReverseIterator<Ct>& other) : IteratorBase<T>(other.m_current) {}
 
-        ConstReverseIterator(ConstReverseIterator<Ct>&& other)  noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
+        ConstReverseIterator(ConstReverseIterator<Ct>&& other) noexcept : IteratorBase<T>(other) {
+            other.m_current = nullptr;
+        }
 
         const T& operator*() { return *m_current; }
 
         ConstReverseIterator<Ct>& operator=(const ConstReverseIterator<Ct>& other) { m_current = other.m_current; }
 
-        ConstReverseIterator<Ct>& operator=(ConstReverseIterator<Ct>&& other)  noexcept {
+        ConstReverseIterator<Ct>& operator=(ConstReverseIterator<Ct>&& other) noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
         }
@@ -251,8 +254,8 @@ namespace ARLib {
         public:
         LoopIterator(T current, T step) : m_current(current), m_step(step) {}
         LoopIterator(const LoopIterator& other) = default;
-        LoopIterator(LoopIterator&& other)  noexcept = default;
-        LoopIterator& operator=(LoopIterator&& other)  noexcept = default;
+        LoopIterator(LoopIterator&& other) noexcept = default;
+        LoopIterator& operator=(LoopIterator&& other) noexcept = default;
         LoopIterator& operator=(const LoopIterator& other) = default;
 
         T operator*() { return m_current; }
@@ -333,6 +336,46 @@ namespace ARLib {
             return m_current_pair.template get<0>() > other.m_current_pair.template get<0>() &&
                    m_current_pair.template get<1>() > other.m_current_pair.template get<1>();
         }
+    };
+
+    template <class T, class Functor>
+    requires CallableWithRes<Functor, bool, const T&>
+    class IfIterator {
+        using IterUnit = Iterator<T>;
+        IterUnit m_current_iter;
+        IterUnit m_end;
+        Functor m_func;
+
+        void advance() {
+            if (m_current_iter == m_end) return;
+            while (!m_func(*m_current_iter)) {
+                ++m_current_iter;
+                if (m_current_iter == m_end) return;
+            }
+        }
+
+        public:
+        IfIterator(IterUnit unit, IterUnit end, Functor func, bool is_end = false) :
+            m_current_iter(unit), m_end(end), m_func(func) {
+            if (!is_end) { advance(); }
+        }
+        T& operator*() { return *m_current_iter; }
+        IfIterator& operator++() {
+            if (m_current_iter == m_end) return *this;
+            ++m_current_iter;
+            advance();
+            return *this;
+        }
+
+        IfIterator operator++(int) {
+            IfIterator iter{*this};
+            ++iter;
+            return iter;
+        }
+        bool operator==(const IfIterator& other) const { return m_current_iter == other.m_current_iter; }
+        bool operator!=(const IfIterator& other) const { return m_current_iter != other.m_current_iter; }
+        bool operator<(const IfIterator& other) { return m_current_iter < other.m_current_iter; }
+        bool operator>(const IfIterator& other) { return m_current_iter > other.m_current_iter; }
     };
 } // namespace ARLib
 
