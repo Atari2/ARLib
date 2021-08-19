@@ -158,6 +158,32 @@ namespace ARLib {
                 append({});
         }
 
+        template <CallableWithRes<T> Functor>
+        void fill(Functor func, size_t count) {
+            reserve(count);
+            for (size_t i = 0; i < count; i++)
+                append(func());
+        }
+
+        template <CallableWithRes<T, T> Functor>
+        requires DefaultConstructible<T>
+        void fill_pattern(Functor func, size_t count, T start = T{}) {
+            reserve(count);
+            for (size_t i = 0; i < count; i++) {
+                append(start);
+                start = move(func(start));
+            }
+        }
+
+        template <CallableWithRes<T, T> Functor>
+        void fill_pattern(Functor func, size_t count, T start) {
+            reserve(count);
+            for (size_t i = 0; i < count; i++) {
+                append(start);
+                start = move(func(start));
+            }
+        }
+
         void shrink_to_fit() { shrink_to_size_(); }
 
         void append(const T& value) requires CopyAssignable<T> {
