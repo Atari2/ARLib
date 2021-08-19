@@ -89,6 +89,7 @@ namespace ARLib {
             reserve(other.capacity());
             if constexpr (IsTriviallyCopiableV<T>) {
                 memcpy(m_storage, other.m_storage, sizeof(T) * other.m_size);
+                m_size = other.m_size;
             } else {
                 for (auto& val : other) {
                     append(val);
