@@ -3,6 +3,21 @@
 #include "Concepts.h"
 #include "Types.h"
 
+#ifdef DEBUG_NEW_DELETE
+
+enum class AllocType : int { Single, Multiple };
+constexpr ARLib::size_t MAP_SIZE = 400ull;
+
+namespace ARLib {
+    template <EqualityComparable Key, typename Val, size_t SIZE>
+    requires Trivial<Key> && Trivial<Val>
+    class IntrusiveMap;
+} // namespace ARLib
+
+using DebugNewDeleteMap = ARLib::IntrusiveMap<void*, ARLib::Pair<ARLib::size_t, AllocType>, MAP_SIZE>;
+
+#endif
+
 namespace ARLib {
     template <EqualityComparable Key, typename Val, size_t SIZE>
     requires Trivial<Key> && Trivial<Val>
@@ -58,14 +73,19 @@ namespace ARLib {
             }
             return Val{};
         }
-        ~IntrusiveMap() {
-            for (size_t i = 0; i < SIZE; i++) {
+
+#ifdef DEBUG_NEW_DELETE
+        ~IntrusiveMap() requires(!IsSameV<RemoveReferenceT<decltype(*this)>, DebugNewDeleteMap>) = default;
+        ~IntrusiveMap() requires IsSameV<RemoveReferenceT<decltype(*this)>, DebugNewDeleteMap> {
+            for (size_t i = 0; i < MAP_SIZE; i++) {
                 auto [size, type] = m_vals[i];
                 if (m_tombs[i]) {
                     printf("Pointer still not free at %p with size %zu and type %s\n", m_keys[i], size,
-                           static_cast<int>(type) == 0 ? "Single" : "Multiple");
+                           type == AllocType::Single ? "Single" : "Multiple");
                 }
             }
-        }
+        };
+#endif
     };
+
 } // namespace ARLib

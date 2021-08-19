@@ -4,26 +4,25 @@
 #include "cstdio_compat.h"
 #include <cstdlib>
 
-using MapType = ARLib::IntrusiveMap<void*, ARLib::Pair<ARLib::size_t, AllocType>, MAP_SIZE>;
-
-void check_and_create_map() {
-    if (!s_alloc_map && !created_once) {
-        s_alloc_map = reinterpret_cast<MapType*>(std::calloc(1, sizeof(MapType)));
-        auto lam = []() {
-            s_alloc_map->~IntrusiveMap();
+static DebugNewDeleteMap* get_alloc_map() {
+    static bool s_created = false;
+    static DebugNewDeleteMap* s_alloc_map =
+    reinterpret_cast<DebugNewDeleteMap*>(std::calloc(1, sizeof(DebugNewDeleteMap)));
+    if (!s_created) {
+        atexit([]() {
+            s_alloc_map->~IntrusiveMap<void*, Pair<size_t, AllocType>, MAP_SIZE>();
             std::free(s_alloc_map);
             s_alloc_map = nullptr;
-        };
-        atexit(lam);
-        created_once = true;
+        });
+        s_created = true;
     }
-}
+    return s_alloc_map;
+};
 
 void* operator new(ARLib::size_t count) {
     if (count == 0) { ++count; }
     if (void* ptr = std::malloc(count)) {
-        check_and_create_map();
-        s_alloc_map->insert(ptr, {count, AllocType::Single});
+        get_alloc_map()->insert(ptr, {count, AllocType::Single});
         ARLib::printf("global op new called, size = %zu, ptr for memory at %p (Single)\n", count, ptr);
         return ptr;
     }
@@ -34,8 +33,7 @@ void* operator new(ARLib::size_t count) {
 void* operator new[](ARLib::size_t count) {
     if (count == 0) { ++count; }
     if (void* ptr = std::malloc(count)) {
-        check_and_create_map();
-        s_alloc_map->insert(ptr, {count, AllocType::Multiple});
+        get_alloc_map()->insert(ptr, {count, AllocType::Multiple});
         ARLib::printf("global op new[] called, size = %zu, ptr for memory at %p (Multiple)\n", count, ptr);
         return ptr;
     }
@@ -45,8 +43,7 @@ void* operator new[](ARLib::size_t count) {
 }
 void operator delete(void* ptr) {
     if (ptr == nullptr) return;
-    check_and_create_map();
-    auto [size, type] = s_alloc_map->remove(ptr);
+    auto [size, type] = get_alloc_map()->remove(ptr);
     ARLib::printf("global op delete called on memory at %p with size %zu (%s)\n", ptr, size,
                   type == AllocType::Single ? "Single" : "Multiple");
     if (type != AllocType::Single) {
@@ -57,8 +54,7 @@ void operator delete(void* ptr) {
 }
 void operator delete[](void* ptr) {
     if (ptr == nullptr) return;
-    check_and_create_map();
-    auto [size, type] = s_alloc_map->remove(ptr);
+    auto [size, type] = get_alloc_map()->remove(ptr);
     ARLib::printf("global op delete[] called on memory at %p with size %zu (%s)\n", ptr, size,
                   type == AllocType::Single ? "Single" : "Multiple");
     if (type != AllocType::Multiple) {
