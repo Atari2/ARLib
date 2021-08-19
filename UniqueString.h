@@ -5,14 +5,10 @@
 #include "Types.h"
 
 namespace ARLib {
-    namespace detail {
-        static inline LinkedSet<String> s_interned_strings{};
-    } // namespace detail
-
     class UniqueString {
         String* m_ref;
 
-        static String* construct(const String& s) { return &ARLib::detail::s_interned_strings.prepend(s); }
+        static String* construct(const String& s);
 
         public:
         UniqueString(const String& str) : m_ref(construct(str)) {  }

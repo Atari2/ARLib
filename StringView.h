@@ -73,15 +73,7 @@ namespace ARLib {
             return strncmp(m_start, view.m_start, sz) != 0;
         }
 
-        [[nodiscard]] Ordering operator<=>(const StringView& other) const {
-            auto val = strncmp(m_start, other.m_start, other.size());
-            if (val == 0)
-                return equal;
-            else if (val < 0)
-                return less;
-            else
-                return greater;
-        }
+        [[nodiscard]] Ordering operator<=>(const StringView& other) const;
 
         char operator[](size_t index) const noexcept { return m_start[index]; }
         const char& index(size_t index) const noexcept { return m_start[index]; }

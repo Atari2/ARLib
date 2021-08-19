@@ -1,6 +1,7 @@
 #pragma once
 #include "Assertion.h"
 #include "Concepts.h"
+#include "PrintInfo.h"
 #include "StringView.h"
 #include "cmath_compat.h"
 #include "cstdio_compat.h"
@@ -105,6 +106,10 @@ namespace ARLib {
         if constexpr (IsSameV<decltype(value), String>) return value;
         return value.to_string();
     }
+
+    BASIC_PRINT_IMPL(int, IntToStr)
+    BASIC_PRINT_IMPL(double, DoubleToStr)
+    BASIC_PRINT_IMPL(size_t, IntToStr)
 } // namespace ARLib
 
 using ARLib::DoubleToStr;

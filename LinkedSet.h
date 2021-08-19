@@ -1,4 +1,5 @@
 #pragma once
+#include "Assertion.h"
 #include "Concepts.h"
 #include "Utility.h"
 
@@ -81,11 +82,10 @@ namespace ARLib {
 
         public:
         template <typename... Args>
-        LinkedSet(T&& val, Args&&... values)  requires AllOfV<T, Args...> {
+        LinkedSet(T&& val, Args&&... values) requires AllOfV<T, Args...> {
             internal_single_prepend_(Forward<T>(val));
             (internal_single_prepend_(Forward<Args>(values)), ...);
         }
-
 
         LinkedSet() = default;
 

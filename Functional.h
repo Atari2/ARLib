@@ -1,10 +1,11 @@
 #pragma once
+#include "Algorithm.h"
+#include "Assertion.h"
 #include "Concepts.h"
+#include "Invoke.h"
+#include "PrintInfo.h"
 #include "TypeTraits.h"
 #include "Utility.h"
-#include "Algorithm.h"
-#include "Invoke.h"
-#include "Assertion.h"
 
 namespace ARLib {
     namespace fntraits {
@@ -424,5 +425,30 @@ namespace ARLib {
         private:
         using InvokerType = Res (*)(const fntraits::AnyData&, Args&&...);
         InvokerType m_invoker;
+    };
+
+    template <typename Arg, typename... Args>
+    struct PrintInfo<detail::PartialArguments<Arg, Args...>> {
+        const detail::PartialArguments<Arg, Args...>& m_partial;
+        PrintInfo(const detail::PartialArguments<Arg, Args...>& partial) : m_partial(partial) {}
+        String repr() {
+            if constexpr (sizeof...(Args) == 0) {
+                return String{typeid(Arg).name()};
+            } else {
+                using Inner = detail::PartialArguments<Args...>;
+                return String{typeid(Arg).name()} + ", "_s +
+                       PrintInfo<Inner>{static_cast<const Inner&>(m_partial)}.repr();
+            }
+        }
+    };
+
+    template <typename Func, typename... Args>
+    struct PrintInfo<PartialFunction<Func, Args...>> {
+        const PartialFunction<Func, Args...>& m_func;
+        PrintInfo(const PartialFunction<Func, Args...>& func) : m_func(func) {}
+        String repr() {
+            return "PartialFunction "_s + String{typeid(Func).name()} + " with partial arguments: ("_s +
+                   PrintInfo<detail::PartialArguments<Args...>>{m_func.partial_args()}.repr() + ")"_s;
+        }
     };
 } // namespace ARLib

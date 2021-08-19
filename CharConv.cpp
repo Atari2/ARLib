@@ -1,4 +1,5 @@
 #include "CharConv.h"
+#include "Vector.h"
 
 namespace ARLib {
     // FIXME: avoid pow/round calls in Str{View}To{I64/int}

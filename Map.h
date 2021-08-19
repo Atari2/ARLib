@@ -2,6 +2,7 @@
 #include "Concepts.h"
 #include "HashTable.h"
 #include "Vector.h"
+#include "PrintInfo.h"
 
 namespace ARLib {
     template <EqualityComparable Key, typename Val>
@@ -101,6 +102,24 @@ namespace ARLib {
         ConstIterator<Entry> end() const { return m_storage.cend(); }
 
         ConstIterator<Entry> cend() { return m_storage.cend(); }
+    };
+
+    template <Printable A, Printable B>
+    struct PrintInfo<Map<A, B>> {
+        const Map<A, B>& m_map;
+        PrintInfo(const Map<A, B>& map) : m_map(map) {}
+        String repr() const {
+            if (m_map.size() == 0) { return "{}"_s; }
+            String con{};
+            con.concat("{ ");
+            for (const auto& [key, val] : m_map) {
+                con.concat(PrintInfo<A>{key}.repr());
+                con.concat(": "_s);
+                con.concat(PrintInfo<B>{val}.repr());
+                con.concat(", ");
+            }
+            return con.substring(0, con.size() - 2) + " }"_s;
+        }
     };
 
 } // namespace ARLib

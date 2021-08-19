@@ -3,6 +3,7 @@
 #include "Concepts.h"
 #include "HashBase.h"
 #include "HashTable.h"
+#include "PrintInfo.h"
 
 namespace ARLib {
 
@@ -116,6 +117,24 @@ namespace ARLib {
 
         size_t size() const { return m_table.size(); }
         size_t bucket_count() const { return m_table.bucket_count(); }
+    };
+
+    template <Printable A, Printable B>
+    struct PrintInfo<HashMap<A, B>> {
+        const HashMap<A, B>& m_map;
+        PrintInfo(const HashMap<A, B>& map) : m_map(map) {}
+        String repr() const {
+            if (m_map.size() == 0) { return "{}"_s; }
+            String con{};
+            con.concat("{ ");
+            for (const auto& entry : m_map) {
+                con.concat(PrintInfo<A>{entry.key()}.repr());
+                con.concat(": "_s);
+                con.concat(PrintInfo<B>{entry.value()}.repr());
+                con.concat(", ");
+            }
+            return con.substring(0, con.size() - 2) + " }"_s;
+        }
     };
 
 } // namespace ARLib

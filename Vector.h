@@ -4,6 +4,7 @@
 #include "Concepts.h"
 #include "Iterator.h"
 #include "Memory.h"
+#include "PrintInfo.h"
 #include "cstring_compat.h"
 #include "std_includes.h"
 
@@ -318,7 +319,32 @@ namespace ARLib {
 
         void clear() { clear_(); }
 
-        ~Vector() { clear_(); }
+        ~Vector() { clear(); }
+    };
+
+    template <Printable T>
+    struct PrintInfo<Vector<T>> {
+        const Vector<T>& m_vec;
+        PrintInfo(const Vector<T>& vec) : m_vec(vec) {}
+        String repr() {
+            if (m_vec.size() == 0) { return "[]"_s; }
+            String con{};
+            if constexpr (IsSameV<T, String>) {
+                for (const auto& s : m_vec) {
+                    con.concat("[\"");
+                    con.concat(PrintInfo<T>{s}.repr());
+                    con.concat("\"], ");
+                }
+            } else {
+                for (const auto& s : m_vec) {
+                    con.append('[');
+                    con.concat(PrintInfo<T>{s}.repr());
+                    con.concat("], ");
+                }
+            }
+
+            return con.substring(0, con.size() - 2);
+        }
     };
 
 } // namespace ARLib

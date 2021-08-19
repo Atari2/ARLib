@@ -4,7 +4,8 @@
 #include "Types.h"
 
 namespace ARLib {
-    template <EqualityComparable Key, typename Val, size_t SIZE> requires Trivial<Key> && Trivial<Val>
+    template <EqualityComparable Key, typename Val, size_t SIZE>
+    requires Trivial<Key> && Trivial<Val>
     class IntrusiveMap {
         Key m_keys[SIZE]{};
         Val m_vals[SIZE]{};
@@ -56,6 +57,15 @@ namespace ARLib {
                 return m_vals[index];
             }
             return Val{};
+        }
+        ~IntrusiveMap() {
+            for (size_t i = 0; i < SIZE; i++) {
+                auto [size, type] = m_vals[i];
+                if (m_tombs[i]) {
+                    printf("Pointer still not free at %p with size %zu and type %s\n", m_keys[i], size,
+                           static_cast<int>(type) == 0 ? "Single" : "Multiple");
+                }
+            }
         }
     };
 } // namespace ARLib

@@ -14,7 +14,7 @@ namespace ARLib {
 #define GCC_COMPAT_COLUMN 0u
 #endif
 #endif
-        [[nodiscard]] static consteval SourceLocation
+        [[nodiscard]] static constexpr SourceLocation
         current(const uint32_t line = __builtin_LINE(), const uint32_t column = GCC_COMPAT_COLUMN,
                 const char* const file = __builtin_FILE(), const char* const function = __builtin_FUNCTION()) noexcept {
             SourceLocation res;
@@ -38,6 +38,7 @@ namespace ARLib {
         const char* file_ = "";
         const char* function_ = "";
     };
+
 } // namespace ARLib
 
 #define PRINT_SOURCE_LOCATION                                                                                          \

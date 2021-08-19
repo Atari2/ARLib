@@ -1,5 +1,4 @@
 #pragma once
-#include "Algorithm.h"
 #include "HashBase.h"
 #include "Memory.h"
 #include "Utility.h"

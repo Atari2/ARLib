@@ -1,6 +1,9 @@
 #pragma once
 #include "PrintInfo.h"
+#include "StringView.h"
+#include "Vector.h"
 #include "cstdio_compat.h"
+
 namespace ARLib {
     // anything that wants to be printed from this function has to specialize PrintInfo
 
@@ -16,12 +19,12 @@ namespace ARLib {
             if constexpr (sizeof...(args) == 0) {
                 builder.concat(format_string.substringview(indexes.last() + 2));
             } else {
-                builder.concat(format_string.substringview(indexes[current_index] + 2, indexes[current_index + 1]));
+                builder.concat(
+                format_string.substringview(indexes.index(current_index) + 2, indexes.index(current_index + 1)));
                 current_index++;
                 print_impl(args...);
             }
         }
-        void print_puts() { puts(builder.data()); }
 
         template <size_t N, typename... Args>
         Printer(const char (&format)[N], const Args&... args) : format_string{format} {
@@ -37,9 +40,11 @@ namespace ARLib {
             "Format arguments are not the same number as formats to fill, arguments are %d, to fill there are %d",
             num_args, indexes.size())
             builder.reserve(N);
-            builder.concat(format_string.substringview(0, indexes[current_index]));
+            builder.concat(format_string.substringview(0, indexes.index(current_index)));
             print_impl(args...);
         }
+
+        void print_puts() { puts(builder.data()); }
 
         public:
         template <size_t N, typename... Args>
