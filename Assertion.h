@@ -49,14 +49,14 @@ namespace ARLib {
 
 #define HARD_ASSERT(val, msg)                                                                                          \
     if (!(val)) {                                                                                                      \
-        ARLib::puts(msg);                                                                                              \
+        ARLib::puts("ASSERTION FAILED: " msg);                                                                         \
         PRINT_SOURCE_LOCATION                                                                                          \
         assertion_failed__();                                                                                          \
         unreachable                                                                                                    \
     }
 #define HARD_ASSERT_FMT(val, fmt, ...)                                                                                 \
     if (!(val)) {                                                                                                      \
-        ARLib::printf(fmt "\n", __VA_ARGS__);                                                                          \
+        ARLib::printf("ASSERTION FAILED: " fmt "\n", __VA_ARGS__);                                                     \
         PRINT_SOURCE_LOCATION                                                                                          \
         assertion_failed__();                                                                                          \
         unreachable                                                                                                    \
@@ -64,12 +64,12 @@ namespace ARLib {
 
 #define SOFT_ASSERT(val, msg)                                                                                          \
     if (!(val)) {                                                                                                      \
-        ARLib::puts(msg);                                                                                              \
+        ARLib::puts("ASSERTION FAILED: " msg);                                                                         \
         PRINT_SOURCE_LOCATION                                                                                          \
     }
 #define SOFT_ASSERT_FMT(val, fmt, ...)                                                                                 \
     if (!(val)) {                                                                                                      \
-        ARLib::printf(fmt "\n", __VA_ARGS__);                                                                          \
+        ARLib::printf("ASSERTION FAILED: " fmt "\n", __VA_ARGS__);                                                     \
         PRINT_SOURCE_LOCATION                                                                                          \
     }
 
