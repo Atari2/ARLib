@@ -147,13 +147,13 @@ namespace ARLib {
         T& operator[](size_t index) { return m_storage[index]; }
         const T& operator[](size_t index) const { return m_storage[index]; }
 
-        Iterator<T> begin() { return {m_storage}; }
+        Iterator<T> begin() { return Iterator<T>{m_storage}; }
 
-        ConstIterator<T> begin() const { return {m_storage}; }
+        ConstIterator<T> begin() const { return ConstIterator<T>{m_storage}; }
 
-        Iterator<T> end() { return {m_storage + m_size}; }
+        Iterator<T> end() { return Iterator<T>{m_storage + m_size}; }
 
-        ConstIterator<T> end() const { return {m_storage + m_size}; }
+        ConstIterator<T> end() const { return ConstIterator<T>{m_storage + m_size}; }
 
         bool is_in_situ() { return m_capacity == SSO && m_storage == addressof(m_situ_storage[0]); }
 
@@ -162,7 +162,7 @@ namespace ARLib {
         const T* storage() const { return m_storage; }
         T* release() {
             HARD_ASSERT(m_capacity != SSO, "Don't release in-situ memory")
-            T* released = nullptr;
+            T* released;
             if (m_capacity == SSO) {
                 released = new T[SSO];
                 ConditionalBitCopy(released, m_storage, m_size);
@@ -188,7 +188,7 @@ namespace ARLib {
         }
         void push_back(const T& item) {
             T mv{item};
-            append_internal(Forward<T>(item));
+            append_internal(Forward<T>(mv));
         }
         void push_back(T&& item) { append_internal(Forward<T>(item)); }
         void append(T&& item) { append_internal(Forward<T>(item)); }

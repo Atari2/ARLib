@@ -94,7 +94,7 @@ namespace ARLib {
 
         public:
         using Type = T;
-        CircularListIteratorBase(const Entry* current) : m_current(current), m_begin(current) {}
+        explicit CircularListIteratorBase(const Entry* current) : m_current(current), m_begin(current) {}
         CircularListIteratorBase(const Entry* current, bool end) : m_current(current), m_begin(current), at_end(end) {}
 
         const Entry* current() const { return m_current; }
@@ -131,7 +131,7 @@ namespace ARLib {
         }
 
         public:
-        CircularListIterator(const Entry* current) : CircularListIteratorBase<T>(current) {}
+        explicit CircularListIterator(const Entry* current) : CircularListIteratorBase<T>(current) {}
         CircularListIterator(const Entry* current, bool end) : CircularListIteratorBase<T>(current, end) {}
 
         CircularListIterator<T>& operator=(const CircularListIterator<T>& other) { m_current = other.m_current; return *this; }
@@ -174,20 +174,20 @@ namespace ARLib {
     template <typename T>
     class ReverseCircularListIterator final : public CircularListIteratorBase<T> {
         using Entry = CircularListEntry<T>;
-        virtual void internal_advance_() override {
+        void internal_advance_() override {
             if (at_end) return;
             m_current = m_current->prev();
             if (m_current == m_begin) { at_end = true; }
         }
 
-        virtual void internal_revert_() override {
+        void internal_revert_() override {
             if (at_end) return;
             m_current = m_current->next();
             if (m_current == m_begin) { at_end = true; }
         }
 
         public:
-        ReverseCircularListIterator(const Entry* current) : CircularListIteratorBase<T>(current) {}
+        explicit ReverseCircularListIterator(const Entry* current) : CircularListIteratorBase<T>(current) {}
         ReverseCircularListIterator(const Entry* current, bool end) : CircularListIteratorBase<T>(current, end) {}
 
         ReverseCircularListIterator<T>& operator=(const ReverseCircularListIterator<T>& other) {
@@ -248,7 +248,7 @@ namespace ARLib {
 
         void internal_single_append_(T&& value) {
             if (m_size == 0) {
-                Entry* val = new Entry(Forward<T>(value), nullptr, nullptr);
+                auto* val = new Entry(Forward<T>(value), nullptr, nullptr);
                 val->swap_both(val, val);
                 m_first = val;
                 m_last = val;
@@ -271,7 +271,7 @@ namespace ARLib {
 
         public:
         template <typename... Args>
-        CircularDoublyLinkedList(Args&&... values) {
+        explicit CircularDoublyLinkedList(Args&&... values) {
             internal_append_(Forward<Args>(values)...);
         }
 
@@ -296,7 +296,7 @@ namespace ARLib {
 
         void prepend(T&& value) {
             if (m_size == 0) {
-                Entry* val = new Entry(value, nullptr, nullptr);
+                auto* val = new Entry(value, nullptr, nullptr);
                 val->swap_both(val, val);
                 m_first = val;
                 m_last = val;

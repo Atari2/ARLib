@@ -31,7 +31,7 @@ namespace ARLib {
         OpenFileMode m_mode;
 
         public:
-        File(String filename) : m_filename(move(filename)), m_mode(OpenFileMode::None) {}
+        explicit File(String filename) : m_filename(move(filename)), m_mode(OpenFileMode::None) {}
 
         Optional<OpenFileError> open(OpenFileMode mode) {
             m_mode = mode;

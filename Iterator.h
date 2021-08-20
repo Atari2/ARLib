@@ -27,7 +27,7 @@ namespace ARLib {
     class IteratorBase : public IteratorOperators<IteratorBase<T>> {
         protected:
         T* m_current;
-        IteratorBase(T* ptr) : m_current(ptr) {}
+        explicit IteratorBase(T* ptr) : m_current(ptr) {}
 
         IteratorBase(const IteratorBase<T>& other) : m_current(other.m_current) {}
 
@@ -42,13 +42,13 @@ namespace ARLib {
         virtual ~IteratorBase() = default;
     };
 
-    // for some god forsaken reason
+    // for some godforsaken reason
 #define m_current IteratorBase<T>::m_current
 
     template <typename T>
     class Iterator final : public IteratorBase<T> {
         public:
-        Iterator(T* start) : IteratorBase<T>(start) {}
+        explicit Iterator(T* start) : IteratorBase<T>(start) {}
 
         Iterator(const Iterator<T>& other) : IteratorBase<T>(other) {}
 
@@ -61,7 +61,7 @@ namespace ARLib {
             return *this;
         }
 
-        Iterator& operator=(Iterator<T>&& other) {
+        Iterator& operator=(Iterator<T>&& other)  noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
             return *this;
@@ -72,28 +72,28 @@ namespace ARLib {
             return *this;
         }
 
-        Iterator<T> operator++(int) { return {m_current++}; }
+        Iterator<T> operator++(int) { return Iterator<T>{m_current++}; }
 
         Iterator<T>& operator+=(int offset) {
             m_current += offset;
             return *this;
         }
 
-        Iterator<T> operator+(int offset) { return {m_current + offset}; }
+        Iterator<T> operator+(int offset) { return Iterator<T>{m_current + offset}; }
 
         Iterator<T>& operator--() {
             m_current--;
             return *this;
         }
 
-        Iterator<T> operator--(int) { return {m_current--}; }
+        Iterator<T> operator--(int) { return Iterator<T>{m_current--}; }
 
         Iterator<T>& operator-=(int offset) {
             m_current -= offset;
             return *this;
         }
 
-        Iterator<T> operator-(int offset) { return {m_current - offset}; }
+        Iterator<T> operator-(int offset) { return Iterator<T>{m_current - offset}; }
         size_t operator-(const Iterator<T>& other) { return static_cast<size_t>(m_current - other.m_current); }
     };
 
@@ -102,7 +102,7 @@ namespace ARLib {
         using T = typename AddConst<Ct>::type;
 
         public:
-        ConstIterator(T* start) : IteratorBase<T>(start) {}
+        explicit ConstIterator(T* start) : IteratorBase<T>(start) {}
 
         ConstIterator(const ConstIterator<Ct>& other) : IteratorBase<T>(other) {}
 
@@ -110,7 +110,7 @@ namespace ARLib {
 
         ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) { m_current = other.m_current; }
 
-        ConstIterator<Ct>& operator=(ConstIterator<Ct>&& other) {
+        ConstIterator<Ct>& operator=(ConstIterator<Ct>&& other)  noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
         }
@@ -149,7 +149,7 @@ namespace ARLib {
     template <typename T>
     class ReverseIterator final : public IteratorBase<T> {
         public:
-        ReverseIterator(T* end) : IteratorBase<T>(end) {}
+        explicit ReverseIterator(T* end) : IteratorBase<T>(end) {}
 
         ReverseIterator(const ReverseIterator<T>& other) : IteratorBase<T>(other.m_current) {}
 
@@ -198,7 +198,7 @@ namespace ARLib {
         using T = typename AddConst<Ct>::type;
 
         public:
-        ConstReverseIterator(T* end) : IteratorBase<T>(end) {}
+        explicit ConstReverseIterator(T* end) : IteratorBase<T>(end) {}
 
         ConstReverseIterator(const ConstReverseIterator<Ct>& other) : IteratorBase<T>(other.m_current) {}
 
@@ -281,7 +281,7 @@ namespace ARLib {
         using Unit = Pair<size_t, T&>;
 
         public:
-        Enumerator(T* begin) : m_iter(begin), m_index(0) {}
+        explicit Enumerator(T* begin) : m_iter(begin), m_index(0) {}
         Enumerator(T* begin, size_t index) : m_iter(begin), m_index(index) {}
         Enumerator(Iterator<T> iter, size_t index) : m_iter(iter), m_index(index) {}
         Unit operator*() { return {m_index, *m_iter}; }
@@ -309,7 +309,7 @@ namespace ARLib {
 
         public:
         PairIterator(F first, S second) : m_current_pair(first, second) {}
-        PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
+        explicit PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
         Pair<FT, ST> operator*() { return {*m_current_pair.template get<0>(), *m_current_pair.template get<1>()}; }
         PairIterator& operator++() {
             m_current_pair.template get<0>()++;

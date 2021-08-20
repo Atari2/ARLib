@@ -38,11 +38,11 @@ namespace ARLib {
             return _m_storage_[index];
         }
 
-        Iterator<T> begin() { return {PointerTraits<T*>::pointer_to(*_m_storage_)}; }
-        Iterator<T> end() { return {PointerTraits<T*>::pointer_to(*_m_storage_) + S}; }
+        Iterator<T> begin() { return Iterator<T>{PointerTraits<T*>::pointer_to(*_m_storage_)}; }
+        Iterator<T> end() { return Iterator<T>{PointerTraits<T*>::pointer_to(*_m_storage_) + S}; }
 
-        ConstIterator<T> begin() const { return {PointerTraits<const T*>::pointer_to(*_m_storage_)}; }
-        ConstIterator<T> end() const { return {PointerTraits<const T*>::pointer_to(*_m_storage_) + S}; }
+        ConstIterator<T> begin() const { return ConstIterator<T>{PointerTraits<const T*>::pointer_to(*_m_storage_)}; }
+        ConstIterator<T> end() const { return ConstIterator<T>{PointerTraits<const T*>::pointer_to(*_m_storage_) + S}; }
     };
 } // namespace ARLib
 

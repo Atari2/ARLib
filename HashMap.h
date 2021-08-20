@@ -122,7 +122,7 @@ namespace ARLib {
     template <Printable A, Printable B>
     struct PrintInfo<HashMap<A, B>> {
         const HashMap<A, B>& m_map;
-        PrintInfo(const HashMap<A, B>& map) : m_map(map) {}
+        explicit PrintInfo(const HashMap<A, B>& map) : m_map(map) {}
         String repr() const {
             if (m_map.size() == 0) { return "{}"_s; }
             String con{};

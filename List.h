@@ -47,11 +47,16 @@ namespace ARLib {
             }
 
             public:
-            LinkedListIterator(ListEntry* current) : m_current(current) {}
-            LinkedListIterator& operator=(const LinkedListIterator& other) { m_current = other.m_current; }
+            explicit LinkedListIterator(ListEntry* current) : m_current(current) {}
+            LinkedListIterator& operator=(const LinkedListIterator& other) {
+                if (this == &other) return *this;
+                m_current = other.m_current;
+                return *this;
+            }
             LinkedListIterator& operator=(LinkedListIterator&& other) noexcept {
                 m_current = other.m_current;
                 other.m_current = nullptr;
+                return *this;
             }
 
             const ListEntry* current() const { return m_current; }
@@ -83,7 +88,7 @@ namespace ARLib {
         public:
         using Entry = ListEntry;
         template <typename... Args>
-        LinkedList(T&& val, Args&&... values) requires AllOfV<T, Args...> {
+        explicit LinkedList(T&& val, Args&&... values) requires AllOfV<T, Args...> {
             internal_single_prepend_(Forward<T>(val));
             (internal_single_prepend_(Forward<Args>(values)), ...);
         }
@@ -207,8 +212,8 @@ namespace ARLib {
                 pop_head();
         }
 
-        LinkedListIterator begin() const { return {m_head}; }
-        LinkedListIterator end() const { return {nullptr}; }
+        LinkedListIterator begin() const { return LinkedListIterator{m_head}; }
+        LinkedListIterator end() const { return LinkedListIterator{nullptr}; }
 
         size_t size() const { return m_size; }
 
@@ -230,11 +235,11 @@ namespace ARLib {
         }
 
         LinkedListIterator find(const T& value) const requires EqualityComparable<T> {
-            if (m_size == 0) return {nullptr};
+            if (m_size == 0) return LinkedListIterator{nullptr};
             for (LinkedListIterator beg = begin(); beg != end(); ++beg) {
-                if (*beg == value) return {beg.m_current};
+                if (*beg == value) return LinkedListIterator{beg.m_current};
             }
-            return {nullptr};
+            return LinkedListIterator{nullptr};
         }
 
         ~LinkedList() { clear(); }

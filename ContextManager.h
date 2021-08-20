@@ -16,7 +16,7 @@ namespace ARLib {
         ManageWhen m_when;
 
         public:
-        ContextManager(Functor func, ManageWhen when = ManageWhen::AtExit,
+        explicit ContextManager(Functor func, ManageWhen when = ManageWhen::AtExit,
                        TestFunc testfunc = detail::DefaultValueRet) :
             m_func(func), m_when(when), m_testfunc(testfunc) {
             if (!!(m_when & ManageWhen::AtEnter)) {

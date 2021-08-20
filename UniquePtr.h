@@ -20,14 +20,14 @@ namespace ARLib {
             return *this;
         }
 
-        UniquePtr(T* ptr) : m_storage(ptr) {}
-        UniquePtr(T&& storage) : m_storage(new T{move(storage)}) {}
+        explicit UniquePtr(T* ptr) : m_storage(ptr) {}
+        explicit UniquePtr(T&& storage) : m_storage(new T{move(storage)}) {}
         UniquePtr(UniquePtr&& ptr)  noexcept {
             m_storage = ptr.m_storage;
             ptr.m_storage = nullptr;
         }
         template <typename... Args>
-        UniquePtr(EmplaceT<T>, Args&&... args) {
+        explicit UniquePtr(EmplaceT<T>, Args&&... args) {
             m_storage = new T{Forward<Args>(args)...};
         }
 
@@ -82,10 +82,10 @@ namespace ARLib {
             return *this;
         }
 
-        UniquePtr(size_t size) : m_storage(new T[size]), m_size(size) {}
+        explicit UniquePtr(size_t size) : m_storage(new T[size]), m_size(size) {}
 
         template <size_t N>
-        UniquePtr(T (&src)[N]) : m_storage(new T[N]), m_size(N) {
+        explicit UniquePtr(T (&src)[N]) : m_storage(new T[N]), m_size(N) {
             ConditionalBitCopy(m_storage, src, N);
         }
 

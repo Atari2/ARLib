@@ -120,8 +120,8 @@ namespace ARLib {
         return __builtin_memcpy(dst0, src0, num);
 #else
         if (is_constant_evaluated()) {
-            uint8_t* dst = static_cast<uint8_t*>(dst0);
-            const uint8_t* src = static_cast<const uint8_t*>(src0);
+            auto* dst = static_cast<uint8_t*>(dst0);
+            const auto* src = static_cast<const uint8_t*>(src0);
             for (size_t i = 0; i < num; i++)
                 dst[i] = src[i];
             return dst;
@@ -129,8 +129,8 @@ namespace ARLib {
             [[unlikely]] if (num >= 64 && cpuinfo.avx2()) { // check avx2 support
                 return memcpy_vectorized(dst0, src0, num);
             }
-            uint8_t* dst = static_cast<uint8_t*>(dst0);
-            const uint8_t* src = static_cast<const uint8_t*>(src0);
+            auto* dst = static_cast<uint8_t*>(dst0);
+            const auto* src = static_cast<const uint8_t*>(src0);
             while (num--) {
                 *dst++ = *src++;
             }
@@ -140,11 +140,11 @@ namespace ARLib {
     }
     void* memset(void* ptr, uint8_t value, size_t size);
     constexpr char toupper(char c) {
-        if (c >= 96 && c <= 122) return c - 32;
+        if (c >= 96_c && c <= 122_c) return c - 32_c;
         return c;
     }
     constexpr char tolower(char c) {
-        if (c >= 65 && c <= 90) return c + 32;
+        if (c >= 65_c && c <= 90_c) return c + 32_c;
         return c;
     }
 } // namespace ARLib

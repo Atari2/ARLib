@@ -22,7 +22,7 @@ namespace ARLib {
 
         public:
         static constexpr size_t npos = static_cast<size_t>(-1);
-        HashTableIterator(Vector<Vector<T>>& backing_store) :
+        explicit HashTableIterator(Vector<Vector<T>>& backing_store) :
             m_backing_store(backing_store), m_bkt_size(backing_store.size()) {
             while (m_backing_store[m_current_bucket].empty()) {
                 m_current_bucket++;
@@ -114,7 +114,7 @@ namespace ARLib {
 
         public:
         static constexpr size_t npos = static_cast<size_t>(-1);
-        ConstHashTableIterator(const Vector<Vector<T>>& backing_store) :
+        explicit ConstHashTableIterator(const Vector<Vector<T>>& backing_store) :
             m_backing_store(backing_store), m_bkt_size(backing_store.size()) {
             while (m_backing_store[m_current_bucket].empty()) {
                 m_current_bucket++;
@@ -249,7 +249,7 @@ namespace ARLib {
             m_bucket_count(other.m_bucket_count),
             m_size(other.m_size),
             hasher(move(other.hasher)) {}
-        HashTable(size_t initial_bucket_count) : m_size(initial_bucket_count) {
+        explicit HashTable(size_t initial_bucket_count) : m_size(initial_bucket_count) {
             m_storage.resize(initial_bucket_count);
         }
         HashTable& operator=(const HashTable& other) {

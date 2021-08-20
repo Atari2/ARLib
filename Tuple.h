@@ -23,11 +23,11 @@ namespace ARLib {
         public:
         Tuple() = default;
         Tuple(const Tuple&) = default;
-        Tuple(Tuple&&) = default;
+        Tuple(Tuple&&)  noexcept = default;
 
-        Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(move(arg)) {}
+        explicit Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(move(arg)) {}
         Tuple& operator=(const Tuple&) = default;
-        Tuple& operator=(Tuple&&) = default;
+        Tuple& operator=(Tuple&&)  noexcept = default;
 
         bool operator==(const Tuple& other) const { return equality_impl<sizeof...(Args) - 1>(other); }
 
@@ -98,7 +98,7 @@ namespace ARLib {
 
         public:
         Tuple() = default;
-        Tuple(T arg) : m_member(move(arg)) {}
+        explicit Tuple(T arg) : m_member(move(arg)) {}
 
         bool operator==(const Tuple& other) const { return m_member == other.m_member; }
 

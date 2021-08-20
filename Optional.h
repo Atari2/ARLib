@@ -29,6 +29,7 @@ namespace ARLib {
         }
 
         Optional& operator=(const Optional<T>& other) {
+            if (this == &other) return *this;
             if (other.m_exists) *m_object = *other.m_object;
             m_exists = other.m_exists;
             return *this;
@@ -60,11 +61,7 @@ namespace ARLib {
         }
 
         bool operator!() { return !m_exists; }
-        operator bool() { return m_exists; }
-        operator T() {
-            assert_not_null_();
-            return *m_object;
-        }
+        explicit operator bool() { return m_exists; }
 
         bool empty() const { return !m_exists; }
         bool has_value() const { return m_exists; };

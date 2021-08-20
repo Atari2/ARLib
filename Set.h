@@ -55,10 +55,10 @@ namespace ARLib {
 
         public:
         Set() = default;
-        Set(size_t capacity) : m_capacity(capacity), m_storage(new T[capacity]) {}
+        explicit Set(size_t capacity) : m_capacity(capacity), m_storage(new T[capacity]) {}
 
         template <typename... Args>
-        Set(T&& val, Args&&... args) requires AllOfV<T, Args...> {
+        explicit Set(T&& val, Args&&... args) requires AllOfV<T, Args...> {
             grow_internal_(sizeof...(args) + 1);
             append_internal_(Forward<T>(val));
             (append_internal_(Forward<Args>(args)), ...);
@@ -84,21 +84,21 @@ namespace ARLib {
             return true;
         }
 
-        Iter begin() const { return {m_storage}; }
+        Iter begin() const { return Iter{m_storage}; }
 
-        Iter end() const { return {m_storage + m_size}; }
+        Iter end() const { return Iter{m_storage + m_size}; }
 
-        ConstIter cbegin() const { return {m_storage}; }
+        ConstIter cbegin() const { return ConstIter{m_storage}; }
 
-        ConstIter cend() const { return {m_storage + m_size}; }
+        ConstIter cend() const { return ConstIter{m_storage + m_size}; }
 
-        ReverseIter rbegin() const { return {m_storage + m_size - 1}; }
+        ReverseIter rbegin() const { return ReverseIter{m_storage + m_size - 1}; }
 
-        ReverseIter rend() const { return {m_storage - 1}; }
+        ReverseIter rend() const { return ReverseIter{m_storage - 1}; }
 
-        ConstReverseIter crbegin() const { return {m_storage + m_size - 1}; }
+        ConstReverseIter crbegin() const { return ConstReverseIter{m_storage + m_size - 1}; }
 
-        ConstReverseIter crend() const { return {m_storage - 1}; }
+        ConstReverseIter crend() const { return ConstReverseIter{m_storage - 1}; }
 
         bool remove(size_t index) {
             if (index >= m_size) return false;
@@ -119,7 +119,7 @@ namespace ARLib {
 
         Iter find(const T& elem) const {
             for (size_t i = 0; i < m_size; i++) {
-                if (m_storage[i] == elem) return {m_storage + i};
+                if (m_storage[i] == elem) return Iter{m_storage + i};
             }
             return end();
         }

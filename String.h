@@ -75,7 +75,7 @@ namespace ARLib {
         constexpr String() = default;
 
         template <size_t N>
-        constexpr String(const char (&src)[N]) : m_size(N - 1) {
+        explicit constexpr String(const char (&src)[N]) : m_size(N - 1) {
             grow_if_needed(N);
             strncpy(m_data_buf, src, N);
         }
@@ -100,7 +100,7 @@ namespace ARLib {
             m_data_buf[m_size] = '\0';
         }
         template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
-        constexpr String(T other) : m_size(strlen(other)) {
+        explicit constexpr String(T other) : m_size(strlen(other)) {
             grow_if_needed(m_size);
             strncpy(m_data_buf, other, m_size);
             m_data_buf[m_size] = '\0';
@@ -123,7 +123,7 @@ namespace ARLib {
             other.m_size = 0;
         }
 
-        String(StringView other);
+        explicit String(StringView other);
 
         String& operator=(const String& other) {
             if (this != &other) {
@@ -154,7 +154,7 @@ namespace ARLib {
         template <typename... Args>
         static String formatted(const char* format, Args... args) {
             String str{};
-            size_t len = static_cast<size_t>(scprintf(format, args...));
+            auto len = static_cast<size_t>(scprintf(format, args...));
             str.reserve(len);
             str.set_size(static_cast<size_t>(sprintf(str.rawptr(), format, args...)));
             return str;
@@ -294,11 +294,11 @@ namespace ARLib {
         }
 
         // iterator support
-        [[nodiscard]] Iterator<char> begin() { return {get_buf_internal()}; }
-        [[nodiscard]] ConstIterator<char> begin() const { return {get_buf_internal()}; }
+        [[nodiscard]] Iterator<char> begin() { return Iterator<char>{get_buf_internal()}; }
+        [[nodiscard]] ConstIterator<char> begin() const { return ConstIterator<char>{get_buf_internal()}; }
         [[nodiscard]] Iterator<char> rbegin() { return end() - 1; }
-        [[nodiscard]] Iterator<char> end() { return {get_buf_internal() + m_size}; }
-        [[nodiscard]] ConstIterator<char> end() const { return {get_buf_internal() + m_size}; }
+        [[nodiscard]] Iterator<char> end() { return Iterator<char>{get_buf_internal() + m_size}; }
+        [[nodiscard]] ConstIterator<char> end() const { return ConstIterator<char>{get_buf_internal() + m_size}; }
         [[nodiscard]] Iterator<char> rend() { return begin() - 1; }
         [[nodiscard]] char front() const { return get_buf_internal()[0]; }
         [[nodiscard]] char back() const { return get_buf_internal()[m_size - 1]; }
@@ -545,7 +545,7 @@ namespace ARLib {
             return hash_array_representation(key.data(), key.size());
         }
     };
-}; // namespace ARLib
+} // namespace ARLib
 
 using ARLib::String;
 using ARLib::operator""_s;

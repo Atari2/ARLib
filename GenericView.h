@@ -17,7 +17,7 @@ namespace ARLib {
 
         // this constructor works only if the container operates on contiguous memory (e.g. not a linked list)
         // actually this whole class only operates on contiguous memory
-        GenericView(const Iterable auto& container) {
+        explicit GenericView(const Iterable auto& container) {
             m_begin_view = &(*container.begin());
             m_end_view = &(*container.end()) - 1;
         }
@@ -74,7 +74,7 @@ namespace ARLib {
         IteratorView(ItemType* storage, Iter begin, Iter end) : m_begin(begin), m_end(end), m_stolen_storage(storage) {}
         IteratorView(ItemType* storage, size_t size) :
             m_begin(storage), m_end(storage + size), m_stolen_storage(storage) {}
-        IteratorView(const Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
+        explicit IteratorView(const Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
         Iter begin() { return m_begin; }
         Iter end() { return m_end; }
         size_t size() requires IterCanSubtractForSize<Iter> {

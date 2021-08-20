@@ -26,16 +26,16 @@ namespace ARLib {
         constexpr StringView(T buf, size_t size) : m_start_mut(buf), m_start(buf), m_end(buf + size) {}
 
         template <size_t N>
-        consteval StringView(const char (&buf)[N]) : m_start(buf), m_end(buf + N - 1) {}
+        consteval explicit StringView(const char (&buf)[N]) : m_start(buf), m_end(buf + N - 1) {}
 
         template <typename T>
-        requires IsSameV<T, const char*> StringView(T buf) : m_start(buf) { m_end = buf + strlen(buf); }
+        requires IsSameV<T, const char*> explicit StringView(T buf) : m_start(buf) { m_end = buf + strlen(buf); }
 
         template <typename T>
-        requires IsSameV<T, char*> StringView(T buf) : m_start_mut(buf), m_start(buf) { m_end = buf + strlen(buf); }
+        requires IsSameV<T, char*> explicit StringView(T buf) : m_start_mut(buf), m_start(buf) { m_end = buf + strlen(buf); }
 
-        StringView(const String& ref) : m_start(ref.data()) { m_end = m_start + ref.length(); }
-        StringView(String& ref) : m_start_mut(ref.rawptr()), m_start(ref.data()) { m_end = m_start + ref.length(); }
+        explicit StringView(const String& ref) : m_start(ref.data()) { m_end = m_start + ref.length(); }
+        explicit StringView(String& ref) : m_start_mut(ref.rawptr()), m_start(ref.data()) { m_end = m_start + ref.length(); }
         StringView(const StringView& view) = default;
         StringView(StringView&& view) noexcept {
             m_start_mut = view.m_start_mut;
@@ -78,7 +78,7 @@ namespace ARLib {
         char operator[](size_t index) const noexcept { return m_start[index]; }
         const char& index(size_t index) const noexcept { return m_start[index]; }
         char& index(size_t index) noexcept {
-            HARD_ASSERT(m_start_mut, "This stringview is not mutable");
+            HARD_ASSERT(m_start_mut, "This stringview is not mutable")
             return m_start_mut[index];
         }
 
@@ -94,11 +94,11 @@ namespace ARLib {
         [[nodiscard]] size_t length() const { return static_cast<size_t>(m_end - m_start); }
         [[nodiscard]] const char* data() const { return m_start; }
         [[nodiscard]] char* rawptr() {
-            HARD_ASSERT(m_start_mut, "This stringview is not mutable");
+            HARD_ASSERT(m_start_mut, "This stringview is not mutable")
             return m_start_mut;
         }
-        [[nodiscard]] ConstIterator<char> begin() { return {m_start}; }
-        [[nodiscard]] ConstIterator<char> end() { return {m_end}; }
+        [[nodiscard]] ConstIterator<char> begin() { return ConstIterator<char>{m_start}; }
+        [[nodiscard]] ConstIterator<char> end() { return ConstIterator<char>{m_end}; }
         [[nodiscard]] String extract_string() const { return {m_start, length()}; }
         explicit operator String() const { return extract_string(); }
         StringView substringview(size_t first = 0, size_t last = npos) {

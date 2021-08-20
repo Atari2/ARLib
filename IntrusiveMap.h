@@ -51,7 +51,7 @@ namespace ARLib {
 
         public:
         void insert(Key key, Val val) {
-            HARD_ASSERT_FMT(m_size <= SIZE, "Intrusive map is full at size %zu", SIZE);
+            HARD_ASSERT_FMT(m_size <= SIZE, "Intrusive map is full at size %zu", SIZE)
             auto index = search_internal(key);
             if (index == npos) {
                 index = search_tomb_internal();

@@ -28,7 +28,7 @@ namespace ARLib {
     }
 
     void* memset_vectorized(void* dst0, uint8_t val, size_t size) {
-        uint8_t* dst = static_cast<uint8_t*>(dst0);
+        auto* dst = static_cast<uint8_t*>(dst0);
         size_t rem = size % 32;
         for (size_t offset = 0; offset < (size - rem); offset += 32) {
             __m256i buffer = _mm256_set1_epi8(static_cast<char>(val));
@@ -55,12 +55,12 @@ namespace ARLib {
     // stolen from an old stdlib implementation
     // assumes that sizeof(char) == 1... should probably use uint8_t but eh
     void* memmove(void* dst0, const void* src0, size_t length) {
-        uint8_t* dst = static_cast<uint8_t*>(dst0);
-        const uint8_t* src = static_cast<const uint8_t*>(src0);
+        auto* dst = static_cast<uint8_t*>(dst0);
+        const auto* src = static_cast<const uint8_t*>(src0);
         if (length == 0 || dst == src) return dst;
         if (reinterpret_cast<uintptr_t>(dst) < reinterpret_cast<uintptr_t>(src)) {
             // copy forward
-            size_t t = reinterpret_cast<size_t>(src);
+            auto t = reinterpret_cast<size_t>(src);
             if ((t | reinterpret_cast<size_t>(dst)) & wmask) {
                 if ((t ^ reinterpret_cast<size_t>(dst)) & wmask || length < wsize)
                     t = length;
@@ -88,7 +88,7 @@ namespace ARLib {
         } else {
             src += length;
             dst += length;
-            size_t t = reinterpret_cast<size_t>(src);
+            auto t = reinterpret_cast<size_t>(src);
             if ((t | reinterpret_cast<size_t>(dst)) & wmask) {
                 if ((t ^ reinterpret_cast<size_t>(dst)) & wmask || length <= wsize)
                     t = length;
@@ -124,7 +124,7 @@ namespace ARLib {
         if (size >= 64 && cpuinfo.avx2()) { // check avx2 support
             return memset_vectorized(ptr, value, size);
         }
-        uint8_t* dst = static_cast<uint8_t*>(ptr);
+        auto* dst = static_cast<uint8_t*>(ptr);
         for (size_t i = 0; i < size; i++)
             dst[i] = value;
         return ptr;

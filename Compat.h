@@ -38,7 +38,7 @@
 
 #ifdef _WIN64
 #ifdef _MSC_VER
-// windows means strictly MSVC, if you want mingw, use MINDOWS_MINGW
+// WINDOWS means strictly MSVC, if you want mingw, use MINDOWS_MINGW
 #define WINDOWS
 #else
 #define WINDOWS_MINGW

@@ -9,7 +9,7 @@ namespace ARLib {
         Fn m_func;
 
         public:
-        Test(Fn func) : m_func(func) {}
+        explicit Test(Fn func) : m_func(func) {}
 
         bool run(Args... args) { return m_func(args...); }
     };

@@ -11,7 +11,7 @@ namespace ARLib {
         TRef m_boxed;
 
         public:
-        RefBox(TRef obj) : m_boxed(obj) {}
+        explicit RefBox(TRef obj) : m_boxed(obj) {}
         RefBox(const RefBox& other) : m_boxed(other.m_boxed) { }
         RefBox(RefBox&& other) noexcept : m_boxed(move(other.m_boxed)) { }
 

@@ -45,11 +45,16 @@ namespace ARLib {
             }
 
             public:
-            LinkedSetIterator(SetEntry* current) : m_current(current) {}
-            LinkedSetIterator& operator=(const LinkedSetIterator& other) { m_current = other.m_current; }
+            explicit LinkedSetIterator(SetEntry* current) : m_current(current) {}
+            LinkedSetIterator& operator=(const LinkedSetIterator& other) {
+                if (this == &other) return *this;
+                m_current = other.m_current;
+                return *this;
+            }
             LinkedSetIterator& operator=(LinkedSetIterator&& other) noexcept {
                 m_current = other.m_current;
                 other.m_current = nullptr;
+                return *this;
             }
 
             const SetEntry* current() const { return m_current; }
@@ -82,7 +87,7 @@ namespace ARLib {
 
         public:
         template <typename... Args>
-        LinkedSet(T&& val, Args&&... values) requires AllOfV<T, Args...> {
+        explicit LinkedSet(T&& val, Args&&... values) requires AllOfV<T, Args...> {
             internal_single_prepend_(Forward<T>(val));
             (internal_single_prepend_(Forward<Args>(values)), ...);
         }
@@ -197,8 +202,8 @@ namespace ARLib {
                 pop_head();
         }
 
-        LinkedSetIterator begin() const { return {m_head}; }
-        LinkedSetIterator end() const { return {nullptr}; }
+        LinkedSetIterator begin() const { return LinkedSetIterator{m_head}; }
+        LinkedSetIterator end() const { return LinkedSetIterator{nullptr}; }
 
         size_t size() const { return m_size; }
 
@@ -220,11 +225,11 @@ namespace ARLib {
         }
 
         LinkedSetIterator find(const T& value) const requires EqualityComparable<T> {
-            if (m_size == 0) return {nullptr};
+            if (m_size == 0) return LinkedSetIterator{nullptr};
             for (LinkedSetIterator beg = begin(); beg != end(); ++beg) {
-                if (*beg == value) return {beg.m_current};
+                if (*beg == value) return LinkedSetIterator{beg.m_current};
             }
-            return {nullptr};
+            return LinkedSetIterator{nullptr};
         }
 
         ~LinkedSet() { clear(); }

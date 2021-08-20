@@ -27,7 +27,7 @@ namespace ARLib {
         }
 
         template <size_t N, typename... Args>
-        Printer(const char (&format)[N], const Args&... args) : format_string{format} {
+        explicit Printer(const char (&format)[N], const Args&... args) : format_string{format} {
             static_assert(sizeof...(args) > 0);
             size_t index = format_string.index_of("{}");
             while (index != String::npos) {

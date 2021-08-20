@@ -16,7 +16,7 @@ namespace ARLib {
         OrderingType m_type;
 
         public:
-        Ordering(OrderingType type) noexcept : m_type(type) {}
+        explicit Ordering(OrderingType type) noexcept : m_type(type) {}
         Ordering() = delete;
         Ordering(const Ordering&) = default;
         Ordering(Ordering&&) = default;

@@ -11,8 +11,8 @@ namespace ARLib {
         static String* construct(const String& s);
 
         public:
-        UniqueString(const String& str) : m_ref(construct(str)) {  }
-        UniqueString(const char* ptr) : m_ref(construct(String{ptr})) {
+        explicit UniqueString(const String& str) : m_ref(construct(str)) {  }
+        explicit UniqueString(const char* ptr) : m_ref(construct(String{ptr})) {
         }
         UniqueString(const UniqueString& other) = default;
         UniqueString(UniqueString&& other) = default;

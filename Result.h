@@ -107,7 +107,7 @@ namespace ARLib {
             unreachable
         }
 
-        operator bool() const { return is_ok(); }
+        explicit operator bool() const { return is_ok(); }
 
         ~Result() { 
             if (m_type == CurrType::Ok) {

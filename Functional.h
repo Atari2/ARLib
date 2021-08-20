@@ -143,7 +143,7 @@ namespace ARLib {
         PartialFunction& operator=(PartialFunction&&) noexcept = default;
 
         const auto& partial_args() const { return m_pargs; }
-        constexpr PartialFunction(Func func, Args... args) : m_function(move(func)) {
+        constexpr explicit PartialFunction(Func func, Args... args) : m_function(move(func)) {
             MakeIndexSequence<sizeof...(Args)> seq{};
             apply_impl(Forward<Args>(args)..., seq);
         }
@@ -381,14 +381,14 @@ namespace ARLib {
         explicit operator bool() const noexcept { return !m_empty(); }
 
         Res operator()(Args... args) const {
-            HARD_ASSERT(!m_empty(), "Function can't be empty on call");
+            HARD_ASSERT(!m_empty(), "Function can't be empty on call")
             return m_invoker(m_functor, Forward<Args>(args)...);
         }
 
 #if __cpp_rtti
         const TypeInfo& target_type() const noexcept {
             if (m_manager) {
-                fntraits::AnyData typeinfo_result;
+                fntraits::AnyData typeinfo_result{};
                 m_manager(typeinfo_result, m_functor, fntraits::GetTypeInfo);
                 if (auto ti = typeinfo_result.m_access<const TypeInfo*>()) return *ti;
             }
@@ -413,7 +413,7 @@ namespace ARLib {
                     || (m_manager && typeid(Functor) == target_type())
 #endif
                 ) {
-                    fntraits::AnyData ptr;
+                    fntraits::AnyData ptr{};
                     m_manager(ptr, m_functor, fntraits::GetFuncPtr);
                     return ptr.m_access<const Functor*>();
                 }
@@ -429,7 +429,7 @@ namespace ARLib {
     template <typename Arg, typename... Args>
     struct PrintInfo<detail::PartialArguments<Arg, Args...>> {
         const detail::PartialArguments<Arg, Args...>& m_partial;
-        PrintInfo(const detail::PartialArguments<Arg, Args...>& partial) : m_partial(partial) {}
+        explicit PrintInfo(const detail::PartialArguments<Arg, Args...>& partial) : m_partial(partial) {}
         String repr() {
             if constexpr (sizeof...(Args) == 0) {
                 return String{typeid(Arg).name()};
@@ -444,7 +444,7 @@ namespace ARLib {
     template <typename Func, typename... Args>
     struct PrintInfo<PartialFunction<Func, Args...>> {
         const PartialFunction<Func, Args...>& m_func;
-        PrintInfo(const PartialFunction<Func, Args...>& func) : m_func(func) {}
+        explicit PrintInfo(const PartialFunction<Func, Args...>& func) : m_func(func) {}
         String repr() {
             return "PartialFunction "_s + String{typeid(Func).name()} + " with partial arguments: ("_s +
                    PrintInfo<detail::PartialArguments<Args...>>{m_func.partial_args()}.repr() + ")"_s;

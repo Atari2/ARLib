@@ -45,7 +45,7 @@ namespace ARLib {
             *iptr = x;
             return 0.0f;
         }
-        float integer = static_cast<float>(trunc(static_cast<double>(x)));
+        auto integer = static_cast<float>(trunc(static_cast<double>(x)));
         (*iptr) = (x - integer);
         return integer;
     }
@@ -84,7 +84,7 @@ namespace ARLib {
             double ptr;
             double res = modf(base, &ptr);
             if (ptr == 0.0) {
-                uint64_t integer = static_cast<uint64_t>(res);
+                auto integer = static_cast<uint64_t>(res);
                 if (integer % 2 == 0) return NumericLimits::HugeVal;
                 return -NumericLimits::HugeVal;
             }

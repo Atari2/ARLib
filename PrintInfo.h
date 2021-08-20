@@ -18,7 +18,7 @@ namespace ARLib {
     struct PrintInfo<x> {                                                                                              \
         using type_ = AddConstT<AddLValueRefIfNotPtrT<x>>;                                                             \
         type_ m_val;                                                                                                   \
-        PrintInfo(type_ val) : m_val(val) {}                                                                           \
+        explicit PrintInfo(type_ val) : m_val(val) {}                                                                  \
         String repr() const { return impl(m_val); }                                                                    \
     };
 
@@ -27,7 +27,7 @@ namespace ARLib {
     struct PrintInfo<const x> {                                                                                        \
         using type_ = AddConstT<AddLValueRefIfNotPtrT<const x>>;                                                       \
         type_ m_val;                                                                                                   \
-        PrintInfo(type_ val) : m_val(val) {}                                                                           \
+        explicit PrintInfo(type_ val) : m_val(val) {}                                                                  \
         String repr() const { return impl(m_val); }                                                                    \
     };
 
@@ -36,12 +36,12 @@ namespace ARLib {
     BASIC_CONST_PRINT_IMPL(x, impl)
 
     BASIC_PRINT_IMPL(String, )
-    BASIC_PRINT_IMPL(char*, )
+    BASIC_PRINT_IMPL(char*, String)
 
     template <typename T>
     struct PrintInfo<T*> {
         const T* m_ptr;
-        PrintInfo(const T* ptr) : m_ptr(ptr) {}
+        explicit PrintInfo(const T* ptr) : m_ptr(ptr) {}
         String repr() {
             if constexpr (Printable<T>) {
                 return String::formatted("0x%p -> ", m_ptr) + PrintInfo<T>{*m_ptr}.repr();
@@ -54,7 +54,7 @@ namespace ARLib {
     template <Printable T, size_t N>
     struct PrintInfo<T[N]> {
         const T (&m_vec)[N];
-        PrintInfo(const T (&vec)[N]) : m_vec(vec) {}
+        explicit PrintInfo(const T (&vec)[N]) : m_vec(vec) {}
         String repr() {
             String str{"["};
             for (size_t i = 0; i < N; i++) {
@@ -72,7 +72,7 @@ namespace ARLib {
     template <Printable T, size_t N, size_t M>
     requires(!IsArrayV<T>) struct PrintInfo<T[N][M]> {
         const T (&m_matrix)[N][M];
-        PrintInfo(const T (&matrix)[N][M]) : m_matrix(matrix) {}
+        explicit PrintInfo(const T (&matrix)[N][M]) : m_matrix(matrix) {}
         String repr() {
             String str{"[\n"};
             for (size_t i = 0; i < N; i++) {
@@ -89,7 +89,7 @@ namespace ARLib {
     template <>
     struct PrintInfo<SourceLocation> {
         const SourceLocation& m_loc;
-        PrintInfo(const SourceLocation& loc) : m_loc(loc) {}
+        explicit PrintInfo(const SourceLocation& loc) : m_loc(loc) {}
         String repr();
     };
 

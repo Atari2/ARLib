@@ -11,7 +11,7 @@
 namespace ARLib {
     // this in origin was `template <MoveAssignable T>`
     // however that failed to compile when used as a return type, didn't when using auto
-    // reverted back to static_assert().
+    // reverted to static_assert().
     // https://godbolt.org/z/hnYj99MPc
     template <typename T>
     class Vector {
@@ -118,10 +118,10 @@ namespace ARLib {
             return *this;
         }
 
-        Vector(size_t capacity) { round_to_capacity_(capacity); }
+        explicit Vector(size_t capacity) { round_to_capacity_(capacity); }
 
         template <MoveAssignable... Values>
-        Vector(T&& val, Values&&... values) requires AllOfV<T, Values...> {
+        explicit Vector(T&& val, Values&&... values) requires AllOfV<T, Values...> {
             reserve(sizeof...(values) + 1);
             append(Forward<T>(val));
             (append(Forward<Values>(values)), ...);
@@ -320,25 +320,25 @@ namespace ARLib {
 
         const T* data() { return m_storage; }
 
-        Enumer enumerate_begin() const { return {m_storage}; }
+        Enumer enumerate_begin() const { return Enumer{m_storage}; }
 
-        Enumer enumerate_end() const { return {m_storage + m_size, m_size}; }
+        Enumer enumerate_end() const { return Enumer{m_storage + m_size, m_size}; }
 
-        Iter begin() const { return {m_storage}; }
+        Iter begin() const { return Iter{m_storage}; }
 
-        Iter end() const { return {m_storage + m_size}; }
+        Iter end() const { return Iter{m_storage + m_size}; }
 
-        ConstIter cbegin() const { return {m_storage}; }
+        ConstIter cbegin() const { return ConstIter{m_storage}; }
 
-        ConstIter cend() const { return {m_storage + m_size}; }
+        ConstIter cend() const { return ConstIter{m_storage + m_size}; }
 
-        ReverseIter rbegin() const { return {m_storage + m_size - 1}; }
+        ReverseIter rbegin() const { return ReverseIter{m_storage + m_size - 1}; }
 
-        ReverseIter rend() const { return {m_storage - 1}; }
+        ReverseIter rend() const { return ReverseIter{m_storage - 1}; }
 
-        ConstReverseIter crbegin() const { return {m_storage + m_size - 1}; }
+        ConstReverseIter crbegin() const { return ConstReverseIter{m_storage + m_size - 1}; }
 
-        ConstReverseIter crend() const { return {m_storage - 1}; }
+        ConstReverseIter crend() const { return ConstReverseIter{m_storage - 1}; }
 
         T& last() { return m_storage[m_size - 1]; }
 
@@ -352,9 +352,9 @@ namespace ARLib {
     template <Printable T>
     struct PrintInfo<Vector<T>> {
         const Vector<T>& m_vec;
-        PrintInfo(const Vector<T>& vec) : m_vec(vec) {}
+        explicit PrintInfo(const Vector<T>& vec) : m_vec(vec) {}
         String repr() {
-            if (m_vec.size() == 0) { return "[]"_s; }
+            if (m_vec.empty()) { return "[]"_s; }
             String con{};
             if constexpr (IsSameV<T, String>) {
                 for (const auto& s : m_vec) {
@@ -376,4 +376,3 @@ namespace ARLib {
 
 } // namespace ARLib
 
-using ARLib::Vector;
