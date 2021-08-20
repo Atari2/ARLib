@@ -22,5 +22,3 @@ namespace ARLib {
         TRef get() { return m_boxed; }
     };
 } // namespace ARLib
-
-using ARLib::RefBox;

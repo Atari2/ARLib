@@ -172,5 +172,3 @@ namespace ARLib {
         ~IteratorView() { delete[] m_stolen_storage; }
     };
 } // namespace ARLib
-
-using ARLib::GenericView;

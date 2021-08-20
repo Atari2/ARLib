@@ -392,7 +392,3 @@ namespace ARLib {
         size_t bucket_count() const { return m_bucket_count; }
     };
 } // namespace ARLib
-
-using ARLib::HashTable;
-using ARLib::HashTableIterator;
-using ARLib::InsertionResult;

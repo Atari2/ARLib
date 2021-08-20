@@ -154,5 +154,3 @@ namespace ARLib {
         }
     };
 } // namespace ARLib
-
-using ARLib::Set;

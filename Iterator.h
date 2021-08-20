@@ -378,9 +378,3 @@ namespace ARLib {
         bool operator>(const IfIterator& other) { return m_current_iter > other.m_current_iter; }
     };
 } // namespace ARLib
-
-using ARLib::ConstIterator;
-using ARLib::ConstReverseIterator;
-using ARLib::Enumerator;
-using ARLib::Iterator;
-using ARLib::ReverseIterator;

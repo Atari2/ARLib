@@ -80,5 +80,3 @@ namespace ARLib {
         }
     };
 } // namespace ARLib
-
-using ARLib::ArgParser;

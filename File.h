@@ -93,6 +93,3 @@ namespace ARLib {
         ~File() { fclose(m_ptr); }
     };
 } // namespace ARLib
-
-using ARLib::File;
-using ARLib::OpenFileMode;

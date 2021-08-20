@@ -45,5 +45,3 @@ namespace ARLib {
         ConstIterator<T> end() const { return ConstIterator<T>{PointerTraits<const T*>::pointer_to(*_m_storage_) + S}; }
     };
 } // namespace ARLib
-
-using ARLib::Array;

@@ -111,11 +111,3 @@ namespace ARLib {
     BASIC_PRINT_IMPL(double, DoubleToStr)
     BASIC_PRINT_IMPL(size_t, IntToStr)
 } // namespace ARLib
-
-using ARLib::DoubleToStr;
-using ARLib::FloatToStr;
-using ARLib::IntToStr;
-using ARLib::StrToDouble;
-using ARLib::StrToFloat;
-using ARLib::StrToInt;
-using ARLib::SupportedBase;

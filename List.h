@@ -245,4 +245,3 @@ namespace ARLib {
         ~LinkedList() { clear(); }
     };
 } // namespace ARLib
-using ARLib::LinkedList;

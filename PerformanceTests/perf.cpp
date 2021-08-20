@@ -2,6 +2,8 @@
 #include "../cstdio_compat.h"
 #include "PerfTime.h"
 
+using namespace ARLib;
+
 int main() {
     PERF_SUITE_START(test)
     ADD_PERF_START(test, test_perf)

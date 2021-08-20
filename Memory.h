@@ -71,5 +71,3 @@ namespace ARLib {
         src = nullptr;
     }
 } // namespace ARLib
-
-using ARLib::BitCast;

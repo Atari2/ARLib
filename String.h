@@ -547,5 +547,3 @@ namespace ARLib {
     };
 } // namespace ARLib
 
-using ARLib::String;
-using ARLib::operator""_s;

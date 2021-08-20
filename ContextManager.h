@@ -47,6 +47,3 @@ namespace ARLib {
         }
     };
 } // namespace ARLib
-
-using ARLib::ContextManager;
-using ARLib::ManageWhen;

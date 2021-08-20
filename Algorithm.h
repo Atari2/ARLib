@@ -249,11 +249,3 @@ namespace ARLib {
     }
 } // namespace ARLib
 
-using ARLib::fill;
-using ARLib::fill_with;
-using ARLib::find;
-using ARLib::max;
-using ARLib::min;
-using ARLib::prime_generator;
-using ARLib::sort;
-using ARLib::sum;

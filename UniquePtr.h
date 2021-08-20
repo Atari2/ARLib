@@ -132,5 +132,3 @@ namespace ARLib {
     };
 
 } // namespace ARLib
-
-using ARLib::UniquePtr;

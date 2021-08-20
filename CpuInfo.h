@@ -210,5 +210,3 @@ namespace ARLib {
 
     static inline CPUInfo cpuinfo{};
 } // namespace ARLib
-
-using ARLib::cpuinfo;

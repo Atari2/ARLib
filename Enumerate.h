@@ -68,5 +68,3 @@ namespace ARLib {
         auto end() const { return IfIterator<Type, Functor>{m_end, m_end, m_func, true}; }
     };
 } // namespace ARLib
-
-using ARLib::Enumerate;

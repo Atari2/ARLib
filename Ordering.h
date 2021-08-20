@@ -46,8 +46,3 @@ namespace ARLib {
     }
 
 } // namespace ARLib
-
-using ARLib::equal;
-using ARLib::greater;
-using ARLib::less;
-using ARLib::Ordering;

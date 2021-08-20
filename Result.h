@@ -122,6 +122,3 @@ namespace ARLib {
     using DiscardResult = class Result<DefaultOk, T_err>;
 
 } // namespace ARLib
-
-using ARLib::DiscardResult;
-using ARLib::Result;

@@ -123,6 +123,3 @@ namespace ARLib {
         }
     };
 } // namespace ARLib
-
-using ARLib::StringView;
-using ARLib::operator""_sv;
