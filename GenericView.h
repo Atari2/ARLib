@@ -24,21 +24,21 @@ namespace ARLib {
 
         size_t size() { return m_end_view - m_begin_view; }
 
-        Iterator<T> begin() { return {m_begin_view}; }
+        Iterator<T> begin() { return Iterator<T>{m_begin_view}; }
 
-        Iterator<T> end() { return {m_end_view}; }
+        Iterator<T> end() { return Iterator<T>{m_end_view}; }
 
-        ReverseIterator<T> rbegin() { return {m_end_view - 1}; }
+        ReverseIterator<T> rbegin() { return ReverseIterator<T>{m_end_view - 1}; }
 
-        ReverseIterator<T> rend() { return {m_begin_view - 1}; }
+        ReverseIterator<T> rend() { return ReverseIterator<T>{m_begin_view - 1}; }
 
-        ConstIterator<T> begin() const { return {m_begin_view}; }
+        ConstIterator<T> begin() const { return ConstIterator<T>{m_begin_view}; }
 
-        ConstIterator<T> end() const { return {m_end_view}; }
+        ConstIterator<T> end() const { return ConstIterator<T>{m_end_view}; }
 
-        ConstReverseIterator<T> rbegin() const { return {m_end_view - 1}; }
+        ConstReverseIterator<T> rbegin() const { return ConstReverseIterator<T>{m_end_view - 1}; }
 
-        ConstReverseIterator<T> rend() const { return {m_begin_view - 1}; }
+        ConstReverseIterator<T> rend() const { return ConstReverseIterator<T>{m_begin_view - 1}; }
 
         T& operator[](size_t index) { return m_begin_view[index]; }
 
@@ -77,9 +77,7 @@ namespace ARLib {
         explicit IteratorView(const Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
         Iter begin() { return m_begin; }
         Iter end() { return m_end; }
-        size_t size() requires IterCanSubtractForSize<Iter> {
-            return m_end - m_begin;
-        }
+        size_t size() requires IterCanSubtractForSize<Iter> { return m_end - m_begin; }
 
         // in-place transform
         template <typename Functor, typename = EnableIfT<IsSameV<ResultOfT<Functor(ItemType)>, ItemType>>>

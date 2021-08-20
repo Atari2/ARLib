@@ -269,6 +269,10 @@ namespace ARLib {
             return m_storage[index];
         }
 
+        T& index_unchecked(size_t index) const {
+            return m_storage[index];
+        }
+
         template <typename Functor>
         void for_each(Functor&& func) const {
             for (auto& v : *this)

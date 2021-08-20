@@ -6,7 +6,7 @@
 namespace ARLib {
     struct Console {
         template <size_t N, typename... Args>
-        static void print(const char(&fmt)[N], const Args&... args) {
+        static void print(const char (&fmt)[N], const Args&... args) {
             if constexpr (sizeof...(args) == 0) {
                 ARLib::puts(fmt);
             } else {
@@ -23,5 +23,24 @@ namespace ARLib {
             }
         }
 
+        template <size_t N, typename... Args>
+        static void println(const char (&fmt)[N], const Args&... args) {
+            if constexpr (sizeof...(args) == 0) {
+                ARLib::puts(fmt);
+            } else {
+                ARLib::printf(fmt, args...);
+            }
+            ARLib::puts("\n");
+        }
+
+        template <typename T, typename... Args, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
+        static void println(T fmt, Args... args) {
+            if constexpr (sizeof...(args) == 0) {
+                ARLib::puts(fmt);
+            } else {
+                ARLib::printf(fmt, args...);
+            }
+            ARLib::puts("\n");
+        }
     };
-}
+} // namespace ARLib

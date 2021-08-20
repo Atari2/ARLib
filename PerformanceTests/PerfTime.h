@@ -1,10 +1,10 @@
 #pragma once
+#include "../Console.h"
 #include "../Functional.h"
 #include "../Macros.h"
 #include "../Pair.h"
 #include "../String.h"
 #include "../Vector.h"
-#include "../Console.h"
 
 #define TIMER_START(coll)                                                                                              \
     {                                                                                                                  \
@@ -38,7 +38,7 @@ namespace ARLib {
         Vector<int64_t>* m_vec;
 
         public:
-        RAIIPerfCounter(Vector<int64_t>* vec = nullptr);
+        explicit RAIIPerfCounter(Vector<int64_t>* vec = nullptr);
         ~RAIIPerfCounter();
     };
 
@@ -70,11 +70,11 @@ namespace ARLib {
 
         template <size_t N>
         class PerfSuite {
-            char m_name[N];
+            char m_name[N]{};
             Vector<TimerOnce> timers{};
 
             public:
-            constexpr PerfSuite(const char (&name)[N]) { ConditionalBitCopy(m_name, name, N); }
+            constexpr explicit PerfSuite(const char (&name)[N]) { ConditionalBitCopy(m_name, name, N); }
 
             template <size_t M>
             void append_timer(const char (&subname)[M], Function<void()>&& func) {

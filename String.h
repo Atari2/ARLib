@@ -80,7 +80,6 @@ namespace ARLib {
             strncpy(m_data_buf, src, N);
         }
 
-        explicit String(size_t size) { grow_if_needed(size); }
         explicit String(size_t size, char c) {
             grow_if_needed(size);
             memset(get_buf_internal(), static_cast<uint8_t>(c), size);
@@ -546,4 +545,3 @@ namespace ARLib {
         }
     };
 } // namespace ARLib
-

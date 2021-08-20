@@ -130,7 +130,8 @@ namespace ARLib {
     String DoubleToStr(double value) {
 #ifdef WINDOWS
         const auto len = static_cast<size_t>(scprintf("%f", value));
-        String str{len};
+        String str{};
+        str.reserve(len);
         sprintf(str.rawptr(), "%f", value);
         str.set_size(len);
         return str;
@@ -155,4 +156,4 @@ namespace ARLib {
         return str;
 #endif
     }
-}
+} // namespace ARLib
