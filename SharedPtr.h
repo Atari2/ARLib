@@ -89,13 +89,10 @@ namespace ARLib {
         size_t refcount() const { return m_count ? *m_count : 0; }
         bool exists() const { return m_storage != nullptr; }
 
+        T* operator->() { return *m_storage; }
         const T* operator->() const { return m_storage; }
-
         T& operator*() { return *m_storage; }
-
-        const T* operator->() const { return m_storage; }
-
-        T& operator*() { return *m_storage; }
+        const T& operator*() const { return *m_storage; }
 
         ~SharedPtr() {
             if (decrease_instance_count_()) { delete m_storage; }
@@ -172,22 +169,27 @@ namespace ARLib {
             m_storage = nullptr;
         }
 
-        void share_with(SharedPtr& other) {
+        void share_with(SharedPtr& other) const {
             other.m_storage = m_storage;
             other.m_count = m_count;
             (*m_count)++;
         }
 
-        size_t size() { return m_size; }
+        size_t size() const { return m_size; }
 
         T* get() { return m_storage; }
+        const T* get() const { return m_storage; }
 
-        size_t refcount() { return m_count ? *m_count : 0; }
-        bool exists() { return m_storage != nullptr; }
+        size_t refcount() const { return m_count ? *m_count : 0; }
+        bool exists() const { return m_storage != nullptr; }
 
         T* operator->() { return m_storage; }
 
         T& operator[](size_t index) { return m_storage[index]; }
+
+        const T* operator->() const { return m_storage; }
+
+        const T& operator[](size_t index) const { return m_storage[index]; }
 
         ~SharedPtr() {
             if (decrease_instance_count_()) { delete[] m_storage; }
