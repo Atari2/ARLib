@@ -6,11 +6,10 @@
 
 static DebugNewDeleteMap* get_alloc_map() {
     static bool s_created = false;
-    static DebugNewDeleteMap* s_alloc_map =
-    reinterpret_cast<DebugNewDeleteMap*>(std::calloc(1, sizeof(DebugNewDeleteMap)));
+    static DebugNewDeleteMap* s_alloc_map = static_cast<DebugNewDeleteMap*>(std::calloc(1, sizeof(DebugNewDeleteMap)));
     if (!s_created) {
         atexit([]() {
-            s_alloc_map->~IntrusiveMap<void*, Pair<size_t, AllocType>, MAP_SIZE>();
+            s_alloc_map->~IntrusiveMap<void*, ARLib::Pair<size_t, AllocType>, MAP_SIZE>();
             std::free(s_alloc_map);
             s_alloc_map = nullptr;
         });
