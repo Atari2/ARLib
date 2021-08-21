@@ -269,9 +269,7 @@ namespace ARLib {
             return m_storage[index];
         }
 
-        T& index_unchecked(size_t index) const {
-            return m_storage[index];
-        }
+        T& index_unchecked(size_t index) const { return m_storage[index]; }
 
         template <typename Functor>
         void for_each(Functor&& func) const {
@@ -348,6 +346,9 @@ namespace ARLib {
 
         const T& last() const { return m_storage[m_size - 1]; }
 
+        void clear_retain() { m_size = 0; }
+
+        // this function completely nukes the vector, if you want to retain capacity, use clear_retain
         void clear() { clear_(); }
 
         ~Vector() { clear(); }
@@ -379,4 +380,3 @@ namespace ARLib {
     };
 
 } // namespace ARLib
-

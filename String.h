@@ -222,6 +222,8 @@ namespace ARLib {
         [[nodiscard]] char* rawptr() { return get_buf_internal(); }
         [[nodiscard]] bool is_empty() const { return m_size == 0; }
 
+        void clear() { set_size(0); }
+
         // starts/ends with
         [[nodiscard]] bool starts_with(const String& other) const {
             if (other.m_size > m_size) return false;
