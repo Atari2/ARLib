@@ -45,3 +45,20 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build . --config Release
 ```
+
+To add this library to your cmake project, simply use the following in your CMakeLists.txt
+```
+include(FetchContent)
+
+FetchContent_Declare(
+	ARLib
+	GIT_REPOSITORY "https://github.com/Atari2/ARLib"
+	GIT_TAG master
+)
+
+FetchContent_MakeAvailable(ARLib)
+target_include_directories(YOUR_PROJECT PRIVATE ${ARLib_SOURCE_DIR})
+target_link_libraries(YOUR_PROJECT PRIVATE ARLib)
+```
+
+This requires CMake at least version 3.15

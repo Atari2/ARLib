@@ -14,6 +14,25 @@ set(ON_CLANG false)
 set(ON_GCC false)
 set(ON_MSVC false)
 
+if (${CMAKE_VERSION} VERSION_LESS "3.21")
+	get_directory_property(hasParent PARENT_DIRECTORY)
+	if (hasParent)
+		message(STATUS "ARLib is not top level")
+		set(ARLIB_TOP_LEVEL false)
+	else()
+		message(STATUS "ARLib is top level")
+		set(ARLIB_TOP_LEVEL true)
+	endif()
+else()
+	if (PROJECT_IS_TOP_LEVEL)
+		message(STATUS "ARLib is top level")
+		set(ARLIB_TOP_LEVEL true)
+	else()
+		message(STATUS "ARLib is not top level")
+		set(ARLIB_TOP_LEVEL false)
+	endif()
+endif()
+
 # detecting platform
 if (WIN32)
 	set(ON_WINDOWS true)
@@ -77,7 +96,10 @@ execute_process(
 					COMMAND_ECHO STDOUT
 				 )
 add_library(ARLib ${ARLIB_SOURCE_FILES})
-add_subdirectory(Tests)
+
+if (ARLIB_TOP_LEVEL)
+	add_subdirectory(Tests)
+endif()
 
 if (PERF_TEST)
 	message(STATUS "Enabling perfomance runner")
@@ -167,12 +189,13 @@ target_link_libraries(ARLib PUBLIC ${ARLIB_LINK_LIBRARIES})
 target_compile_options(ARLib PUBLIC ${ARLIB_COMPILE_OPTIONS})
 target_compile_definitions(ARLib PUBLIC ${ARLIB_COMPILE_DEFINITIONS})
 
-
-add_custom_target(
-	RUN_TEST ALL
-	ARLibTestSuite
-	COMMENT "Running tests"
-)
+if (ARLIB_TOP_LEVEL)
+	add_custom_target(
+		RUN_TEST ALL
+		ARLibTestSuite
+		COMMENT "Running tests"
+	)
+endif()
 if (PERF_TEST)
 	add_custom_target(
 		RUN_PERF ALL
