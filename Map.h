@@ -83,13 +83,14 @@ namespace ARLib {
             m_storage.for_each([&func](const Entry& entry) { func(entry); });
         }
 
-        auto find(const Key& key) {
+        auto find(const Key& key) const {
             for (auto it = m_storage.begin(); it != m_storage.end(); it++)
                 if ((*it).key() == key) return it;
             return m_storage.end();
         }
 
         Val& operator[](const Key& key) { return (*find(key)).value(); }
+        const Val& operator[](const Key& key) const { return (*find(key)).value(); }
 
         size_t size() const { return m_storage.size(); }
 
