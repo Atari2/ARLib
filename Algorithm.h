@@ -89,8 +89,34 @@ namespace ARLib {
             }
             return total / static_cast<double>(sz);
         }
+    }
 
+    template <IteratorConcept Iter, typename Functor>
+    requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
+    auto all_of(Iter begin, Iter end, Functor func) {
+        for (; begin != end; ++begin) {
+            if (!func(*begin)) return false;
+        }
+        return true;
+    }
 
+    template <IteratorConcept Iter, typename Functor>
+    requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
+    auto any_of(Iter begin, Iter end, Functor func) {
+        for (; begin != end; ++begin) {
+            if (func(*begin)) return true;
+        }
+        return false;
+    }
+
+    template <IteratorConcept Iter, typename Functor>
+    requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
+    auto exactly_n(Iter begin, Iter end, Functor func, size_t n) {
+        size_t how_many = 0;
+        for (; begin != end; ++begin) {
+            if (func(*begin)) how_many++;
+        }
+        return how_many == n;
     }
 
     template <typename C>
@@ -119,8 +145,20 @@ namespace ARLib {
         }
     }
 
+    template <Iterable C, typename Functor>
+    requires CallableWithRes<Functor, bool, decltype(*declval<C>().begin())>
+    auto all_of(const C& cont, Functor func) { return all_of(cont.begin(), cont.end(), func); }
+
+    template <Iterable C, typename Functor>
+    requires CallableWithRes<Functor, bool, decltype(*declval<C>().begin())>
+    auto any_of(const C& cont, Functor func) { return any_of(cont.begin(), cont.end(), func); }
+
+    template <Iterable C, typename Functor>
+    requires CallableWithRes<Functor, bool, decltype(*declval<C>().begin())>
+    auto exactly_n(const C& cont, Functor func, size_t n) { return exactly_n(cont.begin(), cont.end(), func, n); }
+
     template <typename C, typename Functor>
-    requires Iterable<C> && Pushable<C, decltype(*C{}.begin())> &&
+    requires Iterable<C> && Pushable<C, decltype(*declval<C>().begin())> &&
     ConvertibleTo<decltype(*C{}.begin()), ResultOfT<Functor(decltype(*C{}.begin()))>>
     auto transform(const C& cont, Functor func) {
         C copy{};
@@ -248,4 +286,3 @@ namespace ARLib {
             container[i] = move(T{args...});
     }
 } // namespace ARLib
-
