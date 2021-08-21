@@ -22,7 +22,7 @@ namespace ARLib {
 
         public:
         constexpr SharedPtr() = default;
-        SharedPtr(SharedPtr&& other)  noexcept : m_storage(other.m_storage), m_count(other.m_count) {
+        SharedPtr(SharedPtr&& other) noexcept : m_storage(other.m_storage), m_count(other.m_count) {
             other.m_storage = nullptr;
             other.m_count = nullptr;
         }
@@ -77,18 +77,23 @@ namespace ARLib {
             m_storage = nullptr;
         }
 
-        void share_with(SharedPtr& other) {
+        void share_with(SharedPtr& other) const {
             other.m_storage = m_storage;
             other.m_count = m_count;
             (*m_count)++;
         }
 
         T* get() { return m_storage; }
+        const T* get() const { return m_storage; }
 
-        size_t refcount() { return m_count ? *m_count : 0; }
-        bool exists() { return m_storage != nullptr; }
+        size_t refcount() const { return m_count ? *m_count : 0; }
+        bool exists() const { return m_storage != nullptr; }
 
-        T* operator->() { return m_storage; }
+        const T* operator->() const { return m_storage; }
+
+        T& operator*() { return *m_storage; }
+
+        const T* operator->() const { return m_storage; }
 
         T& operator*() { return *m_storage; }
 
