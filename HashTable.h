@@ -369,14 +369,16 @@ namespace ARLib {
 
         auto end(size_t hash) { return m_storage[hash % m_bucket_count].end(); }
 
-        HashTableIterator<T> tbegin() { return {m_storage}; }
+        HashTableIterator<T> tbegin() { return HashTableIterator<T>{m_storage}; }
 
-        HashTableIterator<T> tend() { return {m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos}; }
+        HashTableIterator<T> tend() {
+            return HashTableIterator<T>{m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos};
+        }
 
-        ConstHashTableIterator<T> tbegin() const { return {m_storage}; }
+        ConstHashTableIterator<T> tbegin() const { return ConstHashTableIterator<T>{m_storage}; }
 
         ConstHashTableIterator<T> tend() const {
-            return {m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos};
+            return ConstHashTableIterator<T>{m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos};
         }
 
         DeletionResult remove(const T& val) {

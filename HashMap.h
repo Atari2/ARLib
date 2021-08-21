@@ -66,6 +66,13 @@ namespace ARLib {
 
         public:
         HashMap() = default;
+
+        HashMap(std::initializer_list<MapEntry> entries) {
+            for (const auto& val : entries) {
+                add(val);
+            }
+        }
+
         HashMap(const HashMap& other) : m_table(other.m_table) {}
         HashMap(HashMap&& other) noexcept : m_table(move(other.m_table)) {}
         HashMap& operator=(HashMap&& other) noexcept {
