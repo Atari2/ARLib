@@ -11,7 +11,7 @@ namespace ARLib {
         T _m_storage_[S];
 
         private:
-        void assert_size_(size_t index) {
+        void assert_size_(size_t index) const {
             SOFT_ASSERT_FMT((index < S), "Index %lu out of bounds in array of size %lu", index, S)
         }
 

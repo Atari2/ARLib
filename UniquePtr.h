@@ -49,8 +49,9 @@ namespace ARLib {
         }
 
         T* get() { return m_storage; }
+        const T* get() const { return m_storage; }
 
-        bool exists() { return m_storage != nullptr; }
+        bool exists() const { return m_storage != nullptr; }
 
         T* operator->() { return m_storage; }
         const T* operator->() const { return m_storage; }
