@@ -89,7 +89,7 @@ namespace ARLib {
         size_t refcount() const { return m_count ? *m_count : 0; }
         bool exists() const { return m_storage != nullptr; }
 
-        T* operator->() { return *m_storage; }
+        T* operator->() { return m_storage; }
         const T* operator->() const { return m_storage; }
         T& operator*() { return *m_storage; }
         const T& operator*() const { return *m_storage; }
