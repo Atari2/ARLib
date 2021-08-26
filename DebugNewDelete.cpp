@@ -47,7 +47,7 @@ void operator delete(void* ptr) {
                   type == AllocType::Single ? "Single" : "Multiple");
     if (type != AllocType::Single) {
         ARLib::printf(
-        "Mismatch deallocation type. Pointer was allocated with `new[]` but was deallocated with `delete`\n");
+        "Mismatch deallocation type. Pointer %p was allocated with `new[]` but was deallocated with `delete`\n", ptr);
     }
     std::free(ptr);
 }
@@ -58,7 +58,7 @@ void operator delete[](void* ptr) {
                   type == AllocType::Single ? "Single" : "Multiple");
     if (type != AllocType::Multiple) {
         ARLib::printf(
-        "Mismatch deallocation type. Pointer was allocated with `new` but was deallocated with `delete[]`\n");
+        "Mismatch deallocation type. Pointer %p was allocated with `new` but was deallocated with `delete[]`\n", ptr);
     }
     std::free(ptr);
 }
