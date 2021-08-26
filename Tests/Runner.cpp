@@ -3,6 +3,26 @@
 
 using namespace ARLib;
 
+template <typename T>
+auto test_tuple_get(const Tuple<T, String>& tuple) {
+    return get<T>(tuple);
+}
+
+template <typename T>
+void test_tuple_set(Tuple<T, String>& tuple, T value) {
+    set<T>(tuple, value);
+}
+
+template <typename... Args>
+auto test_tuple_get_by_idx(const Tuple<Args...>& tuple) {
+    return get<0>(tuple);
+}
+
+template <typename... Args>
+void test_tuple_set_by_idx(Tuple<Args...>& tuple, auto value) {
+    set<0>(tuple, value);
+}
+
 TEST(LegacyARLibTests, AllTests) {
     EXPECT_TRUE(run_all_legacy_tests());
 }
@@ -115,6 +135,16 @@ TEST(ARLibTests, StackTests) {
 TEST(ARLibTests, TupleTests) {
     Tuple<int, String, double, Vector<String>> tup{0, "hello"_s, 10.0, Vector{"a"_s, "b"_s, "c"_s}};
     Tuple<int, String, double, Vector<String>> tup3{0, "hello"_s, 10.0, Vector{"a"_s, "b"_s, "c"_s}};
+    Tuple<int, String> tup4{110, "hello"_s};
+
+    EXPECT_EQ(test_tuple_get(tup4), 110);
+    test_tuple_set(tup4, 120);
+    EXPECT_EQ(test_tuple_get(tup4), 120);
+
+    EXPECT_EQ(test_tuple_get_by_idx(tup4), 120);
+    test_tuple_set_by_idx(tup4, 130);
+    EXPECT_EQ(test_tuple_get_by_idx(tup4), 130);
+
     EXPECT_EQ(tup, tup3);
     EXPECT_EQ(tup.get<0>(), 0);
     EXPECT_EQ(tup.get<1>(), "hello"_s);

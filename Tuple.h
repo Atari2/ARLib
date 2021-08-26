@@ -2,8 +2,7 @@
 #include "Concepts.h"
 #include "Utility.h"
 
-
-//TODO: make sure to overload everything correctly for rvalue and lvalue references
+// TODO: make sure to overload everything correctly for rvalue and lvalue references
 
 namespace ARLib {
     template <typename T, typename... Args>
@@ -163,4 +162,26 @@ namespace ARLib {
             m_member = move(f);
         }
     };
+
+    // free functions to avoid template keyword when calling member functions in templated functions.
+    template <typename Tp, typename... Args>
+    requires IsAnyOfV<Tp, Args...>
+    auto& get(Tuple<Args...>& tuple) { return tuple.template get<Tp>(); }
+    template <typename Tp, typename... Args>
+    requires IsAnyOfV<Tp, Args...>
+    const auto& get(const Tuple<Args...>& tuple) { return tuple.template get<Tp>(); }
+
+    template <size_t Idx, typename... Args>
+    requires(Idx < sizeof...(Args)) auto& get(Tuple<Args...>& tuple) { return tuple.template get<Idx>(); }
+    template <size_t Idx, typename... Args>
+    requires(Idx < sizeof...(Args)) const auto& get(const Tuple<Args...>& tuple) { return tuple.template get<Idx>(); }
+
+    template <typename Tp, typename... Args>
+    requires IsAnyOfV<Tp, Args...>
+    void set(Tuple<Args...>& tuple, Tp value) { tuple.template set<Tp>(move(value)); }
+
+    template <size_t Idx, typename Tp, typename... Args>
+    requires(Idx < sizeof...(Args) && IsAnyOfV<Tp, Args...>) void set(Tuple<Args...>& tuple, Tp value) {
+        tuple.template set<Idx, Tp>(move(value));
+    }
 } // namespace ARLib
