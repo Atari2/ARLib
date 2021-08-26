@@ -120,8 +120,8 @@ namespace ARLib {
             RETURN_IF_NOT_EQ(tup.get<3>().size(), 3ull)
             tup.get<3>().push_back("k"_s);
             RETURN_IF_NOT_EQ(tup.get<3>().size(), 4ull)
-            tup.set_typed("world"_s);
-            tup.set_typed(54.4);
+            tup.set("world"_s);
+            tup.set(54.4);
             RETURN_IF_NOT_EQ(tup.get<1>(), "world"_s)
             RETURN_IF_NOT_EQ(tup.get<2>(), 54.4)
             auto tup_2 = move(tup);

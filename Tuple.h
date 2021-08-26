@@ -2,6 +2,9 @@
 #include "Concepts.h"
 #include "Utility.h"
 
+
+//TODO: make sure to overload everything correctly for rvalue and lvalue references
+
 namespace ARLib {
     template <typename T, typename... Args>
     class Tuple : Tuple<Args...> {
@@ -23,31 +26,42 @@ namespace ARLib {
         public:
         Tuple() = default;
         Tuple(const Tuple&) = default;
-        Tuple(Tuple&&)  noexcept = default;
+        Tuple(Tuple&&) noexcept = default;
 
         explicit Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(move(arg)) {}
         Tuple& operator=(const Tuple&) = default;
-        Tuple& operator=(Tuple&&)  noexcept = default;
+        Tuple& operator=(Tuple&&) noexcept = default;
 
         bool operator==(const Tuple& other) const { return equality_impl<sizeof...(Args) - 1>(other); }
 
+        Tuple& operator=(T&& value) {
+            m_member = move(value);
+            return *this;
+        }
+
+        template <typename U>
+        requires IsAnyOfV<U, Args...> Tuple& operator=(U&& value) {
+            static_cast<Tuple<Args...>*>(this)->template set<U>(Forward<U>(value));
+            return *this;
+        }
+
         template <typename Tp>
-        constexpr const Tp& get_typed() const {
+        constexpr const Tp& get() const {
             static_assert(IsAnyOfV<Tp, T, Args...>);
             if constexpr (SameAs<Tp, T>) {
                 return m_member;
             } else {
-                return static_cast<const Tuple<Args...>*>(this)->template get_typed<Tp>();
+                return static_cast<const Tuple<Args...>*>(this)->template get<Tp>();
             }
         }
 
         template <typename Tp>
-        constexpr Tp& get_typed() {
+        constexpr Tp& get() {
             static_assert(IsAnyOfV<Tp, T, Args...>);
             if constexpr (SameAs<Tp, T>) {
                 return m_member;
             } else {
-                return static_cast<Tuple<Args...>*>(this)->template get_typed<Tp>();
+                return static_cast<Tuple<Args...>*>(this)->template get<Tp>();
             }
         }
 
@@ -72,12 +86,12 @@ namespace ARLib {
         }
 
         template <typename Tp>
-        constexpr void set_typed(Tp&& p) {
+        constexpr void set(Tp&& p) {
             static_assert(IsAnyOfV<Tp, T, Args...>);
             if constexpr (SameAs<Tp, T>) {
                 m_member = move(p);
             } else {
-                static_cast<Tuple<Args...>*>(this)->template set_typed<Tp>(Forward<Tp>(p));
+                static_cast<Tuple<Args...>*>(this)->template set<Tp>(Forward<Tp>(p));
             }
         }
 
@@ -102,14 +116,19 @@ namespace ARLib {
 
         bool operator==(const Tuple& other) const { return m_member == other.m_member; }
 
+        Tuple& operator=(T&& value) {
+            m_member = move(value);
+            return *this;
+        }
+
         template <typename Tp>
-        T& get_typed() {
+        T& get() {
             static_assert(SameAs<Tp, T>);
             return m_member;
         }
 
         template <typename Tp>
-        const T& get_typed() const {
+        const T& get() const {
             static_assert(SameAs<Tp, T>);
             return m_member;
         }
@@ -127,7 +146,7 @@ namespace ARLib {
         }
 
         template <typename Tp>
-        void set_typed(Tp&& p) {
+        void set(Tp&& p) {
             static_assert(SameAs<Tp, T>);
             m_member = move(p);
         }

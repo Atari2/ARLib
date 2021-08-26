@@ -123,16 +123,16 @@ TEST(ARLibTests, TupleTests) {
     EXPECT_EQ(tup.get<3>().size(), 3ull);
     tup.get<3>().push_back("k"_s);
     EXPECT_EQ(tup.get<3>().size(), 4ull);
-    tup.set_typed("world"_s);
-    tup.set_typed(54.4);
+    tup = "world"_s;
+    tup = 54.4;
     EXPECT_EQ(tup.get<1>(), "world"_s);
     EXPECT_EQ(tup.get<2>(), 54.4);
     auto&& tup_2 = move(tup);
-    EXPECT_EQ(tup_2.get<0>(), 0);
-    EXPECT_EQ(tup_2.get<1>(), "world"_s);
-    EXPECT_EQ(tup_2.get<2>(), 54.4);
-    EXPECT_EQ(tup_2.get<3>()[3], "k"_s);
-    EXPECT_EQ(tup_2.get<3>().size(), 4ull);
+    EXPECT_EQ(tup_2.get<int>(), 0);
+    EXPECT_EQ(tup_2.get<String>(), "world"_s);
+    EXPECT_EQ(tup_2.get<double>(), 54.4);
+    EXPECT_EQ(tup_2.get<Vector<String>>()[3], "k"_s);
+    EXPECT_EQ(tup_2.get<Vector<String>>().size(), 4ull);
 }
 
 TEST(ARLibTests, PartialFuncTests) {
