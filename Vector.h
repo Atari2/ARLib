@@ -1,5 +1,6 @@
 #pragma once
 #include "Algorithm.h"
+#include "Allocator.h"
 #include "Assertion.h"
 #include "Concepts.h"
 #include "Iterator.h"
@@ -34,7 +35,8 @@ namespace ARLib {
         }
 
         void clear_() {
-            delete[] m_storage;
+            if (m_capacity == 0) return;
+            deallocate<T, DeallocType::Multiple>(m_storage);
             m_storage = nullptr;
             m_end_of_storage = nullptr;
             m_size = 0;
@@ -56,13 +58,13 @@ namespace ARLib {
 
         void resize_to_capacity_(size_t capacity) {
             m_capacity = capacity;
-            T* new_storage = new T[m_capacity];
+            T* new_storage = allocate<T>(m_capacity);
             if constexpr (MoveAssignableV<T>) {
                 ConditionalBitMove(new_storage, m_storage, m_size);
             } else {
                 ConditionalBitCopy(new_storage, m_storage, m_size);
             }
-            delete[] m_storage;
+            deallocate<T, DeallocType::Multiple>(m_storage);
             m_storage = new_storage;
             m_end_of_storage = m_storage + m_capacity;
         }
