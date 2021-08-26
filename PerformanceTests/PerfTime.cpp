@@ -17,7 +17,7 @@ namespace ARLib {
         return {m_last_time, diff};
     }
     int64_t PerfCounter::current_time() { return NOW; }
-    RAIIPerfCounter::RAIIPerfCounter(Vector<int64_t>* vec) : m_start(m_counter.start()), m_vec(vec) {}
+    RAIIPerfCounter::RAIIPerfCounter(Vector<int64_t>*& vec) : m_start(m_counter.start()), m_vec(vec) {}
     RAIIPerfCounter::~RAIIPerfCounter() {
         auto [_, diff] = m_counter.stop();
         if (m_vec) m_vec->append(diff);

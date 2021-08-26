@@ -4,11 +4,16 @@
 #include "../Macros.h"
 #include "../Pair.h"
 #include "../String.h"
+#include "../UniquePtr.h"
 #include "../Vector.h"
 
 #define TIMER_START(coll)                                                                                              \
     {                                                                                                                  \
         ARLib::RAIIPerfCounter _counter{coll};
+
+#define TIMER_START_NOARGS                                                                                            \
+    {                                                                                                                  \
+        ARLib::RAIIPerfCounter _counter{};
 
 #define TIMER_END }
 
@@ -18,7 +23,7 @@
 
 #define PERF_SUITE_END }
 
-#define ADD_PERF_START(suite_name, perf_name) suite_name.append_timer(#perf_name, []() TIMER_START(nullptr)
+#define ADD_PERF_START(suite_name, perf_name) suite_name.append_timer(#perf_name, []() TIMER_START_NOARGS
 
 #define ADD_PERF_END TIMER_END );
 
@@ -35,10 +40,11 @@ namespace ARLib {
     class RAIIPerfCounter {
         PerfCounter m_counter{};
         int64_t m_start;
-        Vector<int64_t>* m_vec;
+        UniquePtr<Vector<int64_t>> m_vec;
 
         public:
-        explicit RAIIPerfCounter(Vector<int64_t>* vec = nullptr);
+        explicit RAIIPerfCounter(Vector<int64_t>*& vec);
+        explicit RAIIPerfCounter() : m_start(0), m_vec() {}
         ~RAIIPerfCounter();
     };
 

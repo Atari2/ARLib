@@ -20,9 +20,10 @@ namespace ARLib {
             return *this;
         }
 
-        explicit UniquePtr(T* ptr) : m_storage(ptr) {}
+        explicit UniquePtr(nullptr_t) = delete;
+        explicit UniquePtr(T*& ptr) : m_storage(ptr) { ptr = nullptr; }
         explicit UniquePtr(T&& storage) : m_storage(new T{move(storage)}) {}
-        UniquePtr(UniquePtr&& ptr)  noexcept {
+        UniquePtr(UniquePtr&& ptr) noexcept {
             m_storage = ptr.m_storage;
             ptr.m_storage = nullptr;
         }
@@ -52,6 +53,7 @@ namespace ARLib {
         const T* get() const { return m_storage; }
 
         bool exists() const { return m_storage != nullptr; }
+        explicit operator bool() const { return m_storage != nullptr; }
 
         T* operator->() { return m_storage; }
         const T* operator->() const { return m_storage; }
