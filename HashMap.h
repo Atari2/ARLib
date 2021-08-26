@@ -68,8 +68,8 @@ namespace ARLib {
         HashMap() = default;
 
         HashMap(std::initializer_list<MapEntry> entries) {
-            for (const auto& val : entries) {
-                add(val);
+            for (auto val : entries) {
+                add(move(val));
             }
         }
 
