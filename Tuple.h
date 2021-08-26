@@ -35,6 +35,8 @@ namespace ARLib {
         bool operator==(const Tuple& other) const { return equality_impl<sizeof...(Args) - 1>(other); }
 
         Tuple& operator=(T&& value) {
+            static_assert(!IsAnyOfV<T, Args...>,
+                          "Don't use the assignment operator with a type that appears more than once in the tuple");
             m_member = move(value);
             return *this;
         }
@@ -49,6 +51,8 @@ namespace ARLib {
         constexpr const Tp& get() const {
             static_assert(IsAnyOfV<Tp, T, Args...>);
             if constexpr (SameAs<Tp, T>) {
+                static_assert(!IsAnyOfV<Tp, Args...>,
+                              "Don't use the typed get function with a type that appears more than once in the tuple");
                 return m_member;
             } else {
                 return static_cast<const Tuple<Args...>*>(this)->template get<Tp>();
@@ -59,6 +63,8 @@ namespace ARLib {
         constexpr Tp& get() {
             static_assert(IsAnyOfV<Tp, T, Args...>);
             if constexpr (SameAs<Tp, T>) {
+                static_assert(!IsAnyOfV<Tp, Args...>,
+                              "Don't use the typed get function with a type that appears more than once in the tuple");
                 return m_member;
             } else {
                 return static_cast<Tuple<Args...>*>(this)->template get<Tp>();
