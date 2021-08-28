@@ -99,6 +99,7 @@ add_library(ARLib ${ARLIB_SOURCE_FILES})
 
 if (ARLIB_TOP_LEVEL)
 	add_subdirectory(Tests)
+	add_subdirectory(Playground)
 endif()
 
 if (PERF_TEST)
