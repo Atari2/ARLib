@@ -2,6 +2,7 @@
 #include "Concepts.h"
 #include "Iterator.h"
 #include "cmath_compat.h"
+#include "Utility.h"
 
 namespace ARLib {
 

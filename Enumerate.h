@@ -1,6 +1,7 @@
 #pragma once
 #include "Algorithm.h"
 #include "Iterator.h"
+#include "Pair.h"
 
 namespace ARLib {
     template <typename T, ComparatorType CMP = ComparatorType::NotEqual, typename = EnableIfT<IsNonboolIntegral<T>>>

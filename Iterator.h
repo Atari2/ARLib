@@ -1,7 +1,6 @@
 #pragma once
 #include "Comparator.h"
 #include "Concepts.h"
-#include "Pair.h"
 #include "TypeTraits.h"
 #include "Types.h"
 
@@ -61,7 +60,7 @@ namespace ARLib {
             return *this;
         }
 
-        Iterator& operator=(Iterator<T>&& other)  noexcept {
+        Iterator& operator=(Iterator<T>&& other) noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
             return *this;
@@ -110,7 +109,7 @@ namespace ARLib {
 
         ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) { m_current = other.m_current; }
 
-        ConstIterator<Ct>& operator=(ConstIterator<Ct>&& other)  noexcept {
+        ConstIterator<Ct>& operator=(ConstIterator<Ct>&& other) noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
         }
@@ -270,71 +269,6 @@ namespace ARLib {
         bool operator>(const LoopIterator& other) override { return m_current > other.m_current; }
         size_t operator-(const LoopIterator& other) {
             return static_cast<size_t>(m_current) - static_cast<size_t>(other.m_current);
-        }
-    };
-
-    template <typename T>
-    class Enumerator : public IteratorOperators<Enumerator<T>>, IteratorType<T> {
-        Iterator<T> m_iter;
-        size_t m_index;
-
-        using Unit = Pair<size_t, T&>;
-
-        public:
-        explicit Enumerator(T* begin) : m_iter(begin), m_index(0) {}
-        Enumerator(T* begin, size_t index) : m_iter(begin), m_index(index) {}
-        Enumerator(Iterator<T> iter, size_t index) : m_iter(iter), m_index(index) {}
-        Unit operator*() { return {m_index, *m_iter}; }
-
-        Enumerator& operator++() {
-            m_index++;
-            m_iter++;
-            return *this;
-        }
-
-        Enumerator operator++(int) { return {m_iter++, m_index++}; }
-        bool operator==(const Enumerator& other) const override { return m_index == other.m_index; }
-        bool operator!=(const Enumerator& other) const override { return m_index != other.m_index; }
-        bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
-        bool operator>(const Enumerator& other) override { return m_index > other.m_index; }
-        size_t operator-(const Enumerator& other) { return m_iter - other.m_iter; }
-    };
-
-    template <typename F, typename S>
-    class PairIterator {
-        using IterUnit = Pair<F, S>;
-        IterUnit m_current_pair;
-        using FT = decltype(*m_current_pair.template get<0>());
-        using ST = decltype(*m_current_pair.template get<1>());
-
-        public:
-        PairIterator(F first, S second) : m_current_pair(first, second) {}
-        explicit PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
-        Pair<FT, ST> operator*() { return {*m_current_pair.template get<0>(), *m_current_pair.template get<1>()}; }
-        PairIterator& operator++() {
-            m_current_pair.template get<0>()++;
-            m_current_pair.template get<1>()++;
-            return *this;
-        }
-
-        PairIterator operator++(int) {
-            return {m_current_pair.template get<0>()++, m_current_pair.template get<1>()++};
-        }
-        bool operator==(const PairIterator& other) const {
-            return m_current_pair.template get<0>() == other.m_current_pair.template get<0>() &&
-                   m_current_pair.template get<1>() == other.m_current_pair.template get<1>();
-        }
-        bool operator!=(const PairIterator& other) const {
-            return m_current_pair.template get<0>() != other.m_current_pair.template get<0>() &&
-                   m_current_pair.template get<1>() != other.m_current_pair.template get<1>();
-        }
-        bool operator<(const PairIterator& other) {
-            return m_current_pair.template get<0>() < other.m_current_pair.template get<0>() &&
-                   m_current_pair.template get<1>() < other.m_current_pair.template get<1>();
-        }
-        bool operator>(const PairIterator& other) {
-            return m_current_pair.template get<0>() > other.m_current_pair.template get<0>() &&
-                   m_current_pair.template get<1>() > other.m_current_pair.template get<1>();
         }
     };
 
