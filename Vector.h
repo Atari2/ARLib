@@ -20,7 +20,6 @@ namespace ARLib {
         using ConstIter = ConstIterator<T>;
         using ReverseIter = ReverseIterator<T>;
         using ConstReverseIter = ConstReverseIterator<T>;
-        using Enumer = Enumerator<T>;
 
         T* m_storage = nullptr;
         T* m_end_of_storage = nullptr;
@@ -323,10 +322,6 @@ namespace ARLib {
         bool empty() const { return m_size == 0; }
 
         const T* data() { return m_storage; }
-
-        Enumer enumerate_begin() const { return Enumer{m_storage}; }
-
-        Enumer enumerate_end() const { return Enumer{m_storage + m_size, m_size}; }
 
         Iter begin() const { return Iter{m_storage}; }
 

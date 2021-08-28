@@ -289,8 +289,8 @@ namespace ARLib {
         template <typename... Args>
         explicit Variant(Args&&... args) : m_storage(Forward<Args>(args)...) {}
 
-        Variant(const Variant& other) : m_storage(other.m_storage) { }
-        Variant(Variant&& other) noexcept : m_storage(move(other.m_storage)) { }
+        Variant(const Variant& other) : m_storage(other.m_storage) {}
+        Variant(Variant&& other) noexcept : m_storage(move(other.m_storage)) {}
         Variant& operator=(const Variant& other) {
             m_storage.deactivate();
             m_storage = other.m_storage;
