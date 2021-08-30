@@ -1,6 +1,7 @@
 #pragma once
 #include "Assertion.h"
 #include "Concepts.h"
+#include "PrintInfo.h"
 #include "TypeTraits.h"
 #include "Utility.h"
 
@@ -95,6 +96,14 @@ namespace ARLib {
                     head.~First();
                 } else {
                     tail.deactivate();
+                }
+            }
+
+            String get_printinfo_string() const requires Printable<First> {
+                if (is_active) {
+                    return PrintInfo<First>{head}.repr();
+                } else {
+                    return tail.get_printinfo_string();
                 }
             }
 
@@ -205,6 +214,14 @@ namespace ARLib {
                 }
             }
 
+            String get_printinfo_string() const requires Printable<Type> {
+                if (is_active) {
+                    return PrintInfo<Type>{head}.repr();
+                } else {
+                    return "Uninitialized variant"_s;
+                }
+            }
+
             template <class T, typename = EnableIfT<IsSameV<T, Type>>>
             auto& get() const {
                 HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is `%s` but this type is not active.",
@@ -284,6 +301,10 @@ namespace ARLib {
     template <class... Types>
     class Variant {
         detail::VariantStorage<Types...> m_storage;
+        friend PrintInfo<Variant<Types...>>;
+
+        protected:
+        String get_printinfo_string() const { return m_storage.get_printinfo_string(); }
 
         public:
         template <typename... Args>
@@ -324,11 +345,11 @@ namespace ARLib {
         }
 
         template <class T>
-        bool contains_type() {
+        bool contains_type() const {
             return m_storage.template contains_type<T>();
         }
 
-        bool is_active() { return m_storage.active(); }
+        bool is_active() const { return m_storage.active(); }
 
         ~Variant() = default;
     };
@@ -363,11 +384,18 @@ namespace ARLib {
 
         template <class T>
         requires IsSameV<T, Monostate>
-        bool contains_type() { return m_storage.active(); }
+        bool contains_type() const { return m_storage.active(); }
 
-        bool is_active() { return m_storage.active(); }
+        bool is_active() const { return m_storage.active(); }
 
         ~Variant() = default;
+    };
+
+    template <Printable Arg, Printable... Args>
+    struct PrintInfo<Variant<Arg, Args...>> {
+        const Variant<Arg, Args...>& m_variant;
+        explicit PrintInfo(const Variant<Arg, Args...>& variant) : m_variant(variant) {}
+        String repr() const { return m_variant.get_printinfo_string(); }
     };
 
 } // namespace ARLib

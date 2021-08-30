@@ -2,6 +2,7 @@
 
 #include "Assertion.h"
 #include "Iterator.h"
+#include "PrintInfo.h"
 #include "TypeTraits.h"
 
 namespace ARLib {
@@ -43,5 +44,20 @@ namespace ARLib {
 
         ConstIterator<T> begin() const { return ConstIterator<T>{PointerTraits<const T*>::pointer_to(*_m_storage_)}; }
         ConstIterator<T> end() const { return ConstIterator<T>{PointerTraits<const T*>::pointer_to(*_m_storage_) + S}; }
+    };
+
+    template <Printable T, size_t S>
+    struct PrintInfo<Array<T, S>> {
+        const Array<T, S>& m_array;
+        explicit PrintInfo(const Array<T, S>& array_) : m_array(array_) {}
+        String repr() {
+            String str{"[ "};
+            for (size_t i = 0; i < S; i++) {
+                str.concat(PrintInfo<T>{m_array[i]}.repr() + ", "_s);
+            }
+            str = str.substring(0, str.size() - 2);
+            str.concat(" ]"_s);
+            return str;
+        }
     };
 } // namespace ARLib

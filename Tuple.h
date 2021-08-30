@@ -1,8 +1,7 @@
 #pragma once
 #include "Concepts.h"
 #include "Utility.h"
-
-// TODO: make sure to overload everything correctly for rvalue and lvalue references
+#include "PrintInfo.h"
 
 namespace ARLib {
     template <typename T, typename... Args>
@@ -184,4 +183,17 @@ namespace ARLib {
     requires(Idx < sizeof...(Args) && IsAnyOfV<Tp, Args...>) void set(Tuple<Args...>& tuple, Tp value) {
         tuple.template set<Idx, Tp>(move(value));
     }
+
+    template <Printable... Args>
+    struct PrintInfo<Tuple<Args...>> {
+        const Tuple<Args...>& m_tuple;
+        explicit PrintInfo(const Tuple<Args...>& tuple) : m_tuple(tuple) {}
+        String repr() const { 
+            String str{"{ "};
+            (str.concat(PrintInfo<Args>{m_tuple.template get<Args>()}.repr() + ", "_s), ...);
+            str = str.substring(0, str.size() - 2);
+            str.concat(" }");
+            return str;
+        }
+    };
 } // namespace ARLib
