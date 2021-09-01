@@ -73,7 +73,10 @@ namespace ARLib {
         using type = U&;
     };
 
-        template <typename>
+    template <typename T, typename U = RemoveCvRefT<T>>
+    using InvUnwrapT = typename InvUnwrap<T, U>::type;
+
+    template <typename>
     struct IsMemberObjectPointerHelper : public FalseType {};
 
     template <typename T, typename C>
@@ -90,6 +93,24 @@ namespace ARLib {
 
     template <typename T>
     struct IsMemberFunctionPointer : public IsMemberFunctionPointerHelper<typename RemoveCv<T>::type>::type {};
+
+    template <typename T>
+    constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<T>::value;
+
+    template <typename C>
+    struct MembFnUnwrap {};
+
+    template <typename T, typename C>
+    struct MembFnUnwrap<T C::*> {
+        using cls = C;
+        using fn = T;
+    };
+
+    template <typename T>
+    using MembFnCls = typename MembFnUnwrap<RemoveReferenceT<T>>::cls;
+
+    template <typename T>
+    using MembFnFn = typename MembFnUnwrap<RemoveReferenceT<T>>::fn;
 
     template <typename Ptr>
     struct PointerTraits {

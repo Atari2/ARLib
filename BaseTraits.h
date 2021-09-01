@@ -26,6 +26,11 @@ namespace ARLib {
     using IsDestructibleSafe = std::__is_destructible_safe<T>;
 #endif
 
+    template <typename T>
+    struct Identity {
+        using type = T;
+    };
+
     template <class T>
     using IsUnion = std::is_union<T>;
 

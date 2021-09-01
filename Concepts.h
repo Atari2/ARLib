@@ -228,10 +228,26 @@ namespace ARLib {
         { func(args...) } -> SameAs<ResultOfT<Callable(Args...)>>;
     };
 
+    template <typename Cls, typename F, typename Res, typename... Args>
+    concept CallMembFnImpl = requires {
+        { (declval<F>())(declval<Args>()...) } -> SameAs<Res>;
+    };
+
+    template <typename Cls, typename F, typename Res, typename MaybeClsPtr, typename... Args>
+    struct CallMembFnImplStruct {
+        static constexpr bool is_mbm_fn = IsSameV<MaybeClsPtr, Cls*> ?
+                                          CallMembFnImpl<Cls, F, Res, Args...> :
+                                          CallMembFnImpl<Cls, F, Res, MaybeClsPtr, Args...>;
+    };
+
+    template <typename Cls, typename F, typename Res, typename... Args>
+    concept CallMembFn = CallMembFnImplStruct<Cls, F, Res, Args...>::is_mbm_fn;
+
     template <typename Callable, typename Res, typename... Args>
     concept CallableWithRes = requires(Callable func, Args... args) {
         { func(args...) } -> SameAs<Res>;
-    };
+    }
+    || CallMembFn<MembFnCls<Callable>, MembFnFn<Callable>, Res, Args...>;
 
     template <typename T>
     concept Swappable = requires(T a, T b) {

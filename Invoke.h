@@ -42,18 +42,8 @@ namespace ARLib {
         return invoke_impl<type>(tag{}, Forward<Callable>(fn), Forward<Args>(args)...);
     }
 
-    // FIXME: CallableWithRes should behave correctly when called on member function pointers.
-    // Code like the following currently fails if the requires clause is uncommented:
-    // struct TestStruct {
-    //     static bool ret() { return true; }
-    //     bool other_ret(bool b) { return b; }
-    // };
-    // 
-    // TestStruct st{};
-    // 
-    // Function<bool(TestStruct*, bool)> fn3{&TestStruct::other_ret};
     template <typename Res, typename Callable, typename... Args>
-    constexpr Res invoke_r(Callable&& fn, Args&&... args) /*requires CallableWithRes<Callable, Res, Args...>*/ {
+    constexpr Res invoke_r(Callable&& fn, Args&&... args) requires CallableWithRes<Callable, Res, Args...> {
         using result = detail::InvokeResultForFunc<Callable, Args...>;
         using type = typename result::type;
         using tag = typename result::invoke_type;
@@ -62,4 +52,4 @@ namespace ARLib {
         else
             return invoke_impl<type>(tag{}, Forward<Callable>(fn), Forward<Args>(args)...);
     }
-}
+} // namespace ARLib
