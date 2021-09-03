@@ -476,3 +476,21 @@ TEST(ARLibTests, ContainerAlgoTest) {
                      }),
               true);
 }
+
+#ifndef DISABLE_THREADING
+
+TEST(ARLibTests, ThreadingTests) {
+    auto func = [](int val, String help) {
+        EXPECT_EQ(val, 30);
+        EXPECT_EQ(help, "hello world"_s);
+    };
+
+    Thread t{};
+    EXPECT_FALSE(t.joinable());
+    t = move(Thread{func, 30, "hello world"_s});
+    EXPECT_TRUE(t.joinable());
+    t.join();
+    EXPECT_FALSE(t.joinable());
+}
+
+#endif
