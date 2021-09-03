@@ -1,7 +1,8 @@
 #pragma once
 #include "Concepts.h"
-#include "Utility.h"
+#include "Invoke.h"
 #include "PrintInfo.h"
+#include "Utility.h"
 
 namespace ARLib {
     template <typename T, typename... Args>
@@ -26,7 +27,7 @@ namespace ARLib {
         Tuple(const Tuple&) = default;
         Tuple(Tuple&&) noexcept = default;
 
-        explicit Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(move(arg)) {}
+        explicit Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(arg) {}
         Tuple& operator=(const Tuple&) = default;
         Tuple& operator=(Tuple&&) noexcept = default;
 
@@ -116,7 +117,7 @@ namespace ARLib {
 
         public:
         Tuple() = default;
-        explicit Tuple(T arg) : m_member(move(arg)) {}
+        explicit Tuple(T arg) : m_member(arg) {}
 
         bool operator==(const Tuple& other) const { return m_member == other.m_member; }
 
@@ -184,11 +185,35 @@ namespace ARLib {
         tuple.template set<Idx, Tp>(move(value));
     }
 
+    template <typename... Args>
+    constexpr Tuple<Args&...> tie(Args&... args) noexcept {
+        return Tuple<Args&...>{args...};
+    }
+
+    template <class... Types>
+    struct TupleSize : IntegralConstant<size_t, sizeof...(Types)> {};
+
+    template <class... Types>
+    constexpr inline size_t TupleSizeV = TupleSize<Types...>::value;
+
+    namespace detail {
+        template <class F, class Tuple, size_t... I>
+        constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, IndexSequence<I...>) {
+            return invoke(Forward<F>(f), get<I>(Forward<Tuple>(t))...);
+        }
+    } // namespace detail
+
+    template <class F, class Tuple>
+    constexpr decltype(auto) apply(F&& f, Tuple&& t) {
+        return detail::apply_impl(Forward<F>(f), Forward<Tuple>(t),
+                                  MakeIndexSequence<TupleSizeV<RemoveReferenceT<Tuple>>>{});
+    }
+
     template <Printable... Args>
     struct PrintInfo<Tuple<Args...>> {
         const Tuple<Args...>& m_tuple;
         explicit PrintInfo(const Tuple<Args...>& tuple) : m_tuple(tuple) {}
-        String repr() const { 
+        String repr() const {
             String str{"{ "};
             (str.concat(PrintInfo<Args>{m_tuple.template get<Args>()}.repr() + ", "_s), ...);
             str = str.substring(0, str.size() - 2);
