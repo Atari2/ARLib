@@ -36,7 +36,7 @@ namespace ARLib {
 #define ARGS_DECL RetVal ret
     
     /* MUTEX */
-    using MutexT = Mutex;
+    using MutexT = MutexHandle;
     using MutexTimer = XTime;
     using MutexAttributes = MutexType;
 #endif
@@ -79,15 +79,20 @@ namespace ARLib {
     };
 
     class MutexNative {
+        public:
         static Pair<MutexT, bool> init();
         static Pair<MutexT, bool> init_try();
         static Pair<MutexT, bool> init_timed();
         static Pair<MutexT, bool> init_recursive();
-        static void destroy(MutexT);
-        static bool lock(MutexT);
-        static bool trylock(MutexT);
-        static bool timedlock(MutexT, MutexTimer);
-        static bool unlock(MutexT);
+        static MutexT init_noret();
+        static MutexT init_try_noret();
+        static MutexT init_timed_noret();
+        static MutexT init_recursive_noret();
+        static void destroy(MutexT&);
+        static bool lock(MutexT&);
+        static bool trylock(MutexT&);
+        static bool timedlock(MutexT&, MutexTimer);
+        static bool unlock(MutexT&);
     };
 } // namespace ARLib
 #endif

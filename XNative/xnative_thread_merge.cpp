@@ -55,11 +55,44 @@ namespace ARLib {
         auto state = pthread_mutex_init(&mtx, &attr);
         return {mtx, state == 0};
     }
-    void MutexNative::destroy(MutexT mutex) { pthread_mutex_destroy(&mutex); }
-    bool MutexNative::lock(MutexT mutex) { return pthread_mutex_lock(&mutex) == 0; }
-    bool MutexNative::trylock(MutexT mutex) { return pthread_mutex_trylock(&mutex) == 0; }
-    bool MutexNative::timedlock(MutexT mutex, MutexTimer timer) { return pthread_mutex_timedlock(&mutex, &timer) == 0; }
-    bool MutexNative::unlock(MutexT mutex) { return pthread_mutex_unlock(&mutex) == 0; }
+
+    MutexT MutexNative::init_noret() {
+        MutexT mtx{};
+        pthread_mutex_init(&mtx, nullptr);
+        return mtx;
+    }
+    MutexT MutexNative::init_try_noret() {
+        MutexT mtx{};
+        PthreadMutexAttr attr{};
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, static_cast<int>(PThreadMutex::ERRORCHECK_NP));
+        pthread_mutex_init(&mtx, &attr);
+        return mtx;
+    }
+    MutexT MutexNative::init_timed_noret() {
+        MutexT mtx{};
+        PthreadMutexAttr attr{};
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, static_cast<int>(PThreadMutex::TIMED_NP));
+        pthread_mutex_init(&mtx, &attr);
+        return mtx;
+    }
+    MutexT MutexNative::init_recursive_noret() {
+        MutexT mtx{};
+        PthreadMutexAttr attr{};
+        pthread_mutexattr_init(&attr);
+        pthread_mutexattr_settype(&attr, static_cast<int>(PThreadMutex::RECURSIVE_NP));
+        pthread_mutex_init(&mtx, &attr);
+        return mtx;
+    }
+
+    void MutexNative::destroy(MutexT& mutex) { pthread_mutex_destroy(&mutex); }
+    bool MutexNative::lock(MutexT& mutex) { return pthread_mutex_lock(&mutex) == 0; }
+    bool MutexNative::trylock(MutexT& mutex) { return pthread_mutex_trylock(&mutex) == 0; }
+    bool MutexNative::timedlock(MutexT& mutex, MutexTimer timer) {
+        return pthread_mutex_timedlock(&mutex, &timer) == 0;
+    }
+    bool MutexNative::unlock(MutexT& mutex) { return pthread_mutex_unlock(&mutex) == 0; }
 #else
     Pair<ThreadT, bool> ThreadNative::create(ThreadRoutine routine, void* arg) {
         ThreadHandle t{};
@@ -104,13 +137,35 @@ namespace ARLib {
         auto state = mutex_init(&mtx, MutexType::Recursive);
         return {mtx, state == ThreadState::Success};
     }
-    void MutexNative::destroy(MutexT mutex) { mutex_destroy(mutex); }
-    bool MutexNative::lock(MutexT mutex) { return mutex_lock(mutex) == ThreadState::Success; }
-    bool MutexNative::trylock(MutexT mutex) { return mutex_trylock(mutex) == ThreadState::Success; }
-    bool MutexNative::timedlock(MutexT mutex, MutexTimer timer) {
+
+    MutexT MutexNative::init_noret() {
+        MutexT mtx{};
+        mutex_init(&mtx, MutexType::Plain);
+        return mtx;
+    }
+    MutexT MutexNative::init_try_noret() {
+        MutexT mtx{};
+        mutex_init(&mtx, MutexType::Try);
+        return mtx;
+    }
+    MutexT MutexNative::init_timed_noret() {
+        MutexT mtx{};
+        mutex_init(&mtx, MutexType::Timed);
+        return mtx;
+    }
+    MutexT MutexNative::init_recursive_noret() {
+        MutexT mtx{};
+        mutex_init(&mtx, MutexType::Recursive);
+        return mtx;
+    }
+
+    void MutexNative::destroy(MutexT& mutex) { mutex_destroy(mutex); }
+    bool MutexNative::lock(MutexT& mutex) { return mutex_lock(mutex) == ThreadState::Success; }
+    bool MutexNative::trylock(MutexT& mutex) { return mutex_trylock(mutex) == ThreadState::Success; }
+    bool MutexNative::timedlock(MutexT& mutex, MutexTimer timer) {
         return mutex_timedlock(mutex, &timer) == ThreadState::Success;
     }
-    bool MutexNative::unlock(MutexT mutex) { return mutex_unlock(mutex) == ThreadState::Success; }
+    bool MutexNative::unlock(MutexT& mutex) { return mutex_unlock(mutex) == ThreadState::Success; }
 
 #endif
 } // namespace ARLib

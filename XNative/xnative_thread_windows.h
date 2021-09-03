@@ -25,9 +25,9 @@ namespace ARLib {
 #define Cond_internal_imp_size       72
 #define Cond_internal_imp_alignment  8
 
-    using Mutex = struct mutex_internal_imp_t*;
+    using MutexHandle = struct mutex_internal_imp_t*;
 
-    using Cond = struct _Cnd_internal_imp_t*;
+    using CondHandle = struct _Cnd_internal_imp_t*;
 
     using SharedMutex = void*;
 
@@ -41,19 +41,19 @@ namespace ARLib {
     unsigned int __cdecl thread_hardware_concurrency();
     ThreadId __cdecl thread_id();
 
-    ThreadState __cdecl mutex_init(Mutex*, MutexType);
-    void __cdecl mutex_destroy(Mutex);
-    void __cdecl mutex_init_in_situ(Mutex, MutexType);
-    void __cdecl mutex_destroy_in_situ(Mutex);
-    int __cdecl mutex_current_owns(Mutex);
-    ThreadState __cdecl mutex_lock(Mutex);
-    ThreadState __cdecl mutex_trylock(Mutex);
-    ThreadState __cdecl mutex_timedlock(Mutex, const XTime*);
-    ThreadState __cdecl mutex_unlock(Mutex);
+    ThreadState __cdecl mutex_init(MutexHandle*, MutexType);
+    void __cdecl mutex_destroy(MutexHandle);
+    void __cdecl mutex_init_in_situ(MutexHandle, MutexType);
+    void __cdecl mutex_destroy_in_situ(MutexHandle);
+    int __cdecl mutex_current_owns(MutexHandle);
+    ThreadState __cdecl mutex_lock(MutexHandle);
+    ThreadState __cdecl mutex_trylock(MutexHandle);
+    ThreadState __cdecl mutex_timedlock(MutexHandle, const XTime*);
+    ThreadState __cdecl mutex_unlock(MutexHandle);
 
-    void* __cdecl mutex_getconcrtcs(Mutex);
-    void __cdecl mutex_clear_owner(Mutex);
-    void __cdecl mutex_reset_owner(Mutex);
+    void* __cdecl mutex_getconcrtcs(MutexHandle);
+    void __cdecl mutex_clear_owner(MutexHandle);
+    void __cdecl mutex_reset_owner(MutexHandle);
 
     void __cdecl sharedmutex_lock_exclusive(SharedMutex*);
     void __cdecl sharedmutex_lock_shared(SharedMutex*);
@@ -62,16 +62,16 @@ namespace ARLib {
     void __cdecl sharedmutex_unlock_exclusive(SharedMutex*);
     void __cdecl sharedmutex_unlock_shared(SharedMutex*);
 
-    int __cdecl cond_init(Cond*);
-    void __cdecl cond_destroy(Cond);
-    void __cdecl cond_init_in_situ(Cond);
-    void __cdecl cond_destroy_in_situ(Cond);
-    int __cdecl cond_wait(Cond, Mutex);
-    int __cdecl cond_timedwait(Cond, Mutex, const XTime*);
-    int __cdecl cond_broadcast(Cond);
-    int __cdecl cond_signal(Cond);
-    void __cdecl cond_register_at_thread_exit(Cond, Mutex, int*);
-    void __cdecl cond_unregister_at_thread_exit(Mutex);
+    int __cdecl cond_init(CondHandle*);
+    void __cdecl cond_destroy(CondHandle);
+    void __cdecl cond_init_in_situ(CondHandle);
+    void __cdecl cond_destroy_in_situ(CondHandle);
+    int __cdecl cond_wait(CondHandle, MutexHandle);
+    int __cdecl cond_timedwait(CondHandle, MutexHandle, const XTime*);
+    int __cdecl cond_broadcast(CondHandle);
+    int __cdecl cond_signal(CondHandle);
+    void __cdecl cond_register_at_thread_exit(CondHandle, MutexHandle, int*);
+    void __cdecl cond_unregister_at_thread_exit(MutexHandle);
     void __cdecl cond_do_broadcast_at_thread_exit();
 
     typedef void(__cdecl* beginthread_proc_type)(void*);
