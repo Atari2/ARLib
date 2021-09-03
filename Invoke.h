@@ -36,7 +36,7 @@ namespace ARLib {
 
     template <typename Callable, typename... Args>
     constexpr typename InvokeResult<Callable, Args...>::type invoke(Callable&& fn, Args&&... args) noexcept {
-        using result = InvokeResult<Callable, Args...>;
+        using result = detail::InvokeResultForFunc<Callable, Args...>;
         using type = typename result::type;
         using tag = typename result::invoke_type;
         return invoke_impl<type>(tag{}, Forward<Callable>(fn), Forward<Args>(args)...);

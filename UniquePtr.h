@@ -21,7 +21,7 @@ namespace ARLib {
         }
 
         explicit UniquePtr(nullptr_t) = delete;
-        explicit UniquePtr(T*& ptr) : m_storage(ptr) { ptr = nullptr; }
+        explicit UniquePtr(T* ptr) : m_storage(ptr) { }
         explicit UniquePtr(T&& storage) : m_storage(new T{move(storage)}) {}
         UniquePtr(UniquePtr&& ptr) noexcept {
             m_storage = ptr.m_storage;

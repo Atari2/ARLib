@@ -61,6 +61,9 @@ namespace ARLib {
     };
 
     template <typename T>
+    using DecayT = typename Decay<T>::type;
+
+    template <typename T>
     using RemoveCvRefT = typename RemoveCv<typename RemoveReference<T>::type>::type;
 
     template <typename T, typename U = RemoveCvRefT<T>>
