@@ -1,11 +1,12 @@
+#include "../Array.h"
 #include "../CharConv.h"
+#include "../Pair.h"
 #include "../Printer.h"
 #include "../String.h"
-#include "../Pair.h"
+#include "../Tuple.h"
 #include "../Variant.h"
 #include "../Vector.h"
-#include "../Tuple.h"
-#include "../Array.h"
+
 using namespace ARLib;
 
 int main() {
