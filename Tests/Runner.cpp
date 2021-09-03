@@ -491,6 +491,12 @@ TEST(ARLibTests, ThreadingTests) {
     EXPECT_TRUE(t.joinable());
     t.join();
     EXPECT_FALSE(t.joinable());
+    Mutex m1{};
+    Mutex m2{};
+    Mutex m3{};
+    { ScopedLock lock{m1, m2, m3}; }
+    RecursiveMutex m4{};
+    { UniqueLock ll{m4}; }
 }
 
 #endif
