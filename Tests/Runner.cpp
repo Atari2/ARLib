@@ -499,6 +499,17 @@ TEST(ARLibTests, ThreadingTests) {
     { UniqueLock ll{m4}; }
 }
 
+TEST(ARLibTests, EventLoop) {
+    auto func = [](int val, String help) {
+        EXPECT_EQ(val, 30);
+        EXPECT_EQ(help, "hello world"_s);
+    };
+    EventLoop loop{};
+    EXPECT_FALSE(loop.running());
+    loop.subscribe_callback(func, 30, "hello world"_s);
+    loop.join();
+}
+
 #endif
 
 TEST(ARLibTests, ChronoTest) {

@@ -4,6 +4,7 @@
 #include "../CharConv.h"
 #include "../Chrono.h"
 #include "../Enumerate.h"
+#include "../EventLoop.h"
 #include "../Functional.h"
 #include "../GenericView.h"
 #include "../HashMap.h"
