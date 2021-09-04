@@ -2,6 +2,7 @@
 #include "../Algorithm.h"
 #include "../Array.h"
 #include "../CharConv.h"
+#include "../Chrono.h"
 #include "../Enumerate.h"
 #include "../Functional.h"
 #include "../GenericView.h"

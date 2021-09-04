@@ -500,3 +500,15 @@ TEST(ARLibTests, ThreadingTests) {
 }
 
 #endif
+
+TEST(ARLibTests, ChronoTest) {
+    auto now = Clock::now();
+    String s{};
+    for (int i = 0; i < 100; i++) {
+        s.append('c');
+    }
+    auto new_now = Clock::now();
+    EXPECT_TRUE(new_now > now);
+    auto diff = Clock::diff(now, new_now);
+    EXPECT_TRUE(diff > 0);
+}
