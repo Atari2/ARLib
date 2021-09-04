@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseTraits.h"
+#include "Concepts.h"
 #include "Types.h"
 
 namespace ARLib {
@@ -180,7 +180,5 @@ namespace ARLib {
     double trunc(double x);
     double round(double x);
 
-    template <typename T>
-    requires (IsIntegralV<T> || IsAnyOfV<T, float, double, long double>)
-    constexpr T abs(T x) { return x < T{0} ? -x : x; }
+    constexpr auto abs(Numeric auto x) { return x < decltype(x){0} ? -x : x; }
 } // namespace ARLib
