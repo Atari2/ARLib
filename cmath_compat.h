@@ -1,6 +1,8 @@
 #pragma once
 
+#include "BaseTraits.h"
 #include "Types.h"
+
 namespace ARLib {
     namespace detail {
         enum class InfinityType : uint8_t { None, Plus, Minus };
@@ -178,7 +180,7 @@ namespace ARLib {
     double trunc(double x);
     double round(double x);
 
-    constexpr double abs(double x) { return x < 0.0 ? -x : x; }
-    constexpr int abs(int x) { return x < 0 ? -x : x; }
-    constexpr float abs(float x) { return x < 0.0f ? -x : x; }
+    template <typename T>
+    requires (IsIntegralV<T> || IsAnyOfV<T, float, double, long double>)
+    constexpr T abs(T x) { return x < T{0} ? -x : x; }
 } // namespace ARLib
