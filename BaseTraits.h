@@ -467,6 +467,12 @@ namespace ARLib {
              unsigned short, int, unsigned int, long, unsigned long, long long, unsigned long long>;
 
     template <class T>
+    inline constexpr bool IsFloatingPointV = IsAnyOfV<typename RemoveCv<T>::type, float, double, long double>;
+
+    template <class T>
+    inline constexpr bool IsNumericV = IsIntegralV<T> || IsFloatingPointV<T>;
+
+    template <class T>
     inline constexpr bool IsSizeV =
     IsAnyOfV<typename RemoveCv<T>::type, unsigned int, unsigned long, unsigned long long>;
 

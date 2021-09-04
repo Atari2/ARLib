@@ -276,6 +276,12 @@ namespace ARLib {
     concept Integral = IsIntegralV<T>;
 
     template <typename T>
+    concept FloatingPoint = IsFloatingPointV<T>;
+
+    template <typename T>
+    concept Numeric = IsNumericV<T>;
+
+    template <typename T>
     concept Sized = IsSizeV<T>;
 
     template <typename T>
