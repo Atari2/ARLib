@@ -13,8 +13,6 @@ For now it relies on:
 - `<initializer_list>` for `std::initializer_list<T>`
 - `<pthread.h>` on Linux, this dependency can be disabled with -DDISABLE_THREADING passed upon running CMake.
 
-Conditionally (and only for testing and profiling purposes) it also relies on `<chrono>`, however that dependancy gets added only for the test runner and only when adding `-DPERF_TEST=true` upon CMake generation. 
-
 This library has been compiled and tested with:
 - MSVC 19.29.30037.0
 - GCC 11

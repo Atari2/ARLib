@@ -6,6 +6,7 @@
 #include "../String.h"
 #include "../UniquePtr.h"
 #include "../Vector.h"
+#include "../Chrono.h"
 
 #define TIMER_START(coll)                                                                                              \
     {                                                                                                                  \
@@ -29,21 +30,21 @@
 
 namespace ARLib {
     class PerfCounter {
-        int64_t m_last_time;
+        TimePoint m_last_time;
 
         public:
-        int64_t start();
-        Pair<int64_t, int64_t> stop();
-        int64_t current_time();
+        TimePoint start();
+        Pair<TimePoint, TimeDiff> stop();
+        TimePoint current_time();
     };
 
     class RAIIPerfCounter {
         PerfCounter m_counter{};
-        int64_t m_start;
-        UniquePtr<Vector<int64_t>> m_vec;
+        TimePoint m_start;
+        UniquePtr<Vector<TimeDiff>> m_vec;
 
         public:
-        explicit RAIIPerfCounter(Vector<int64_t>*& vec);
+        explicit RAIIPerfCounter(Vector<TimeDiff>*& vec);
         explicit RAIIPerfCounter() : m_start(0), m_vec() {}
         ~RAIIPerfCounter();
     };
