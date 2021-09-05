@@ -281,8 +281,27 @@ namespace ARLib {
             new_str.concat(other);
             return new_str;
         }
+        String operator+(const char* other) const {
+            String new_str(*this);
+            new_str.concat(other);
+            return new_str;
+        }
+        String operator+(char c) const {
+            String new_str(*this);
+            new_str.append(c);
+            return new_str;
+        }
+
         String& operator+=(const String& other) {
             concat(other);
+            return *this;
+        }
+        String& operator+=(const char* other) {
+            concat(other);
+            return *this;
+        }
+        String& operator+=(char c) {
+            append(c);
             return *this;
         }
 

@@ -402,6 +402,8 @@ TEST(ARLibTests, StringTest2) {
     EXPECT_EQ(ret, vec);
     EXPECT_EQ(retv, vec);
     EXPECT_EQ(str.last_index_of_any("po"), str.size() - 1);
+    str2 += 'c';
+    EXPECT_EQ(str2, "ciao ciaoc"_s);
 }
 
 TEST(ARLibTests, PartialFuncTest2) {
