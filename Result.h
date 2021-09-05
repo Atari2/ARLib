@@ -2,6 +2,7 @@
 #include "Concepts.h"
 #include "Macros.h"
 #include "Utility.h"
+#include "Assertion.h"
 
 namespace ARLib {
     struct DefaultErr {};
@@ -98,14 +99,16 @@ namespace ARLib {
         CurrType type() const { return m_type; }
         bool is_error() const { return m_type == CurrType::Error; }
         bool is_ok() const { return m_type == CurrType::Ok; }
-        T_err&& to_error() {
-            if (is_error()) return move(m_err);
-            unreachable
+        T_err to_error() {
+            HARD_ASSERT(is_error(), "Tried to take error type from result with value.");
+            return move(m_err);
         }
-        T_ok&& to_ok() {
-            if (is_ok()) return move(m_ok);
-            unreachable
+        T_ok to_ok() {
+            HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
+            return move(m_ok);
         }
+
+
 
         explicit operator bool() const { return is_ok(); }
 

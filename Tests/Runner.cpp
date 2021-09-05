@@ -105,6 +105,10 @@ TEST(ARLibTests, OptionalTests) {
     EXPECT_EQ(opt.has_value(), true);
     delete opt.detach();
     EXPECT_EQ(opt.empty(), true);
+    auto str = Optional<String>{}.value_or("Hello world"_s);
+    auto str2 = Optional<String>{"hello cpp"_s}.value_or("shouldn't get returned"_s);
+    EXPECT_EQ(str, "Hello world"_s);
+    EXPECT_EQ(str2, "hello cpp"_s);
 }
 
 TEST(ARLibTests, ResulTests) {

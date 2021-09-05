@@ -17,24 +17,24 @@ namespace ARLib {
 
         public:
         Optional() = default;
-        Optional(const Optional<T>& other) {
+        Optional(const Optional& other) {
             if (other.m_exists) { m_object = new T{*other.m_object}; }
             m_exists = other.m_exists;
         }
-        Optional(Optional<T>&& other) noexcept {
+        Optional(Optional&& other) noexcept {
             m_object = other.m_object;
             m_exists = other.m_exists;
             other.m_object = nullptr;
             other.m_exists = false;
         }
 
-        Optional& operator=(const Optional<T>& other) {
+        Optional& operator=(const Optional& other) {
             if (this == &other) return *this;
             if (other.m_exists) *m_object = *other.m_object;
             m_exists = other.m_exists;
             return *this;
         }
-        Optional& operator=(Optional<T>&& other) noexcept {
+        Optional& operator=(Optional&& other) noexcept {
             m_object = other.m_object;
             m_exists = other.m_exists;
             other.m_object = nullptr;
@@ -46,14 +46,14 @@ namespace ARLib {
 
         Optional(const T& val) requires CopyAssignable<T> : m_object(new T), m_exists(true) { *m_object = val; }
 
-        Optional<T>& operator=(const T& val) requires CopyAssignable<T> {
+        Optional& operator=(const T& val) requires CopyAssignable<T> {
             evict_();
             m_object = new T{val};
             m_exists = true;
             return *this;
         }
 
-        Optional<T>& operator=(T&& val) requires CopyAssignable<T> {
+        Optional& operator=(T&& val) requires CopyAssignable<T> {
             evict_();
             m_object = new T{Forward<T>(val)};
             m_exists = true;
@@ -65,13 +65,21 @@ namespace ARLib {
 
         bool empty() const { return !m_exists; }
         bool has_value() const { return m_exists; };
-        const T& value() const {
+
+        const T& value() const& {
             assert_not_null_();
             return *m_object;
         }
-        T& value() {
+        T& value() & {
             assert_not_null_();
             return *m_object;
+        }
+
+        T value() && {
+            assert_not_null_();
+            T val = move(*m_object);
+            evict_();
+            return val;
         }
 
         const T* operator->() const {
@@ -94,9 +102,11 @@ namespace ARLib {
             return *m_object;
         }
 
-        T value_or(T&& default_value) requires CopyConstructible<T> {
+        T value_or(T&& default_value) && {
             if (!m_exists) return move(default_value);
-            return value();
+            T val = move(*m_object);
+            evict_();
+            return val;
         }
 
         template <typename... Args>
