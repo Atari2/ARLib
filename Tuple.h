@@ -34,7 +34,7 @@ namespace ARLib {
         bool operator==(const Tuple& other) const { return equality_impl<sizeof...(Args) - 1>(other); }
 
         Tuple& operator=(T&& value) {
-            static_assert(!IsAnyOfV<T, Args...>,
+            static_assert(!IsAnyOfCvRefV<T, Args...>,
                           "Don't use the assignment operator with a type that appears more than once in the tuple");
             m_member = move(value);
             return *this;
@@ -48,9 +48,9 @@ namespace ARLib {
 
         template <typename Tp>
         constexpr const Tp& get() const {
-            static_assert(IsAnyOfV<Tp, T, Args...>);
-            if constexpr (SameAs<Tp, T>) {
-                static_assert(!IsAnyOfV<Tp, Args...>,
+            static_assert(IsAnyOfCvRefV<Tp, T, Args...>);
+            if constexpr (SameAsCvRef<Tp, RemoveReferenceT<T>>) {
+                static_assert(!IsAnyOfCvRefV<Tp, RemoveReferenceT<Args>...>,
                               "Don't use the typed get function with a type that appears more than once in the tuple");
                 return m_member;
             } else {
@@ -60,9 +60,9 @@ namespace ARLib {
 
         template <typename Tp>
         constexpr Tp& get() {
-            static_assert(IsAnyOfV<Tp, T, Args...>);
-            if constexpr (SameAs<Tp, T>) {
-                static_assert(!IsAnyOfV<Tp, Args...>,
+            static_assert(IsAnyOfCvRefV<Tp, T, Args...>);
+            if constexpr (SameAsCvRef<Tp, T>) {
+                static_assert(!IsAnyOfCvRefV<Tp, Args...>,
                               "Don't use the typed get function with a type that appears more than once in the tuple");
                 return m_member;
             } else {
@@ -92,8 +92,8 @@ namespace ARLib {
 
         template <typename Tp>
         constexpr void set(Tp&& p) {
-            static_assert(IsAnyOfV<Tp, T, Args...>);
-            if constexpr (SameAs<Tp, T>) {
+            static_assert(IsAnyOfCvRefV<Tp, T, Args...>);
+            if constexpr (SameAsCvRef<Tp, T>) {
                 m_member = move(p);
             } else {
                 static_cast<Tuple<Args...>*>(this)->template set<Tp>(Forward<Tp>(p));
@@ -128,13 +128,13 @@ namespace ARLib {
 
         template <typename Tp>
         T& get() {
-            static_assert(SameAs<Tp, T>);
+            static_assert(SameAsCvRef<Tp, T>);
             return m_member;
         }
 
         template <typename Tp>
         const T& get() const {
-            static_assert(SameAs<Tp, T>);
+            static_assert(SameAsCvRef<Tp, T>);
             return m_member;
         }
 
@@ -152,7 +152,7 @@ namespace ARLib {
 
         template <typename Tp>
         void set(Tp&& p) {
-            static_assert(SameAs<Tp, T>);
+            static_assert(SameAsCvRef<Tp, T>);
             m_member = move(p);
         }
 
@@ -209,13 +209,16 @@ namespace ARLib {
                                   MakeIndexSequence<TupleSizeV<RemoveReferenceT<Tuple>>>{});
     }
 
-    template <Printable... Args>
+    template <typename... Args>
+    requires (Printable<RemoveCvRefT<Args>>, ...)
     struct PrintInfo<Tuple<Args...>> {
         const Tuple<Args...>& m_tuple;
         explicit PrintInfo(const Tuple<Args...>& tuple) : m_tuple(tuple) {}
         String repr() const {
             String str{"{ "};
-            (str.concat(PrintInfo<Args>{m_tuple.template get<Args>()}.repr() + ", "_s), ...);
+            (str.concat(PrintInfo<RemoveReferenceT<Args>>{m_tuple.template get<RemoveReferenceT<Args>>()}.repr() +
+                        ", "_s),
+             ...);
             str = str.substring(0, str.size() - 2);
             str.concat(" }");
             return str;
