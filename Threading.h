@@ -1,7 +1,10 @@
 #pragma once
 #ifndef DISABLE_THREADING
 #include "HashBase.h"
+#include "Ordering.h"
+#include "PrintInfo.h"
 #include "ThreadBase.h"
+#include "CharConv.h"
 
 namespace ARLib {
 
@@ -11,25 +14,38 @@ namespace ARLib {
             MutexT m_mutex = MutexNative::init_try_noret();
             constexpr MutexBase() noexcept = default;
             MutexBase(const MutexBase&) = delete;
+            MutexBase(MutexBase&&) = delete;
             MutexBase& operator=(const MutexBase&) = delete;
+            MutexBase& operator=(MutexBase&&) = delete;
         };
         class RecursiveMutexBase {
             protected:
-            RecursiveMutexBase(const RecursiveMutexBase&) = delete;
-            RecursiveMutexBase& operator=(const RecursiveMutexBase&) = delete;
             MutexT m_mutex = MutexNative::init_recursive_noret();
-            RecursiveMutexBase() = default;
+            constexpr RecursiveMutexBase() = default;
+            RecursiveMutexBase(const RecursiveMutexBase&) = delete;
+            RecursiveMutexBase(RecursiveMutexBase&&) = delete;
+            RecursiveMutexBase& operator=(const RecursiveMutexBase&) = delete;
+            RecursiveMutexBase& operator=(RecursiveMutexBase&&) = delete;
         };
     } // namespace detail
 
     class Mutex : private detail::MutexBase {
         public:
         using HandleType = MutexT*;
+        using ConstHandleType = const MutexT*;
         constexpr Mutex() noexcept = default;
         ~Mutex() = default;
 
         Mutex(const Mutex&) = delete;
         Mutex& operator=(const Mutex&) = delete;
+        Mutex(Mutex&&) = delete;
+        Mutex& operator=(Mutex&&) = delete;
+
+        bool operator==(const Mutex& other) const { return native_handle() == other.native_handle(); }
+        bool operator!=(const Mutex& other) const { return native_handle() != other.native_handle(); }
+        Ordering operator<=>(const Mutex& other) const {
+            return CompareThreeWay(native_handle(), other.native_handle());
+        }
 
         void lock() {
             bool e = MutexNative::lock(m_mutex);
@@ -39,15 +55,25 @@ namespace ARLib {
         bool try_lock() noexcept { return MutexNative::trylock(m_mutex); }
         void unlock() { MutexNative::unlock(m_mutex); }
         HandleType native_handle() noexcept { return &m_mutex; }
+        ConstHandleType native_handle() const noexcept { return &m_mutex; }
     };
 
     class RecursiveMutex : private detail::RecursiveMutexBase {
         public:
         using HandleType = MutexT*;
+        using ConstHandleType = const MutexT*;
         RecursiveMutex() = default;
         ~RecursiveMutex() = default;
         RecursiveMutex(const RecursiveMutex&) = delete;
         RecursiveMutex& operator=(const RecursiveMutex&) = delete;
+        RecursiveMutex(RecursiveMutex&&) = delete;
+        RecursiveMutex& operator=(RecursiveMutex&&) = delete;
+
+        bool operator==(const RecursiveMutex& other) const { return native_handle() == other.native_handle(); }
+        bool operator!=(const RecursiveMutex& other) const { return native_handle() != other.native_handle(); }
+        Ordering operator<=>(const RecursiveMutex& other) const {
+            return CompareThreeWay(native_handle(), other.native_handle());
+        }
 
         void lock() {
             bool e = MutexNative::lock(m_mutex);
@@ -57,6 +83,7 @@ namespace ARLib {
         void unlock() { MutexNative::unlock(m_mutex); }
 
         HandleType native_handle() noexcept { return &m_mutex; }
+        ConstHandleType native_handle() const noexcept { return &m_mutex; }
     };
 
     struct DeferLock {
@@ -76,11 +103,14 @@ namespace ARLib {
     class LockGuard {
         public:
         using MutexType = Mutex;
+        using ConstMutexType = const Mutex;
         explicit LockGuard(MutexType& m) : m_device(m) { m_device.lock(); }
         LockGuard(MutexType& m, AdoptLock) noexcept : m_device(m) {}
         ~LockGuard() { m_device.unlock(); }
         LockGuard(const LockGuard&) = delete;
         LockGuard& operator=(const LockGuard&) = delete;
+        MutexType& device() { return m_device; }
+        ConstMutexType& device() const { return m_device; }
 
         private:
         MutexType& m_device;
@@ -108,6 +138,9 @@ namespace ARLib {
         }
         UniqueLock(const UniqueLock&) = delete;
         UniqueLock& operator=(const UniqueLock&) = delete;
+
+        bool operator==(const UniqueLock& other) const { return other.mutex() == mutex(); }
+        bool operator!=(const UniqueLock& other) const { return other.mutex() != mutex(); }
 
         UniqueLock(UniqueLock&& u) noexcept : m_device(u.m_device), m_owns(u.m_owns) {
             u.m_device = 0;
@@ -231,8 +264,7 @@ namespace ARLib {
         public:
         explicit ScopedLock(MutexTypes&... m) : m_devices(tie(m...)) { lock(m...); }
 
-        explicit ScopedLock(AdoptLock, MutexTypes&... m) noexcept :
-            m_devices(tie(m...)) {} 
+        explicit ScopedLock(AdoptLock, MutexTypes&... m) noexcept : m_devices(tie(m...)) {}
 
         ~ScopedLock() {
             apply([](auto&... m) { (m.unlock(), ...); }, m_devices);
@@ -240,6 +272,9 @@ namespace ARLib {
 
         ScopedLock(const ScopedLock&) = delete;
         ScopedLock& operator=(const ScopedLock&) = delete;
+
+        const auto& devices() const { return m_devices; }
+        auto& devices() { return m_devices; }
 
         private:
         Tuple<MutexTypes&...> m_devices;
@@ -295,9 +330,12 @@ namespace ARLib {
             swap(t);
             return *this;
         }
-        bool joinable() { return !(ThreadNative::get_id(m_thread) == NotAThread); }
-        ThreadId get_id() { return ThreadNative::get_id(m_thread); }
-        ThreadT native_handle() { return m_thread; }
+        bool operator==(const Thread& other) const { return get_id() == other.get_id(); }
+        bool operator!=(const Thread& other) const { return get_id() != other.get_id(); }
+        Ordering operator<=>(const Thread& other) const { return CompareThreeWay(get_id(), other.get_id()); }
+        bool joinable() const { return !(ThreadNative::get_id(m_thread) == NotAThread); }
+        ThreadId get_id() const { return ThreadNative::get_id(m_thread); }
+        ThreadT native_handle() const { return m_thread; }
         void join() {
             if (!joinable()) { arlib_terminate(); }
             RetVal val = ThreadNative::retval_none();
@@ -313,6 +351,68 @@ namespace ARLib {
         ~Thread() {
             if (joinable()) { arlib_terminate(); }
         }
+    };
+
+    template <>
+    struct Hash<Mutex> {
+        [[nodiscard]] size_t operator()(const Mutex& key) const noexcept {
+            return hash_representation(key.native_handle());
+        }
+    };
+    template <>
+    struct Hash<RecursiveMutex> {
+        [[nodiscard]] size_t operator()(const RecursiveMutex& key) const noexcept {
+            return hash_representation(key.native_handle());
+        }
+    };
+    template <typename T>
+    struct Hash<UniqueLock<T>> {
+        [[nodiscard]] size_t operator()(const UniqueLock<T>& key) const noexcept {
+            return hash_representation(key.mutex()->native_handle());
+        }
+    };
+    template <>
+    struct Hash<Thread> {
+        [[nodiscard]] size_t operator()(const Thread& key) const noexcept { return key.get_id(); }
+    };
+
+    template <>
+    struct PrintInfo<Mutex> {
+        const Mutex& m_mutex;
+        using PtrT = decltype(m_mutex.native_handle());
+        explicit PrintInfo(const Mutex& mutex) : m_mutex(mutex) {}
+        String repr() const { return "Mutex { "_s + PrintInfo<PtrT>{m_mutex.native_handle()}.repr() + " }"_s; }
+    };
+    template <>
+    struct PrintInfo<RecursiveMutex> {
+        const RecursiveMutex& m_mutex;
+        using PtrT = decltype(m_mutex.native_handle());
+        explicit PrintInfo(const RecursiveMutex& mutex) : m_mutex(mutex) {}
+        String repr() const { return "RecursiveMutex { "_s + PrintInfo<PtrT>{m_mutex.native_handle()}.repr() + " }"_s; }
+    };
+    template <Printable M>
+    struct PrintInfo<LockGuard<M>> {
+        const LockGuard<M>& m_lock;
+        explicit PrintInfo(const LockGuard<M>& lock) : m_lock(lock) {}
+        String repr() const { return "LockGuard { "_s + PrintInfo<M>{m_lock.device()}.repr() + " }"_s; }
+    };
+    template <Printable M>
+    struct PrintInfo<UniqueLock<M>> {
+        const UniqueLock<M>& m_lock;
+        explicit PrintInfo(const UniqueLock<M>& lock) : m_lock(lock) {}
+        String repr() const { return "UniqueLock { "_s + PrintInfo<M>{*m_lock.mutex()}.repr() + " }"_s; }
+    };
+    template <Printable... Args>
+    struct PrintInfo<ScopedLock<Args...>> {
+        const ScopedLock<Args...>& m_lock;
+        explicit PrintInfo(const ScopedLock<Args...>& lock) : m_lock(lock) {}
+        String repr() const { return "ScopedLock { "_s + PrintInfo<Tuple<Args&...>>{m_lock.devices()}.repr() + " }"_s; }
+    };
+    template <>
+    struct PrintInfo<Thread> {
+        const Thread& m_thread;
+        explicit PrintInfo(const Thread& thread) : m_thread(thread) {}
+        String repr() const { return "Thread { "_s + IntToStr(m_thread.get_id()) + " }"_s; }
     };
 } // namespace ARLib
 #endif
