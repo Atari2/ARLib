@@ -1,6 +1,9 @@
 #pragma once
 #include "Assertion.h"
 #include "Concepts.h"
+#include "Ordering.h"
+#include "HashBase.h"
+#include "PrintInfo.h"
 
 namespace ARLib {
     template <DefaultConstructible T>
@@ -58,6 +61,27 @@ namespace ARLib {
             m_object = new T{Forward<T>(val)};
             m_exists = true;
             return *this;
+        }
+
+        bool operator==(const Optional& other) const requires EqualityComparable<T> {
+            // both are empty => true
+            if (!m_exists && !other.m_exists) return true;
+            // one of them is empty => false
+            if (!m_exists || !other.m_exists) return false;
+            return *m_object == *other.m_object;
+        }
+        bool operator!=(const Optional& other) const requires EqualityComparable<T> { return !(*this == other); }
+        Ordering operator<=>(const Optional& other) const {
+            // both are empty => true
+            if (!m_exists && !other.m_exists) return equal;
+            // one of them is empty => false
+            if (!m_exists) return less;
+            if (!other.m_exists) return greater;
+            if constexpr (Orderable<T>) {
+                return value() <=> other.value();
+            } else {
+                return CompareThreeWay(value(), other.value());
+            }
         }
 
         bool operator!() { return !m_exists; }
@@ -131,6 +155,25 @@ namespace ARLib {
 
         ~Optional() { evict_(); }
     };
-} // namespace ARLib
 
-using ARLib::Optional;
+    template <typename T>
+    struct Hash<Optional<T>> {
+        constexpr static inline auto empty_opt_hash = static_cast<size_t>(-1);
+        [[nodiscard]] size_t operator()(const Optional<T>& key) const noexcept {
+            return key.has_value() ? Hash<T>{}(key.value()) : empty_opt_hash;
+        }
+    };
+
+    template <Printable T>
+    struct PrintInfo<Optional<T>> {
+        const Optional<T>& m_optional;
+        explicit PrintInfo(const Optional<T>& optional) : m_optional(optional) {}
+        String repr() const {
+            if (m_optional.empty()) {
+                return "Empty optional"_s;
+            } else {
+                return "Optional { "_s + PrintInfo<T>{m_optional.value()}.repr() + " }"_s;
+            }
+        }
+    };
+} // namespace ARLib
