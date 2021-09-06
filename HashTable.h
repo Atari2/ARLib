@@ -325,8 +325,7 @@ namespace ARLib {
             const auto& bucket = m_storage[bucket_index];
             for (size_t i = 0; i < bucket.size(); i++) {
                 auto& item = bucket[i];
-                if (hash == hasher(item))
-                    if (item.key() == val.key()) return {m_storage, bucket_index, i};
+                if (hash == hasher(item) && item == val) return {m_storage, bucket_index, i};
             }
             return tend();
         }
