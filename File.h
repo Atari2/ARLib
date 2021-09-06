@@ -1,7 +1,9 @@
 #pragma once
 #include "Compat.h"
 #include "GeneratedEnums/OpenFileMode.h"
+#include "HashBase.h"
 #include "Optional.h"
+#include "PrintInfo.h"
 #include "Result.h"
 #include "String.h"
 #include "StringView.h"
@@ -24,14 +26,40 @@ namespace ARLib {
         static constexpr inline StringView error = "File couldn't be written correctly"_sv;
     };
 
+    template <>
+    struct PrintInfo<ReadFileError> {
+        const ReadFileError& m_error;
+        explicit PrintInfo(const ReadFileError& error) : m_error(error) {}
+        String repr() const { return String{m_error.error}; }
+    };
+    template <>
+    struct PrintInfo<OpenFileError> {
+        const OpenFileError& m_error;
+        explicit PrintInfo(const OpenFileError& error) : m_error(error) {}
+        String repr() const { return String{m_error.error}; }
+    };
+    template <>
+    struct PrintInfo<WriteFileError> {
+        const WriteFileError& m_error;
+        explicit PrintInfo(const WriteFileError& error) : m_error(error) {}
+        String repr() const { return String{m_error.error}; }
+    };
+
     class File {
         constexpr inline static size_t LINELENGTH_MAX = 1024;
         FILE* m_ptr = nullptr;
         String m_filename;
         OpenFileMode m_mode;
 
+        using WriteResult = Result<size_t, WriteFileError>;
+        using ReadResult = Result<String, ReadFileError>;
+        friend Hash<File>;
+
         public:
         explicit File(String filename) : m_filename(move(filename)), m_mode(OpenFileMode::None) {}
+
+        OpenFileMode mode() const { return m_mode; }
+        const String& name() const { return m_filename; }
 
         Optional<OpenFileError> open(OpenFileMode mode) {
             m_mode = mode;
@@ -55,30 +83,30 @@ namespace ARLib {
             }
         }
 
-        Result<size_t, WriteFileError> write(const String& str) {
-            if (m_mode != OpenFileMode::Write) { return Result<size_t, WriteFileError>::from_error(); }
+        WriteResult write(const String& str) {
+            if (m_mode != OpenFileMode::Write) { return WriteResult::from_error(); }
             auto len = fwrite(str.data(), str.size(), sizeof(char), m_ptr);
-            if (len != str.size()) { return Result<size_t, WriteFileError>::from_error(); }
-            return Result<size_t, WriteFileError>::from_ok(len);
+            if (len != str.size()) { return WriteResult::from_error(); }
+            return WriteResult::from_ok(len);
         }
 
-        Result<String, ReadFileError> read_n(size_t count) {
-            if (m_mode != OpenFileMode::Read) { return Result<String, ReadFileError>::from_error(); }
+        ReadResult read_n(size_t count) {
+            if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
             String line{count, '\0'};
             line.set_size(fread(line.rawptr(), count, sizeof(char), m_ptr));
-            if (line.size() != count) return Result<String, ReadFileError>::from_error();
-            return Result<String, ReadFileError>{Forward<String>(line)};
+            if (line.size() != count) return ReadResult::from_error();
+            return ReadResult{Forward<String>(line)};
         }
 
-        Result<String, ReadFileError> read_line() {
-            if (m_mode != OpenFileMode::Read) { return Result<String, ReadFileError>::from_error(); }
+        ReadResult read_line() {
+            if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
             String line{LINELENGTH_MAX, '\0'};
             line.set_size(fread(line.rawptr(), sizeof(char), LINELENGTH_MAX, m_ptr));
-            return Result<String, ReadFileError>{Forward<String>(line)};
+            return ReadResult{Forward<String>(line)};
         }
 
-        Result<String, ReadFileError> read_all() {
-            if (m_mode != OpenFileMode::Read) { return Result<String, ReadFileError>::from_error(); }
+        ReadResult read_all() {
+            if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
             String line{};
             fseek(m_ptr, 0, SEEK_END);
             auto len = ftell(m_ptr);
@@ -86,10 +114,23 @@ namespace ARLib {
             line.reserve(len);
             line.set_size(fread(line.rawptr(), sizeof(char), len, m_ptr));
 #ifndef WINDOWS
-            if (line.size() != len) { return Result<String, ReadFileError>::from_error(); }
+            if (line.size() != len) { return ReadResult::from_error(); }
 #endif
-            return Result<String, ReadFileError>{Forward<String>(line)};
+            return ReadResult{Forward<String>(line)};
         }
-        ~File() { fclose(m_ptr); }
+        ~File() { if (m_ptr) fclose(m_ptr); }
     };
+
+    template <>
+    struct Hash<File> {
+        [[nodiscard]] size_t operator()(const File& key) const noexcept { return hash_representation(key.m_ptr); }
+    };
+
+    template <>
+    struct PrintInfo<File> {
+        const File& m_file;
+        explicit PrintInfo(const File& file) : m_file(file) {}
+        String repr() const { return "File { "_s + m_file.name() + " }"_s; }
+    };
+
 } // namespace ARLib
