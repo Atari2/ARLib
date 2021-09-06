@@ -264,40 +264,45 @@ namespace ARLib {
             get_buf_internal()[m_size] = c;
             set_size(m_size + 1);
         }
-        void concat(const String& other) {
+        void append(const String& other) {
             auto new_size = m_size + other.m_size;
             grow_if_needed(new_size);
             strcat_eff(get_buf_internal() + m_size, other.get_buf_internal());
             set_size(m_size + other.m_size);
         }
-        void concat(StringView other);
-        void concat(const char* other) {
-            String sother(other);
-            concat(sother);
+        void append(StringView other);
+        void append(const char* other);
+
+        [[nodiscard]] String concat(char c) const {
+            String copy{*this};
+            auto new_size = m_size + 1;
+            copy.grow_if_needed(new_size);
+            copy.get_buf_internal()[m_size] = c;
+            copy.set_size(m_size + 1);
+            return copy;
         }
 
-        String operator+(const String& other) const {
-            String new_str(*this);
-            new_str.concat(other);
-            return new_str;
+        [[nodiscard]] String concat(const String& other) const {
+            String copy{*this};
+            auto new_size = m_size + other.m_size;
+            copy.grow_if_needed(new_size);
+            strcat_eff(copy.get_buf_internal() + m_size, other.get_buf_internal());
+            copy.set_size(new_size);
+            return copy;
         }
-        String operator+(const char* other) const {
-            String new_str(*this);
-            new_str.concat(other);
-            return new_str;
-        }
-        String operator+(char c) const {
-            String new_str(*this);
-            new_str.append(c);
-            return new_str;
-        }
+        [[nodiscard]] String concat(StringView other) const;
+        [[nodiscard]] String concat(const char* other) const;
+
+        String operator+(const String& other) const { return concat(other); }
+        String operator+(const char* other) const { return concat(other); }
+        String operator+(char c) const { return concat(c); }
 
         String& operator+=(const String& other) {
-            concat(other);
+            append(other);
             return *this;
         }
         String& operator+=(const char* other) {
-            concat(other);
+            append(other);
             return *this;
         }
         String& operator+=(char c) {
@@ -308,6 +313,7 @@ namespace ARLib {
         // reverse
         String reversed() {
             String reversed{};
+            reversed.reserve(size());
             for (auto rc = this->rbegin(); rc != this->rend(); rc--)
                 reversed.append(*rc);
             return reversed;

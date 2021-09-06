@@ -15,11 +15,11 @@ namespace ARLib {
 
         template <Printable Arg, typename... Args>
         void print_impl(const Arg& arg, const Args&... args) {
-            builder.concat(PrintInfo<Arg>{arg}.repr());
+            builder.append(PrintInfo<Arg>{arg}.repr());
             if constexpr (sizeof...(args) == 0) {
-                builder.concat(format_string.substringview(indexes.last() + 2));
+                builder.append(format_string.substringview(indexes.last() + 2));
             } else {
-                builder.concat(
+                builder.append(
                 format_string.substringview(indexes.index(current_index) + 2, indexes.index(current_index + 1)));
                 current_index++;
                 print_impl(args...);
@@ -40,7 +40,7 @@ namespace ARLib {
             "Format arguments are not the same number as formats to fill, arguments are %d, to fill there are %d",
             num_args, indexes.size())
             builder.reserve(N);
-            builder.concat(format_string.substringview(0, indexes.index(current_index)));
+            builder.append(format_string.substringview(0, indexes.index(current_index)));
             print_impl(args...);
         }
 

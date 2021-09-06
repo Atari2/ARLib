@@ -112,12 +112,12 @@ namespace ARLib {
         String repr() const {
             if (m_map.size() == 0) { return "{}"_s; }
             String con{};
-            con.concat("{ ");
+            con.append("{ ");
             for (const auto& [key, val] : m_map) {
-                con.concat(PrintInfo<A>{key}.repr());
-                con.concat(": "_s);
-                con.concat(PrintInfo<B>{val}.repr());
-                con.concat(", ");
+                con.append(PrintInfo<A>{key}.repr());
+                con.append(": "_s);
+                con.append(PrintInfo<B>{val}.repr());
+                con.append(", ");
             }
             return con.substring(0, con.size() - 2) + " }"_s;
         }

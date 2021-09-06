@@ -210,17 +210,14 @@ namespace ARLib {
     }
 
     template <typename... Args>
-    requires (Printable<RemoveCvRefT<Args>>, ...)
-    struct PrintInfo<Tuple<Args...>> {
+    requires(Printable<RemoveCvRefT<Args>>, ...) struct PrintInfo<Tuple<Args...>> {
         const Tuple<Args...>& m_tuple;
         explicit PrintInfo(const Tuple<Args...>& tuple) : m_tuple(tuple) {}
         String repr() const {
             String str{"{ "};
-            (str.concat(PrintInfo<RemoveReferenceT<Args>>{m_tuple.template get<RemoveReferenceT<Args>>()}.repr() +
-                        ", "_s),
-             ...);
+            (str.append(PrintInfo<RemoveReferenceT<Args>>{get<Args>(m_tuple)}.repr() + ", "_s), ...);
             str = str.substring(0, str.size() - 2);
-            str.concat(" }");
+            str.append(" }");
             return str;
         }
     };

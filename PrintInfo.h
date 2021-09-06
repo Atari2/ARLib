@@ -58,7 +58,7 @@ namespace ARLib {
         String repr() {
             String str{"["};
             for (size_t i = 0; i < N; i++) {
-                str.concat(PrintInfo<T>{m_vec[i]}.repr());
+                str.append(PrintInfo<T>{m_vec[i]}.repr());
                 if (i != N - 1) {
                     str.append(',');
                     str.append(' ');
@@ -77,7 +77,7 @@ namespace ARLib {
             String str{"[\n"};
             for (size_t i = 0; i < N; i++) {
                 str.append('\t');
-                str.concat(PrintInfo<T[M]>{m_matrix[i]}.repr());
+                str.append(PrintInfo<T[M]>{m_matrix[i]}.repr());
                 if (i != N - 1) { str.append(','); }
                 str.append('\n');
             }

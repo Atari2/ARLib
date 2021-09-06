@@ -260,7 +260,7 @@ TEST(ARLibTests, StringTest) {
     String str{};
     EXPECT_EQ(str, ""_sv);
     EXPECT_EQ(str.size(), 0ull);
-    str.concat("hello world");
+    str.append("hello world");
     EXPECT_EQ(str, "hello world"_s);
     EXPECT_EQ(str.size(), ARLib::strlen("hello world"));
     auto sub = str.substring(6);

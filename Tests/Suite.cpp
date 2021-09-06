@@ -203,7 +203,7 @@ namespace ARLib {
             String str{};
             RETURN_IF_NOT_EQ(str, ""_sv)
             RETURN_IF_NOT_EQ(str.size(), 0ull)
-            str.concat("hello world");
+            str.append("hello world");
             RETURN_IF_NOT_EQ(str, "hello world"_s)
             RETURN_IF_NOT_EQ(str.size(), strlen("hello world"))
             auto sub = str.substring(6);

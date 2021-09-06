@@ -53,10 +53,10 @@ namespace ARLib {
         String repr() {
             String str{"[ "};
             for (size_t i = 0; i < S; i++) {
-                str.concat(PrintInfo<T>{m_array[i]}.repr() + ", "_s);
+                str.append(PrintInfo<T>{m_array[i]}.repr() + ", "_s);
             }
             str = str.substring(0, str.size() - 2);
-            str.concat(" ]"_s);
+            str.append(" ]"_s);
             return str;
         }
     };

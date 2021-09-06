@@ -220,13 +220,36 @@ namespace ARLib {
         set_size(repl_is_bigger ? m_size + diff_len * n_occurr : m_size - diff_len * n_occurr);
     }
 
-    void String::concat(StringView other) {
+    void String::append(StringView other) {
         auto other_size = other.size();
         if (other_size == 0) return;
         auto new_size = m_size + other_size;
         grow_if_needed(new_size);
         memcpy(get_buf_internal() + m_size, other.data(), other_size);
         set_size(new_size);
+    }
+
+    void String::append(const char* other) {
+        StringView view{other};
+        append(view);
+    }
+
+    String String::concat(StringView other) const {
+        auto other_size = other.size();
+        String copy{*this};
+        if (other_size == 0) return copy;
+        auto new_size = m_size + other_size;
+        copy.grow_if_needed(new_size);
+        memcpy(copy.get_buf_internal() + m_size, other.data(), other_size);
+        copy.set_size(new_size);
+        return copy;
+    }
+
+    String String::concat(const char* other) const {
+        String copy{*this};
+        StringView sother{other};
+        copy.append(sother);
+        return copy;
     }
 
 } // namespace ARLib

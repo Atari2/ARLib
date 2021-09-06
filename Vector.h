@@ -360,15 +360,15 @@ namespace ARLib {
             String con{};
             if constexpr (IsSameV<T, String>) {
                 for (const auto& s : m_vec) {
-                    con.concat("[\"");
-                    con.concat(PrintInfo<T>{s}.repr());
-                    con.concat("\"], ");
+                    con.append("[\"");
+                    con.append(PrintInfo<T>{s}.repr());
+                    con.append("\"], ");
                 }
             } else {
                 for (const auto& s : m_vec) {
                     con.append('[');
-                    con.concat(PrintInfo<T>{s}.repr());
-                    con.concat("], ");
+                    con.append(PrintInfo<T>{s}.repr());
+                    con.append("], ");
                 }
             }
 
