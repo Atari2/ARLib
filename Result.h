@@ -1,8 +1,9 @@
 #pragma once
+#include "Assertion.h"
 #include "Concepts.h"
 #include "Macros.h"
+#include "PrintInfo.h"
 #include "Utility.h"
-#include "Assertion.h"
 
 namespace ARLib {
     struct DefaultErr {};
@@ -99,6 +100,25 @@ namespace ARLib {
         CurrType type() const { return m_type; }
         bool is_error() const { return m_type == CurrType::Error; }
         bool is_ok() const { return m_type == CurrType::Ok; }
+
+        T_err& error_value() {
+            HARD_ASSERT(is_error(), "Tried to take error type from result with value.");
+            return m_err;
+        }
+        T_ok& ok_value() {
+            HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
+            return m_ok;
+        }
+
+        const T_err& error_value() const {
+            HARD_ASSERT(is_error(), "Tried to take error type from result with value.");
+            return m_err;
+        }
+        const T_ok& ok_value() const {
+            HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
+            return m_ok;
+        }
+
         T_err to_error() {
             HARD_ASSERT(is_error(), "Tried to take error type from result with value.");
             return move(m_err);
@@ -108,11 +128,9 @@ namespace ARLib {
             return move(m_ok);
         }
 
-
-
         explicit operator bool() const { return is_ok(); }
 
-        ~Result() { 
+        ~Result() {
             if (m_type == CurrType::Ok) {
                 m_ok.~T_ok();
             } else {
@@ -123,5 +141,33 @@ namespace ARLib {
 
     template <typename T_err>
     using DiscardResult = class Result<DefaultOk, T_err>;
+    template <typename T_ok>
+    using DiscardError = class Result<T_ok, DefaultErr>;
+
+    template <>
+    struct PrintInfo<DefaultOk> {
+        const DefaultOk& m_ok;
+        explicit PrintInfo(const DefaultOk& ok) : m_ok(ok) {}
+        String repr() const { return "DefaultOk"_s; }
+    };
+
+    template <>
+    struct PrintInfo<DefaultErr> {
+        const DefaultErr& m_ok;
+        explicit PrintInfo(const DefaultErr& ok) : m_ok(ok) {}
+        String repr() const { return "DefaultErr"_s; }
+    };
+
+    template <Printable T, Printable U>
+    struct PrintInfo<Result<T, U>> {
+        const Result<T, U>& m_result;
+        explicit PrintInfo(const Result<T, U>& result) : m_result(result) {}
+        String repr() const {
+            return "Result { "_s +
+                   (m_result.is_ok() ? PrintInfo<T>{m_result.ok_value()}.repr() :
+                                       PrintInfo<U>{m_result.error_value()}.repr()) +
+                   " }"_s;
+        }
+    };
 
 } // namespace ARLib
