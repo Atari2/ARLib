@@ -6,6 +6,7 @@
 #include "Ordering.h"
 #include "Utility.h"
 #include "cstring_compat.h"
+#include "PrintInfo.h"
 
 namespace ARLib {
 
@@ -149,24 +150,49 @@ namespace ARLib {
         size_t capacity() const { return m_capacity; }
         const Ordering& ordering() const { return m_ordering; }
 
-        Iter begin() const { return {m_storage}; }
+        Iter begin() const { return Iter{m_storage}; }
 
-        Iter end() const { return {m_storage + m_size}; }
+        Iter end() const { return Iter{m_storage + m_size}; }
 
-        ConstIter cbegin() const { return {m_storage}; }
+        ConstIter cbegin() const { return ConstIter{m_storage}; }
 
-        ConstIter cend() const { return {m_storage + m_size}; }
+        ConstIter cend() const { return ConstIter{m_storage + m_size}; }
 
-        ReverseIter rbegin() const { return {m_storage + m_size - 1}; }
+        ReverseIter rbegin() const { return ReverseIter{m_storage + m_size - 1}; }
 
-        ReverseIter rend() const { return {m_storage - 1}; }
+        ReverseIter rend() const { return ReverseIter{m_storage - 1}; }
 
-        ConstReverseIter crbegin() const { return {m_storage + m_size - 1}; }
+        ConstReverseIter crbegin() const { return ConstReverseIter{m_storage + m_size - 1}; }
 
-        ConstReverseIter crend() const { return {m_storage - 1}; }
+        ConstReverseIter crend() const { return ConstReverseIter{m_storage - 1}; }
 
         ~SortedVector() {
             if (m_capacity) delete[] m_storage;
+        }
+    };
+
+    template <Printable T>
+    struct PrintInfo<SortedVector<T>> {
+        const SortedVector<T>& m_vector;
+        explicit PrintInfo(const SortedVector<T>& vector) : m_vector(vector) {}
+        String repr() const {
+            if (m_vector.empty()) { return "[]"_s; }
+            String con{};
+            if constexpr (IsSameV<T, String>) {
+                for (const auto& s : m_vector) {
+                    con.concat("[\"");
+                    con.concat(PrintInfo<T>{s}.repr());
+                    con.concat("\"], ");
+                }
+            } else {
+                for (const auto& s : m_vector) {
+                    con.append('[');
+                    con.concat(PrintInfo<T>{s}.repr());
+                    con.concat("], ");
+                }
+            }
+
+            return con.substring(0, con.size() - 2);
         }
     };
 } // namespace ARLib
