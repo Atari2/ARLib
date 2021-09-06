@@ -155,7 +155,11 @@ namespace ARLib {
     }
     MutexT MutexNative::init_recursive_noret() {
         MutexT mtx{};
-        mutex_init(&mtx, MutexType::Recursive);
+        constexpr auto combine = [](MutexType a, MutexType b) {
+            return static_cast<MutexType>(static_cast<UnderlyingTypeT<MutexType> >(a) |
+                                          static_cast<UnderlyingTypeT<MutexType> >(b));
+        };
+        mutex_init(&mtx, combine(MutexType::Try, MutexType::Recursive));
         return mtx;
     }
 
