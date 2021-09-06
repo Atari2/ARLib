@@ -371,6 +371,10 @@ namespace ARLib {
     template <class T>
     struct IsSame<T, T> : TrueType {};
 
+    template <class T, class U>
+    struct IsSameCvRef :
+        IsSame<typename RemoveCv<RemoveReferenceT<T>>::type, typename RemoveCv<RemoveReferenceT<U>>::type> {};
+
     // isvoid
     template <class T>
     struct IsVoid : IsSame<void, typename RemoveCv<T>::type> {};
@@ -458,6 +462,9 @@ namespace ARLib {
 
     template <class T, class... Types>
     inline constexpr bool IsAnyOfV = DisjunctionV<IsSame<T, Types>...>;
+
+    template <class T, class... Types>
+    inline constexpr bool IsAnyOfCvRefV = DisjunctionV<IsSameCvRef<T, Types>...>;
 
     [[nodiscard]] consteval bool is_constant_evaluated() noexcept { return __builtin_is_constant_evaluated(); }
 

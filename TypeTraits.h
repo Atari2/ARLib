@@ -584,6 +584,9 @@ namespace ARLib {
     template <class T, class U>
     inline constexpr bool IsSameV = IsSame<T, U>::value;
 
+    template <class T, class U>
+    inline constexpr bool IsSameCvRefV = IsSameCvRef<T, U>::value;
+
     template <class T>
     inline constexpr bool IsConstV = IsConst<T>::value;
 

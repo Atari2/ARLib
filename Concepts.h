@@ -10,13 +10,22 @@
 #endif
 
 namespace ARLib {
+    // FWD declare for Orderable<T>
+    class Ordering;
+
     namespace detail {
         template <class T, class U>
         concept SameHelper = IsSameV<T, U>;
-    }
+
+        template <class T, class U>
+        concept SameHelperCvRef = IsSameCvRefV<T, U>;
+    } // namespace detail
 
     template <class T, class U>
     concept SameAs = detail::SameHelper<T, U> && detail::SameHelper<U, T>;
+
+    template <class T, class U>
+    concept SameAsCvRef = detail::SameHelperCvRef<T, U> && detail::SameHelperCvRef<U, T>;
 
     template <class Derived, class Base>
     concept DerivedFrom = BaseOfV<Base, Derived> && ConvertibleV<const volatile Derived*, const volatile Base*>;
@@ -182,7 +191,7 @@ namespace ARLib {
 
     template <typename T>
     concept Orderable = requires(T a, T b) {
-        { a <=> b } -> ConvertibleTo<bool>;
+        { a <=> b } -> ConvertibleTo<Ordering>;
     };
 
     template <typename T>
