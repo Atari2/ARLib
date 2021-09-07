@@ -273,6 +273,14 @@ TEST(ARLibTests, StringTest) {
     EXPECT_EQ(repls.replace("foo", "te"), "heteteo worted"_s);
 }
 
+TEST(ARLibTests, StringViewTests) {
+    constexpr StringView view = "hello world"_sv;
+    constexpr char c = view[7];
+    static_assert(c == 'o');        // this needs to compile
+    static_assert(view == "hello world"_sv);
+    static_assert(view == "hello world");
+}
+
 TEST(ARLibTests, FormatTest) {
     Vector<double> vec{1.0, 2.0, 3.0};
     Map<String, int> map{};
