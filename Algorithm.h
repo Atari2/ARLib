@@ -7,29 +7,11 @@
 namespace ARLib {
 
     template <typename T>
-    constexpr inline void swap(T& a, T& b) noexcept requires NothrowMoveAssignable<T> && NothrowMoveConstructible<T> {
-        T tmp = move(a);
-        a = move(b);
-        b = move(tmp);
-    }
-
-    template <typename T, size_t N>
-    constexpr inline void swap(T (&a)[N], T (&b)[N]) noexcept requires Swappable<T> {
-        for (size_t n = 0; n < N; ++n)
-            swap(a[n], b[n]);
-    }
-
-    template <typename T>
     constexpr inline auto sum_default = [](const T& elem) {
         return elem;
     };
 
     constexpr inline size_t npos_ = static_cast<size_t>(-1);
-
-    template <typename C, size_t N>
-    consteval size_t sizeof_array(C (&)[N]) {
-        return N;
-    }
 
     template <IteratorConcept Iter>
     requires EqualityComparable<typename Iter::Type> size_t find(Iter begin, Iter end,
