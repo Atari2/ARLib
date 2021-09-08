@@ -276,7 +276,7 @@ TEST(ARLibTests, StringTest) {
 TEST(ARLibTests, StringViewTests) {
     constexpr StringView view = "hello world"_sv;
     constexpr char c = view[7];
-    static_assert(c == 'o');        // this needs to compile
+    static_assert(c == 'o'); // this needs to compile
     static_assert(view == "hello world"_sv);
     static_assert(view == "hello world");
 }
