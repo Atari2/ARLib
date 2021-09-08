@@ -1,5 +1,5 @@
 #define INCLUDED_FROM_OWN_CPP___
-#ifdef ON_LINUX
+#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
 
 #include "xnative_thread_unix.h"
 #include <pthread.h>
@@ -14,9 +14,11 @@ namespace ARLib {
     int pthread_attr_getdetachstate(const PthreadAttr* attr, int* state) {
         return ::pthread_attr_getdetachstate(_to_<const pthread_attr_t*>(attr), state);
     }
+#ifndef ON_MINGW
     int pthread_attr_getguardsize(const PthreadAttr* attr, size_t* gsize) {
         return ::pthread_attr_getguardsize(_to_<const pthread_attr_t*>(attr), gsize);
     }
+#endif
     int pthread_attr_getinheritsched(const PthreadAttr* attr, int* sched) {
         return ::pthread_attr_getinheritsched(_to_<const pthread_attr_t*>(attr), sched);
     }
@@ -33,9 +35,11 @@ namespace ARLib {
     int pthread_attr_setdetachstate(PthreadAttr* attr, int state) {
         return ::pthread_attr_setdetachstate(_to_<pthread_attr_t*>(attr), state);
     }
+#ifndef ON_MINGW
     int pthread_attr_setguardsize(PthreadAttr* attr, size_t size) {
         return ::pthread_attr_setguardsize(_to_<pthread_attr_t*>(attr), size);
     }
+#endif
     int pthread_attr_setinheritsched(PthreadAttr* attr, int sched) {
         return ::pthread_attr_setinheritsched(_to_<pthread_attr_t*>(attr), sched);
     }
@@ -89,16 +93,20 @@ namespace ARLib {
     int pthread_key_create(PthreadKey* key, void (*routine)(void*)) { return ::pthread_key_create(key, routine); }
     int pthread_key_delete(PthreadKey key) { return ::pthread_key_delete(key); }
     int pthread_mutex_destroy(PthreadMutex* mutex) { return ::pthread_mutex_destroy(_to_<pthread_mutex_t*>(mutex)); }
+#ifndef ON_MINGW
     int pthread_mutex_getprioceiling(const PthreadMutex* mutex, int* prio) {
         return ::pthread_mutex_getprioceiling(_to_<const pthread_mutex_t*>(mutex), prio);
     }
+#endif
     int pthread_mutex_init(PthreadMutex* mutex, const PthreadMutexAttr* attr) {
         return ::pthread_mutex_init(_to_<pthread_mutex_t*>(mutex), _to_<const pthread_mutexattr_t*>(attr));
     }
     int pthread_mutex_lock(PthreadMutex* mutex) { return ::pthread_mutex_lock(_to_<pthread_mutex_t*>(mutex)); }
+#ifndef ON_MINGW
     int pthread_mutex_setprioceiling(PthreadMutex* mutex, int prio, int* prop_ptr) {
         return ::pthread_mutex_setprioceiling(_to_<pthread_mutex_t*>(mutex), prio, prop_ptr);
     }
+#endif
     int pthread_mutex_trylock(PthreadMutex* mutex) { return ::pthread_mutex_trylock(_to_<pthread_mutex_t*>(mutex)); }
     int pthread_mutex_timedlock(PthreadMutex* mutex, const TimeSpec* spec) {
         return ::pthread_mutex_timedlock(_to_<pthread_mutex_t*>(mutex), _to_<const timespec*>(spec));
@@ -153,8 +161,8 @@ namespace ARLib {
     int pthread_rwlockattr_destroy(PthreadRWLockAttr* lockattr) {
         return ::pthread_rwlockattr_destroy(_to_<pthread_rwlockattr_t*>(lockattr));
     }
-    int pthread_rwlockattr_getpshared(const PthreadRWLockAttr* lockattr, int* pshared) {
-        return ::pthread_rwlockattr_getpshared(_to_<const pthread_rwlockattr_t*>(lockattr), pshared);
+    int pthread_rwlockattr_getpshared(LOCKATTR_CONST PthreadRWLockAttr* lockattr, int* pshared) {
+        return ::pthread_rwlockattr_getpshared(_to_<LOCKATTR_CONST pthread_rwlockattr_t*>(lockattr), pshared);
     }
     int pthread_rwlockattr_init(PthreadRWLockAttr* lockattr) {
         return ::pthread_rwlockattr_init(_to_<pthread_rwlockattr_t*>(lockattr));
@@ -162,7 +170,7 @@ namespace ARLib {
     int pthread_rwlockattr_setpshared(PthreadRWLockAttr* lockattr, int pshared) {
         return ::pthread_rwlockattr_setpshared(_to_<pthread_rwlockattr_t*>(lockattr), pshared);
     }
-    Pthread pthread_self(void) { return ::pthread_self(); }
+    Pthread pthread_self(void) { return _to_<Pthread>(::pthread_self()); }
     int pthread_setcancelstate(int state, int* oldstate) { return ::pthread_setcancelstate(state, oldstate); }
     int pthread_setcanceltype(int type, int* oldtype) { return ::pthread_setcanceltype(type, oldtype); }
     int pthread_setconcurrency(int concurrency) { return ::pthread_setconcurrency(concurrency); }

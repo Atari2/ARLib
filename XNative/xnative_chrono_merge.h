@@ -1,6 +1,6 @@
 #pragma once
 #include "../Types.h"
-#ifdef ON_LINUX
+#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
 #include "xnative_chrono_unix.h"
 #else
 #include "xnative_chrono_windows.h"

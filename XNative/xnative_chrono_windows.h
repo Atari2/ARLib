@@ -1,5 +1,5 @@
 #pragma once
-#ifdef ON_WINDOWS
+#ifdef COMPILER_MSVC
 #if not defined(CHRONO_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
 #error "Don't include the XNative files directly. Use Use Chrono.h"
 #endif

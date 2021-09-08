@@ -1,10 +1,10 @@
 #pragma once
 #ifndef DISABLE_THREADING
+#include "CharConv.h"
 #include "HashBase.h"
 #include "Ordering.h"
 #include "PrintInfo.h"
 #include "ThreadBase.h"
-#include "CharConv.h"
 
 namespace ARLib {
 
@@ -21,7 +21,7 @@ namespace ARLib {
         class RecursiveMutexBase {
             protected:
             MutexT m_mutex = MutexNative::init_recursive_noret();
-            constexpr RecursiveMutexBase() = default;
+            constexpr RecursiveMutexBase() noexcept = default;
             RecursiveMutexBase(const RecursiveMutexBase&) = delete;
             RecursiveMutexBase(RecursiveMutexBase&&) = delete;
             RecursiveMutexBase& operator=(const RecursiveMutexBase&) = delete;

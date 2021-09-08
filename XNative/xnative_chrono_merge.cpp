@@ -4,7 +4,7 @@
 namespace ARLib {
     TimePoint ChronoNative::now() {
         constexpr auto den = 1'000'000'000;
-#ifdef ON_LINUX
+#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
         auto spec = time_get();
         return (spec.tv_sec * den) + spec.tv_nsec;
 #else

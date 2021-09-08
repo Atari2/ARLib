@@ -1,6 +1,6 @@
 #define INCLUDED_FROM_OWN_CPP___
 #include "xnative_chrono_windows.h"
-#ifdef ON_WINDOWS
+#ifdef COMPILER_MSVC
 
 #include <xtimec.h>
 

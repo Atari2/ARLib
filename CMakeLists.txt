@@ -77,6 +77,11 @@ else()
 	message(FATAL_ERROR "Compiler unknown, only valid compilers are Clang/GCC/MSVC")
 endif()
 
+if (ON_WINDOWS AND ON_GCC)
+	message(STATUS "Using MINGW for some reason")
+	list(APPEND ARLIB_COMPILE_DEFINITIONS ON_MINGW)
+endif()
+
 #detecting build type
 if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
 	list(APPEND ARLIB_COMPILE_DEFINITIONS DEBUG)

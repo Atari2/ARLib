@@ -1,9 +1,15 @@
 #pragma once
 #ifndef DISABLE_THREADING
 
-#ifdef ON_LINUX
+#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
 #if not defined(THREADBASE_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
 #error "Don't include the XNative files directly. Use ThreadBase.h or Threading.h"
+#endif
+
+#ifdef ON_MINGW
+#define LOCKATTR_CONST
+#else
+#define LOCKATTR_CONST const
 #endif
 
 namespace ARLib {
@@ -14,7 +20,7 @@ namespace ARLib {
 
     struct TimeSpec {
         long tv_sec;
-        long tv_nsec; 
+        long tv_nsec;
     };
 
 #define __LOCK_ALIGNMENT
@@ -163,24 +169,24 @@ namespace ARLib {
 
     enum class PThreadPrio { NONE, INHERIT, PROTECT };
 
-#define __ARLIB_PTHREAD_MUTEX_INITIALIZER(__kind)                                                                            \
+#define __ARLIB_PTHREAD_MUTEX_INITIALIZER(__kind)                                                                      \
     0, 0, 0, 0, __kind, 0, 0, { 0, 0 }
 
-#define ARLIB_PTHREAD_MUTEX_INITIALIZER                                                                                      \
+#define ARLIB_PTHREAD_MUTEX_INITIALIZER                                                                                \
     {                                                                                                                  \
-        { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_TIMED_NP) }                                                        \
+        { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_TIMED_NP) }                                                  \
     }
-#define ARLIB_PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP                                                                         \
+#define ARLIB_PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP                                                                   \
     {                                                                                                                  \
-        { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_RECURSIVE_NP) }                                                    \
+        { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_RECURSIVE_NP) }                                              \
     }
-#define ARLIB_PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP                                                                        \
+#define ARLIB_PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP                                                                  \
     {                                                                                                                  \
-        { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_ERRORCHECK_NP) }                                                   \
+        { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_ERRORCHECK_NP) }                                             \
     }
-#define ARLIB_PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP                                                                          \
+#define ARLIB_PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP                                                                    \
     {                                                                                                                  \
-        { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_ADAPTIVE_NP) }                                                     \
+        { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_ADAPTIVE_NP) }                                               \
     }
     enum class PThreadRWLock {
         PREFER_READER_NP,
@@ -189,25 +195,25 @@ namespace ARLib {
         DEFAULT_NP = PREFER_READER_NP
     };
 
-#define __ARLIB_PTHREAD_RWLOCK_ELISION_EXTRA                                                                                 \
+#define __ARLIB_PTHREAD_RWLOCK_ELISION_EXTRA                                                                           \
     0, { 0, 0, 0, 0, 0, 0, 0 }
 
 #define __ARLIB_PTHREAD_RWLOCK_INITIALIZER(__flags)                                                                    \
     0, 0, 0, 0, 0, 0, 0, 0, __ARLIB_PTHREAD_RWLOCK_ELISION_EXTRA, 0, __flags
 
-#define ARLIB_PTHREAD_RWLOCK_INITIALIZER                                                                                     \
+#define ARLIB_PTHREAD_RWLOCK_INITIALIZER                                                                               \
     {                                                                                                                  \
-        { __ARLIB_PTHREAD_RWLOCK_INITIALIZER(PTHREAD_RWLOCK_DEFAULT_NP) }                                                    \
+        { __ARLIB_PTHREAD_RWLOCK_INITIALIZER(PTHREAD_RWLOCK_DEFAULT_NP) }                                              \
     }
-#define ARLIB_PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP                                                              \
+#define ARLIB_PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP                                                        \
     {                                                                                                                  \
-        { __ARLIB_PTHREAD_RWLOCK_INITIALIZER(PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP) }                                 \
+        { __ARLIB_PTHREAD_RWLOCK_INITIALIZER(PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP) }                           \
     }
     enum class PThreadSched { INHERIT, EXPLICIT };
     enum class PThreadScope { SYSTEM, PROCESS };
     enum class PThreadProcess { PRIVATE, SHARED };
 
-#define ARLIB_PTHREAD_COND_INITIALIZER                                                                                       \
+#define ARLIB_PTHREAD_COND_INITIALIZER                                                                                 \
     {                                                                                                                  \
         {                                                                                                              \
             {0}, {0}, {0, 0}, {0, 0}, 0, 0, { 0, 0 }                                                                   \
@@ -219,14 +225,18 @@ namespace ARLib {
 
     int pthread_attr_destroy(PthreadAttr*);
     int pthread_attr_getdetachstate(const PthreadAttr*, int*);
+#ifndef ON_MINGW
     int pthread_attr_getguardsize(const PthreadAttr*, size_t*);
+#endif
     int pthread_attr_getinheritsched(const PthreadAttr*, int*);
     int pthread_attr_getschedparam(const PthreadAttr*, SchedParam*);
     int pthread_attr_getschedpolicy(const PthreadAttr*, int*);
     int pthread_attr_getscope(const PthreadAttr*, int*);
     int pthread_attr_init(PthreadAttr*);
     int pthread_attr_setdetachstate(PthreadAttr*, int);
+#ifndef ON_MINGW
     int pthread_attr_setguardsize(PthreadAttr*, size_t);
+#endif
     int pthread_attr_setinheritsched(PthreadAttr*, int);
     int pthread_attr_setschedparam(PthreadAttr*, const SchedParam*);
     int pthread_attr_setschedpolicy(PthreadAttr*, int);
@@ -253,10 +263,14 @@ namespace ARLib {
     int pthread_key_create(PthreadKey*, void (*)(void*));
     int pthread_key_delete(PthreadKey);
     int pthread_mutex_destroy(PthreadMutex*);
+#ifndef ON_MINGW
     int pthread_mutex_getprioceiling(const PthreadMutex*, int*);
+#endif
     int pthread_mutex_init(PthreadMutex*, const PthreadMutexAttr*);
     int pthread_mutex_lock(PthreadMutex*);
+#ifndef ON_MINGW
     int pthread_mutex_setprioceiling(PthreadMutex*, int, int*);
+#endif
     int pthread_mutex_trylock(PthreadMutex*);
     int pthread_mutex_timedlock(PthreadMutex*, const TimeSpec*);
     int pthread_mutex_unlock(PthreadMutex*);
@@ -279,7 +293,7 @@ namespace ARLib {
     int pthread_rwlock_unlock(PthreadRWLock*);
     int pthread_rwlock_wrlock(PthreadRWLock*);
     int pthread_rwlockattr_destroy(PthreadRWLockAttr*);
-    int pthread_rwlockattr_getpshared(const PthreadRWLockAttr*, int*);
+    int pthread_rwlockattr_getpshared(LOCKATTR_CONST PthreadRWLockAttr*, int*);
     int pthread_rwlockattr_init(PthreadRWLockAttr*);
     int pthread_rwlockattr_setpshared(PthreadRWLockAttr*, int);
     Pthread pthread_self(void);
