@@ -23,6 +23,7 @@ namespace ARLib {
         }
 
         public:
+        static constexpr inline size_t size = 1 + sizeof...(Args);
         Tuple() = default;
         Tuple(const Tuple&) = default;
         Tuple(Tuple&&) noexcept = default;
@@ -116,6 +117,7 @@ namespace ARLib {
         T m_member;
 
         public:
+        static constexpr inline size_t size = 1;
         Tuple() = default;
         explicit Tuple(T arg) : m_member(arg) {}
 
@@ -190,11 +192,13 @@ namespace ARLib {
         return Tuple<Args&...>{args...};
     }
 
-    template <class... Types>
-    struct TupleSize : IntegralConstant<size_t, sizeof...(Types)> {};
+    template <class Tuple>
+    struct TupleSize {
+        static constexpr inline size_t value = Tuple::size;
+    };
 
-    template <class... Types>
-    constexpr inline size_t TupleSizeV = TupleSize<Types...>::value;
+    template <class Tuple>
+    constexpr inline size_t TupleSizeV = TupleSize<Tuple>::value;
 
     namespace detail {
         template <class F, class Tuple, size_t... I>
