@@ -1,5 +1,6 @@
 #include "Assertion.h"
 #include "Compat.h"
+#include "StackTrace.h"
 
 [[noreturn]] void abort__() {
 #ifdef _MSC_VER
@@ -15,5 +16,6 @@ void abort_arlib() {
 }
 
 void assertion_failed__() {
+    BACKTRACE();
     abort_arlib();
 }
