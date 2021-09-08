@@ -286,10 +286,12 @@ TEST(ARLibTests, FormatTest) {
     Map<String, int> map{};
     map.add("Hello"_s, 1);
     map.add("World"_s, 2);
-    auto ret = Printer::format("My name is {}, I'm {} years old, vector: {}, map: {}", "Alessio"_s, 22, vec, map);
+    auto ret = Printer::format("My name is {{}}, I'm {} years old, vector: {}, map: {}", 22, vec, map);
     EXPECT_EQ(
     ret,
-    "My name is Alessio, I'm 22 years old, vector: [1.000000], [2.000000], [3.000000], map: { Hello: 1, World: 2 }"_s);
+    "My name is {}, I'm 22 years old, vector: [1.000000], [2.000000], [3.000000], map: { Hello: 1, World: 2 }"_s);
+    auto ret2 = Printer::format("{{}}");
+    EXPECT_EQ(ret2, "{}"_s);
 }
 
 TEST(ARLibTests, VariantTests) {

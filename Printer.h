@@ -28,20 +28,54 @@ namespace ARLib {
 
         template <size_t N, typename... Args>
         explicit Printer(const char (&format)[N], const Args&... args) : format_string{format} {
-            static_assert(sizeof...(args) > 0);
-            size_t index = format_string.index_of("{}");
-            while (index != String::npos) {
-                indexes.append(index);
-                index = format_string.index_of("{}", index + 2);
+            enum class FormatState { EscapeNextOpen, EscapeNextClosed, Continue } state{FormatState::Continue};
+            String escaped_format_string{};
+            escaped_format_string.reserve(N);
+            for (size_t idx = 0; idx < format_string.size(); idx++) {
+                char c = format_string[idx];
+                if (c == '{') {
+                    switch (state) {
+                    case FormatState::Continue:
+                    case FormatState::EscapeNextClosed:
+                        state = FormatState::EscapeNextOpen;
+                        escaped_format_string.append(c);
+                        break;
+                    case FormatState::EscapeNextOpen:
+                        state = FormatState::Continue;
+                        break;
+                    }
+                } else if (c == '}') {
+                    switch (state) {
+                    case FormatState::EscapeNextOpen:
+                        indexes.append(escaped_format_string.size() - 1);
+                        escaped_format_string.append(c);
+                        [[fallthrough]];
+                    case FormatState::EscapeNextClosed:
+                        state = FormatState::Continue;
+                        break;
+                    case FormatState::Continue:
+                        state = FormatState::EscapeNextClosed;
+                        escaped_format_string.append(c);
+                        break;
+                    }
+                } else {
+                    escaped_format_string.append(c);
+                    state = FormatState::Continue;
+                }
             }
+            format_string = move(escaped_format_string);
             constexpr auto num_args = sizeof...(args);
             HARD_ASSERT_FMT(
             (indexes.size() == num_args),
             "Format arguments are not the same number as formats to fill, arguments are %d, to fill there are %d",
             num_args, indexes.size())
             builder.reserve(N);
-            builder.append(format_string.substringview(0, indexes.index(current_index)));
-            print_impl(args...);
+            if constexpr (num_args == 0) {
+                builder = move(format_string);
+            } else {
+                builder.append(format_string.substringview(0, indexes.index(current_index)));
+                print_impl(args...);
+            }
         }
 
         void print_puts() { puts(builder.data()); }
@@ -59,12 +93,8 @@ namespace ARLib {
 
         template <size_t N, typename... Args>
         [[nodiscard]] static String format(const char (&format)[N], const Args&... args) {
-            if constexpr (sizeof...(args) == 0) {
-                return String{format};
-            } else {
-                Printer printer{format, args...};
-                return move(printer.builder);
-            }
+            Printer printer{format, args...};
+            return move(printer.builder);
         }
     };
 } // namespace ARLib
