@@ -24,6 +24,7 @@ namespace ARLib {
     }
 
     constexpr size_t strlen(const char* ptr) {
+        if (!ptr) return 0;
         size_t len = 0;
         while (*(ptr++))
             len++;
