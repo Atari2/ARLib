@@ -20,7 +20,7 @@ namespace ARLib {
     ThreadId ThreadNative::get_id(ThreadT thread) { return thread; }
 
     void ThreadNative::set_id(ThreadT& t1, ThreadId t2) { t1 = t2; }
-    void ThreadNative::swap_id(ThreadT& t1, ThreadT& t2) {
+    void ThreadNative::swap(ThreadT& t1, ThreadT& t2) {
         auto cp = t1;
         t1 = t2;
         t2 = cp;
@@ -99,8 +99,10 @@ namespace ARLib {
         t._Hnd = reinterpret_cast<void*>(beginthreadex(nullptr, 0, routine, arg, 0, &t._Id));
         return {t, t._Hnd != nullptr};
     }
-    int ThreadNative::detach(ThreadT thread) { return thread_detach(thread); }
-    int ThreadNative::join(ThreadT thread, RetVal* ret) { return thread_join(thread, reinterpret_cast<int*>(ret)); }
+    ThreadState ThreadNative::detach(ThreadT thread) { return thread_detach(thread); }
+    ThreadState ThreadNative::join(ThreadT thread, RetVal* ret) {
+        return thread_join(thread, reinterpret_cast<int*>(ret));
+    }
     ThreadId ThreadNative::id() { return thread_id(); }
     void ThreadNative::exit(RetVal val) {
         cond_do_broadcast_at_thread_exit();
@@ -111,10 +113,13 @@ namespace ARLib {
     void ThreadNative::retval_destroy(RetVal) {}
     ThreadId ThreadNative::get_id(ThreadT thread) { return thread._Id; }
     void ThreadNative::set_id(ThreadT& t1, ThreadId t2) { t1._Id = t2; }
-    void ThreadNative::swap_id(ThreadT& t1, ThreadT& t2) {
+    void ThreadNative::swap(ThreadT& t1, ThreadT& t2) {
+        auto hdl = t1._Hnd;
         auto cp = t1._Id;
         t1._Id = t2._Id;
+        t1._Hnd = t2._Hnd;
         t2._Id = cp;
+        t2._Hnd = hdl;
     }
 
     Pair<MutexT, bool> MutexNative::init() {

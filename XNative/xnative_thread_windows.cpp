@@ -22,8 +22,12 @@ namespace ARLib {
         return t_;
     }
 
-    int __cdecl thread_detach(ThreadHandle thread) { return _Thrd_detach(ThreadToNative(thread)); }
-    int __cdecl thread_join(ThreadHandle thread, int* ptr) { return _Thrd_join(ThreadToNative(thread), ptr); }
+    ThreadState __cdecl thread_detach(ThreadHandle thread) {
+        return _ec_<ThreadState>(_Thrd_detach(ThreadToNative(thread)));
+    }
+    ThreadState __cdecl thread_join(ThreadHandle thread, int* ptr) {
+        return _ec_<ThreadState>(_Thrd_join(ThreadToNative(thread), ptr));
+    }
     void __cdecl thread_sleep(const XTime* time) { return _Thrd_sleep(_to_<const xtime*>(time)); }
     void __cdecl thread_yield() { _Thrd_yield(); }
     unsigned int __cdecl thread_hardware_concurrency() { return _Thrd_hardware_concurrency(); }

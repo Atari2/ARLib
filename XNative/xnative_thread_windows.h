@@ -34,8 +34,8 @@ namespace ARLib {
     enum class ThreadState { Success, Nomem, Timeout, Busy, Error };
     enum class MutexType { Plain = 0x01, Try = 0x02, Timed = 0x04, Recursive = 0x100 };
 
-    int __cdecl thread_detach(ThreadHandle);
-    int __cdecl thread_join(ThreadHandle, int*);
+    ThreadState __cdecl thread_detach(ThreadHandle);
+    ThreadState __cdecl thread_join(ThreadHandle, int*);
     void __cdecl thread_sleep(const XTime*);
     void __cdecl thread_yield();
     unsigned int __cdecl thread_hardware_concurrency();

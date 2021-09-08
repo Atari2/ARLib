@@ -339,15 +339,19 @@ namespace ARLib {
         void join() {
             if (!joinable()) { arlib_terminate(); }
             RetVal val = ThreadNative::retval_none();
-            ThreadNative::join(m_thread, &val);
+            auto state = ThreadNative::join(m_thread, &val);
+            HARD_ASSERT_FMT(static_cast<int>(state) == 0, "Thread %lu didn't join successfully, error number was %d\n",
+                            ThreadNative::get_id(m_thread), static_cast<int>(state));
             m_thread = {};
         }
         void detach() {
             if (!joinable()) { arlib_terminate(); }
-            ThreadNative::detach(m_thread);
+            auto state = ThreadNative::detach(m_thread);
+            HARD_ASSERT_FMT(static_cast<int>(state) == 0, "Thread %lu didn't detach successfully, error number was %d\n",
+                            ThreadNative::get_id(m_thread), static_cast<int>(state));
             m_thread = {};
         }
-        void swap(Thread& other) { ThreadNative::swap_id(m_thread, other.m_thread); }
+        void swap(Thread& other) { ThreadNative::swap(m_thread, other.m_thread); }
         ~Thread() {
             if (joinable()) { arlib_terminate(); }
         }

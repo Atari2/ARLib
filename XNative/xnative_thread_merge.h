@@ -19,6 +19,7 @@ namespace ARLib {
     using ThreadId = Pthread;
     using ThreadRoutine = void* (*)(void*);
     using RetVal = void*;
+    using ThreadState = int;
 #define TEMPLATE  template <typename Tp, typename... Args>
 #define ARGS_DECL Args... args
 
@@ -43,15 +44,15 @@ namespace ARLib {
     class ThreadNative {
         public:
         static Pair<ThreadT, bool> create(ThreadRoutine, void*);
-        static int detach(ThreadT);
-        static int join(ThreadT, RetVal*);
+        static ThreadState detach(ThreadT);
+        static ThreadState join(ThreadT, RetVal*);
         static ThreadId id();
         static void exit(RetVal);
         static RetVal retval_none();
         static void retval_destroy(RetVal);
         static ThreadId get_id(ThreadT);
         static void set_id(ThreadT&, ThreadId);
-        static void swap_id(ThreadT&, ThreadT&);
+        static void swap(ThreadT&, ThreadT&);
         TEMPLATE
         static RetVal retval_create(ARGS_DECL) {
 #if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
