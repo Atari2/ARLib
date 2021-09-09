@@ -1,7 +1,8 @@
 #pragma once
 #ifndef DISABLE_THREADING
 
-#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
+#include "../Compat.h"
+#ifdef UNIX_OR_MINGW
 #if not defined(THREADBASE_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
 #error "Don't include the XNative files directly. Use ThreadBase.h or Threading.h"
 #endif
@@ -93,8 +94,11 @@ namespace ARLib {
     constexpr auto SIZEOF_PTHREAD_RWLOCKATTR_T = 8;
     constexpr auto SIZEOF_PTHREAD_BARRIERATTR_T = 4;
 
+#ifdef ON_MINGW
+    typedef unsigned long long int Pthread;
+#else
     typedef unsigned long int Pthread;
-
+#endif
     typedef union {
         char __size[SIZEOF_PTHREAD_MUTEXATTR_T];
         int __align;

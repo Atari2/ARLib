@@ -42,9 +42,11 @@
 #define WINDOWS
 #else
 #define WINDOWS_MINGW
+#define UNIX_OR_MINGW
 #endif
 #elif (defined(__unix__) || defined(__unix)) && !defined(BSD)
 #define UNIX
+#define UNIX_OR_MINGW
 #else
 #error "Unsupported platform"
 #endif

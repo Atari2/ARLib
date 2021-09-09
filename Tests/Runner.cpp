@@ -535,7 +535,7 @@ TEST(ARLibTests, ChronoTest) {
         s.append('c');
     }
     auto new_now = Clock::now();
-    EXPECT_TRUE(new_now > now);
+    EXPECT_GT(new_now, now);
     auto diff = Clock::diff(now, new_now);
-    EXPECT_TRUE(diff > 0);
+    EXPECT_GT(diff, 0);
 }

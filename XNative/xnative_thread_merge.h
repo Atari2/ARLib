@@ -1,6 +1,8 @@
 #pragma once
 #ifndef DISABLE_THREADING
-#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
+
+#include "../Compat.h"
+#ifdef UNIX_OR_MINGW
 #include "xnative_thread_unix.h"
 #else
 #include "xnative_thread_windows.h"
@@ -13,7 +15,7 @@
 
 namespace ARLib {
     [[noreturn]] void inline arlib_terminate() { abort_arlib(); unreachable }
-#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
+#ifdef UNIX_OR_MINGW
     /* THREADS */
     using ThreadT = Pthread;
     using ThreadId = Pthread;
@@ -55,7 +57,7 @@ namespace ARLib {
         static void swap(ThreadT&, ThreadT&);
         TEMPLATE
         static RetVal retval_create(ARGS_DECL) {
-#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
+#ifdef UNIX_OR_MINGW
             if constexpr (alignof(Tp) < alignof(char*)) {
                 char* storage = new char[sizeof(Tp)];
                 new (storage) Tp{args...};
@@ -71,7 +73,7 @@ namespace ARLib {
         }
         template <typename Tp>
         static decltype(auto) retval_read(RetVal val) {
-#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
+#ifdef UNIX_OR_MINGW
             return static_cast<Tp&>(*static_cast<Tp*>(val));
 #else
             return val;

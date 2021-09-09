@@ -2,7 +2,7 @@
 #include "xnative_thread_merge.h"
 
 namespace ARLib {
-#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
+#ifdef UNIX_OR_MINGW
     Pair<ThreadT, bool> ThreadNative::create(ThreadRoutine routine, void* arg) {
         ThreadT p;
         auto res = pthread_create(&p, nullptr, routine, arg);

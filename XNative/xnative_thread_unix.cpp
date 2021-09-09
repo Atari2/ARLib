@@ -1,7 +1,7 @@
 #define INCLUDED_FROM_OWN_CPP___
-#if defined(COMPILER_GCC) or defined(COMPILER_CLANG)
-
 #include "xnative_thread_unix.h"
+
+#ifdef UNIX_OR_MINGW
 #include <pthread.h>
 namespace ARLib {
 

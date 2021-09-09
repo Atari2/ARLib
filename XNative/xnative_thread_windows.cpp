@@ -1,6 +1,6 @@
 #define INCLUDED_FROM_OWN_CPP___
-#ifdef COMPILER_MSVC
 #include "xnative_thread_windows.h"
+#ifdef WINDOWS
 #include "../TypeTraits.h"
 #include <process.h>
 #include <xthreads.h>

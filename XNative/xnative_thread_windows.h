@@ -4,7 +4,7 @@
 
 // FIXME: eventually drop the use of these functions and start using the Win32 API directly.
 
-#ifdef COMPILER_MSVC
+#ifdef WINDOWS
 #if not defined(THREADBASE_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
 #error "Don't include the XNative files directly. Use ThreadBase.h or Threading.h"
 #endif
