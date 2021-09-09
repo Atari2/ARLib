@@ -201,7 +201,6 @@ else()
 			-Wduplicated-cond			# gcc only
 			-Wduplicated-branches		# gcc only
 			-Wlogical-op				# gcc only
-			-Wuseless-cast				# gcc only
 			)
     elseif(ON_CLANG)
 		list(APPEND ARLIB_COMPILE_WARNINGS

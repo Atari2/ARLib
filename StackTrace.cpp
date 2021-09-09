@@ -61,7 +61,7 @@ namespace ARLib {
         for (auto i = 0; i < res; ++i) {
             constexpr size_t ptr_fmt_len = 15; // how many chars to print a pointer on MSVC (e.g. `00007FFBED00703`)
             char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)]{};
-            PSYMBOL_INFO psymbol = (PSYMBOL_INFO)buffer;
+            PSYMBOL_INFO psymbol = reinterpret_cast<PSYMBOL_INFO>(buffer);
             psymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
             psymbol->MaxNameLen = MAX_SYM_NAME;
             if (!SymFromAddr(hdl, reinterpret_cast<DWORD64>(backtrace[i]), nullptr, psymbol)) {
