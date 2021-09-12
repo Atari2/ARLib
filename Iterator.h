@@ -121,28 +121,28 @@ namespace ARLib {
             return *this;
         }
 
-        ConstIterator<Ct> operator++(int) { return {m_current++}; }
+        ConstIterator<Ct> operator++(int) { return ConstIterator<Ct>{m_current++}; }
 
         ConstIterator<Ct>& operator+=(int offset) {
             m_current += offset;
             return *this;
         }
 
-        ConstIterator<Ct> operator+(int offset) { return {m_current + offset}; }
+        ConstIterator<Ct> operator+(int offset) { return ConstIterator<Ct>{m_current + offset}; }
 
         ConstIterator<Ct>& operator--() {
             m_current--;
             return *this;
         }
 
-        ConstIterator<Ct> operator--(int) { return {m_current--}; }
+        ConstIterator<Ct> operator--(int) { return ConstIterator<Ct>{m_current--}; }
 
         ConstIterator<Ct>& operator-=(int offset) {
             m_current -= offset;
             return *this;
         }
 
-        ConstIterator<Ct> operator-(int offset) { return {m_current - offset}; }
+        ConstIterator<Ct> operator-(int offset) { return ConstIterator<Ct>{m_current - offset}; }
     };
 
     template <typename T>
