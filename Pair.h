@@ -1,8 +1,8 @@
 #pragma once
+#include "Iterator.h"
 #include "PrintInfo.h"
 #include "Types.h"
 #include "Utility.h"
-#include "Iterator.h"
 
 namespace ARLib {
     template <typename T, typename U>
@@ -171,6 +171,33 @@ namespace ARLib {
         bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
         bool operator>(const Enumerator& other) override { return m_index > other.m_index; }
         size_t operator-(const Enumerator& other) { return m_iter - other.m_iter; }
+    };
+
+    template <typename T>
+    class ConstEnumerator : public IteratorOperators<ConstEnumerator<T>>, IteratorType<T> {
+        ConstIterator<T> m_iter;
+        size_t m_index;
+
+        using Unit = Pair<size_t, const T&>;
+
+        public:
+        explicit ConstEnumerator(const T* begin) : m_iter(begin), m_index(0) {}
+        ConstEnumerator(const T* begin, size_t index) : m_iter(begin), m_index(index) {}
+        ConstEnumerator(ConstIterator<T> iter, size_t index) : m_iter(iter), m_index(index) {}
+        Unit operator*() { return {m_index, *m_iter}; }
+
+        ConstEnumerator& operator++() {
+            m_index++;
+            m_iter++;
+            return *this;
+        }
+
+        ConstEnumerator operator++(int) { return {m_iter++, m_index++}; }
+        bool operator==(const ConstEnumerator& other) const override { return m_index == other.m_index; }
+        bool operator!=(const ConstEnumerator& other) const override { return m_index != other.m_index; }
+        bool operator<(const ConstEnumerator& other) override { return m_index < other.m_index; }
+        bool operator>(const ConstEnumerator& other) override { return m_index > other.m_index; }
+        size_t operator-(const ConstEnumerator& other) { return m_iter - other.m_iter; }
     };
 
 } // namespace ARLib

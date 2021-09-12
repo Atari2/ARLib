@@ -1,8 +1,8 @@
 #pragma once
 #include "Concepts.h"
 #include "Iterator.h"
-#include "cmath_compat.h"
 #include "Utility.h"
+#include "cmath_compat.h"
 
 namespace ARLib {
 
@@ -187,6 +187,16 @@ namespace ARLib {
     template <typename C>
     requires Iterable<C>
     void sort(const C& cont) { quicksort_internal(cont.begin(), cont.end() - 1); }
+
+    template <Iterable C>
+    auto begin(C& cont) {
+        return cont.begin();
+    }
+
+    template <Iterable C>
+    auto end(C& cont) {
+        return cont.end();
+    }
 
     template <Iterable C>
     auto begin(const C& cont) {

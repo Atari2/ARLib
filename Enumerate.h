@@ -41,6 +41,18 @@ namespace ARLib {
         auto end() const { return Enumerator{ARLib::end(m_container), m_container.size()}; }
     };
 
+    template <EnumerableC T>
+    class ConstEnumerate {
+        using TRef = AddConstT<typename RemoveReference<T>::type>&;
+        TRef m_container;
+
+        public:
+        explicit ConstEnumerate(const T& container) : m_container(container) {}
+
+        auto begin() const { return ConstEnumerator{ARLib::begin(m_container), 0ull}; }
+        auto end() const { return ConstEnumerator{ARLib::end(m_container), m_container.size()}; }
+    };
+
     // simple iterator pair wrapper, will only iterate until the shorter of the 2 iterators has elements.
     template <Iterable F, Iterable S>
     class PairIterate {
