@@ -111,4 +111,5 @@ namespace ARLib {
     BASIC_PRINT_IMPL(double, DoubleToStr)
     BASIC_PRINT_IMPL(size_t, IntToStr)
     BASIC_PRINT_IMPL(long long, IntToStr)
+    BASIC_PRINT_IMPL(bool, BoolToStr)
 } // namespace ARLib
