@@ -1,4 +1,5 @@
 #include "UniqueString.h"
+#include "LinkedSet.h"
 
 namespace ARLib {
     namespace detail {
@@ -8,5 +9,7 @@ namespace ARLib {
         }
     } // namespace detail
 
-    String* UniqueString::construct(const String& s) { return &ARLib::detail::get_interned_strings().prepend(s); }
+    WeakPtr<String> UniqueString::construct(String s) {
+        return WeakPtr{ARLib::detail::get_interned_strings().prepend(Forward<String>(s))};
+    }
 } // namespace ARLib
