@@ -2,6 +2,7 @@
 #include "String.h"
 #include "Types.h"
 #include "WeakPtr.h"
+#include "PrintInfo.h"
 
 namespace ARLib {
     class UniqueString {
@@ -29,5 +30,12 @@ namespace ARLib {
         bool operator==(const String& other) const { return *m_ref == other; }
         WeakPtr<String> operator->() { return m_ref; }
         const WeakPtr<String> operator->() const { return m_ref; }
+    };
+
+    template <>
+    struct PrintInfo<UniqueString> {
+        const UniqueString& m_string;
+        PrintInfo(const UniqueString& string) : m_string(string) {}
+        String repr() const { return *m_string.operator->().get(); }
     };
 } // namespace ARLib

@@ -1,6 +1,7 @@
 #pragma once
 #include "HashBase.h"
 #include "Memory.h"
+#include "PrintInfo.h"
 #include "TypeTraits.h"
 
 namespace ARLib {
@@ -200,6 +201,34 @@ namespace ARLib {
     struct Hash<SharedPtr<T>> {
         [[nodiscard]] size_t operator()(const SharedPtr<T>& ptr) const noexcept {
             return reinterpret_cast<uintptr_t>(ptr.get());
+        }
+    };
+
+    template <Printable T>
+    struct PrintInfo<SharedPtr<T>> {
+        const SharedPtr<T>& m_ptr;
+        PrintInfo(const SharedPtr<T>& ptr) : m_ptr(ptr) {}
+        String repr() const { return "SharedPtr { "_s + PrintInfo<T>{*m_ptr.get()}.repr() + " }"_s; }
+    };
+
+    template <Printable T>
+    struct PrintInfo<SharedPtr<T[]>> {
+        const SharedPtr<T[]>& m_ptr;
+        PrintInfo(const SharedPtr<T[]>& ptr) : m_ptr(ptr) {}
+        String repr() const {
+            String conc{};
+            if (m_ptr.exists()) {
+                if (m_ptr.size() > 0) conc.append("[ ");
+                for (size_t i = 0; i < m_ptr.size(); i++) {
+                    conc.append(PrintInfo<T>{m_ptr[i]}.repr());
+                    conc.append(", ");
+                }
+                conc = conc.substring(0, conc.size() - 2);
+                conc.append(" ]");
+            } else {
+                conc.append("nullptr");
+            }
+            return "SharedPtr { "_s + conc + " }"_s;
         }
     };
 } // namespace ARLib

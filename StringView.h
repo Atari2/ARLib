@@ -1,6 +1,7 @@
 #pragma once
 #include "HashBase.h"
 #include "Iterator.h"
+#include "PrintInfo.h"
 #include "String.h"
 
 namespace ARLib {
@@ -68,7 +69,7 @@ namespace ARLib {
         template <size_t N>
         constexpr bool operator==(const char (&buf)[N]) const noexcept {
             size_t sz = size();
-            if (sz != (N-1)) return false;
+            if (sz != (N - 1)) return false;
             return strncmp(m_start, buf, N - 1) == 0;
         }
 
@@ -141,5 +142,12 @@ namespace ARLib {
         [[nodiscard]] size_t operator()(const StringView& key) const noexcept {
             return hash_array_representation(key.data(), key.size());
         }
+    };
+
+    template <>
+    struct PrintInfo<StringView> {
+        const StringView& m_view;
+        PrintInfo(const StringView& view) : m_view(view) {}
+        String repr() const { return m_view.extract_string(); }
     };
 } // namespace ARLib

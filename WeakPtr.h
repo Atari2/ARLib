@@ -1,4 +1,5 @@
 #pragma once
+#include "PrintInfo.h"
 #include "Types.h"
 #include "Utility.h"
 
@@ -42,5 +43,12 @@ namespace ARLib {
 
         T& operator*() { return *m_storage; }
         const T& operator*() const { return *m_storage; }
+    };
+
+    template <Printable T>
+    struct PrintInfo<WeakPtr<T>> {
+        const WeakPtr<T>& m_ptr;
+        PrintInfo(const WeakPtr<T>& ptr) : m_ptr(ptr) {}
+        String repr() const { return "WeakPtr { "_s + PrintInfo<T>{*m_ptr.get()}.repr() + " }"_s; }
     };
 } // namespace ARLib
