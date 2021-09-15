@@ -20,6 +20,8 @@ This library has been compiled and tested with:
 - Mingw x64 with GCC 11
 - clang-cl 12
 
+To build on Windows the minimum version of Visual Studio required to build is VS 2019 v16.11.
+
 ## How to build
 
 Simply run cmake with the preferred settings of your choice.
