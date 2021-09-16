@@ -46,7 +46,8 @@ namespace ARLib {
             if constexpr (Printable<T>) {
                 return String::formatted("0x%p -> ", m_ptr) + PrintInfo<T>{*m_ptr}.repr();
             } else {
-                return String::formatted("0x%p (pointer to %s)", m_ptr, typeid(T).name());
+                DemangledInfo info{MANGLED_TYPENAME_TO_STRING(T), false};
+                return String::formatted("0x%p (pointer to %s)", m_ptr, info.name());
             }
         }
     };
