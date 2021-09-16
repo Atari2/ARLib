@@ -1,5 +1,6 @@
 #pragma once
 #include "Compat.h"
+#include "TypeInfo.h"
 
 #define STRINGIFY(TOK)       #TOK
 #define TOSTRING(X)          STRINGIFY(X)
@@ -32,9 +33,3 @@
     do {                                                                                                               \
         if (!(c)) new char[0];                                                                                         \
     } while (false)
-
-namespace ARLib {
-    using TypeInfo = std::type_info;
-}
-
-#define TYPENAME_TO_STRING(type) typeid(type).name()
