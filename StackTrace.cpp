@@ -12,6 +12,8 @@
 // clang-format no reorder these 2 headers
 #include <dbghelp.h>
 #else
+#include "String.h"
+#include <cxxabi.h>
 #include <cstdlib>      // this header is here literally just for std::free and I'm sad about it
 #include <execinfo.h>
 #endif
@@ -101,7 +103,28 @@ namespace ARLib {
         int ret = backtrace(buffer, frames_to_capture);
         char** symbols = backtrace_symbols(buffer, ret);
         for (int i = 0; i < ret; i++) {
-            trace.append_frame(symbols[i], strlen(symbols[i]) + 1, true);
+            int status = 0;
+            size_t len = strlen(symbols[i]);
+            char* start_of_name = nullptr;
+            char* end_of_name = nullptr;
+            for (size_t j = 0; j < len; j++) {
+                if (symbols[i][j] == '(')
+                    start_of_name = &symbols[i][j] + 1;
+                else if (symbols[i][j] == '+')
+                    end_of_name = &symbols[i][j];
+                if (end_of_name && start_of_name) break;
+            }
+            String name_to_demangle{start_of_name, end_of_name};
+            char* demangled = abi::__cxa_demangle(name_to_demangle.data(), nullptr, nullptr, &status);
+            if (status != 0) {
+                trace.append_frame(symbols[i], strlen(symbols[i]) + 1, true);
+            } else {
+                String demangled_full_symbol{symbols[i], len};
+                demangled_full_symbol.ireplace(name_to_demangle.data(), demangled, 1);
+                size_t sz = demangled_full_symbol.size();
+                trace.append_frame(demangled_full_symbol.release(), sz + 1);
+            }
+
         }
         std::free(symbols);
         return trace;
