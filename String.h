@@ -167,6 +167,21 @@ namespace ARLib {
             }
         }
 
+        // releases the inner char* buffer. May allocate if buffer is in-situ. May return nullptr if the string is empty.
+        char* release() {
+            if (m_size == 0) return nullptr;
+            if (is_local()) {
+                char* buffer = new char[m_size];
+                strcpy(buffer, local_data_internal());
+                return buffer;
+            } else {
+                char* buffer = m_data_buf;
+                m_data_buf = local_data_internal();
+                m_size = 0;
+                return buffer;
+            }
+        }
+
         [[nodiscard]] String substring(size_t first = 0, size_t last = npos) const {
             if (last == npos) last = length();
             return String{get_buf_internal() + first, get_buf_internal() + last};
