@@ -72,8 +72,15 @@ namespace ARLib {
 
         public:
         constexpr UniquePtr() = default;
-        UniquePtr(const UniquePtr& other) : m_storage(new T[other.m_size]), m_size(other.m_size) {
-            if (other.m_storage) { ConditionalBitCopy(m_storage, other.m_storage, m_size); }
+        UniquePtr(const UniquePtr& other) requires DefaultConstructible<T> :
+            m_storage(new T[other.m_size]),
+            m_size(other.m_size) {
+            if (other.m_storage) {
+                ConditionalBitCopy(m_storage, other.m_storage, m_size);
+            } else {
+                for (size_t i = 0; i < other.m_size; i++)
+                    m_storage[i] = T{};
+            }
         }
         UniquePtr& operator=(const UniquePtr& other) {
             if (this == &other) return *this;
@@ -86,7 +93,10 @@ namespace ARLib {
             return *this;
         }
 
-        explicit UniquePtr(size_t size) : m_storage(new T[size]), m_size(size) {}
+        explicit UniquePtr(size_t size) requires DefaultConstructible<T> : m_storage(new T[size]), m_size(size) {
+            for (size_t i = 0; i < size; i++)
+                m_storage[i] = T{};
+        }
 
         template <size_t N>
         explicit UniquePtr(T (&src)[N]) : m_storage(new T[N]), m_size(N) {
@@ -119,7 +129,6 @@ namespace ARLib {
 
         size_t size() const { return m_size; }
 
-        
         T* get() { return m_storage; }
         const T* get() const { return m_storage; }
 
