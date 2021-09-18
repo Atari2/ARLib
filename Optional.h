@@ -1,8 +1,8 @@
 #pragma once
 #include "Assertion.h"
 #include "Concepts.h"
-#include "Ordering.h"
 #include "HashBase.h"
+#include "Ordering.h"
 #include "PrintInfo.h"
 
 namespace ARLib {
@@ -143,6 +143,13 @@ namespace ARLib {
             if (m_exists) evict_();
             m_object = new T{Forward<T>(value)};
             m_exists = true;
+        }
+
+        T extract() {
+            assert_not_null_();
+            T val = move(*m_object);
+            evict_();
+            return move(val);
         }
 
         T* detach() {

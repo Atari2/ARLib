@@ -147,11 +147,18 @@ namespace ARLib {
         }
     };
 
-    template <Printable T>
+    template <typename T>
     struct PrintInfo<UniquePtr<T>> {
         const UniquePtr<T>& m_ptr;
         PrintInfo(const UniquePtr<T>& ptr) : m_ptr(ptr) {}
-        String repr() const { return "UniquePtr { "_s + PrintInfo<T>{*m_ptr.get()}.repr() + " }"_s; }
+        String repr() const { 
+            if constexpr (Printable<T>) {
+                return "UniquePtr { "_s + PrintInfo<T>{*m_ptr.get()}.repr() + " }"_s;
+            } else {
+                DemangledInfo info{MANGLED_TYPENAME_TO_STRING(T)};
+                return "UniquePtr { "_s + String{info.name()} + " }"_s;
+            }
+        }
     };
 
     template <Printable T>
