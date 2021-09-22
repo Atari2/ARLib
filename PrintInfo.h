@@ -13,6 +13,16 @@ namespace ARLib {
         { PrintInfo<T>{a}.repr() } -> SameAs<String>;
     };
 
+    template <typename T>
+    String print_conditional(const T& m_value) {
+        if constexpr (Printable<T>) {
+            return PrintInfo<T>{m_value}.repr();
+        } else {
+            DemangledInfo info{MANGLED_TYPENAME_TO_STRING(T)};
+            return String{info.name()};
+        }
+    };
+
 #define BASIC_NOT_CONST_PRINT_IMPL(x, impl)                                                                            \
     template <>                                                                                                        \
     struct PrintInfo<x> {                                                                                              \
