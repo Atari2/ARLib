@@ -17,18 +17,21 @@ namespace ARLib {
 
         Parsed<Object> parse_object(StringView view, size_t current_index);
         size_t skip_whitespace(StringView view, size_t current_index);
-        Pair<size_t, String> eat_until_space(StringView view, size_t current_index);
+        Pair<size_t, String> eat_until_space_or_delim(StringView view, size_t current_index);
         Parsed<JString> parse_quoted_string(StringView view, size_t current_index);
         Pair<size_t, String> parse_non_delimited(StringView view, size_t current_index);
         Parsed<Array> parse_array(StringView view, size_t current_index);
+        String dump_array(const Array& arr, size_t indent = 1);
+        String dump_json(const Object& obj, size_t indent = 1);
+
 
         struct ParseError {
             ParseError() = default;
             static constexpr inline StringView error = "JSON String couldn't be parsed correctly"_sv;
         };
 
-        using ParseResult = Result<Object, ParseError>;
-        using FileParseResult = Result<Object, Variant<ReadFileError, ParseError>>;
+        using ParseResult = Result<Document, ParseError>;
+        using FileParseResult = Result<Document, Variant<ReadFileError, ParseError>>;
 
         class Parser {
             StringView m_view;
@@ -53,5 +56,12 @@ namespace ARLib {
             // was working fine on GCC/Clang
             return "JSON String couldn't be parsed correctly"_s;
         }
+    };
+
+    template <>
+    struct PrintInfo<JSON::Document> {
+        const JSON::Document& m_document;
+        PrintInfo(const JSON::Document& document) : m_document(document) {}
+        String repr() const { return JSON::dump_json(m_document.object()); }
     };
 } // namespace ARLib

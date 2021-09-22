@@ -8,7 +8,7 @@ namespace ARLib {
 
 #define CHK_CURR(c)                                                                                                    \
     if (view[current_index] != c) {                                                                                    \
-        HARD_ASSERT(false, "chk curr    ");                                                                            \
+        HARD_ASSERT(false, "CHK_CURR " #c);                                                                            \
         return {};                                                                                                     \
     }
 
@@ -16,7 +16,7 @@ namespace ARLib {
     current_index = skip_whitespace(view, current_index);                                                              \
     if (view[current_index] != ',') {                                                                                  \
         if (view[current_index] != c) {                                                                                \
-            HARD_ASSERT(false, "verify comma");                                                                        \
+            HARD_ASSERT(false, "VERIFY_COMMA " #c);                                                                    \
             return {};                                                                                                 \
         }                                                                                                              \
     } else {                                                                                                           \
@@ -58,13 +58,29 @@ namespace ARLib {
 
         Parsed<JString> parse_quoted_string(StringView view, size_t current_index) {
             CHK_CURR('"')
+            constexpr char escaped[] = {'n', 'r', 'v', 't', 'f'};
+            constexpr char equiv[] = {'\n', '\r', '\v', '\t', '\f'};
+            auto check_c = [&escaped, &equiv](char c) {
+                constexpr size_t sz = 5;
+                for (size_t i = 0; i < sz; i++) {
+                    if (c == escaped[i]) return equiv[i];
+                }
+                return c;
+            };
             current_index++;
             JString container{};
             bool at_end = false;
             while (!at_end && current_index < view.size()) {
                 char c = view[current_index];
                 if (c == '\\') {
-                    current_index += 2;
+                    if (view[current_index + 1] == '\\') {
+                        container.append(check_c(view[current_index + 2]));
+                        current_index += 3;
+                    } else {
+                        container.append(check_c(view[current_index + 1]));
+                        current_index += 2;
+                    }
+
                 } else if (c == '"') {
                     current_index++;
                     at_end = true;
@@ -176,6 +192,89 @@ namespace ARLib {
             return Pair{current_index + 1, obj};
         }
 
+        // FIXME: fix indentation
+        String dump_array(const Array& arr, size_t indent) {
+            String repr{"[\n"};
+            size_t i = 0;
+            for (const auto& val_ptr : arr) {
+                const auto& val = *val_ptr;
+                switch (val.type()) {
+                case Type::Array:
+                    repr.append(dump_array(val.get<Type::Array>()));
+                    break;
+                case Type::Object:
+                    repr.append(dump_json(val.get<Type::Object>(), indent + 1));
+                    break;
+                case Type::Number:
+                    repr.append(DoubleToStr(val.get<Type::Number>()));
+                    break;
+                case Type::Null:
+                    repr.append("null"_s);
+                    break;
+                case Type::Bool:
+                    repr.append(BoolToStr(val.get<Type::Bool>().value()));
+                    break;
+                case Type::String:
+                    repr.append(val.get<Type::String>());
+                    break;
+                default:
+                    HARD_ASSERT(false, "Invalid type in JSON object");
+                    break;
+                }
+                if (++i < arr.size()) {
+                    repr.append(",\n");
+                } else {
+                    repr.append('\n');
+                }
+            }
+            repr.append(String{indent, '\t'} + "]"_s);
+            return repr;
+        }
+
+        String dump_json(const Object& obj, size_t indent) {
+            String indent_string{indent, '\t'};
+            String prev_indent_string{indent - 1, '\t'};
+            String repr{prev_indent_string + "{\n"_s};
+            size_t i = 0;
+            for (const auto& entry : obj) {
+                const auto& val = *entry.value();
+                const auto& key = entry.key();
+                repr.append(indent_string);
+                repr.append("\""_s + key + '"');
+                repr.append(": "_s);
+                switch (val.type()) {
+                case Type::Array:
+                    repr.append(dump_array(val.get<Type::Array>(), indent + 1));
+                    break;
+                case Type::Object:
+                    repr.append(dump_json(val.get<Type::Object>(), indent + 1));
+                    break;
+                case Type::Number:
+                    repr.append(DoubleToStr(val.get<Type::Number>()));
+                    break;
+                case Type::Null:
+                    repr.append("null"_s);
+                    break;
+                case Type::Bool:
+                    repr.append(BoolToStr(val.get<Type::Bool>().value()));
+                    break;
+                case Type::String:
+                    repr.append("\""_s + val.get<Type::String>() + '"');
+                    break;
+                default:
+                    HARD_ASSERT(false, "Invalid type in JSON object");
+                    break;
+                }
+                if (++i < obj.size()) {
+                    repr.append(",\n");
+                } else {
+                    repr.append('\n');
+                }
+            }
+            repr.append(prev_indent_string + "}"_s);
+            return repr;
+        }
+
         Parser::Parser(StringView view) : m_view(view) {}
 
         ParseResult Parser::parse_internal() {
@@ -183,7 +282,7 @@ namespace ARLib {
             auto maybe_object = parse_object(m_view, current_index);
             if (!maybe_object) return ParseResult::from_error();
             auto [_, obj] = maybe_object.extract();
-            return ParseResult::from_ok(move(obj));
+            return ParseResult::from_ok(Document{move(obj)});
         }
 
         ParseResult Parser::parse(StringView data) {

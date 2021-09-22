@@ -19,7 +19,7 @@ namespace ARLib {
         using Value = UniquePtr<ValueObj>;
 
         // FIXME: when used with hashmap, it leaks huge amounts of memory for no reason.
-        using Object = Map<String, Value>;
+        using Object = HashMap<String, Value>;
         using Array = Vector<Value>;
         using JString = String;
         using Number = double;
@@ -39,18 +39,17 @@ namespace ARLib {
         struct Bool {
             bool m_value;
             Bool(detail::BoolTag, bool val) : m_value(val) {}
+            bool value() const { return m_value; }
         };
 
-        enum class Type { Value, Object, String, Number, Array, Bool, Null };
+        enum class Type { Object, String, Number, Array, Bool, Null };
 
         template <typename Tp>
-        concept JSONType = IsAnyOfV<Tp, Value, Object, JString, Number, Array, Bool, Null>;
+        concept JSONType = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null>;
 
         template <JSONType T>
         constexpr Type enum_from_type() {
-            if constexpr (IsSameV<T, Value>) {
-                return Type::Value;
-            } else if constexpr (IsSameV<T, Object>) {
+             if constexpr (IsSameV<T, Object>) {
                 return Type::Object;
             } else if constexpr (IsSameV<T, JString>) {
                 return Type::String;
@@ -71,7 +70,7 @@ namespace ARLib {
             friend Parser;
             friend PrintInfo<ValueObj>;
 
-            using JSONVariant = Variant<Value, Object, JString, Number, Array, Bool, Null>;
+            using JSONVariant = Variant<Object, JString, Number, Array, Bool, Null>;
             JSONVariant m_internal_value{null_tag};
             Type m_type{Type::Null};
 
@@ -84,12 +83,12 @@ namespace ARLib {
                 return UniquePtr{ValueObj{Forward<T>(value), enum_from_type<T>()}};
             }
 
+            Type type() const { return m_type; }
+
             template <Type T>
             const auto& get() const {
                 // Value, Object, String, Number, Array, Bool, Null
-                if constexpr (T == Type::Value) {
-                    return m_internal_value.template get<Value>();
-                } else if constexpr (T == Type::Object) {
+                if constexpr (T == Type::Object) {
                     return m_internal_value.template get<Object>();
                 } else if constexpr (T == Type::String) {
                     return m_internal_value.template get<JString>();
@@ -109,9 +108,7 @@ namespace ARLib {
             template <Type T>
             auto& get() {
                 // Value, Object, String, Number, Array, Bool, Null
-                if constexpr (T == Type::Value) {
-                    return m_internal_value.template get<Value>();
-                } else if constexpr (T == Type::Object) {
+                if constexpr (T == Type::Object) {
                     return m_internal_value.template get<Object>();
                 } else if constexpr (T == Type::String) {
                     return m_internal_value.template get<JString>();
@@ -127,6 +124,15 @@ namespace ARLib {
                     COMPTIME_ASSERT("Invalid enum value passed to JSON:Value::get<T>");
                 }
             }
+        };
+
+        class Document {
+            Object m_object;
+
+            public:
+            Document(Object&& obj) : m_object(move(obj)) {}
+            const Object& object() const { return m_object; }
+            Object& object() { return m_object; }
         };
     } // namespace JSON
 
@@ -150,5 +156,4 @@ namespace ARLib {
         PrintInfo(const JSON::ValueObj& value) : m_value(value) {}
         String repr() const { return PrintInfo<JSON::ValueObj::JSONVariant>{m_value.m_internal_value}.repr(); }
     };
-
 } // namespace ARLib
