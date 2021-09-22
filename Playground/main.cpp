@@ -2,24 +2,34 @@
 #include "../CharConv.h"
 #include "../Chrono.h"
 #include "../HashTable.h"
+#include "../JSONParser.h"
 #include "../Optional.h"
 #include "../Pair.h"
 #include "../Printer.h"
 #include "../Result.h"
+#include "../SharedPtr.h"
 #include "../SortedVector.h"
 #include "../String.h"
 #include "../Threading.h"
 #include "../Tuple.h"
+#include "../UniquePtr.h"
 #include "../Variant.h"
 #include "../Vector.h"
-#include "../UniquePtr.h" 
-#include "../SharedPtr.h"
-#include "../JSONParser.h" 
+#ifdef ON_WINDOWS
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#include <stdlib.h>
+#endif
 
 using namespace ARLib;
 
-bool func() {
-    return true;
+void func() {
+    // auto maybe_obj = JSON::Parser::from_file("test.json"_sv);
+    auto maybe_obj = JSON::Parser::parse(R"({"hello world": 10})"_sv);
+    if (maybe_obj) {
+        auto obj = maybe_obj.to_ok();
+        Printer::print("{}", obj);
+    }
 }
 
 int main() {
@@ -38,7 +48,7 @@ int main() {
     // Mutex mut{};
     // Mutex mut2{};
     // RecursiveMutex rmut{};
-    // 
+    //
     // tbl.insert(UniqueLock{mut});
     // UniqueLock loc{mut, defer_lock};
     // ScopedLock sloc{mut2, rmut};
@@ -56,7 +66,9 @@ int main() {
     // Printer::print("{}, {}, {}, {}, {}, {}", res, res2, opt, opt2, loc, t);
     // Printer::print("{}", sloc);
     // t.join();
-    auto obj = JSON::Parser::from_file("test.json"_sv);
-    Printer::print("{}", obj);
+    func();
+#ifdef ON_WINDOWS
+    _CrtDumpMemoryLeaks();
+#endif
     return 0;
 }
