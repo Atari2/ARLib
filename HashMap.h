@@ -126,6 +126,16 @@ namespace ARLib {
         size_t bucket_count() const { return m_table.bucket_count(); }
     };
 
+    template <typename A, typename B>
+    struct PrintInfo<HashMapEntry<A, B>> {
+        const HashMapEntry<A, B>& m_entry;
+        explicit PrintInfo(const HashMapEntry<A, B>& entry) : m_entry(entry) {}
+        String repr() const {
+            return "HashMapEntry { "_s + print_conditional<A>(m_entry.key()) + ": "_s +
+                   print_conditional<B>(m_entry.value()) + ", hash: " + print_conditional<size_t>(m_entry.hashval()) + " }"_s;
+        }
+    };
+
     template <Printable A, Printable B>
     struct PrintInfo<HashMap<A, B>> {
         const HashMap<A, B>& m_map;
