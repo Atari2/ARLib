@@ -45,9 +45,9 @@ namespace ARLib {
             return *this;
         }
 
-        Optional(T&& val) requires MoveAssignable<T> : m_object(new T), m_exists(true) { *m_object = move(val); }
+        Optional(T&& val) requires MoveAssignable<T> : m_object(new T{move(val)}), m_exists(true) {}
 
-        Optional(const T& val) requires CopyAssignable<T> : m_object(new T), m_exists(true) { *m_object = val; }
+        Optional(const T& val) requires CopyAssignable<T> : m_object(new T{val}), m_exists(true) {}
 
         Optional& operator=(const T& val) requires CopyAssignable<T> {
             evict_();
