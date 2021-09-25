@@ -56,7 +56,7 @@ namespace ARLib {
             return *this;
         }
 
-        Optional& operator=(T&& val) requires CopyAssignable<T> {
+        Optional& operator=(T&& val) requires MoveAssignable<T> {
             evict_();
             m_object = new T{Forward<T>(val)};
             m_exists = true;
