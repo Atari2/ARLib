@@ -56,19 +56,25 @@ namespace ARLib {
             return Pair{current_index, container};
         }
 
-        Parsed<JString> parse_quoted_string(StringView view, size_t current_index) {
+        Parsed<String> parse_quoted_string(StringView view, size_t current_index) {
             CHK_CURR('"')
+#ifdef COMPILER_CLANG
+#define LAMBDA_CAPTURES []
+#else
+#define LAMBDA_CAPTURES [&escaped, &equiv]
+#endif
             constexpr char escaped[] = {'n', 'r', 'v', 't', 'f'};
             constexpr char equiv[] = {'\n', '\r', '\v', '\t', '\f'};
-            auto check_c = [&escaped, &equiv](char c) {
+            auto check_c = LAMBDA_CAPTURES(char c) {
                 constexpr size_t sz = 5;
                 for (size_t i = 0; i < sz; i++) {
                     if (c == escaped[i]) return equiv[i];
                 }
                 return c;
             };
+#undef LAMBDA_CAPTURES
             current_index++;
-            JString container{};
+            String container{};
             bool at_end = false;
             while (!at_end && current_index < view.size()) {
                 char c = view[current_index];
@@ -199,23 +205,23 @@ namespace ARLib {
             for (const auto& val_ptr : arr) {
                 const auto& val = *val_ptr;
                 switch (val.type()) {
-                case Type::Array:
-                    repr.append(dump_array(val.get<Type::Array>()));
+                case Type::JArray:
+                    repr.append(dump_array(val.get<Type::JArray>()));
                     break;
-                case Type::Object:
-                    repr.append(dump_json(val.get<Type::Object>(), indent + 1));
+                case Type::JObject:
+                    repr.append(dump_json(val.get<Type::JObject>(), indent + 1));
                     break;
-                case Type::Number:
-                    repr.append(DoubleToStr(val.get<Type::Number>()));
+                case Type::JNumber:
+                    repr.append(DoubleToStr(val.get<Type::JNumber>()));
                     break;
-                case Type::Null:
+                case Type::JNull:
                     repr.append("null"_s);
                     break;
-                case Type::Bool:
-                    repr.append(BoolToStr(val.get<Type::Bool>().value()));
+                case Type::JBool:
+                    repr.append(BoolToStr(val.get<Type::JBool>().value()));
                     break;
-                case Type::String:
-                    repr.append(val.get<Type::String>());
+                case Type::JString:
+                    repr.append(val.get<Type::JString>());
                     break;
                 default:
                     HARD_ASSERT(false, "Invalid type in JSON object");
@@ -243,23 +249,23 @@ namespace ARLib {
                 repr.append("\""_s + key + '"');
                 repr.append(": "_s);
                 switch (val.type()) {
-                case Type::Array:
-                    repr.append(dump_array(val.get<Type::Array>(), indent + 1));
+                case Type::JArray:
+                    repr.append(dump_array(val.get<Type::JArray>(), indent + 1));
                     break;
-                case Type::Object:
-                    repr.append(dump_json(val.get<Type::Object>(), indent + 1));
+                case Type::JObject:
+                    repr.append(dump_json(val.get<Type::JObject>(), indent + 1));
                     break;
-                case Type::Number:
-                    repr.append(DoubleToStr(val.get<Type::Number>()));
+                case Type::JNumber:
+                    repr.append(DoubleToStr(val.get<Type::JNumber>()));
                     break;
-                case Type::Null:
+                case Type::JNull:
                     repr.append("null"_s);
                     break;
-                case Type::Bool:
-                    repr.append(BoolToStr(val.get<Type::Bool>().value()));
+                case Type::JBool:
+                    repr.append(BoolToStr(val.get<Type::JBool>().value()));
                     break;
-                case Type::String:
-                    repr.append("\""_s + val.get<Type::String>() + '"');
+                case Type::JString:
+                    repr.append("\""_s + val.get<Type::JString>() + '"');
                     break;
                 default:
                     HARD_ASSERT(false, "Invalid type in JSON object");
