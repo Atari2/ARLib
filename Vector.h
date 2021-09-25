@@ -358,21 +358,19 @@ namespace ARLib {
         String repr() {
             if (m_vec.empty()) { return "[]"_s; }
             String con{};
+            con.append('[');
             if constexpr (IsSameV<T, String>) {
                 for (const auto& s : m_vec) {
-                    con.append("[\"");
-                    con.append(PrintInfo<T>{s}.repr());
-                    con.append("\"], ");
+                    con.append("\""_s + PrintInfo<T>{s}.repr() + "\", "_s);
                 }
             } else {
                 for (const auto& s : m_vec) {
-                    con.append('[');
-                    con.append(PrintInfo<T>{s}.repr());
-                    con.append("], ");
+                    con.append(PrintInfo<T>{s}.repr() + ", "_s);
                 }
             }
-
-            return con.substring(0, con.size() - 2);
+            con = con.substring(0, con.size() - 2);
+            con.append(']');
+            return con;
         }
     };
 
