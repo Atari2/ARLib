@@ -8,6 +8,7 @@
 #include "../Functional.h"
 #include "../GenericView.h"
 #include "../HashMap.h"
+#include "../JSONParser.h"
 #include "../LinkedSet.h"
 #include "../List.h"
 #include "../Map.h"

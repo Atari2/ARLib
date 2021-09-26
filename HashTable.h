@@ -22,14 +22,19 @@ namespace ARLib {
 
         public:
         static constexpr size_t npos = static_cast<size_t>(-1);
-        explicit HashTableIterator(Vector<Vector<T>>& backing_store) :
+        explicit HashTableIterator(HashTableStorage<T>& backing_store) :
             m_backing_store(backing_store), m_bkt_size(backing_store.size()) {
             while (m_backing_store[m_current_bucket].empty()) {
                 m_current_bucket++;
+                if (m_current_bucket == m_backing_store.size()) {
+                    m_current_bucket = npos;
+                    m_current_vector_index = npos;
+                    break;
+                }
             }
         }
 
-        HashTableIterator(Vector<Vector<T>>& backing_store, size_t bucket_index, size_t vector_index) :
+        HashTableIterator(HashTableStorage<T>& backing_store, size_t bucket_index, size_t vector_index) :
             m_backing_store(backing_store),
             m_current_bucket(bucket_index),
             m_current_vector_index(vector_index),
@@ -55,14 +60,22 @@ namespace ARLib {
         HashTableIterator& operator++() {
             if (m_backing_store[m_current_bucket].empty() ||
                 m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
-                if (m_current_bucket == m_bkt_size - 1 || m_backing_store[m_current_bucket + 1].empty()) {
-                    // end iterator has npos
+                if (++m_current_bucket == m_bkt_size) {
+                    // we're at end
                     m_current_vector_index = npos;
                     m_current_bucket = npos;
                     return *this;
                 }
+                while (m_backing_store[m_current_bucket++].empty()) {
+                    if (m_current_bucket == m_bkt_size) {
+                        // we're at end
+                        m_current_vector_index = npos;
+                        m_current_bucket = npos;
+                        return *this;
+                    }
+                }
+                m_current_bucket--;
                 m_current_vector_index = 0;
-                m_current_bucket++;
             } else {
                 m_current_vector_index++;
             }
@@ -114,14 +127,19 @@ namespace ARLib {
 
         public:
         static constexpr size_t npos = static_cast<size_t>(-1);
-        explicit ConstHashTableIterator(const Vector<Vector<T>>& backing_store) :
+        explicit ConstHashTableIterator(const HashTableStorage<T>& backing_store) :
             m_backing_store(backing_store), m_bkt_size(backing_store.size()) {
             while (m_backing_store[m_current_bucket].empty()) {
                 m_current_bucket++;
+                if (m_current_bucket == m_backing_store.size()) {
+                    m_current_bucket = npos;
+                    m_current_vector_index = npos;
+                    break;
+                }
             }
         }
 
-        ConstHashTableIterator(const Vector<Vector<T>>& backing_store, size_t bucket_index, size_t vector_index) :
+        ConstHashTableIterator(const HashTableStorage<T>& backing_store, size_t bucket_index, size_t vector_index) :
             m_backing_store(backing_store),
             m_current_bucket(bucket_index),
             m_current_vector_index(vector_index),
@@ -147,14 +165,22 @@ namespace ARLib {
         ConstHashTableIterator& operator++() {
             if (m_backing_store[m_current_bucket].empty() ||
                 m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
-                if (m_current_bucket == m_bkt_size - 1 || m_backing_store[m_current_bucket + 1].empty()) {
-                    // end iterator has npos
+                if (++m_current_bucket == m_bkt_size) {
+                    // we're at end
                     m_current_vector_index = npos;
                     m_current_bucket = npos;
                     return *this;
                 }
+                while (m_backing_store[m_current_bucket++].empty()) {
+                    if (m_current_bucket == m_bkt_size) {
+                        // we're at end
+                        m_current_vector_index = npos;
+                        m_current_bucket = npos;
+                        return *this;
+                    }
+                }
+                m_current_bucket--;
                 m_current_vector_index = 0;
-                m_current_bucket++;
             } else {
                 m_current_vector_index++;
             }

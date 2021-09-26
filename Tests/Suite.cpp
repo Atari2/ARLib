@@ -226,7 +226,7 @@ namespace ARLib {
             Printer::format("My name is {}, I'm {} years old, vector: {}, map: {}", "Alessio"_s, 22, vec, map);
             RETURN_IF_NOT_EQ(
             ret,
-            "My name is Alessio, I'm 22 years old, vector: [1.000000], [2.000000], [3.000000], map: { Hello: 1, World: 2 }"_s)
+            "My name is Alessio, I'm 22 years old, vector: [1.000000, 2.000000, 3.000000], map: { Hello: 1, World: 2 }"_s)
             return true;
         };
 

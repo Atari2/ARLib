@@ -107,6 +107,32 @@ namespace ARLib {
                 }
             }
 
+            template <size_t Idx>
+            requires(Idx < sizeof...(Rest) + 1) auto& get() const {
+                if constexpr (Idx == 0) {
+                    HARD_ASSERT_FMT(is_active,
+                                    "Bad variant access, requested type is index %zu but this type is not active.", Idx)
+                    return head;
+                } else {
+                    HARD_ASSERT_FMT(!is_active, "Bad variant access, requested type is %zu but active type is `%s`",
+                                    Idx, TYPENAME_TO_STRING(First))
+                    return tail.template get<Idx - 1>();
+                }
+            }
+
+            template <size_t Idx>
+            requires(Idx < sizeof...(Rest) + 1) auto& get() {
+                if constexpr (Idx == 0) {
+                    HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is %zu but this type is not active.",
+                                    Idx)
+                    return head;
+                } else {
+                    HARD_ASSERT_FMT(!is_active, "Bad variant access, requested type is %zu but active type is `%s`",
+                                    Idx, TYPENAME_TO_STRING(First))
+                    return tail.template get<Idx - 1>();
+                }
+            }
+
             template <class Type, typename = EnableIfT<IsAnyOfV<Type, First, Rest...>>>
             auto& get() const {
                 if constexpr (IsSameV<Type, First>) {
@@ -222,6 +248,20 @@ namespace ARLib {
                 }
             }
 
+            template <size_t Idx>
+            requires(Idx == 0) auto& get() const {
+                HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is `%s` but this type is not active.",
+                                TYPENAME_TO_STRING(Type))
+                return head;
+            }
+
+            template <size_t Idx>
+            requires(Idx == 0) auto& get() {
+                HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is `%s` but this type is not active.",
+                                TYPENAME_TO_STRING(Type))
+                return head;
+            }
+
             template <class T, typename = EnableIfT<IsSameV<T, Type>>>
             auto& get() const {
                 HARD_ASSERT_FMT(is_active, "Bad variant access, requested type is `%s` but this type is not active.",
@@ -334,6 +374,9 @@ namespace ARLib {
             m_storage.operator=(Forward<Args>(args)...);
         }
 
+        template <size_t Idx>
+        requires(Idx < sizeof...(Types)) auto& get() const { return m_storage.template get<Idx>(); }
+
         template <class T>
         auto& get() const {
             return m_storage.template get<T>();
@@ -382,6 +425,12 @@ namespace ARLib {
         requires IsSameV<T, Monostate>
         auto& get() { return m_storage.get(); }
 
+        template <size_t Idx>
+        requires(Idx == 0) auto& get() const { return m_storage.get(); }
+
+        template <size_t Idx>
+        requires(Idx == 0) auto& get() { return m_storage.get(); }
+
         template <class T>
         requires IsSameV<T, Monostate>
         bool contains_type() const { return m_storage.active(); }
@@ -390,6 +439,25 @@ namespace ARLib {
 
         ~Variant() = default;
     };
+
+    // free functions to avoid template keyword when calling member functions in templated functions.
+    template <typename Tp, typename... Args>
+    requires IsAnyOfV<Tp, Args...>
+    auto& get(Variant<Args...>& variant) { return variant.template get<Tp>(); }
+    template <typename Tp, typename... Args>
+    requires IsAnyOfV<Tp, Args...>
+    const auto& get(const Variant<Args...>& variant) { return variant.template get<Tp>(); }
+
+    template <size_t Idx, typename... Args>
+    requires(Idx < sizeof...(Args)) auto& get(Variant<Args...>& variant) { return variant.template get<Idx>(); }
+    template <size_t Idx, typename... Args>
+    requires(Idx < sizeof...(Args)) const auto& get(const Variant<Args...>& variant) {
+        return variant.template get<Idx>();
+    }
+
+    template <typename Tp, typename... Args>
+    requires IsAnyOfV<Tp, Args...>
+    void set(Variant<Args...>& variant, Tp value) { variant.template set<Tp>(move(value)); }
 
     template <Printable Arg, Printable... Args>
     struct PrintInfo<Variant<Arg, Args...>> {

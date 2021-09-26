@@ -291,7 +291,7 @@ TEST(ARLibTests, FormatTest) {
     auto ret = Printer::format("My name is {{}}, I'm {} years old, vector: {}, map: {}", 22, vec, map);
     EXPECT_EQ(
     ret,
-    "My name is {}, I'm 22 years old, vector: [1.000000], [2.000000], [3.000000], map: { Hello: 1, World: 2 }"_s);
+    "My name is {}, I'm 22 years old, vector: [1.000000, 2.000000, 3.000000], map: { Hello: 1, World: 2 }"_s);
     auto ret2 = Printer::format("{{}}");
     EXPECT_EQ(ret2, "{}"_s);
 }
@@ -383,7 +383,7 @@ TEST(ARLibTests, GenericViewTests) {
     IteratorView view{vec};
     IteratorView view2{veccp};
     String form_filtered{
-    R"(["112"], ["128"], ["144"], ["160"], ["176"], ["192"], ["208"], ["224"], ["240"], ["256"], ["272"], ["288"], ["304"], ["320"], ["336"], ["352"], ["368"], ["384"], ["400"], ["416"], ["432"], ["448"], ["464"], ["480"], ["496"], ["512"], ["528"], ["544"], ["560"], ["576"], ["592"], ["608"], ["624"], ["640"], ["656"], ["672"], ["688"], ["704"], ["720"], ["736"], ["752"], ["768"], ["784"], ["800"], ["816"], ["832"], ["848"], ["864"], ["880"], ["896"], ["912"], ["928"], ["944"], ["960"], ["976"], ["992"])"_s};
+    R"(["112", "128", "144", "160", "176", "192", "208", "224", "240", "256", "272", "288", "304", "320", "336", "352", "368", "384", "400", "416", "432", "448", "464", "480", "496", "512", "528", "544", "560", "576", "592", "608", "624", "640", "656", "672", "688", "704", "720", "736", "752", "768", "784", "800", "816", "832", "848", "864", "880", "896", "912", "928", "944", "960", "976", "992"])"_s};
     view.transform([](int a) { return a * 2; });
     for (auto [index, item] : Enumerate{vec}) {
         EXPECT_EQ(item, index * 2);
@@ -457,7 +457,7 @@ TEST(ARLibTests, FunctionalTest) {
 
 TEST(ARLibTests, MoreFormatTests) {
     auto map_print = R"([{ hello: 10, cap: 10, world: 20 }, {}, {}])"_s;
-    auto vec_of_vecs_print = R"([["hello"], ["world"], ["name"], ["cap"], [], [], [], [], [], [], []])"_s;
+    auto vec_of_vecs_print = R"([["hello", "world"], ["name"], ["cap"], [], [], [], [], [], [], []])"_s;
     auto mat_print =
     "[\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],\n\t[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\n]"_s;
     auto row_print = R"([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])"_s;
@@ -540,4 +540,23 @@ TEST(ARLibTests, ChronoTest) {
     EXPECT_GT(new_now, now);
     auto diff = Clock::diff(now, new_now);
     EXPECT_GT(diff, 0);
+}
+
+TEST(ARLibTests, JSONTest) {
+    auto maybe_obj = JSON::Parser::parse(R"({"hello world": 10, "array": [1, 2, 3, 4]})"_sv);
+    EXPECT_TRUE(maybe_obj.is_ok());
+    auto obj = maybe_obj.to_ok();
+    Vector vec{1.0, 2.0, 3.0, 4.0};
+    const auto& ptr_vec = obj["array"_s].get<JSON::Type::JArray>();
+    EXPECT_EQ(vec.size(), ptr_vec.size());
+    for (size_t i = 0; i < vec.size(); i++) {
+        EXPECT_EQ(vec[i], ptr_vec[i]->get<JSON::Type::JNumber>());
+    }
+    auto dbl = obj["hello world"_s].get<JSON::Type::JNumber>();
+    EXPECT_EQ(dbl, 10.0);
+    auto maybe_obj_2 = JSON::Parser::parse(R"({"hello world": 10, "array: [1, 2, 3, 4]})"_sv);
+    EXPECT_FALSE(maybe_obj_2.is_ok());
+    auto err = maybe_obj_2.to_error();
+    EXPECT_EQ(err.message(), "Missing end of quotation on string"_s);
+    EXPECT_EQ(err.offset(), 41);
 }
