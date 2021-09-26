@@ -1,19 +1,20 @@
 #pragma once
 #include "File.h"
 #include "JSONObject.h"
+#include "Pair.h"
 #include "PrintInfo.h"
 #include "Result.h"
 #include "StringView.h"
 #include "Variant.h"
-#include "Pair.h" 
 
 namespace ARLib {
 
     namespace JSON {
-        // TODO: better errors.
+
+        class ParseError;
 
         template <typename T>
-        using Parsed = Optional<Pair<size_t, T>>;
+        using Parsed = Result<Pair<size_t, T>, ParseError>;
 
         Parsed<Object> parse_object(StringView view, size_t current_index);
         size_t skip_whitespace(StringView view, size_t current_index);
@@ -24,10 +25,21 @@ namespace ARLib {
         String dump_array(const Array& arr, size_t indent = 1);
         String dump_json(const Object& obj, size_t indent = 1);
 
+        struct ErrorInfo {
+            String error_string{};
+            size_t error_offset{};
+        };
 
-        struct ParseError {
+        class ParseError {
+            ErrorInfo m_info;
+
+            public:
             ParseError() = default;
-            static constexpr inline StringView error = "JSON String couldn't be parsed correctly"_sv;
+            ParseError(String error, size_t offset) : m_info{move(error), offset} {};
+            ParseError(ErrorInfo info) : m_info(move(info)){};
+            const ErrorInfo& info() const { return m_info; }
+            const String& message() const { return m_info.error_string; }
+            const size_t offset() const { return m_info.error_offset; }
         };
 
         using ParseResult = Result<Document, ParseError>;
@@ -51,10 +63,8 @@ namespace ARLib {
         const JSON::ParseError& m_error;
         explicit PrintInfo(const JSON::ParseError& error) : m_error(error) {}
         String repr() const {
-            // this is a workaround, as returning String{m_error.error} was bugging out on msvc
-            // e.g. size() was 40 at compile time but 88 at runtime
-            // was working fine on GCC/Clang
-            return "JSON String couldn't be parsed correctly"_s;
+            return "Error encountered while parsing json: "_s + m_error.message() + " at offset "_s +
+                   IntToStr(m_error.offset());
         }
     };
 

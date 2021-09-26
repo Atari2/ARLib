@@ -8,35 +8,30 @@ namespace ARLib {
 
 #define CHK_CURR(c)                                                                                                    \
     if (view[current_index] != c) {                                                                                    \
-        HARD_ASSERT(false, "CHK_CURR " #c);                                                                            \
-        return {};                                                                                                     \
+        return ParseError{"Invalid character, expected " #c ", but got "_s + view[current_index], current_index};      \
     }
 
 #define VERIFY_COMMA(c)                                                                                                \
     current_index = skip_whitespace(view, current_index);                                                              \
     if (view[current_index] != ',') {                                                                                  \
         if (view[current_index] != c) {                                                                                \
-            HARD_ASSERT(false, "VERIFY_COMMA " #c);                                                                    \
-            return {};                                                                                                 \
+            return ParseError{"Invalid character, expected a comma but got "_s + view[current_index], current_index};  \
         }                                                                                                              \
     } else {                                                                                                           \
         current_index++;                                                                                               \
     }
 
 #define ADD_TO_OBJ_WITH(func)                                                                                          \
-    auto maybe_value = func(view, current_index);                                                                      \
-    if (!maybe_value) {                                                                                                \
-        HARD_ASSERT(false, "ADD_TO_OBJ_WITH " #func);                                                                  \
-        return {};                                                                                                     \
-    }                                                                                                                  \
-    auto [new_index_val, value] = maybe_value.extract();                                                               \
+    auto value_or_error = func(view, current_index);                                                                   \
+    if (value_or_error.is_error()) { return value_or_error.to_error(); }                                               \
+    auto [new_index_val, value] = value_or_error.to_ok();                                                              \
     current_index = skip_whitespace(view, new_index_val);                                                              \
     obj.add(key, ValueObj::construct(move(value)));
 
 #define ADD_TO_ARR_WITH(func)                                                                                          \
-    auto maybe_value = func(view, current_index);                                                                      \
-    if (!maybe_value) return {};                                                                                       \
-    auto [new_index_val, value] = maybe_value.extract();                                                               \
+    auto value_or_error = func(view, current_index);                                                                   \
+    if (value_or_error.is_error()) { return value_or_error.to_error(); }                                               \
+    auto [new_index_val, value] = value_or_error.to_ok();                                                              \
     current_index = skip_whitespace(view, new_index_val);                                                              \
     arr.append(ValueObj::construct(move(value)));
 
@@ -95,7 +90,7 @@ namespace ARLib {
                     current_index++;
                 }
             }
-            if (!at_end) return {};
+            if (!at_end) return ParseError{"Missing end of quotation on string"_s, current_index};
             return Pair{current_index, container};
         }
 
@@ -154,13 +149,14 @@ namespace ARLib {
 
                 // parse key:
                 current_index = skip_whitespace(view, current_index);
-                auto maybe_key = parse_quoted_string(view, current_index);
-                if (!maybe_key) return {};
-                auto [new_index, key] = maybe_key.extract();
+                auto value_or_error = parse_quoted_string(view, current_index);
+                if (value_or_error.is_error()) return value_or_error.to_error();
+                auto [new_index, key] = value_or_error.to_ok();
 
                 // parse divisor between key and value
                 current_index = skip_whitespace(view, new_index);
-                if (view[current_index] != ':') return {};
+                if (view[current_index] != ':')
+                    return ParseError{"Invalid character, expected : but got "_s + view[current_index], current_index};
                 current_index = skip_whitespace(view, current_index + 1);
 
                 switch (view[current_index]) {
@@ -285,9 +281,9 @@ namespace ARLib {
 
         ParseResult Parser::parse_internal() {
             size_t current_index = skip_whitespace(m_view, 0);
-            auto maybe_object = parse_object(m_view, current_index);
-            if (!maybe_object) return ParseResult::from_error();
-            auto [_, obj] = maybe_object.extract();
+            auto object_or_error = parse_object(m_view, current_index);
+            if (object_or_error.is_error()) return object_or_error.to_error();
+            auto [_, obj] = object_or_error.to_ok();
             return ParseResult::from_ok(Document{move(obj)});
         }
 
