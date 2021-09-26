@@ -75,6 +75,25 @@ namespace ARLib {
             template <JSONType T>
             ValueObj(T&& value, Type type) : m_internal_value(move(value)), m_type(type) {}
 
+            template <JSONType T>
+            static consteval Type map_t_to_enum() {
+                if constexpr (SameAs<T, Object>) {
+                    return Type::JObject;
+                } else if constexpr (SameAs<T, String>) {
+                    return Type::JString;
+                } else if constexpr (SameAs<T, Number>) {
+                    return Type::JNumber;
+                } else if constexpr (SameAs<T, Array>) {
+                    return Type::JArray;
+                } else if constexpr (SameAs<T, Bool>) {
+                    return Type::JBool;
+                } else if constexpr (SameAs<T, Null>) {
+                    return Type::JNull;
+                } else {
+                    COMPTIME_ASSERT("Invalid enum value passed to JSON operator=");
+                }
+            }
+
             public:
             template <JSONType T>
             static Value construct(T&& value) {
@@ -82,6 +101,32 @@ namespace ARLib {
             }
 
             Type type() const { return m_type; }
+
+            template <JSONType T>
+            ValueObj& operator=(const T& value) {
+                m_internal_value = value;
+                m_type = map_t_to_enum<T>();
+                return *this;
+            }
+
+            template <JSONType T>
+            ValueObj& operator=(T&& value) {
+                m_internal_value = move(value);
+                m_type = map_t_to_enum<T>();
+                return *this;
+            }
+
+            template <JSONType T>
+            bool operator==(const T& value) const {
+                auto val = map_t_to_enum<T>();
+                if (val != m_type) return false;
+                return ARLib::get<T>(m_internal_value) == value;
+            }
+
+            template <JSONType T>
+            bool operator!=(const T& value) const {
+                return !(*this == value);
+            }
 
             template <Type T>
             const auto& get() const {

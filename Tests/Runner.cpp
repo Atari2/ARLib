@@ -289,9 +289,8 @@ TEST(ARLibTests, FormatTest) {
     map.add("Hello"_s, 1);
     map.add("World"_s, 2);
     auto ret = Printer::format("My name is {{}}, I'm {} years old, vector: {}, map: {}", 22, vec, map);
-    EXPECT_EQ(
-    ret,
-    "My name is {}, I'm 22 years old, vector: [1.000000, 2.000000, 3.000000], map: { Hello: 1, World: 2 }"_s);
+    EXPECT_EQ(ret,
+              "My name is {}, I'm 22 years old, vector: [1.000000, 2.000000, 3.000000], map: { Hello: 1, World: 2 }"_s);
     auto ret2 = Printer::format("{{}}");
     EXPECT_EQ(ret2, "{}"_s);
 }
@@ -550,10 +549,10 @@ TEST(ARLibTests, JSONTest) {
     const auto& ptr_vec = obj["array"_s].get<JSON::Type::JArray>();
     EXPECT_EQ(vec.size(), ptr_vec.size());
     for (size_t i = 0; i < vec.size(); i++) {
-        EXPECT_EQ(vec[i], ptr_vec[i]->get<JSON::Type::JNumber>());
+        EXPECT_EQ(vec[i], *ptr_vec[i]);
+        (*ptr_vec[i]) = 10.0;
     }
-    auto dbl = obj["hello world"_s].get<JSON::Type::JNumber>();
-    EXPECT_EQ(dbl, 10.0);
+    EXPECT_EQ(obj["hello world"_s], 10.0);
     auto maybe_obj_2 = JSON::Parser::parse(R"({"hello world": 10, "array: [1, 2, 3, 4]})"_sv);
     EXPECT_FALSE(maybe_obj_2.is_ok());
     auto err = maybe_obj_2.to_error();
