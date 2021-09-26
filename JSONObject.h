@@ -137,6 +137,10 @@ namespace ARLib {
         };
     } // namespace JSON
 
+#ifndef COMPILER_CLANG
+    // until I figure out what's wrong with this on Clang...
+    // this is the solution.
+
     template <>
     struct PrintInfo<JSON::Null> {
         const JSON::Null& m_null;
@@ -150,11 +154,30 @@ namespace ARLib {
         PrintInfo(const JSON::Bool& bol) : m_bool(bol) {}
         String repr() const { return BoolToStr(m_bool.value()); }
     };
+#endif
 
     template <>
     struct PrintInfo<JSON::ValueObj> {
         const JSON::ValueObj& m_value;
         PrintInfo(const JSON::ValueObj& value) : m_value(value) {}
-        String repr() const { return PrintInfo<JSON::ValueObj::JSONVariant>{m_value.m_internal_value}.repr(); }
+        String repr() const {
+            switch (m_value.type()) {
+            case JSON::Type::JArray:
+                return PrintInfo<JSON::Array>{m_value.get<JSON::Type::JArray>()}.repr();
+            case JSON::Type::JString:
+                return m_value.get<JSON::Type::JString>();
+            case JSON::Type::JObject:
+                return PrintInfo<JSON::Object>{m_value.get<JSON::Type::JObject>()}.repr();
+            case JSON::Type::JBool:
+                return BoolToStr(m_value.get<JSON::Type::JBool>().value());
+            case JSON::Type::JNull:
+                return "null"_s;
+            case JSON::Type::JNumber:
+                return DoubleToStr(m_value.get<JSON::Type::JNumber>());
+            default:
+                HARD_ASSERT(false, "Invalid JSON type.");
+            }
+            return "Invalid JSON Value"_s;
+        }
     };
 } // namespace ARLib
