@@ -39,7 +39,7 @@ namespace ARLib {
             ParseError(ErrorInfo info) : m_info(move(info)){};
             const ErrorInfo& info() const { return m_info; }
             const String& message() const { return m_info.error_string; }
-            const size_t offset() const { return m_info.error_offset; }
+            size_t offset() const { return m_info.error_offset; }
         };
 
         using ParseResult = Result<Document, ParseError>;

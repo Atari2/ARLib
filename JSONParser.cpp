@@ -149,9 +149,9 @@ namespace ARLib {
 
                 // parse key:
                 current_index = skip_whitespace(view, current_index);
-                auto value_or_error = parse_quoted_string(view, current_index);
-                if (value_or_error.is_error()) return value_or_error.to_error();
-                auto [new_index, key] = value_or_error.to_ok();
+                auto key_or_error = parse_quoted_string(view, current_index);
+                if (key_or_error.is_error()) return key_or_error.to_error();
+                auto [new_index, key] = key_or_error.to_ok();
 
                 // parse divisor between key and value
                 current_index = skip_whitespace(view, new_index);
