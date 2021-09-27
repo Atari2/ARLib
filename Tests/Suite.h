@@ -14,6 +14,7 @@
 #include "../Map.h"
 #include "../Optional.h"
 #include "../Printer.h"
+#include "../Random.h"
 #include "../Result.h"
 #include "../SSOVector.h"
 #include "../Set.h"

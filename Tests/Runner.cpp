@@ -559,3 +559,9 @@ TEST(ARLibTests, JSONTest) {
     EXPECT_EQ(err.message(), "Missing end of quotation on string"_s);
     EXPECT_EQ(err.offset(), 41);
 }
+
+TEST(ARLibTests, RandomTest) {
+    EXPECT_EQ(Random::PCG::random_s(), 355248013);
+    auto pcg = Random::PCG::create();
+    EXPECT_NE(pcg.random(), 355248013);
+}
