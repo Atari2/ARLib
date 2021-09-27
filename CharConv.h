@@ -102,14 +102,23 @@ namespace ARLib {
         return String{"false"};
     }
 
+    inline String CharToStr(char value) { return String{1, value}; }
+
     inline String ToString(Stringable auto& value) {
         if constexpr (IsSameV<decltype(value), String>) return value;
         return value.to_string();
     }
 
+    BASIC_PRINT_IMPL(short, IntToStr)
+    BASIC_PRINT_IMPL(unsigned short, IntToStr)
     BASIC_PRINT_IMPL(int, IntToStr)
-    BASIC_PRINT_IMPL(double, DoubleToStr)
-    BASIC_PRINT_IMPL(size_t, IntToStr)
+    BASIC_PRINT_IMPL(unsigned int, IntToStr)
+    BASIC_PRINT_IMPL(long, IntToStr)
+    BASIC_PRINT_IMPL(unsigned long, IntToStr)
     BASIC_PRINT_IMPL(long long, IntToStr)
+    BASIC_PRINT_IMPL(unsigned long long, IntToStr)
+    BASIC_PRINT_IMPL(double, DoubleToStr)
+    BASIC_PRINT_IMPL(float, FloatToStr)
+    BASIC_PRINT_IMPL(char, CharToStr);
     BASIC_PRINT_IMPL(bool, BoolToStr)
 } // namespace ARLib
