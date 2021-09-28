@@ -18,38 +18,76 @@ namespace ARLib {
         class ValueObj;
         using Value = UniquePtr<ValueObj>;
 
-        using Object = HashMap<String, Value>;
-        using Array = Vector<Value>;
-        using Number = double;
+        struct Object : public HashMap<String, Value> {
+            operator Value() &&;
+            ValueObj& operator[](const String& key) {
+                return *(static_cast<HashMap<String, Value>*>(this)->operator[](key));
+            }
+            const ValueObj& operator[](const String& key) const {
+                return *(static_cast<const HashMap<String, Value>*>(this)->operator[](key));
+            }
+        };
+        struct Array : public Vector<Value> {
+            operator Value() &&;
+            ValueObj& operator[](size_t index) { return *(static_cast<Vector<Value>*>(this)->operator[](index)); }
+            const ValueObj& operator[](size_t index) const {
+                return *(static_cast<const Vector<Value>*>(this)->operator[](index));
+            }
+        };
+
+        struct JString : public String {
+            operator Value() &&;
+        };
 
         // Null detail impl
         namespace detail {
             struct NullTag {};
             struct BoolTag {};
+            struct NumberTag {};
         } // namespace detail
         constexpr inline auto null_tag = detail::NullTag{};
         constexpr inline auto bool_tag = detail::BoolTag{};
+        constexpr inline auto number_tag = detail::NumberTag{};
         struct Null {
             constexpr Null(detail::NullTag) {}
+            constexpr Null(nullptr_t) {}
+            operator Value() &&;
         };
         class Bool {
             bool m_value;
 
             public:
+            constexpr Bool(bool val) : m_value(val) {}
             constexpr Bool(detail::BoolTag, bool val) : m_value(val) {}
             constexpr bool value() const { return m_value; }
+            operator bool() const { return m_value; }
+            operator Value() &&;
+        };
+
+        class Number {
+            double m_value;
+
+            public:
+            constexpr Number(double val) : m_value(val) {}
+            constexpr Number(detail::NumberTag, double val) : m_value(val) {}
+            constexpr double value() const { return m_value; }
+            operator double() const { return m_value; }
+            operator Value() &&;
         };
 
         enum class Type { JObject, JString, JNumber, JArray, JBool, JNull };
 
         template <typename Tp>
-        concept JSONType = IsAnyOfV<Tp, Object, String, Number, Array, Bool, Null>;
+        concept JSONType = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null>;
+
+        template <typename Tp>
+        concept JSONTypeExt = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null, bool, double, String, nullptr_t>;
 
         template <JSONType T>
         constexpr Type enum_from_type() {
             if constexpr (IsSameV<T, Object>) {
                 return Type::JObject;
-            } else if constexpr (IsSameV<T, String>) {
+            } else if constexpr (IsSameV<T, JString>) {
                 return Type::JString;
             } else if constexpr (IsSameV<T, Number>) {
                 return Type::JNumber;
@@ -68,26 +106,26 @@ namespace ARLib {
             friend Parser;
             friend PrintInfo<ValueObj>;
 
-            using JSONVariant = Variant<Object, String, Number, Array, Bool, Null>;
+            using JSONVariant = Variant<Object, JString, Number, Array, Bool, Null>;
             JSONVariant m_internal_value{null_tag};
             Type m_type{Type::JNull};
 
             template <JSONType T>
             ValueObj(T&& value, Type type) : m_internal_value(move(value)), m_type(type) {}
 
-            template <JSONType T>
+            template <JSONTypeExt T>
             static consteval Type map_t_to_enum() {
                 if constexpr (SameAs<T, Object>) {
                     return Type::JObject;
-                } else if constexpr (SameAs<T, String>) {
+                } else if constexpr (SameAs<T, JString> || SameAs<T, String>) {
                     return Type::JString;
-                } else if constexpr (SameAs<T, Number>) {
+                } else if constexpr (SameAs<T, Number> || SameAs<T, double>) {
                     return Type::JNumber;
                 } else if constexpr (SameAs<T, Array>) {
                     return Type::JArray;
-                } else if constexpr (SameAs<T, Bool>) {
+                } else if constexpr (SameAs<T, Bool> || SameAs<T, bool>) {
                     return Type::JBool;
-                } else if constexpr (SameAs<T, Null>) {
+                } else if constexpr (SameAs<T, Null> || SameAs<T, nullptr_t>) {
                     return Type::JNull;
                 } else {
                     COMPTIME_ASSERT("Invalid enum value passed to JSON operator=");
@@ -102,28 +140,28 @@ namespace ARLib {
 
             Type type() const { return m_type; }
 
-            template <JSONType T>
+            template <JSONTypeExt T>
             ValueObj& operator=(const T& value) {
                 m_internal_value = value;
                 m_type = map_t_to_enum<T>();
                 return *this;
             }
 
-            template <JSONType T>
+            template <JSONTypeExt T>
             ValueObj& operator=(T&& value) {
                 m_internal_value = move(value);
                 m_type = map_t_to_enum<T>();
                 return *this;
             }
 
-            template <JSONType T>
+            template <JSONTypeExt T>
             bool operator==(const T& value) const {
-                auto val = map_t_to_enum<T>();
+                constexpr auto val = map_t_to_enum<T>();
                 if (val != m_type) return false;
-                return ARLib::get<T>(m_internal_value) == value;
+                return get<val>() == value;
             }
 
-            template <JSONType T>
+            template <JSONTypeExt T>
             bool operator!=(const T& value) const {
                 return !(*this == value);
             }
@@ -134,7 +172,7 @@ namespace ARLib {
                 if constexpr (T == Type::JObject) {
                     return ARLib::get<Object>(m_internal_value);
                 } else if constexpr (T == Type::JString) {
-                    return ARLib::get<String>(m_internal_value);
+                    return ARLib::get<JString>(m_internal_value);
                 } else if constexpr (T == Type::JNumber) {
                     return ARLib::get<Number>(m_internal_value);
                 } else if constexpr (T == Type::JArray) {
@@ -154,7 +192,7 @@ namespace ARLib {
                 if constexpr (T == Type::JObject) {
                     return ARLib::get<Object>(m_internal_value);
                 } else if constexpr (T == Type::JString) {
-                    return ARLib::get<String>(m_internal_value);
+                    return ARLib::get<JString>(m_internal_value);
                 } else if constexpr (T == Type::JNumber) {
                     return ARLib::get<Number>(m_internal_value);
                 } else if constexpr (T == Type::JArray) {
@@ -177,8 +215,8 @@ namespace ARLib {
             const Object& object() const { return m_object; }
             Object& object() { return m_object; }
 
-            ValueObj& operator[](const String& key) { return *m_object[key]; }
-            const ValueObj& operator[](const String& key) const { return *m_object[key]; }
+            ValueObj& operator[](const String& key) { return m_object[key]; }
+            const ValueObj& operator[](const String& key) const { return m_object[key]; }
         };
     } // namespace JSON
 
@@ -199,7 +237,24 @@ namespace ARLib {
         PrintInfo(const JSON::Bool& bol) : m_bool(bol) {}
         String repr() const { return BoolToStr(m_bool.value()); }
     };
+    
+    template <>
+    struct PrintInfo<JSON::Array> {
+        const JSON::Array& m_array;
+        PrintInfo(const JSON::Array& array_) : m_array(array_) {}
+        String repr() const { return PrintInfo<Vector<JSON::Value>>{static_cast<Vector<JSON::Value>>(m_array)}.repr(); }
+    };
+
+    template <>
+    struct PrintInfo<JSON::Object> {
+        const JSON::Object& m_object;
+        PrintInfo(const JSON::Object& obj) : m_object(obj) {}
+        String repr() const {
+            return PrintInfo<HashMap<String, JSON::Value>>{static_cast<HashMap<String, JSON::Value>>(m_object)}.repr();
+        }
+    };
 #endif
+
 
     template <>
     struct PrintInfo<JSON::ValueObj> {
@@ -208,11 +263,11 @@ namespace ARLib {
         String repr() const {
             switch (m_value.type()) {
             case JSON::Type::JArray:
-                return PrintInfo<JSON::Array>{m_value.get<JSON::Type::JArray>()}.repr();
+                return PrintInfo<Vector<JSON::Value>>{m_value.get<JSON::Type::JArray>()}.repr();
             case JSON::Type::JString:
                 return m_value.get<JSON::Type::JString>();
             case JSON::Type::JObject:
-                return PrintInfo<JSON::Object>{m_value.get<JSON::Type::JObject>()}.repr();
+                return PrintInfo<HashMap<String, JSON::Value>>{m_value.get<JSON::Type::JObject>()}.repr();
             case JSON::Type::JBool:
                 return BoolToStr(m_value.get<JSON::Type::JBool>().value());
             case JSON::Type::JNull:

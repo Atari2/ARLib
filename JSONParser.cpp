@@ -51,7 +51,7 @@ namespace ARLib {
             return Pair{current_index, container};
         }
 
-        Parsed<String> parse_quoted_string(StringView view, size_t current_index) {
+        Parsed<JString> parse_quoted_string(StringView view, size_t current_index) {
             CHK_CURR('"')
 #ifdef COMPILER_CLANG
 #define LAMBDA_CAPTURES []
@@ -69,7 +69,7 @@ namespace ARLib {
             };
 #undef LAMBDA_CAPTURES
             current_index++;
-            String container{};
+            JString container{};
             bool at_end = false;
             while (!at_end && current_index < view.size()) {
                 char c = view[current_index];
@@ -130,7 +130,7 @@ namespace ARLib {
                     } else if (raw_value == "false"_s) {
                         arr.append(ValueObj::construct(Bool{bool_tag, false}));
                     } else {
-                        arr.append(ValueObj::construct(StrToDouble(raw_value)));
+                        arr.append(ValueObj::construct(Number{number_tag, StrToDouble(raw_value)}));
                     }
                     break;
                 }
@@ -182,7 +182,7 @@ namespace ARLib {
                     } else if (raw_value == "false"_s) {
                         obj.add(key, ValueObj::construct(Bool{bool_tag, false}));
                     } else {
-                        obj.add(key, ValueObj::construct(StrToDouble(raw_value)));
+                        obj.add(key, ValueObj::construct(Number{number_tag, StrToDouble(raw_value)}));
                     }
                     break;
                 }
@@ -197,27 +197,28 @@ namespace ARLib {
         // FIXME: fix indentation
         String dump_array(const Array& arr, size_t indent) {
             String repr{"[\n"};
+            String indent_string{indent, '\t'};
             size_t i = 0;
             for (const auto& val_ptr : arr) {
                 const auto& val = *val_ptr;
                 switch (val.type()) {
                 case Type::JArray:
-                    repr.append(dump_array(val.get<Type::JArray>()));
+                    repr.append(dump_array(val.get<Type::JArray>(), indent + 1));
                     break;
                 case Type::JObject:
                     repr.append(dump_json(val.get<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
-                    repr.append(DoubleToStr(val.get<Type::JNumber>()));
+                    repr.append(indent_string + DoubleToStr(val.get<Type::JNumber>()));
                     break;
                 case Type::JNull:
-                    repr.append("null"_s);
+                    repr.append(indent_string + "null"_s);
                     break;
                 case Type::JBool:
-                    repr.append(BoolToStr(val.get<Type::JBool>().value()));
+                    repr.append(indent_string + BoolToStr(val.get<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append(val.get<Type::JString>());
+                    repr.append(indent_string + val.get<Type::JString>());
                     break;
                 default:
                     HARD_ASSERT(false, "Invalid type in JSON object");
@@ -229,7 +230,7 @@ namespace ARLib {
                     repr.append('\n');
                 }
             }
-            repr.append(String{indent, '\t'} + "]"_s);
+            repr.append(indent_string + "]"_s);
             return repr;
         }
 
