@@ -54,6 +54,11 @@ namespace ARLib {
         return StringView{ptr, ptr + m_size};
     }
 
+    [[nodiscard]] StringView String::view() const {
+        const auto ptr = get_buf_internal();
+        return StringView{ptr, ptr + m_size};
+    }
+
     String::String(StringView other) : m_size(other.length()) {
         bool local = m_size <= SMALL_STRING_CAP;
         if (local) {

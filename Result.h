@@ -22,16 +22,16 @@ namespace ARLib {
 
         Result(const Result& other) : m_type(other.m_type) {
             if (other.is_error()) {
-                m_err = other.m_err;
+                new (&m_err) T_err{other.m_err};
             } else {
-                m_ok = other.m_ok;
+                new (&m_ok) T_ok{other.m_ok};
             }
         }
         Result(Result&& other) noexcept : m_type(other.m_type) {
             if (other.is_error()) {
-                m_err = move(other.m_err);
+                new (&m_err) T_err{move(other.m_err)};
             } else {
-                m_ok = move(other.m_ok);
+                new (&m_ok) T_ok{move(other.m_ok)};
             }
         }
         Result& operator=(Result&& other) noexcept {

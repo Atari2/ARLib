@@ -11,9 +11,14 @@
 #include "cstdio_compat.h"
 
 namespace ARLib {
-    struct OpenFileError {
+    class OpenFileError {
+        String m_filename{};
+
+        public:
         OpenFileError() = default;
-        static constexpr inline StringView error = "File couldn't be opened"_sv;
+        OpenFileError(String filename) : m_filename(move(filename)) {}
+        static constexpr inline StringView error = "Couldn't open file "_sv;
+        const String& filename() const { return m_filename; }
     };
 
     struct ReadFileError {
@@ -36,7 +41,7 @@ namespace ARLib {
     struct PrintInfo<OpenFileError> {
         const OpenFileError& m_error;
         explicit PrintInfo(const OpenFileError& error) : m_error(error) {}
-        String repr() const { return String{m_error.error}; }
+        String repr() const { return String{m_error.error} + m_error.filename(); }
     };
     template <>
     struct PrintInfo<WriteFileError> {
@@ -77,7 +82,7 @@ namespace ARLib {
                 break;
             }
             if (!m_ptr) {
-                return OpenFileError{};
+                return OpenFileError{m_filename};
             } else {
                 return {};
             }
@@ -118,7 +123,9 @@ namespace ARLib {
 #endif
             return ReadResult{Forward<String>(line)};
         }
-        ~File() { if (m_ptr) fclose(m_ptr); }
+        ~File() {
+            if (m_ptr) fclose(m_ptr);
+        }
     };
 
     template <>

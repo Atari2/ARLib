@@ -187,6 +187,7 @@ namespace ARLib {
             return String{get_buf_internal() + first, get_buf_internal() + last};
         }
         [[nodiscard]] StringView view();
+        [[nodiscard]] StringView view() const;
         [[nodiscard]] StringView substringview(size_t first = 0, size_t last = npos) const;
 
         // comparison operators

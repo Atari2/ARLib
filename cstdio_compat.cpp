@@ -8,7 +8,8 @@ namespace ARLib {
 #ifdef WINDOWS
         FILE* pfile = nullptr;
         errno_t err = ::fopen_s(&pfile, filename, mode);
-        HARD_ASSERT_FMT((err == 0), "Failed to open %s in mode %s", filename, mode)
+        (void)err;
+        // HARD_ASSERT_FMT((err == 0), "Failed to open %s in mode %s", filename, mode)
         return pfile;
 #else
         return ::fopen(filename, mode);

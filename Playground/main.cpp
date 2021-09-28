@@ -25,12 +25,15 @@ using namespace ARLib;
 
 void func() {
     // auto maybe_obj = JSON::Parser::from_file("test.json"_sv);
-    auto maybe_obj = JSON::Parser::parse(R"({"hello world": 10, "array": [1, 2, 3, 4]})"_sv);
+    auto maybe_obj = JSON::Parser::from_file("hello.json"_sv);
     if (maybe_obj) {
         auto obj = maybe_obj.to_ok();
         Printer::print("{}", obj);
         Printer::print("{}", obj["hello world"_s]);
         Printer::print("{}", obj["array"_s]);
+    } else {
+        auto err = maybe_obj.to_error();
+        Printer::print("{}", err);
     }
 }
 

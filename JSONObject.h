@@ -19,19 +19,23 @@ namespace ARLib {
         using Value = UniquePtr<ValueObj>;
 
         struct Object : public HashMap<String, Value> {
+
+            using Parent = HashMap<String, Value>;
+
             operator Value() &&;
-            ValueObj& operator[](const String& key) {
-                return *(static_cast<HashMap<String, Value>*>(this)->operator[](key));
-            }
+            ValueObj& operator[](const String& key) { return *(static_cast<Parent*>(this)->operator[](key)); }
             const ValueObj& operator[](const String& key) const {
-                return *(static_cast<const HashMap<String, Value>*>(this)->operator[](key));
+                return *(static_cast<const Parent*>(this)->operator[](key));
             }
         };
         struct Array : public Vector<Value> {
+
+            using Parent = Vector<Value>;
+
             operator Value() &&;
-            ValueObj& operator[](size_t index) { return *(static_cast<Vector<Value>*>(this)->operator[](index)); }
+            ValueObj& operator[](size_t index) { return *(static_cast<Parent*>(this)->operator[](index)); }
             const ValueObj& operator[](size_t index) const {
-                return *(static_cast<const Vector<Value>*>(this)->operator[](index));
+                return *(static_cast<const Parent*>(this)->operator[](index));
             }
         };
 
@@ -237,7 +241,7 @@ namespace ARLib {
         PrintInfo(const JSON::Bool& bol) : m_bool(bol) {}
         String repr() const { return BoolToStr(m_bool.value()); }
     };
-    
+
     template <>
     struct PrintInfo<JSON::Array> {
         const JSON::Array& m_array;
@@ -254,7 +258,6 @@ namespace ARLib {
         }
     };
 #endif
-
 
     template <>
     struct PrintInfo<JSON::ValueObj> {

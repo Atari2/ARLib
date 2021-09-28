@@ -43,7 +43,7 @@ namespace ARLib {
         };
 
         using ParseResult = Result<Document, ParseError>;
-        using FileParseResult = Result<Document, Variant<ReadFileError, ParseError>>;
+        using FileParseResult = Result<Document, Variant<OpenFileError, ReadFileError, ParseError>>;
 
         class Parser {
             StringView m_view;
