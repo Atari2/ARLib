@@ -8,8 +8,11 @@ namespace ARLib {
 #ifdef WINDOWS
         FILE* pfile = nullptr;
         errno_t err = ::fopen_s(&pfile, filename, mode);
+#ifndef DEBUG
         (void)err;
-        // HARD_ASSERT_FMT((err == 0), "Failed to open %s in mode %s", filename, mode)
+#else
+        HARD_ASSERT_FMT((err == 0), "Failed to open %s in mode %s", filename, mode)
+#endif
         return pfile;
 #else
         return ::fopen(filename, mode);
@@ -63,11 +66,11 @@ namespace ARLib {
     int scprintf(const char* format, ...) {
         va_list argptr{};
         va_start(argptr, format);
-        #ifdef WINDOWS
+#ifdef WINDOWS
         auto ret = ::_vscprintf_l(format, nullptr, argptr);
-        #else
+#else
         auto ret = ::vsnprintf(nullptr, 0, format, argptr);
-        #endif
+#endif
         va_end(argptr);
         return ret;
     }
