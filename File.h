@@ -17,7 +17,7 @@ namespace ARLib {
         public:
         OpenFileError() = default;
         OpenFileError(String filename) : m_filename(move(filename)) {}
-        static inline String error = "Couldn't open file "_s;
+        constexpr static inline StringView error = "Couldn't open file "_sv;
         const String& filename() const { return m_filename; }
     };
 
