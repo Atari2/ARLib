@@ -59,7 +59,7 @@ namespace ARLib {
             char m_pod_data[sizeof(NocopyTypes)];
         };
 
-        enum ManagerOp { GetTypeInfo, GetFuncPtr, CloneFunc, DestroyFunc };
+        enum class ManagerOp { GetFuncPtr, CloneFunc, DestroyFunc };
     } // namespace fntraits
     namespace detail {
         template <typename T, typename... Args>
@@ -160,8 +160,8 @@ namespace ARLib {
 
     class FunctionBase {
         public:
-        static const size_t m_max_size = sizeof(fntraits::NocopyTypes);
-        static const size_t m_max_align = alignof(fntraits::NocopyTypes);
+        static constexpr size_t m_max_size = sizeof(fntraits::NocopyTypes);
+        static constexpr size_t m_max_align = alignof(fntraits::NocopyTypes);
 
         template <typename Functor>
         class BaseManager {
@@ -195,18 +195,15 @@ namespace ARLib {
             public:
             static bool m_manager(fntraits::AnyData& dest, const fntraits::AnyData& source, fntraits::ManagerOp op) {
                 switch (op) {
-                case fntraits::GetTypeInfo:
-                    dest.m_access<const TypeInfo*>() = &typeid(Functor);
-                    break;
-                case fntraits::GetFuncPtr:
+                case fntraits::ManagerOp::GetFuncPtr:
                     dest.m_access<Functor*>() = m_get_ptr(source);
                     break;
 
-                case fntraits::CloneFunc:
+                case fntraits::ManagerOp::CloneFunc:
                     m_clone(dest, source, m_local_storage());
                     break;
 
-                case fntraits::DestroyFunc:
+                case fntraits::ManagerOp::DestroyFunc:
                     m_destroy(dest, m_local_storage());
                     break;
                 }
@@ -250,7 +247,7 @@ namespace ARLib {
         FunctionBase() : m_manager(nullptr) {}
 
         ~FunctionBase() {
-            if (m_manager) m_manager(m_functor, m_functor, fntraits::DestroyFunc);
+            if (m_manager) m_manager(m_functor, m_functor, fntraits::ManagerOp::DestroyFunc);
         }
 
         bool m_empty() const { return !m_manager; }
@@ -271,12 +268,9 @@ namespace ARLib {
         public:
         static bool m_manager(fntraits::AnyData& dest, const fntraits::AnyData& source, fntraits::ManagerOp op) {
             switch (op) {
-            case fntraits::GetTypeInfo:
-                dest.m_access<const TypeInfo*>() = &typeid(Functor);
-                break;
-            case fntraits::GetFuncPtr:
+            case fntraits::ManagerOp::GetFuncPtr:
                 dest.m_access<Functor*>() = Base::m_get_ptr(source);
-                break;
+            break;
 
             default:
                 Base::m_manager(dest, source, op);
@@ -321,7 +315,7 @@ namespace ARLib {
 
         Function(const Function& x) : FunctionBase() {
             if (static_cast<bool>(x)) {
-                x.m_manager(m_functor, x._M_functor, fntraits::CloneFunc);
+                x.m_manager(m_functor, x._M_functor, fntraits::ManagerOp::CloneFunc);
                 m_invoker = x.m_invoker;
                 m_manager = x.m_manager;
             }
@@ -353,7 +347,7 @@ namespace ARLib {
 
         Function& operator=(nullptr_t) noexcept {
             if (m_manager) {
-                m_manager(m_functor, m_functor, fntraits::DestroyFunc);
+                m_manager(m_functor, m_functor, fntraits::ManagerOp::DestroyFunc);
                 m_manager = nullptr;
                 m_invoker = nullptr;
             }
@@ -383,42 +377,6 @@ namespace ARLib {
         Res operator()(Args... args) const {
             HARD_ASSERT(!m_empty(), "Function can't be empty on call")
             return m_invoker(m_functor, Forward<Args>(args)...);
-        }
-
-#if __cpp_rtti
-        const TypeInfo& target_type() const noexcept {
-            if (m_manager) {
-                fntraits::AnyData typeinfo_result{};
-                m_manager(typeinfo_result, m_functor, fntraits::GetTypeInfo);
-                if (auto ti = typeinfo_result.m_access<const TypeInfo*>()) return *ti;
-            }
-            return typeid(void);
-        }
-#endif
-
-        template <typename Functor>
-        Functor* target() noexcept {
-            const Function* const_this = this;
-            const Functor* func = const_this->template target<Functor>();
-            return *const_cast<Functor**>(&func);
-        }
-
-        template <typename Functor>
-        const Functor* target() const noexcept {
-            if constexpr (IsObject<Functor>::value) {
-                using Handler = TargetHandler<Res(Args...), Functor>;
-
-                if (m_manager == &Handler::m_manager
-#if __cpp_rtti
-                    || (m_manager && typeid(Functor) == target_type())
-#endif
-                ) {
-                    fntraits::AnyData ptr{};
-                    m_manager(ptr, m_functor, fntraits::GetFuncPtr);
-                    return ptr.m_access<const Functor*>();
-                }
-            }
-            return nullptr;
         }
 
         private:
