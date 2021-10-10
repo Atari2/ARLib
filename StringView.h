@@ -15,8 +15,10 @@ namespace ARLib {
         static constexpr auto npos = String::npos;
         constexpr StringView() = default;
 
-        constexpr StringView(const char* begin, const char* end) : m_start(begin), m_size(end - begin) {}
-        constexpr StringView(char* begin, const char* end) : m_start_mut(begin), m_start(begin), m_size(end - begin) {}
+        constexpr StringView(const char* begin, const char* end) :
+            m_start(begin), m_size(static_cast<size_t>(end - begin)) {}
+        constexpr StringView(char* begin, const char* end) :
+            m_start_mut(begin), m_start(begin), m_size(static_cast<size_t>(end - begin)) {}
 
         template <typename T>
         requires IsSameV<T, const char*>
@@ -38,9 +40,7 @@ namespace ARLib {
         explicit constexpr StringView(T buf) : m_start_mut(buf), m_start(buf) { m_size = strlen(buf); }
 
         explicit StringView(const String& ref) : m_start(ref.data()) { m_size = ref.length(); }
-        explicit StringView(String& ref) : m_start_mut(ref.rawptr()), m_start(ref.data()) {
-            m_size = ref.length();
-        }
+        explicit StringView(String& ref) : m_start_mut(ref.rawptr()), m_start(ref.data()) { m_size = ref.length(); }
         constexpr StringView(const StringView& view) = default;
         constexpr StringView(StringView&& view) noexcept {
             m_start_mut = view.m_start_mut;
