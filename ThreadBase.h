@@ -6,7 +6,7 @@
 #include "Tuple.h"
 #include "TypeTraits.h"
 #include "UniquePtr.h"
-#include "XNative/xnative_thread_merge.h"
+#include "XNative/thread/xnative_thread_merge.h"
 
 namespace ARLib {
     namespace detail {

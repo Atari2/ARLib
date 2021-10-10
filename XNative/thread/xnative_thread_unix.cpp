@@ -1,6 +1,6 @@
 #define INCLUDED_FROM_OWN_CPP___
 #include "xnative_thread_unix.h"
-#include "../Conversion.h"
+#include "../../Conversion.h"
 
 #ifdef UNIX_OR_MINGW
 #include <pthread.h>

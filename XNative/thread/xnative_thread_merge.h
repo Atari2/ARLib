@@ -1,13 +1,13 @@
 #pragma once
 #ifndef DISABLE_THREADING
 
-#include "../Compat.h"
+#include "../../Compat.h"
 #ifdef UNIX_OR_MINGW
 #include "xnative_thread_unix.h"
 #else
 #include "xnative_thread_windows.h"
 #endif
-#include "../Pair.h"
+#include "../../Pair.h"
 
 #if not defined(THREADBASE_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
 #error "Don't include the XNative files directly. Use ThreadBase.h or Threading.h"

@@ -1,6 +1,6 @@
 #pragma once
 #ifndef DISABLE_THREADING
-#include "../Types.h"
+#include "../../Types.h"
 
 // FIXME: eventually drop the use of these functions and start using the Win32 API directly.
 

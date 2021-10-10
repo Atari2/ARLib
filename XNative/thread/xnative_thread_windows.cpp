@@ -1,8 +1,8 @@
 #define INCLUDED_FROM_OWN_CPP___
 #include "xnative_thread_windows.h"
 #ifdef WINDOWS
-#include "../TypeTraits.h"
-#include "../Conversion.h"
+#include "../../TypeTraits.h"
+#include "../../Conversion.h"
 #include <process.h>
 #include <xthreads.h>
 
