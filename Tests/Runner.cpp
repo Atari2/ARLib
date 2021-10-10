@@ -565,3 +565,23 @@ TEST(ARLibTests, RandomTest) {
     auto pcg = Random::PCG::create();
     EXPECT_NE(pcg.random(), 355248013);
 }
+
+TEST(ARLibTests, TreeTest) {
+    Tree<int> tree{};
+    EXPECT_FALSE(tree.head().exists());
+    tree.insert_leaf(10);
+    tree.insert_leaf(5);
+    tree.insert_leaf(100);
+    tree.insert_leaf(2);
+    tree.insert_leaf(7);
+    tree.insert_leaf(9);
+    tree.insert_leaf(200);
+    tree.insert_leaf(11);
+    tree.insert_leaf(6);
+    tree.remove(7);
+    EXPECT_EQ(tree.head()->value(), 10);
+    EXPECT_TRUE(tree.find(10).exists());
+    tree.remove(10);
+    EXPECT_FALSE(tree.find(10).exists());
+    EXPECT_EQ(tree.head()->value(), 9);
+}

@@ -23,6 +23,7 @@
 #include "../String.h"
 #include "../Test.h"
 #include "../Threading.h"
+#include "../Tree.h"
 #include "../Tuple.h"
 #include "../UniqueString.h"
 #include "../Variant.h"
