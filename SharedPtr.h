@@ -12,6 +12,13 @@ namespace ARLib {
 
         bool decrease_instance_count_() {
             if (m_count == nullptr) return false;
+            if (*m_count == 0) {
+                // count may be 0 if object was constructed from nullptr
+                // which is valid, for now, since it makes life a little bit easier
+                delete m_count;
+                m_count = nullptr;
+                return true;
+            }
             (*m_count)--;
             if (*m_count == 0) {
                 delete m_count;
@@ -35,8 +42,8 @@ namespace ARLib {
             other.m_count = nullptr;
             return *this;
         }
-
-        SharedPtr(T* ptr) : m_storage(ptr), m_count(new size_t{1}) {}
+        SharedPtr(nullptr_t) : m_storage(nullptr), m_count(new size_t{0}) {}
+        SharedPtr(T* ptr) : m_storage(ptr), m_count(ptr ? new size_t{1} : new size_t{0}) {}
         SharedPtr(T&& storage) {
             m_storage = new T{move(storage)};
             m_count = new size_t{1};
