@@ -71,7 +71,11 @@ namespace ARLib {
             return *this;
         }
 
-        Iterator<T> operator++(int) { return Iterator<T>{m_current++}; }
+        Iterator<T> operator++(int) {
+            auto copy = *this;
+            m_current++;
+            return copy;
+        }
 
         Iterator<T>& operator+=(int offset) {
             m_current += offset;
@@ -85,7 +89,11 @@ namespace ARLib {
             return *this;
         }
 
-        Iterator<T> operator--(int) { return Iterator<T>{m_current--}; }
+        Iterator<T> operator--(int) {
+            auto copy = *this;
+            m_current--;
+            return copy;
+        }
 
         Iterator<T>& operator-=(int offset) {
             m_current -= offset;
@@ -121,7 +129,11 @@ namespace ARLib {
             return *this;
         }
 
-        ConstIterator<Ct> operator++(int) { return ConstIterator<Ct>{m_current++}; }
+        ConstIterator<Ct> operator++(int) {
+            auto copy = *this;
+            m_current++;
+            return copy;
+        }
 
         ConstIterator<Ct>& operator+=(int offset) {
             m_current += offset;
@@ -135,7 +147,11 @@ namespace ARLib {
             return *this;
         }
 
-        ConstIterator<Ct> operator--(int) { return ConstIterator<Ct>{m_current--}; }
+        ConstIterator<Ct> operator--(int) {
+            auto copy = *this;
+            m_current--;
+            return copy;
+        }
 
         ConstIterator<Ct>& operator-=(int offset) {
             m_current -= offset;
@@ -168,21 +184,29 @@ namespace ARLib {
             return *this;
         }
 
-        ReverseIterator<T> operator++(int) { return {m_current--}; }
+        ReverseIterator<T> operator++(int) {
+            auto copy = *this;
+            m_current--;
+            return copy;
+        }
 
         ReverseIterator<T>& operator+=(int offset) {
             m_current -= offset;
             return *this;
         }
 
-        ReverseIterator<T> operator+(int offset) { return {m_current - offset}; }
+        ReverseIterator<T> operator+(int offset) { return ReverseIterator<T>{m_current - offset}; }
 
         ReverseIterator<T>& operator--() {
             m_current++;
             return *this;
         }
 
-        ReverseIterator<T> operator--(int) { return {m_current++}; }
+        ReverseIterator<T> operator--(int) {
+            auto copy = *this;
+            m_current++;
+            return copy;
+        }
 
         ReverseIterator<T>& operator-=(int offset) {
             m_current += offset;
@@ -219,21 +243,29 @@ namespace ARLib {
             return *this;
         }
 
-        ConstReverseIterator<Ct> operator++(int) { return {m_current--}; }
+        ConstReverseIterator<Ct> operator++(int) {
+            auto copy = *this;
+            m_current--;
+            return copy;
+        }
 
         ConstReverseIterator<Ct>& operator+=(int offset) {
             m_current -= offset;
             return *this;
         }
 
-        ConstReverseIterator<Ct> operator+(int offset) { return {m_current - offset}; }
+        ConstReverseIterator<Ct> operator+(int offset) { return ConstReverseIterator<Ct>{m_current - offset}; }
 
         ConstReverseIterator<Ct>& operator--() {
             m_current++;
             return *this;
         }
 
-        ConstReverseIterator<Ct> operator--(int) { return {m_current++}; }
+        ConstReverseIterator<Ct> operator--(int) {
+            auto copy = *this;
+            m_current++;
+            return copy;
+        }
 
         ConstReverseIterator<Ct>& operator-=(int offset) {
             m_current += offset;
@@ -262,7 +294,11 @@ namespace ARLib {
             m_current += m_step;
             return *this;
         }
-        LoopIterator operator++(int) { return {m_current + m_step, m_step}; }
+        LoopIterator operator++(int) {
+            auto copy = *this;
+            m_current += m_step;
+            return copy;
+        }
         bool operator==(const LoopIterator& other) const override { return m_current == other.m_current; }
         bool operator!=(const LoopIterator& other) const override { return m_cmp.compare(m_current, other.m_current); }
         bool operator<(const LoopIterator& other) override { return m_current < other.m_current; }
@@ -303,7 +339,7 @@ namespace ARLib {
 
         IfIterator operator++(int) {
             IfIterator iter{*this};
-            ++iter;
+            this->operator++();
             return iter;
         }
         bool operator==(const IfIterator& other) const { return m_current_iter == other.m_current_iter; }

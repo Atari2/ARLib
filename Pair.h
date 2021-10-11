@@ -132,7 +132,9 @@ namespace ARLib {
         }
 
         PairIterator operator++(int) {
-            return {m_current_pair.template get<0>()++, m_current_pair.template get<1>()++};
+            auto copy = *this;
+            this->operator++();
+            return copy;
         }
         bool operator==(const PairIterator& other) const { return m_current_pair == other.m_current_pair; }
         bool operator!=(const PairIterator& other) const { return m_current_pair != other.m_current_pair; }
@@ -165,7 +167,11 @@ namespace ARLib {
             return *this;
         }
 
-        Enumerator operator++(int) { return {m_iter++, m_index++}; }
+        Enumerator operator++(int) {
+            auto copy = *this;
+            this->operator++();
+            return copy;
+        }
         bool operator==(const Enumerator& other) const override { return m_index == other.m_index; }
         bool operator!=(const Enumerator& other) const override { return m_index != other.m_index; }
         bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
@@ -192,7 +198,11 @@ namespace ARLib {
             return *this;
         }
 
-        ConstEnumerator operator++(int) { return {m_iter++, m_index++}; }
+        ConstEnumerator operator++(int) {
+            auto copy = *this;
+            this->operator++();
+            return copy;
+        }
         bool operator==(const ConstEnumerator& other) const override { return m_index == other.m_index; }
         bool operator!=(const ConstEnumerator& other) const override { return m_index != other.m_index; }
         bool operator<(const ConstEnumerator& other) override { return m_index < other.m_index; }

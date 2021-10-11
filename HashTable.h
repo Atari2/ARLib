@@ -83,13 +83,9 @@ namespace ARLib {
         }
 
         HashTableIterator operator++(int) {
-            if (m_backing_store[m_current_bucket].empty() ||
-                m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
-                return {m_backing_store, m_current_bucket == m_bkt_size - 1 ? npos : m_current_bucket + 1,
-                        m_current_bucket == m_bkt_size - 1 ? npos : 0};
-            } else {
-                return {m_backing_store, m_current_bucket, m_current_vector_index + 1};
-            }
+            auto copy = *this;
+            this->operator++();
+            return copy;
         }
 
         HashTableIterator& operator--() {
@@ -109,12 +105,9 @@ namespace ARLib {
         }
 
         HashTableIterator operator--(int) {
-            if (m_backing_store[m_current_bucket].empty() || m_current_vector_index == 0) {
-                return {m_backing_store, m_current_bucket == 0 ? npos : m_current_bucket - 1,
-                        m_current_bucket == 0 ? npos : m_backing_store[m_current_bucket - 1].size() - 1};
-            } else {
-                return {m_backing_store, m_current_bucket, m_current_vector_index - 1};
-            }
+            auto copy = *this;
+            this->operator--();
+            return copy;
         }
     };
 
@@ -188,13 +181,9 @@ namespace ARLib {
         }
 
         ConstHashTableIterator operator++(int) {
-            if (m_backing_store[m_current_bucket].empty() ||
-                m_current_vector_index >= m_backing_store[m_current_bucket].size() - 1) {
-                return {m_backing_store, m_current_bucket == m_bkt_size - 1 ? npos : m_current_bucket + 1,
-                        m_current_bucket == m_bkt_size - 1 ? npos : 0};
-            } else {
-                return {m_backing_store, m_current_bucket, m_current_vector_index + 1};
-            }
+            auto copy = *this;
+            this->operator++();
+            return copy;
         }
 
         ConstHashTableIterator& operator--() {
