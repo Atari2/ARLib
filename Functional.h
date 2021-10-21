@@ -35,7 +35,7 @@ namespace ARLib {
         struct IsLocationInvariant : IsTriviallyCopiable<T>::type {};
 
         union NocopyTypes {
-            void* m_object;
+            void* m_object = nullptr;
             const void* m_const_object;
             void (*m_fn_ptr)();
             void (UndefinedClass::*m_mbfn_ptr)();
@@ -56,7 +56,7 @@ namespace ARLib {
             }
 
             NocopyTypes m_unused;
-            char m_pod_data[sizeof(NocopyTypes)];
+            char m_pod_data[sizeof(NocopyTypes)]{0};
         };
 
         enum class ManagerOp { GetFuncPtr, CloneFunc, DestroyFunc };
@@ -244,7 +244,7 @@ namespace ARLib {
             }
         };
 
-        FunctionBase() : m_manager(nullptr) {}
+        FunctionBase() : m_functor{}, m_manager(nullptr) {}
 
         ~FunctionBase() {
             if (m_manager) m_manager(m_functor, m_functor, fntraits::ManagerOp::DestroyFunc);
@@ -270,7 +270,7 @@ namespace ARLib {
             switch (op) {
             case fntraits::ManagerOp::GetFuncPtr:
                 dest.m_access<Functor*>() = Base::m_get_ptr(source);
-            break;
+                break;
 
             default:
                 Base::m_manager(dest, source, op);
@@ -381,7 +381,7 @@ namespace ARLib {
 
         private:
         using InvokerType = Res (*)(const fntraits::AnyData&, Args&&...);
-        InvokerType m_invoker;
+        InvokerType m_invoker = nullptr;
     };
 
     template <typename Arg, typename... Args>
