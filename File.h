@@ -9,16 +9,17 @@
 #include "StringView.h"
 #include "Types.h"
 #include "cstdio_compat.h"
+#include "arlib_osapi.h"
 
 namespace ARLib {
     class OpenFileError {
         String m_filename{};
-
+        String m_error{};
         public:
         OpenFileError() = default;
-        OpenFileError(String filename) : m_filename(move(filename)) {}
-        constexpr static inline StringView error = "Couldn't open file "_sv;
+        OpenFileError(String error, String filename) : m_filename(move(filename)), m_error(move(error)) {}
         const String& filename() const { return m_filename; }
+        const String& error() const { return m_error; }
     };
 
     struct ReadFileError {
@@ -41,7 +42,7 @@ namespace ARLib {
     struct PrintInfo<OpenFileError> {
         const OpenFileError& m_error;
         explicit PrintInfo(const OpenFileError& error) : m_error(error) {}
-        String repr() const { return String{m_error.error} + m_error.filename(); }
+        String repr() const { return m_error.error() + " - Filename: "_s + m_error.filename(); }
     };
     template <>
     struct PrintInfo<WriteFileError> {
@@ -82,7 +83,7 @@ namespace ARLib {
                 break;
             }
             if (!m_ptr) {
-                return OpenFileError{m_filename};
+                return OpenFileError{last_error(), m_filename};
             } else {
                 return {};
             }

@@ -1,5 +1,6 @@
 #include "cstdio_compat.h"
 #include "Assertion.h"
+#include "arlib_osapi.h"
 #include <cstdarg>
 #include <cstdio>
 namespace ARLib {
@@ -11,6 +12,7 @@ namespace ARLib {
 #ifndef DEBUG
         (void)err;
 #else
+        if (err != 0) print_last_error();
         HARD_ASSERT_FMT((err == 0), "Failed to open %s in mode %s", filename, mode)
 #endif
         return pfile;
