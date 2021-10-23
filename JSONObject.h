@@ -69,14 +69,41 @@ namespace ARLib {
         };
 
         class Number {
-            double m_value;
+            union {
+                double m_double_value;
+                int m_int_value;
+            };
+            enum class NumberType { Double, Integer } m_type;
 
             public:
-            constexpr Number(double val) : m_value(val) {}
-            constexpr Number(detail::NumberTag, double val) : m_value(val) {}
-            constexpr double value() const { return m_value; }
-            operator double() const { return m_value; }
+            constexpr Number(double val) : m_double_value(val), m_type(NumberType::Double) {}
+            constexpr Number(int val) : m_int_value(val), m_type(NumberType::Integer) {}
+            constexpr Number(detail::NumberTag, double val) : m_double_value(val), m_type(NumberType::Double) {}
+            constexpr Number(detail::NumberTag, int val) : m_int_value(val), m_type(NumberType::Integer) {}
+            constexpr double value_double() const {
+                HARD_ASSERT(m_type == NumberType::Double, "Type must be double when this is called");
+                return m_double_value;
+            }
+            constexpr int64_t value_integer() const {
+                HARD_ASSERT(m_type == NumberType::Integer, "Type must be integer when this is called");
+                return m_int_value;
+            }
+            operator double() const {
+                HARD_ASSERT(m_type == NumberType::Double, "Type must be double when this is called");
+                return m_double_value;
+            }
+            operator int() const {
+                HARD_ASSERT(m_type == NumberType::Integer, "Type must be integer when this is called");
+                return m_int_value;
+            }
             operator Value() &&;
+            String to_string() const {
+                if (m_type == NumberType::Integer) {
+                    return IntToStr(m_int_value);
+                } else {
+                    return DoubleToStr(m_double_value);
+                }
+            }
         };
 
         enum class Type { JObject, JString, JNumber, JArray, JBool, JNull };
@@ -276,9 +303,9 @@ namespace ARLib {
             case JSON::Type::JNull:
                 return "null"_s;
             case JSON::Type::JNumber:
-                return DoubleToStr(m_value.get<JSON::Type::JNumber>());
+                return m_value.get<JSON::Type::JNumber>().to_string();
             default:
-                HARD_ASSERT(false, "Invalid JSON type.");
+                ASSERT_NOT_REACHED("Invalid JSON type.");
             }
             return "Invalid JSON Value"_s;
         }

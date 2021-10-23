@@ -53,21 +53,15 @@ namespace ARLib {
 
         Parsed<JString> parse_quoted_string(StringView view, size_t current_index) {
             CHK_CURR('"')
-#ifdef COMPILER_CLANG
-#define LAMBDA_CAPTURES []
-#else
-#define LAMBDA_CAPTURES [&escaped, &equiv]
-#endif
-            constexpr char escaped[] = {'n', 'r', 'v', 't', 'f'};
-            constexpr char equiv[] = {'\n', '\r', '\v', '\t', '\f'};
-            auto check_c = LAMBDA_CAPTURES(char c) {
+            auto check_c = [](char c) {
+                constexpr char escaped[] = {'n', 'r', 'v', 't', 'f'};
+                constexpr char equiv[] = {'\n', '\r', '\v', '\t', '\f'};
                 constexpr size_t sz = 5;
                 for (size_t i = 0; i < sz; i++) {
                     if (c == escaped[i]) return equiv[i];
                 }
                 return c;
             };
-#undef LAMBDA_CAPTURES
             current_index++;
             JString container{};
             bool at_end = false;
@@ -101,6 +95,14 @@ namespace ARLib {
             return Pair{current_index, string};
         }
 
+        Number parse_number(const String& raw_value) {
+            if (raw_value.contains('.') || raw_value.contains(',')) {
+                return Number{number_tag, StrToDouble(raw_value)};    
+            } else {
+                return Number{number_tag, StrToInt(raw_value)};
+            }
+        }
+
         Parsed<Array> parse_array(StringView view, size_t current_index) {
             CHK_CURR('[')
             Array arr{};
@@ -130,7 +132,7 @@ namespace ARLib {
                     } else if (raw_value == "false"_s) {
                         arr.append(ValueObj::construct(Bool{bool_tag, false}));
                     } else {
-                        arr.append(ValueObj::construct(Number{number_tag, StrToDouble(raw_value)}));
+                        arr.append(ValueObj::construct(parse_number(raw_value)));
                     }
                     break;
                 }
@@ -182,7 +184,7 @@ namespace ARLib {
                     } else if (raw_value == "false"_s) {
                         obj.add(key, ValueObj::construct(Bool{bool_tag, false}));
                     } else {
-                        obj.add(key, ValueObj::construct(Number{number_tag, StrToDouble(raw_value)}));
+                        obj.add(key, ValueObj::construct(parse_number(raw_value)));
                     }
                     break;
                 }
@@ -209,7 +211,7 @@ namespace ARLib {
                     repr.append(dump_json(val.get<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
-                    repr.append(indent_string + DoubleToStr(val.get<Type::JNumber>()));
+                    repr.append(indent_string + val.get<Type::JNumber>().to_string());
                     break;
                 case Type::JNull:
                     repr.append(indent_string + "null"_s);
@@ -221,7 +223,7 @@ namespace ARLib {
                     repr.append(indent_string + val.get<Type::JString>());
                     break;
                 default:
-                    HARD_ASSERT(false, "Invalid type in JSON object");
+                    ASSERT_NOT_REACHED("Invalid type in JSON object");
                     break;
                 }
                 if (++i < arr.size()) {
@@ -253,7 +255,7 @@ namespace ARLib {
                     repr.append(dump_json(val.get<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
-                    repr.append(DoubleToStr(val.get<Type::JNumber>()));
+                    repr.append(val.get<Type::JNumber>().to_string());
                     break;
                 case Type::JNull:
                     repr.append("null"_s);
@@ -265,7 +267,7 @@ namespace ARLib {
                     repr.append("\""_s + val.get<Type::JString>() + '"');
                     break;
                 default:
-                    HARD_ASSERT(false, "Invalid type in JSON object");
+                    ASSERT_NOT_REACHED("Invalid type in JSON object");
                     break;
                 }
                 if (++i < obj.size()) {

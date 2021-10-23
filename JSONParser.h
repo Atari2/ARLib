@@ -21,6 +21,7 @@ namespace ARLib {
         Pair<size_t, String> eat_until_space_or_delim(StringView view, size_t current_index);
         Parsed<JString> parse_quoted_string(StringView view, size_t current_index);
         Pair<size_t, String> parse_non_delimited(StringView view, size_t current_index);
+        Number parse_number(const String& raw_value);
         Parsed<Array> parse_array(StringView view, size_t current_index);
         String dump_array(const Array& arr, size_t indent = 1);
         String dump_json(const Object& obj, size_t indent = 1);
