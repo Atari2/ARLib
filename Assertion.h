@@ -62,6 +62,10 @@ namespace ARLib {
         unreachable                                                                                                    \
     }
 
+#define ASSERT_NOT_REACHED(msg) HARD_ASSERT(false, msg)
+
+#define ASSERT_NOT_REACHED_FMT(fmt, ...) HARD_ASSERT_FMT(false, fmt, __VA_ARGS__)
+
 #define SOFT_ASSERT(val, msg)                                                                                          \
     if (!(val)) {                                                                                                      \
         ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                                  \
