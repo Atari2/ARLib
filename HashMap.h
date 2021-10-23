@@ -15,6 +15,7 @@ namespace ARLib {
 
         public:
         HashMapEntry() : m_key(), m_value(), m_hashval(static_cast<size_t>(-1)) {}
+        HashMapEntry(const Key& key, const Val& value) : m_key(key), m_value(value) { m_hashval = Hash<Key>{}(m_key); }
         HashMapEntry(Key&& key, Val&& value) : m_key(move(key)), m_value(move(value)) {
             m_hashval = Hash<Key>{}(m_key);
         }
@@ -85,7 +86,11 @@ namespace ARLib {
         }
         double load() { return m_table.load(); };
 
-        InsertionResult add(Key key, Val value) {
+        InsertionResult add(const Key& key, const Val& value) requires(CopyAssignable<Key>&& CopyAssignable<Val>) {
+            MapEntry entry{key, value};
+            return m_table.insert(MapEntry{key, value});
+        }
+        InsertionResult add(Key&& key, Val&& value) requires(MoveAssignable<Key>&& MoveAssignable<Val>) {
             MapEntry entry{Forward<Key>(key), Forward<Val>(value)};
             return m_table.insert(Forward<MapEntry>(entry));
         }
@@ -132,7 +137,8 @@ namespace ARLib {
         explicit PrintInfo(const HashMapEntry<A, B>& entry) : m_entry(entry) {}
         String repr() const {
             return "HashMapEntry { "_s + print_conditional<A>(m_entry.key()) + ": "_s +
-                   print_conditional<B>(m_entry.value()) + ", hash: " + print_conditional<size_t>(m_entry.hashval()) + " }"_s;
+                   print_conditional<B>(m_entry.value()) + ", hash: " + print_conditional<size_t>(m_entry.hashval()) +
+                   " }"_s;
         }
     };
 

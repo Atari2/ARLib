@@ -137,9 +137,9 @@ namespace ARLib {
                 } else if (left_exists || right_exists) {
                     // one child
                     if (left_exists) {
-                        node = node->left_child();
+                        node = move(node->left_child());
                     } else {
-                        node = node->right_child();
+                        node = move(node->right_child());
                     }
                 } else {
                     // no children, simply remove head

@@ -23,11 +23,17 @@ namespace ARLib {
             bool is_active = false;
 
             public:
-            explicit VariantStorage(First value) : head(move(value)), is_active(true) {}
+            explicit VariantStorage(const First& value) : head(value), is_active(true) {}
+            explicit VariantStorage(First&& value) : head(move(value)), is_active(true) {}
 
             template <class Sc>
             requires IsAnyOfV<Sc, Rest...>
-            explicit VariantStorage(Sc value) : tail(Forward<Sc>(value)), is_active(false) {}
+            explicit VariantStorage(const Sc& value) : tail(value), is_active(false) {}
+
+            
+            template <class Sc>
+            requires IsAnyOfV<Sc, Rest...>
+            explicit VariantStorage(Sc&& value) : tail(Forward<Sc>(value)), is_active(false) {}
 
             template <class... Args>
             explicit VariantStorage(Args&&... args) requires Constructible<First, Args...> :
@@ -46,14 +52,14 @@ namespace ARLib {
 
             VariantStorage(VariantStorage&& other) noexcept : is_active(other.is_active) {
                 if (other.is_active)
-                    new (&head) First(other.head);
+                    new (&head) First(move(other.head));
                 else
                     new (&tail) VariantStorage<Rest...>(move(other.tail));
             }
 
             VariantStorage& operator=(VariantStorage&& other) noexcept {
                 if (other.is_active)
-                    new (&head) First(other.head);
+                    new (&head) First(move(other.head));
                 else
                     new (&tail) VariantStorage<Rest...>(move(other.tail));
                 is_active = other.is_active;
@@ -202,7 +208,8 @@ namespace ARLib {
             bool is_active = false;
 
             public:
-            explicit VariantStorage(Type value) : head(move(value)), is_active(true) {}
+            explicit VariantStorage(Type&& value) : head(move(value)), is_active(true) {}
+            explicit VariantStorage(const Type& value) : head(value), is_active(true) {}
             template <class... Args>
             explicit VariantStorage(Args&&... args) requires Constructible<Type, Args...> :
                 head(move(args)...),
@@ -356,7 +363,11 @@ namespace ARLib {
         public:
         template <typename T>
         requires IsAnyOfV<T, Types...>
-        explicit Variant(T value) : m_storage(Forward<T>(value)) {}
+        explicit Variant(const T& value) : m_storage(value) {}
+
+        template <typename T>
+        requires IsAnyOfV<T, Types...>
+        explicit Variant(T&& value) : m_storage(Forward<T>(value)) {}
 
         template <typename... Args>
         explicit Variant(Args&&... args) : m_storage(Forward<Args>(args)...) {}

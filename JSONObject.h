@@ -181,7 +181,7 @@ namespace ARLib {
             public:
             template <JSONType T>
             static Value construct(T&& value) {
-                return UniquePtr{ValueObj{Forward<T>(value), enum_from_type<T>()}};
+                return Value{ValueObj{Forward<T>(value), enum_from_type<T>()}};
             }
 
             Type type() const { return m_type; }
@@ -288,7 +288,7 @@ namespace ARLib {
     struct PrintInfo<JSON::Array> {
         const JSON::Array& m_array;
         PrintInfo(const JSON::Array& array_) : m_array(array_) {}
-        String repr() const { return PrintInfo<Vector<JSON::Value>>{static_cast<Vector<JSON::Value>>(m_array)}.repr(); }
+        String repr() const { return PrintInfo<Vector<JSON::Value>>{m_array}.repr(); }
     };
 
     template <>
@@ -296,7 +296,7 @@ namespace ARLib {
         const JSON::Object& m_object;
         PrintInfo(const JSON::Object& obj) : m_object(obj) {}
         String repr() const {
-            return PrintInfo<HashMap<String, JSON::Value>>{static_cast<HashMap<String, JSON::Value>>(m_object)}.repr();
+            return PrintInfo<HashMap<String, JSON::Value>>{m_object}.repr();
         }
     };
 #endif

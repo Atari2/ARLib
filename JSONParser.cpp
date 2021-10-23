@@ -26,7 +26,7 @@ namespace ARLib {
     if (value_or_error.is_error()) { return value_or_error.to_error(); }                                               \
     auto [new_index_val, value] = value_or_error.to_ok();                                                              \
     current_index = skip_whitespace(view, new_index_val);                                                              \
-    obj.add(key, ValueObj::construct(move(value)));
+    obj.add(move(key), ValueObj::construct(move(value)));
 
 #define ADD_TO_ARR_WITH(func)                                                                                          \
     auto value_or_error = func(view, current_index);                                                                   \
@@ -139,7 +139,7 @@ namespace ARLib {
                 }
                 VERIFY_COMMA(']')
             }
-            return Pair{current_index + 1, arr};
+            return Pair{current_index + 1, move(arr)};
         }
 
         Parsed<Object> parse_object(StringView view, size_t current_index) {
@@ -178,13 +178,13 @@ namespace ARLib {
                     auto [new_index_val, raw_value] = parse_non_delimited(view, current_index);
                     current_index = new_index_val;
                     if (raw_value == "null"_s) {
-                        obj.add(key, ValueObj::construct(Null{null_tag}));
+                        obj.add(move(key), ValueObj::construct(Null{null_tag}));
                     } else if (raw_value == "true"_s) {
-                        obj.add(key, ValueObj::construct(Bool{bool_tag, true}));
+                        obj.add(move(key), ValueObj::construct(Bool{bool_tag, true}));
                     } else if (raw_value == "false"_s) {
-                        obj.add(key, ValueObj::construct(Bool{bool_tag, false}));
+                        obj.add(move(key), ValueObj::construct(Bool{bool_tag, false}));
                     } else {
-                        obj.add(key, ValueObj::construct(parse_number(raw_value)));
+                        obj.add(move(key), ValueObj::construct(parse_number(raw_value)));
                     }
                     break;
                 }
@@ -193,7 +193,7 @@ namespace ARLib {
                 VERIFY_COMMA('}')
             }
 
-            return Pair{current_index + 1, obj};
+            return Pair{current_index + 1, move(obj)};
         }
 
         // FIXME: fix indentation
@@ -287,7 +287,7 @@ namespace ARLib {
             auto object_or_error = parse_object(m_view, current_index);
             if (object_or_error.is_error()) return object_or_error.to_error();
             auto [_, obj] = object_or_error.to_ok();
-            return ParseResult::from_ok(Document{move(obj)});
+            return ParseResult{Document{move(obj)}};
         }
 
         ParseResult Parser::parse(StringView data) {
@@ -303,7 +303,7 @@ namespace ARLib {
             auto val = read_res.to_ok();
             auto parse_res = Parser::parse(val.view());
             if (parse_res.is_error()) { return FileParseResult::from_error(parse_res.to_error()); }
-            return FileParseResult::from_ok(parse_res.to_ok());
+            return FileParseResult{parse_res.to_ok()};
         }
     } // namespace JSON
 } // namespace ARLib
