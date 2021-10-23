@@ -104,6 +104,21 @@ namespace ARLib {
                     return DoubleToStr(m_double_value);
                 }
             }
+            bool operator==(int value) const {
+                if (m_type == NumberType::Integer) {
+                    return m_int_value == value;
+                }
+                else {
+                    return false;
+                }
+            }
+            bool operator==(double value) const {
+                if (m_type == NumberType::Double) {
+                    return m_double_value == value;
+                } else {
+                    return false;
+                }
+            }
         };
 
         enum class Type { JObject, JString, JNumber, JArray, JBool, JNull };
@@ -112,7 +127,7 @@ namespace ARLib {
         concept JSONType = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null>;
 
         template <typename Tp>
-        concept JSONTypeExt = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null, bool, double, String, nullptr_t>;
+        concept JSONTypeExt = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null, bool, double, int, String, nullptr_t>;
 
         template <JSONType T>
         constexpr Type enum_from_type() {
@@ -150,7 +165,7 @@ namespace ARLib {
                     return Type::JObject;
                 } else if constexpr (SameAs<T, JString> || SameAs<T, String>) {
                     return Type::JString;
-                } else if constexpr (SameAs<T, Number> || SameAs<T, double>) {
+                } else if constexpr (SameAs<T, Number> || SameAs<T, double> || SameAs<T, int>) {
                     return Type::JNumber;
                 } else if constexpr (SameAs<T, Array>) {
                     return Type::JArray;
