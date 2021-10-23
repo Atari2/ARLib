@@ -11,17 +11,9 @@ namespace ARLib {
 
         public:
         constexpr UniquePtr() = default;
-        UniquePtr(const UniquePtr& other) {
-            if (other.m_storage) { m_storage = new T(*other.m_storage); }
-        }
-        UniquePtr& operator=(const UniquePtr& other) {
-            if (this == &other) return *this;
-            delete m_storage;
-            if (other.m_storage) { m_storage = new T(*other.m_storage); }
-            return *this;
-        }
+        constexpr UniquePtr(nullptr_t) : m_storage(nullptr){};
+        UniquePtr(const UniquePtr&) = delete;
 
-        explicit UniquePtr(nullptr_t) = delete;
         explicit UniquePtr(T* ptr) : m_storage(ptr) {}
         explicit UniquePtr(T&& storage) : m_storage(new T{move(storage)}) {}
         UniquePtr(UniquePtr&& ptr) noexcept {
@@ -38,6 +30,7 @@ namespace ARLib {
             other.m_storage = nullptr;
             return *this;
         }
+        UniquePtr& operator=(const UniquePtr&) = delete;
 
         T* release() {
             T* ptr = m_storage;
@@ -72,26 +65,9 @@ namespace ARLib {
 
         public:
         constexpr UniquePtr() = default;
-        UniquePtr(const UniquePtr& other) requires DefaultConstructible<T> :
-            m_storage(new T[other.m_size]),
-            m_size(other.m_size) {
-            if (other.m_storage) {
-                ConditionalBitCopy(m_storage, other.m_storage, m_size);
-            } else {
-                for (size_t i = 0; i < other.m_size; i++)
-                    m_storage[i] = T{};
-            }
-        }
-        UniquePtr& operator=(const UniquePtr& other) {
-            if (this == &other) return *this;
-            delete[] m_storage;
-            m_size = other.m_size;
-            if (other.m_storage) {
-                m_storage = new T[m_size];
-                ConditionalBitCopy(m_storage, other.m_storage, m_size);
-            }
-            return *this;
-        }
+        constexpr UniquePtr(nullptr_t) : m_storage(nullptr){};
+        UniquePtr(const UniquePtr&) = delete;
+        UniquePtr& operator=(const UniquePtr&) = delete;
 
         explicit UniquePtr(size_t size) requires DefaultConstructible<T> : m_storage(new T[size]), m_size(size) {
             for (size_t i = 0; i < size; i++)
@@ -151,7 +127,7 @@ namespace ARLib {
     struct PrintInfo<UniquePtr<T>> {
         const UniquePtr<T>& m_ptr;
         PrintInfo(const UniquePtr<T>& ptr) : m_ptr(ptr) {}
-        String repr() const { 
+        String repr() const {
             if constexpr (Printable<T>) {
                 return "UniquePtr { "_s + PrintInfo<T>{*m_ptr.get()}.repr() + " }"_s;
             } else {
