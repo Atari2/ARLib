@@ -91,7 +91,7 @@ namespace ARLib {
 
         WriteResult write(const String& str) {
             if (m_mode != OpenFileMode::Write) { return WriteResult::from_error(); }
-            auto len = fwrite(str.data(), str.size(), sizeof(char), m_ptr);
+            auto len = ARLib::fwrite(str.data(), str.size(), sizeof(char), m_ptr);
             if (len != str.size()) { return WriteResult::from_error(); }
             return WriteResult::from_ok(len);
         }
@@ -99,7 +99,7 @@ namespace ARLib {
         ReadResult read_n(size_t count) {
             if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
             String line{count, '\0'};
-            line.set_size(fread(line.rawptr(), count, sizeof(char), m_ptr));
+            line.set_size(ARLib::fread(line.rawptr(), count, sizeof(char), m_ptr));
             if (line.size() != count) return ReadResult::from_error();
             return ReadResult{Forward<String>(line)};
         }
@@ -107,25 +107,25 @@ namespace ARLib {
         ReadResult read_line() {
             if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
             String line{LINELENGTH_MAX, '\0'};
-            line.set_size(fread(line.rawptr(), sizeof(char), LINELENGTH_MAX, m_ptr));
+            line.set_size(ARLib::fread(line.rawptr(), sizeof(char), LINELENGTH_MAX, m_ptr));
             return ReadResult{Forward<String>(line)};
         }
 
         ReadResult read_all() {
             if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
             String line{};
-            fseek(m_ptr, 0, SEEK_END);
-            auto len = ftell(m_ptr);
-            fseek(m_ptr, 0, SEEK_SET);
+            ARLib::fseek(m_ptr, 0, SEEK_END);
+            auto len = ARLib::ftell(m_ptr);
+            ARLib::fseek(m_ptr, 0, SEEK_SET);
             line.reserve(len);
-            line.set_size(fread(line.rawptr(), sizeof(char), len, m_ptr));
+            line.set_size(ARLib::fread(line.rawptr(), sizeof(char), len, m_ptr));
 #ifndef WINDOWS
             if (line.size() != len) { return ReadResult::from_error(); }
 #endif
             return ReadResult{Forward<String>(line)};
         }
         ~File() {
-            if (m_ptr) fclose(m_ptr);
+            if (m_ptr) ARLib::fclose(m_ptr);
         }
     };
 
