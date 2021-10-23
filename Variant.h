@@ -23,6 +23,12 @@ namespace ARLib {
             bool is_active = false;
 
             public:
+            explicit VariantStorage(First value) : head(move(value)), is_active(true) {}
+
+            template <class Sc>
+            requires IsAnyOfV<Sc, Rest...>
+            explicit VariantStorage(Sc value) : tail(Forward<Sc>(value)), is_active(false) {}
+
             template <class... Args>
             explicit VariantStorage(Args&&... args) requires Constructible<First, Args...> :
                 head(Forward<Args>(args)...),
@@ -196,6 +202,7 @@ namespace ARLib {
             bool is_active = false;
 
             public:
+            explicit VariantStorage(Type value) : head(move(value)), is_active(true) {}
             template <class... Args>
             explicit VariantStorage(Args&&... args) requires Constructible<Type, Args...> :
                 head(move(args)...),
@@ -347,6 +354,10 @@ namespace ARLib {
         String get_printinfo_string() const { return m_storage.get_printinfo_string(); }
 
         public:
+        template <typename T>
+        requires IsAnyOfV<T, Types...>
+        explicit Variant(T value) : m_storage(Forward<T>(value)) {}
+
         template <typename... Args>
         explicit Variant(Args&&... args) : m_storage(Forward<Args>(args)...) {}
 
