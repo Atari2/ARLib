@@ -42,6 +42,19 @@ extern FILE* stderr;
 }
 
 namespace ARLib {
+    int remove(const char* filename);
+    int rename(const char* old_filename, const char* new_filename);
+    
+    int fscanf(FILE* fp, const char* format, ...);
+    int scanf(const char* format, ...);
+    int sscanf(const char* str, const char* format, ...);
+    int fgetc(FILE* fp);
+    char* fgets(char* str, int n, FILE* fp);
+    int fputc(int ch, FILE* fp);
+    int fputs(const char* str, FILE* fp);
+    int getc(FILE* fp);
+    int getchar();
+
     FILE* fopen(const char* filename, const char* mode);
     int fclose(FILE* fp);
     int fseek(FILE* fp, long off, int whence);

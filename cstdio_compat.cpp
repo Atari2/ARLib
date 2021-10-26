@@ -5,6 +5,37 @@
 #include <cstdio>
 namespace ARLib {
 
+    int remove(const char* filename) { return ::remove(filename); }
+    int rename(const char* old_filename, const char* new_filename) { return ::rename(old_filename, new_filename); }
+
+    int fscanf(FILE* fp, const char* format, ...) {
+        va_list argptr{};
+        va_start(argptr, format);
+        auto ret = ::vfscanf(fp, format, argptr);
+        va_end(argptr);
+        return ret;
+    }
+    int scanf(const char* format, ...) {
+        va_list argptr{};
+        va_start(argptr, format);
+        auto ret = ::vscanf(format, argptr);
+        va_end(argptr);
+        return ret;
+    }
+    int sscanf(const char* str, const char* format, ...) {
+        va_list argptr{};
+        va_start(argptr, format);
+        auto ret = ::vsscanf(str, format, argptr);
+        va_end(argptr);
+        return ret;
+    }
+    int fgetc(FILE* fp) { return ::fgetc(fp); }
+    char* fgets(char* str, int n, FILE* fp) { return ::fgets(str, n, fp); }
+    int fputc(int ch, FILE* fp) { return ::fputc(ch, fp); }
+    int fputs(const char* str, FILE* fp) { return ::fputs(str, fp); }
+    int getc(FILE* fp) { return ::getc(fp); }
+    int getchar() { return ::getchar(); }
+
     FILE* fopen(const char* filename, const char* mode) {
 #ifdef WINDOWS
         FILE* pfile = nullptr;
