@@ -8,13 +8,14 @@
 #include "String.h"
 #include "StringView.h"
 #include "Types.h"
-#include "cstdio_compat.h"
 #include "arlib_osapi.h"
+#include "cstdio_compat.h"
 
 namespace ARLib {
     class OpenFileError {
         String m_filename{};
         String m_error{};
+
         public:
         OpenFileError() = default;
         OpenFileError(String error, String filename) : m_filename(move(filename)), m_error(move(error)) {}
@@ -66,6 +67,32 @@ namespace ARLib {
 
         OpenFileMode mode() const { return m_mode; }
         const String& name() const { return m_filename; }
+
+        void remove() {
+            if (m_mode != OpenFileMode::None) { ARLib::fclose(m_ptr); }
+            ARLib::remove(m_filename.data());
+            m_filename = ""_s;
+            m_mode = OpenFileMode::None;
+        }
+
+        static void remove(StringView name) { ARLib::remove(name.data()); }
+
+        void rename(StringView new_name) {
+            if (m_mode != OpenFileMode::None) {
+                long pl = static_cast<long>(ARLib::ftell(m_ptr));
+                ARLib::fclose(m_ptr);
+                ARLib::rename(m_filename.data(), new_name.data());
+                m_filename = new_name.extract_string();
+                open(m_mode);
+                ARLib::fseek(m_ptr, pl, SEEK_SET);
+            } else {
+                ARLib::rename(m_filename.data(), new_name.data());
+            }
+        }
+
+        static void rename(StringView old_name, StringView new_name) {
+            ARLib::rename(old_name.data(), new_name.data());
+        }
 
         Optional<OpenFileError> open(OpenFileMode mode) {
             m_mode = mode;

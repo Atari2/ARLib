@@ -39,12 +39,13 @@ extern FILE* stderr;
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
+#define EOF      (-1)
 }
 
 namespace ARLib {
     int remove(const char* filename);
     int rename(const char* old_filename, const char* new_filename);
-    
+
     int fscanf(FILE* fp, const char* format, ...);
     int scanf(const char* format, ...);
     int sscanf(const char* str, const char* format, ...);
