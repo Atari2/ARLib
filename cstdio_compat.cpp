@@ -32,7 +32,6 @@ namespace ARLib {
     int fgetc(FILE* fp) { return ::fgetc(fp); }
     char* fgets(char* str, int n, FILE* fp) { return ::fgets(str, n, fp); }
     int fputc(int ch, FILE* fp) { return ::fputc(ch, fp); }
-    int fputs(const char* str, FILE* fp) { return ::fputs(str, fp); }
     int getc(FILE* fp) { return ::getc(fp); }
     int getchar() { return ::getchar(); }
 

@@ -51,7 +51,6 @@ namespace ARLib {
     int fgetc(FILE* fp);
     char* fgets(char* str, int n, FILE* fp);
     int fputc(int ch, FILE* fp);
-    int fputs(const char* str, FILE* fp);
     int getc(FILE* fp);
     int getchar();
 
