@@ -293,6 +293,8 @@ TEST(ARLibTests, FormatTest) {
               "My name is {}, I'm 22 years old, vector: [1.000000, 2.000000, 3.000000], map: { Hello: 1, World: 2 }"_s);
     auto ret2 = Printer::format("{{}}");
     EXPECT_EQ(ret2, "{}"_s);
+    auto ret3 = Printer::format("{}", nullptr);
+    EXPECT_EQ(ret3, "nullptr"_s);
 }
 
 TEST(ARLibTests, VariantTests) {

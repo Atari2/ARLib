@@ -104,4 +104,10 @@ namespace ARLib {
         String repr();
     };
 
+    template <>
+    struct PrintInfo<nullptr_t> {
+        explicit PrintInfo(nullptr_t) {}
+        String repr() const { return "nullptr"_s; }
+    };
+
 } // namespace ARLib
