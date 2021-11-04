@@ -115,8 +115,8 @@ namespace ARLib {
 
         template <typename Functor>
         auto filter(Functor func) {
-            auto filter_iter = FilterIterate{m_begin, m_end, func};
-            return IteratorView<FilterIterate<Iter, Functor>>{release_storage(), filter_iter.begin(),
+            auto filter_iter = FilterIterate{*this, func};
+            return IteratorView<decltype(filter_iter)>{release_storage(), filter_iter.begin(),
                                                               filter_iter.end()};
         }
 

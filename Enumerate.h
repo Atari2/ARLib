@@ -66,8 +66,9 @@ namespace ARLib {
         auto end() const { return PairIterator{m_first.end(), m_second.end()}; }
     };
 
-    template <typename Iter, typename Functor>
+    template <Iterable Container, typename Functor>
     class FilterIterate {
+        using Iter = decltype(declval<Container>().begin());
         Iter m_start;
         Iter m_end;
         Functor m_func;
@@ -75,6 +76,7 @@ namespace ARLib {
         using Type = RemoveReferenceT<decltype(*m_start)>;
 
         public:
+        FilterIterate(Container& cont, Functor func) : m_start(cont.begin()), m_end(cont.end()), m_func(func) {}
         FilterIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
 
         auto begin() const { return IfIterator<Type, Functor>{m_start, m_end, m_func}; }
