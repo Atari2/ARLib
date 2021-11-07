@@ -139,6 +139,7 @@ namespace ARLib {
                 m_size = other.m_size;
                 if (other.is_local()) {
                     memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
+                    m_data_buf = PointerTraits<char*>::pointer_to(*m_local_buf);
                 } else {
                     m_data_buf = other.m_data_buf;
                     m_allocated_capacity = other.m_allocated_capacity;

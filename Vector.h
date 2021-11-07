@@ -361,7 +361,7 @@ namespace ARLib {
             con.append('[');
             if constexpr (IsSameV<T, String>) {
                 for (const auto& s : m_vec) {
-                    con.append("\""_s + PrintInfo<T>{s}.repr() + "\", "_s);
+                    con.append("\""_s + s + "\", "_s);
                 }
             } else {
                 for (const auto& s : m_vec) {

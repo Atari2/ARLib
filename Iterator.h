@@ -6,6 +6,8 @@
 
 namespace ARLib {
 
+    static constexpr size_t it_npos = static_cast<size_t>(-1);
+
     template <typename T>
     struct IteratorType {
         using Type = T;
@@ -101,7 +103,7 @@ namespace ARLib {
         }
 
         Iterator<T> operator-(int offset) { return Iterator<T>{m_current - offset}; }
-        size_t operator-(const Iterator<T>& other) { return static_cast<size_t>(m_current - other.m_current); }
+        size_t operator-(const Iterator<T>& other) const { return static_cast<size_t>(m_current - other.m_current); }
     };
 
     template <typename Ct>
@@ -346,5 +348,10 @@ namespace ARLib {
         bool operator!=(const IfIterator& other) const { return m_current_iter != other.m_current_iter; }
         bool operator<(const IfIterator& other) { return m_current_iter < other.m_current_iter; }
         bool operator>(const IfIterator& other) { return m_current_iter > other.m_current_iter; }
+
+        size_t operator-(const IfIterator& other) const {
+            if (other.m_end != m_end) return it_npos;
+            return m_current_iter - other.m_current_iter;
+        }
     };
 } // namespace ARLib
