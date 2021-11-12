@@ -37,6 +37,7 @@
 #endif
 
 #ifdef _WIN64
+constexpr bool windows_build = true;
 #ifdef _MSC_VER
 // WINDOWS means strictly MSVC, if you want mingw, use MINDOWS_MINGW
 #define WINDOWS
@@ -45,6 +46,7 @@
 #define UNIX_OR_MINGW
 #endif
 #elif (defined(__unix__) || defined(__unix)) && !defined(BSD)
+constexpr bool windows_build = false;
 #define UNIX
 #define UNIX_OR_MINGW
 #else
