@@ -20,6 +20,7 @@ namespace ARLib {
     double StrToDouble(const String& str);
     float StrToFloat(const String& str);
     String DoubleToStr(double value);
+    String LongDoubleToStr(long double value);
     String FloatToStr(float value);
 
     template <class UnsignedIntegral>
@@ -117,6 +118,7 @@ namespace ARLib {
     BASIC_PRINT_IMPL(unsigned long, IntToStr)
     BASIC_PRINT_IMPL(long long, IntToStr)
     BASIC_PRINT_IMPL(unsigned long long, IntToStr)
+    BASIC_PRINT_IMPL(long double, LongDoubleToStr);
     BASIC_PRINT_IMPL(double, DoubleToStr)
     BASIC_PRINT_IMPL(float, FloatToStr)
     BASIC_PRINT_IMPL(char, CharToStr);

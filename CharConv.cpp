@@ -145,6 +145,20 @@ namespace ARLib {
         return str;
 #endif
     }
+
+    String LongDoubleToStr(long double value) {
+#ifdef WINDOWS
+        return DoubleToStr(value);
+#else
+        const int n = 4932 /* numeric limits length for dbl */ + 20;
+        String str{};
+        str.reserve(n);
+        int written = snprintf(str.rawptr(), n, "%Lf", value);
+        HARD_ASSERT((written > 0), "Failed to write long double to string");
+        str.set_size(static_cast<size_t>(written));
+        return str;
+#endif
+    }
     String FloatToStr(float value) {
 #ifdef WINDOWS
         return DoubleToStr(static_cast<double>(value));
@@ -158,4 +172,5 @@ namespace ARLib {
         return str;
 #endif
     }
+
 } // namespace ARLib
