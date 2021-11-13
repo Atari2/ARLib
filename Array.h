@@ -6,6 +6,7 @@
 #include "TypeTraits.h"
 
 namespace ARLib {
+
     template <typename T, size_t S>
     class Array {
         public:
@@ -45,6 +46,9 @@ namespace ARLib {
         ConstIterator<T> begin() const { return ConstIterator<T>{PointerTraits<const T*>::pointer_to(*_m_storage_)}; }
         ConstIterator<T> end() const { return ConstIterator<T>{PointerTraits<const T*>::pointer_to(*_m_storage_) + S}; }
     };
+
+    template <typename First, typename... Rest>
+    Array(First, Rest...) -> Array<First, 1 + sizeof...(Rest)>;
 
     template <Printable T, size_t S>
     struct PrintInfo<Array<T, S>> {

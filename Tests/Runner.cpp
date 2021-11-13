@@ -233,7 +233,7 @@ TEST(ARLibTests, MathAlgorithmTest) {
 }
 
 TEST(ARLibTests, ArrayTest) {
-    Array<String, 3> arr{{"hello"_s, "world"_s, "testing"_s}};
+    Array arr{"hello"_s, "world"_s, "testing"_s};
     EXPECT_EQ(arr.size(), 3ull);
     EXPECT_EQ(arr[0], "hello"_s);
     EXPECT_EQ(arr[1], "world"_s);
