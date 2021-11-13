@@ -142,11 +142,11 @@ endif()
 
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
-	list(APPEND ARLIB_COMPILE_OPTIONS /std:c++20 /arch:AVX2 /permissive-)
+	list(APPEND ARLIB_COMPILE_OPTIONS /std:c++20 /arch:AVX2 /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
 	if (DEBUG_BUILD)
 		list(APPEND ARLIB_COMPILE_OPTIONS /Oy-)
 	else()
-		list(APPEND ARLIB_COMPILE_OPTIONS /O2)
+		list(APPEND ARLIB_COMPILE_OPTIONS /O2 /GR-)
 	endif()
 	list(APPEND ARLIB_COMPILE_WARNINGS
 		/W3 

@@ -140,7 +140,7 @@ namespace ARLib {
     struct NumberTraits<long double> {
         constexpr static inline bool is_signed = true;
 #ifdef _WIN64
-        constexpr static inline long double max = NumberTraits<double>::min;
+        constexpr static inline long double min = NumberTraits<double>::min;
         constexpr static inline long double max = NumberTraits<double>::max;
 #else
         constexpr static inline long double min = 3.3621e-4932L;

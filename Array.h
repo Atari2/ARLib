@@ -52,8 +52,8 @@ namespace ARLib {
         explicit PrintInfo(const Array<T, S>& array_) : m_array(array_) {}
         String repr() {
             String str{"[ "};
-            for (size_t i = 0; i < S; i++) {
-                str.append(PrintInfo<T>{m_array[i]}.repr() + ", "_s);
+            for (const auto& v : m_array) {
+                str.append(PrintInfo<T>{v}.repr() + ", "_s);
             }
             str = str.substring(0, str.size() - 2);
             str.append(" ]"_s);
