@@ -102,6 +102,36 @@ namespace ARLib {
         return how_many == n;
     }
 
+    template <typename T>
+    requires(LessComparable<T> || MoreComparable<T>) auto max_bt(const T& left, const T& right) {
+        if constexpr (LessComparable<T>) {
+            if (left < right)
+                return right;
+            else
+                return left;
+        } else {
+            if (left > right)
+                return left;
+            else
+                return right;
+        }
+    }
+
+    template <typename T>
+    requires(LessComparable<T> || MoreComparable<T>) auto min_bt(const T& left, const T& right) {
+        if constexpr (LessComparable<T>) {
+            if (left < right)
+                return left;
+            else
+                return right;
+        } else {
+            if (left > right)
+                return right;
+            else
+                return left;
+        }
+    }
+
     template <typename C>
     requires Iterable<C>
     auto max(const C& cont) { return max(cont.begin(), cont.end()); }
