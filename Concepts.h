@@ -295,4 +295,9 @@ namespace ARLib {
 
     template <typename T>
     concept Enum = IsEnumV<T>;
+
+    template <typename T>
+    concept IsSigned = IsIntegralV<T> && requires(const T& val) {
+        {static_cast<T>(-1) > 0 == true};
+    };
 } // namespace ARLib
