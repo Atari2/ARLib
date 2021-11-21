@@ -5,6 +5,16 @@
 #include "Types.h"
 
 namespace ARLib {
+#ifdef COMPILER_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#pragma clang diagnostic ignored "-Wimplicitly-unsigned-literal"
+#elif COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4146) // unary minus operator applied to unsigned type, result still unsigned
+#pragma warning(disable : 4309) // truncation of constant value
+#endif
+
     template <typename T>
     struct NumberTraits {};
 
@@ -149,4 +159,9 @@ namespace ARLib {
         constexpr static inline auto size = sizeof(long double);
     };
 
+#ifdef COMPILER_CLANG
+#pragma clang diagnostic pop
+#elif COMPILER_MSVC
+#pragma warning(pop)
+#endif
 } // namespace ARLib
