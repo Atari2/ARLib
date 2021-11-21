@@ -16,7 +16,7 @@ include(FetchContent)
 FetchContent_Declare(
     googletest
     GIT_REPOSITORY "https://github.com/google/googletest"
-    GIT_TAG        master
+    GIT_TAG        main
 )
 
 enable_testing()
