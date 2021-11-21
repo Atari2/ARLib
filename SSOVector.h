@@ -1,5 +1,6 @@
 #pragma once
 #include "Memory.h"
+#include "PrintInfo.h"
 #include "std_includes.h"
 
 namespace ARLib {
@@ -66,13 +67,13 @@ namespace ARLib {
             }
         }
 
-        SSOVector(const SSOVector& other) : m_size(other.m_size), m_capacity(other.m_capacity) {
+        SSOVector(const SSOVector& other) : m_capacity(other.m_capacity), m_size(other.m_size) {
             if (other.m_capacity != SSO) { m_storage = new T[other.m_capacity]; }
             ConditionalBitCopy(m_storage, other.m_storage, other.m_size);
         }
-        SSOVector(SSOVector&& other) noexcept : m_size(other.m_size), m_capacity(other.m_capacity) {
+        SSOVector(SSOVector&& other) noexcept : m_capacity(other.m_capacity), m_size(other.m_size) {
             if (other.m_capacity == SSO) {
-                ConditionalBitMove(m_situ_storage, other.m_situ_storage, other.m_size);
+                ConditionalBitCopy(m_situ_storage, other.m_situ_storage, other.m_capacity);
             } else {
                 m_storage = other.m_storage;
                 other.m_storage = addressof(other.m_situ_storage[0]);
@@ -157,6 +158,11 @@ namespace ARLib {
 
         bool is_in_situ() { return m_capacity == SSO && m_storage == addressof(m_situ_storage[0]); }
 
+        T pop() {
+            m_size--;
+            return move(m_storage[m_size]);
+        }
+        void clear_maintaning_capacity() { m_size = 0; }
         size_t size() const { return m_size; }
         size_t capacity() const { return m_capacity; }
         const T* storage() const { return m_storage; }
@@ -210,8 +216,28 @@ namespace ARLib {
             append_internal(Forward<T>(mv));
         }
 
+        const T& last() const { return m_storage[m_size - 1]; }
+        T& last() { return m_storage[m_size - 1]; }
+
         ~SSOVector() {
             if (m_capacity > SSO) delete[] m_storage;
+        }
+    };
+
+    template <Printable T, size_t S>
+    struct PrintInfo<SSOVector<T, S>> {
+        const SSOVector<T, S>& m_vector;
+        PrintInfo(const SSOVector<T, S>& vector) : m_vector(vector) {}
+        String repr() const {
+            if (m_vector.size() == 0) { return "[]"_s; }
+            String vec_str{"[ "};
+            for (const auto& val : m_vector) {
+                vec_str += PrintInfo<T>{val}.repr();
+                vec_str += ", ";
+            }
+            vec_str = vec_str.substring(0, vec_str.size() - 2);
+            vec_str += " ]";
+            return vec_str;
         }
     };
 } // namespace ARLib
