@@ -121,6 +121,7 @@ namespace ARLib {
     BASIC_PRINT_IMPL(long double, LongDoubleToStr);
     BASIC_PRINT_IMPL(double, DoubleToStr)
     BASIC_PRINT_IMPL(float, FloatToStr)
+    BASIC_PRINT_IMPL(unsigned char, IntToStr<SupportedBase::Hexadecimal>);
     BASIC_PRINT_IMPL(char, CharToStr);
     BASIC_PRINT_IMPL(bool, BoolToStr)
 } // namespace ARLib
