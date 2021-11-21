@@ -587,3 +587,38 @@ TEST(ARLibTests, TreeTest) {
     EXPECT_FALSE(tree.find(10).exists());
     EXPECT_EQ(tree.head()->value(), 9);
 }
+
+TEST(ARLibTests, BigIntTest) {
+    auto a = BigInt{"12389123908"_s};
+    auto b = BigInt{"-983458171238123"_s};
+    auto c = BigInt{"875679183741987"_s};
+    auto d = BigInt{"-1238767812763"_s};
+    auto result_diff_ab = BigInt{"983470560362031"_s};
+    auto result_diff_ba = BigInt{"-983470560362031"_s};
+    auto result_diff_ac = BigInt{"-875666794618079"_s};
+    auto result_diff_ca = BigInt{"875666794618079"_s};
+    auto result_diff_bd = BigInt{"-982219403425360"_s};
+    auto result_diff_db = BigInt{"982219403425360"_s};
+
+    auto result_sum_ab = BigInt{"-983445782114215"_s};
+    auto result_sum_ba = BigInt{"-983445782114215"_s};
+    auto result_sum_ac = BigInt{"875691572865895"_s};
+    auto result_sum_ca = BigInt{"875691572865895"_s};
+    auto result_sum_bd = BigInt{"-984696939050886"_s};
+    auto result_sum_db = BigInt{"-984696939050886"_s};
+
+    EXPECT_EQ(a - b, result_diff_ab);
+    EXPECT_EQ(b - a, result_diff_ba);
+    EXPECT_EQ(a - c, result_diff_ac);
+    EXPECT_EQ(c - a, result_diff_ca);
+    EXPECT_EQ(b - d, result_diff_bd);
+    EXPECT_EQ(d - b, result_diff_db);
+
+    EXPECT_EQ(a + b, result_sum_ab);
+    EXPECT_EQ(b + a, result_sum_ba);
+    EXPECT_EQ(a + c, result_sum_ac);
+    EXPECT_EQ(c + a, result_sum_ca);
+    EXPECT_EQ(b + d, result_sum_bd);
+    EXPECT_EQ(d + b, result_sum_db);
+
+}
