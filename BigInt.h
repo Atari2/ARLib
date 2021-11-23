@@ -23,12 +23,15 @@ namespace ARLib {
         static inline constexpr uint8_t max_sum_unit = max_buffer_unit + max_buffer_unit + s_carry;
         static Ordering comparison_same_length(const BigInt& left, const BigInt& right);
         static BigInt multiplication(const BigInt& left, const BigInt& right);
+        static BigInt division(const BigInt& left, const BigInt& right);
         static BigInt sign_agnostic_sum(const BigInt& left, const BigInt& right);
         static BigInt sign_agnostic_difference(const BigInt& left, const BigInt& right);
         static BigInt difference(const BigInt& left, const BigInt& right);
         static BigInt sum(const BigInt& left, const BigInt& right);
         void inplace_sum(const BigInt& other);
         void inplace_difference(const BigInt& other);
+        void inplace_multiplication(const BigInt& other);
+        void inplace_division(const BigInt& other);
         void trim_leading_zeros();
         void normalize_zero();
         static Ordering absolute_comparison(const BigInt& left, const BigInt& right);
@@ -58,13 +61,32 @@ namespace ARLib {
             return *this;
         }
         BigInt operator-(const BigInt& other) const { return difference(*this, other); }
+        BigInt& operator-=(const BigInt& other) {
+            inplace_difference(other);
+            return *this;
+        }
         BigInt operator*(const BigInt& other) const { return multiplication(*this, other); }
+        BigInt& operator*=(const BigInt& other) {
+            inplace_multiplication(other);
+            return *this;
+        }
+
+        BigInt operator/(const BigInt& other) const { return division(*this, other); }
+        BigInt& operator/=(const BigInt& other) {
+            inplace_division(other);
+            return *this;
+        }
+
+        bool operator==(Integral auto other) const { return *this == BigInt{other}; }
+
         bool operator==(const BigInt& other) const {
             if (this == &other) return true;
             if (m_buffer.size() != other.m_buffer.size()) return false;
             return comparison_same_length(*this, other) == equal;
         }
         bool operator!=(const BigInt& other) const { return !(*this == other); }
+        bool operator!=(Integral auto other) const { return *this != BigInt{other}; }
+
         bool operator>(const BigInt& other) const {
             if (this == &other) return false;
             size_t my_size = size();
@@ -80,6 +102,8 @@ namespace ARLib {
                 return m_sign == Sign::Plus;
             }
         }
+        bool operator>(Integral auto other) const { return *this > BigInt{other}; }
+
         bool operator<(const BigInt& other) const {
             if (this == &other) return false;
             size_t my_size = size();
@@ -95,13 +119,25 @@ namespace ARLib {
                 return m_sign == Sign::Minus;
             }
         }
+        bool operator<(Integral auto other) const { return *this < BigInt{other}; }
+
         bool operator>=(const BigInt& other) const {
             const BigInt& th = *this;
             return (th > other) || (th == other);
         }
+        bool operator>=(Integral auto other) const { return *this >= BigInt{other}; }
+
         bool operator<=(const BigInt& other) const {
             const BigInt& th = *this;
             return (th < other) || (th == other);
+        }
+        bool operator<=(Integral auto other) const { return *this <= BigInt{other}; }
+
+        BigInt operator+() { return *this; }
+        BigInt operator-() {
+            BigInt copy = *this;
+            copy.invert();
+            return copy;
         }
 
         const SSOVector<uint8_t, 20>& buffer() const { return m_buffer; }
@@ -111,7 +147,7 @@ namespace ARLib {
         void clear() { m_buffer.clear_maintaning_capacity(); }
     };
 
-    static inline BigInt __bigint_zero = BigInt{};
+    static const inline BigInt __bigint_zero = BigInt{};
 
     template <>
     struct PrintInfo<BigInt> {

@@ -51,6 +51,46 @@ namespace ARLib {
         return total;
     }
 
+    BigInt BigInt::division(const BigInt& dividend, const BigInt& divisor) {
+        bool dividend_zero = dividend == __bigint_zero;
+        bool divisor_zero = divisor == __bigint_zero;
+        if (dividend_zero && divisor_zero) {
+            ASSERT_NOT_REACHED("0 divided by 0 is not a defined operation");
+        } else if (dividend_zero) {
+            return __bigint_zero;
+        } else if (divisor_zero) {
+            ASSERT_NOT_REACHED("N divided by 0 is not a defined operation");
+        }
+        auto comp = absolute_comparison(dividend, divisor);
+        if (comp == equal) {
+            if (dividend.sign() == divisor.sign())
+                return BigInt{1};
+            else
+                return BigInt{-1};
+        } else if (comp == less) {
+            return __bigint_zero;
+        } else {
+            if (absolute_comparison(divisor, BigInt{1}) == equal) {
+                BigInt result = dividend;
+                result.m_sign = to_enum<Sign>(!(dividend.sign() == divisor.sign()));
+                return result;
+            }
+            // TODO: normal algorithm
+            // remove placeholder when done
+            return __bigint_zero;
+        }
+    }
+
+    void BigInt::inplace_multiplication(const BigInt& other) {
+        // I don't immediately see a way to do multiplcation in-place
+        // this is the easiest way otherwise
+        auto result = multiplication(*this, other);
+        m_sign = result.sign();
+        m_buffer = move(result.m_buffer);
+    }
+
+    void BigInt::inplace_division(const BigInt& other) {}
+
     BigInt BigInt::sign_agnostic_sum(const BigInt& left, const BigInt& right) {
         BigInt result{};
         auto min_len = min_bt(left.size(), right.size());
@@ -146,11 +186,30 @@ namespace ARLib {
 
     void BigInt::inplace_difference(const BigInt& other) {
         if (sign() == other.sign()) {
-            bool this_bigger = absolute_comparison(*this, other) == greater;
+            const bool this_bigger = absolute_comparison(*this, other) == greater;
             auto min_len = this_bigger ? other.size() : size();
             auto max_len = this_bigger ? size() : other.size();
             bool borrow = false;
-            // TODO: algo
+            for (size_t i = 0; i < min_len; i++) {
+                uint8_t left_limb = (this_bigger ? m_buffer[i] : other.m_buffer[i]) - borrow;
+                uint8_t right_limb = this_bigger ? other.m_buffer[i] : m_buffer[i];
+                if (left_limb >= right_limb) {
+                    borrow = false;
+                    m_buffer[i] = left_limb - right_limb;
+                } else {
+                    borrow = true;
+                    m_buffer[i] = left_limb + 100 - right_limb;
+                }
+            }
+            if (this_bigger) {
+                m_buffer[min_len] -= borrow;
+            } else {
+                for (size_t i = min_len; i <= max_len; i++) {
+                    m_buffer.append(other.m_buffer[i] - borrow);
+                    borrow = false;
+                }
+            }
+            trim_leading_zeros();
             if (!this_bigger) invert();
         } else {
             Sign before_sign = m_sign;

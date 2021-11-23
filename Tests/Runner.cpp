@@ -593,6 +593,18 @@ TEST(ARLibTests, BigIntTest) {
     auto b = BigInt{"-983458171238123"_s};
     auto c = BigInt{"875679183741987"_s};
     auto d = BigInt{"-1238767812763"_s};
+
+    auto f = BigInt{1234};
+    auto g = BigInt{4321};
+    auto h = BigInt{-1234};
+    auto i = BigInt{-4321};
+
+    f -= g;
+    h -= i;
+
+    EXPECT_EQ(f, -3087);
+    EXPECT_EQ(h, 3087);
+
     auto result_diff_ab = BigInt{"983470560362031"_s};
     auto result_diff_ba = BigInt{"-983470560362031"_s};
     auto result_diff_ac = BigInt{"-875666794618079"_s};
