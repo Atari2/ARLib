@@ -15,6 +15,7 @@ namespace ARLib {
         }
     }
 
+    // worst case O(N), best case O(1)
     Ordering BigInt::comparison_same_length(const BigInt& left, const BigInt& right) {
         HARD_ASSERT(left.size() == right.size(), "This function assumes same size for the 2 BigInts")
         if (left.size() == 0) return equal;
@@ -31,6 +32,7 @@ namespace ARLib {
         return equal;
     }
 
+    // worst case O(N^2 * M) where N is the longer_buffer.size() and M is smaller_buffer.size()
     BigInt BigInt::multiplication(const BigInt& left, const BigInt& right) {
         BigInt total{};
         for (size_t i = 0; i < left.size(); i++) {
@@ -91,6 +93,7 @@ namespace ARLib {
 
     void BigInt::inplace_division(const BigInt& other) {}
 
+    // worst case: O(N) where N is longer_buffer.size()
     BigInt BigInt::sign_agnostic_sum(const BigInt& left, const BigInt& right) {
         BigInt result{};
         auto min_len = min_bt(left.size(), right.size());
@@ -122,6 +125,8 @@ namespace ARLib {
         if (carry) result.m_buffer.append(carry);
         return result;
     }
+
+    // worst case O(N) where N is longer_buffer.size()
     BigInt BigInt::sign_agnostic_difference(const BigInt& left, const BigInt& right) {
         BigInt result{};
         auto left_bigger = absolute_comparison(left, right) == greater;
