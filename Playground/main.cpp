@@ -12,9 +12,10 @@ int main() {
     Printer::print("Multiplication test: {} / {}", s * s, BigInt{-1} + BigInt{1});
     auto f = BigInt{2234};
     auto g = BigInt{4321};
-    auto f2 = BigInt{-234};
-    auto g2 = BigInt{321};
-    Printer::print("{} {}", g / f, g2 / f2);
+    auto f2 = BigInt{"12345678123456789"_s};
+    HARD_ASSERT(!f2.fits(), "fits??");
+    auto g2 = BigInt{1234};
+    Printer::print("{} {}", g / f, f2 / g2);
     // Printer::print("Subtraction test: {} {} {} {} {} {}", a - b, b - a, a - c, c - a, b - d, d - b);
     // Printer::print("Sumation test: {} {} {} {} {} {}", a + b, b + a, a + c, c + a, b + d, d + b);
     return 0;

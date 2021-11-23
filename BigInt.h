@@ -28,6 +28,11 @@ namespace ARLib {
         static BigInt sign_agnostic_difference(const BigInt& left, const BigInt& right);
         static BigInt difference(const BigInt& left, const BigInt& right);
         static BigInt sum(const BigInt& left, const BigInt& right);
+
+        public:
+        bool fits() const;
+
+        private:
         void inplace_sum(const BigInt& other);
         void inplace_difference(const BigInt& other);
         void inplace_multiplication(const BigInt& other);
@@ -35,14 +40,19 @@ namespace ARLib {
         void trim_leading_zeros();
         void normalize_zero();
         static Ordering absolute_comparison(const BigInt& left, const BigInt& right);
+        uint64_t to_absolute_value_for_division() const;
+
+        void insert_back(uint8_t value);
 
         public:
         constexpr BigInt() = default;
 
         BigInt(Integral auto value) {
-            if (value < 0) {
-                value = -value;
-                m_sign = Sign::Minus;
+            if constexpr (IsSigned<decltype(value)>) {
+                if (value < 0) {
+                    value = -value;
+                    m_sign = Sign::Minus;
+                }
             }
 
             while (value > 0) {

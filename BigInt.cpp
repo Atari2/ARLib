@@ -53,6 +53,27 @@ namespace ARLib {
         return total;
     }
 
+    // checks if value fits into a uint64_t, without sign
+    bool BigInt::fits() const { return size() <= NumberTraits<uint64_t>::size; }
+
+    uint64_t BigInt::to_absolute_value_for_division() const {
+        uint64_t pows[] = {1ull,
+                           1'00ull,
+                           1'00'00ull,
+                           1'00'00'00ull,
+                           1'00'00'00'00ull,
+                           1'00'00'00'00'00ull,
+                           1'00'00'00'00'00'00ull,
+                           1'00'00'00'00'00'00'00ull};
+        static_assert(sizeof_array(pows) == NumberTraits<uint64_t>::size);
+        if (!fits()) return NumberTraits<uint64_t>::max;
+        uint64_t value = 0;
+        for (size_t i = 0; i < m_buffer.size(); i++) {
+            value += (static_cast<uint64_t>(m_buffer[i]) * pows[i]);
+        }
+        return value;
+    }
+
     BigInt BigInt::division(const BigInt& dividend, const BigInt& divisor) {
         bool dividend_zero = dividend == __bigint_zero;
         bool divisor_zero = divisor == __bigint_zero;
@@ -76,12 +97,37 @@ namespace ARLib {
                 BigInt result = dividend;
                 result.m_sign = to_enum<Sign>(!(dividend.sign() == divisor.sign()));
                 return result;
+            } else if (divisor.fits() && dividend.fits()) {
+                auto result =
+                BigInt{dividend.to_absolute_value_for_division() / divisor.to_absolute_value_for_division()};
+                result.m_sign = to_enum<Sign>(!(dividend.sign() == divisor.sign()));
+                return result;
             }
-            // TODO: normal algorithm
-            // remove placeholder when done
+            // TODO: proper division
+            // remove placeholder
+            // maybe long division
+            /*
+The first digit of the dividend is divided by the divisor.
+The whole number result is placed at the top. Any remainders are ignored at this point.
+The answer from the first operation is multiplied by the divisor. The result is placed under the number divided into.
+Now we subtract the bottom number from the top number.
+Bring down the next digit of the dividend.
+            */
+            Vector<BigInt> m_result{};
+            BigInt partial{};
+            for (size_t i = dividend.size() - 1;; i++) {
+                partial.insert_back(dividend.m_buffer[i]);
+                auto top = partial / divisor;
+                auto bottom = top * divisor;
+                Printer::print("{} {} {}", partial, top, bottom);
+                partial -= bottom;
+                m_result.append(top);
+            }
             return __bigint_zero;
         }
     }
+
+    void BigInt::insert_back(uint8_t value) { m_buffer.prepend(move(value)); }
 
     void BigInt::inplace_multiplication(const BigInt& other) {
         // I don't immediately see a way to do multiplcation in-place
@@ -91,7 +137,12 @@ namespace ARLib {
         m_buffer = move(result.m_buffer);
     }
 
-    void BigInt::inplace_division(const BigInt& other) {}
+    void BigInt::inplace_division(const BigInt& other) {
+        // same as multiplication
+        auto result = division(*this, other);
+        m_sign = result.sign();
+        m_buffer = move(result.m_buffer);
+    }
 
     // worst case: O(N) where N is longer_buffer.size()
     BigInt BigInt::sign_agnostic_sum(const BigInt& left, const BigInt& right) {
