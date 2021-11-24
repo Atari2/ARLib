@@ -74,6 +74,11 @@ namespace ARLib {
         return value;
     }
 
+    // this is omega-slow in the case of a bigint with more than 16 digits
+    // divided by another bigint with more than 16 digits
+    // because it doesn't hit any fast path and it has to do a subtraction on a loop in a loop
+    // worst case complexity (with N = dividend.size()) : O(N * (N + 99*(N*N))) -> O(N^2 + 99N^3) 
+    // but it works
     BigInt BigInt::division(const BigInt& dividend, const BigInt& divisor) {
         bool dividend_zero = dividend == __bigint_zero;
         bool divisor_zero = divisor == __bigint_zero;
@@ -103,27 +108,36 @@ namespace ARLib {
                 result.m_sign = to_enum<Sign>(!(dividend.sign() == divisor.sign()));
                 return result;
             }
-            // TODO: proper division
-            // remove placeholder
-            // maybe long division
-            /*
-The first digit of the dividend is divided by the divisor.
-The whole number result is placed at the top. Any remainders are ignored at this point.
-The answer from the first operation is multiplied by the divisor. The result is placed under the number divided into.
-Now we subtract the bottom number from the top number.
-Bring down the next digit of the dividend.
-            */
-            Vector<BigInt> m_result{};
+
+            BigInt result{};
             BigInt partial{};
-            for (size_t i = dividend.size() - 1;; i++) {
+            bool divisor_fits = divisor.fits();
+            for (size_t i = dividend.size() - 1;; i--) {
                 partial.insert_back(dividend.m_buffer[i]);
-                auto top = partial / divisor;
-                auto bottom = top * divisor;
-                Printer::print("{} {} {}", partial, top, bottom);
-                partial -= bottom;
-                m_result.append(top);
+                if (partial > divisor) {
+                    BigInt subtraend{divisor};
+                    uint8_t times = 1;
+                    if (partial.fits() && divisor_fits) {
+                        times = static_cast<uint8_t>(partial.to_absolute_value_for_division() /
+                                                     divisor.to_absolute_value_for_division());
+                    } else {
+                        auto sub_result = partial - subtraend;
+                        while (sub_result > divisor) {
+                            subtraend += divisor;
+                            sub_result = partial - subtraend;
+                            times++;
+                        }
+                    }
+                    partial -= subtraend;
+                    result.insert_back(times);
+                } else {
+                    result.insert_back(0x00);
+                }
+                if (i == 0) break;
             }
-            return __bigint_zero;
+            result.trim_leading_zeros();
+            result.m_sign = to_enum<Sign>(!(dividend.sign() == divisor.sign()));
+            return result;
         }
     }
 
@@ -188,12 +202,20 @@ Bring down the next digit of the dividend.
         bool borrow = false;
         const auto& max_buffer = max_val.buffer();
         const auto& min_buffer = min_val.buffer();
-        bool has_swapped_operands = max_val != left;
         for (size_t i = 0; i < min_len; i++) {
-            uint8_t left_limb = max_buffer[i] - borrow;
+            uint8_t left_limb = max_buffer[i];
+            bool double_borrow = false;
+            if (left_limb == 0x00) {
+                if (borrow) {
+                    left_limb = 99;
+                    double_borrow = true;
+                }
+            } else {
+                left_limb -= borrow;
+            }
             uint8_t right_limb = min_buffer[i];
             if (left_limb >= right_limb) {
-                borrow = false;
+                borrow = double_borrow;
                 result.m_buffer.append(left_limb - right_limb);
             } else {
                 borrow = true;
@@ -247,10 +269,19 @@ Bring down the next digit of the dividend.
             auto max_len = this_bigger ? size() : other.size();
             bool borrow = false;
             for (size_t i = 0; i < min_len; i++) {
-                uint8_t left_limb = (this_bigger ? m_buffer[i] : other.m_buffer[i]) - borrow;
+                bool double_borrow = false;
+                uint8_t left_limb = (this_bigger ? m_buffer[i] : other.m_buffer[i]);
+                if (left_limb == 0x00) {
+                    if (borrow) {
+                        left_limb = 99;
+                        double_borrow = true;
+                    }
+                } else {
+                    left_limb -= borrow;
+                }
                 uint8_t right_limb = this_bigger ? other.m_buffer[i] : m_buffer[i];
                 if (left_limb >= right_limb) {
-                    borrow = false;
+                    borrow = double_borrow;
                     m_buffer[i] = left_limb - right_limb;
                 } else {
                     borrow = true;
@@ -260,7 +291,7 @@ Bring down the next digit of the dividend.
             if (this_bigger) {
                 m_buffer[min_len] -= borrow;
             } else {
-                for (size_t i = min_len; i <= max_len; i++) {
+                for (size_t i = min_len; i < max_len; i++) {
                     m_buffer.append(other.m_buffer[i] - borrow);
                     borrow = false;
                 }
@@ -273,6 +304,7 @@ Bring down the next digit of the dividend.
             inplace_sum(other);
             m_sign = before_sign;
         }
+        trim_leading_zeros();
     }
 
     void BigInt::trim_leading_zeros() {
