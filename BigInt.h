@@ -59,6 +59,26 @@ namespace ARLib {
         // must be a string in decimal
         BigInt(const String& value);
 
+        BigInt& operator++() {
+            inplace_sum(BigInt{1});
+            return *this;
+        }
+        BigInt operator++(int) {
+            BigInt copy = *this;
+            inplace_sum(BigInt{1});
+            return copy;
+        }
+
+        BigInt& operator--() {
+            inplace_difference(BigInt{1});
+            return *this;
+        }
+        BigInt operator--(int) {
+            BigInt copy = *this;
+            inplace_difference(BigInt{1});
+            return copy;
+        }
+
         BigInt operator+(const BigInt& other) const { return sum(*this, other); }
         BigInt& operator+=(const BigInt& other) {
             inplace_sum(other);
