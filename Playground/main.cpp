@@ -1,79 +1,22 @@
-#include "../Array.h"
-#include "../CharConv.h"
-#include "../Chrono.h"
-#include "../HashTable.h"
-#include "../JSONParser.h"
-#include "../Optional.h"
-#include "../Pair.h"
 #include "../Printer.h"
-#include "../Result.h"
-#include "../SharedPtr.h"
-#include "../SortedVector.h"
-#include "../String.h"
-#include "../Threading.h"
-#include "../Tuple.h"
-#include "../UniquePtr.h"
-#include "../Variant.h"
-#include "../Vector.h"
-#ifdef ON_WINDOWS
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#include <stdlib.h>
-#endif
+#include "../BigInt.h"
 
 using namespace ARLib;
 
-void func() {
-    // auto maybe_obj = JSON::Parser::from_file("test.json"_sv);
-    auto maybe_obj = JSON::Parser::from_file("hello.json"_sv);
-    if (maybe_obj) {
-        auto obj = maybe_obj.to_ok();
-        Printer::print("{}", obj);
-        Printer::print("{}", obj["hello world"_s]);
-        Printer::print("{}", obj["array"_s]);
-    } else {
-        auto err = maybe_obj.to_error();
-        Printer::print("{}", err);
-    }
-}
-
 int main() {
-    // UniquePtr<int[]> str{10};
-    // SharedPtr shared{"world"_s};
-    // SharedPtr other{shared};
-    // double arr2[]{10.0, 20.0};
-    // SharedPtr<double[]> ss{arr2};
-    // Printer::print("{} {} {} {}", str, shared, other, ss);
-    // Pair<String, int> pair{"hello"_s, 10};
-    // Variant<String, int, Pair<String, int>, Vector<int>> variant{};
-    // Tuple<String, int, size_t, TimePoint> tup{"hello"_s, 10, 1000, Clock::now()};
-    // Array<int, 4> arr{1, 2, 3, 4};
-    // Printer::print("{}, {}, {}, {}", pair, variant, tup, arr);
-    // HashTable<UniqueLock<Mutex>> tbl{};
-    // Mutex mut{};
-    // Mutex mut2{};
-    // RecursiveMutex rmut{};
-    //
-    // tbl.insert(UniqueLock{mut});
-    // UniqueLock loc{mut, defer_lock};
-    // ScopedLock sloc{mut2, rmut};
-    // auto iter = tbl.find(loc);
-    // if (iter == tbl.tend()) {
-    //     Printer::print("Lock not found\n");
-    // } else {
-    //     Printer::print("Lock found: {}\n", (*iter));
-    // }
-    // Result<String, int> res{"Hello"_s};
-    // Result<String> res2 = Result<String>::from_error();
-    // Thread t{func};
-    // Optional<String> opt{};
-    // Optional<String> opt2{"hello world"_s};
-    // Printer::print("{}, {}, {}, {}, {}, {}", res, res2, opt, opt2, loc, t);
-    // Printer::print("{}", sloc);
-    // t.join();
-    func();
-#ifdef ON_WINDOWS
-    _CrtDumpMemoryLeaks();
-#endif
+    auto a = BigInt{"12389123908"_s};
+    auto b = BigInt{"-983458171238123"_s};
+    auto c = BigInt{"875679183741987"_s};
+    auto d = BigInt{"-1238767812763"_s};
+    auto s = BigInt{"123456"_s};
+    Printer::print("Multiplication test: {} / {}", s * s, BigInt{-1} + BigInt{1});
+    auto f = BigInt{2234};
+    auto g = BigInt{4321};
+    auto f2 = BigInt{"12345678123456789"_s};
+    HARD_ASSERT(!f2.fits(), "fits??");
+    auto g2 = BigInt{1234};
+    Printer::print("{} {}", g / f, f2 / g2);
+    // Printer::print("Subtraction test: {} {} {} {} {} {}", a - b, b - a, a - c, c - a, b - d, d - b);
+    // Printer::print("Sumation test: {} {} {} {} {} {}", a + b, b + a, a + c, c + a, b + d, d + b);
     return 0;
 }

@@ -138,6 +138,7 @@ namespace ARLib {
                 ConditionalBitCopy(m_storage, other.m_storage, other.m_size);
             } else {
                 m_storage = other.m_storage;
+                other.m_storage = nullptr;
             }
             other.release_strong();
             return *this;
@@ -198,6 +199,34 @@ namespace ARLib {
         }
         void push_back(T&& item) { append_internal(Forward<T>(item)); }
         void append(T&& item) { append_internal(Forward<T>(item)); }
+        void prepend(T&& item) {
+            if (m_size == m_capacity) {
+                // grow
+                if (m_capacity == SSO) {
+                    m_capacity = basic_growth(m_capacity + 1);
+                    m_storage = new T[m_capacity];
+                    ConditionalBitCopy(m_storage + sizeof(T), m_situ_storage, m_size);
+                } else {
+                    T* storage = m_storage;
+                    m_capacity = basic_growth(m_capacity + 1);
+                    m_storage = new T[m_capacity];
+                    ConditionalBitCopy(m_storage + sizeof(T), storage, m_size);
+                    delete[] storage;
+                }
+            } else {
+                if constexpr (IsTriviallyCopiableV<T>) {
+                    ARLib::memmove(m_storage + sizeof(T), m_storage, m_size * sizeof(T));
+                } else {
+                    for (size_t sz = m_size;; sz--) {
+                        m_storage[sz] = move(m_storage[sz - 1]);
+                        if (sz == 1) break;
+                    }
+                }
+            }
+            m_storage[0] = move(item);
+            m_size++;
+        }
+
         void resize(size_t new_size) requires DefaultConstructible<T> {
             if (new_size < m_size) return;
             if (new_size > m_capacity) { grow_to_capacity(new_size); }

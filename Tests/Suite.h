@@ -1,6 +1,7 @@
 #pragma once
 #include "../Algorithm.h"
 #include "../Array.h"
+#include "../BigInt.h"
 #include "../CharConv.h"
 #include "../Chrono.h"
 #include "../Enumerate.h"
