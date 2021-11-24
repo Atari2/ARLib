@@ -138,6 +138,7 @@ namespace ARLib {
                 ConditionalBitCopy(m_storage, other.m_storage, other.m_size);
             } else {
                 m_storage = other.m_storage;
+                other.m_storage = nullptr;
             }
             other.release_strong();
             return *this;
@@ -213,8 +214,14 @@ namespace ARLib {
                     delete[] storage;
                 }
             } else {
-                // FIXME: needs to handle overlap
-                ARLib::memmove(m_storage + sizeof(T), m_storage, m_size * sizeof(T));
+                if constexpr (IsTriviallyCopiableV<T>) {
+                    ARLib::memmove(m_storage + sizeof(T), m_storage, m_size * sizeof(T));
+                } else {
+                    for (size_t sz = m_size;; sz--) {
+                        m_storage[sz] = move(m_storage[sz - 1]);
+                        if (sz == 1) break;
+                    }
+                }
             }
             m_storage[0] = move(item);
             m_size++;
