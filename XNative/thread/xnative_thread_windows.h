@@ -1,8 +1,9 @@
 #pragma once
 #ifndef DISABLE_THREADING
 #include "../../Types.h"
-
-// FIXME: eventually drop the use of these functions and start using the Win32 API directly.
+#include "../../Windows/win_native_structs.h"
+#define INCLUDED_FROM_XNATIVE_THREADS__
+#include "../chrono/xnative_chrono_windows.h"
 
 #ifdef WINDOWS
 #if not defined(THREADBASE_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
@@ -10,24 +11,19 @@
 #endif
 
 namespace ARLib {
-    using ThreadId = unsigned int;
-    struct ThreadHandle {
-        void* _Hnd;
-        ThreadId _Id;
-    };
-    struct XTime {
-        __int64 sec;
-        long nsec;
-    };
 
-#define Mutex_internal_imp_size      80
-#define Mutex_internal_imp_alignment 8
-#define Cond_internal_imp_size       72
-#define Cond_internal_imp_alignment  8
+    using ThreadId = ThreadIdImplType;
+    using ThreadHandle = ThreadImplType;
+    using XTime = XTimeC;
 
-    using MutexHandle = struct mutex_internal_imp_t*;
+    constexpr size_t Mutex_internal_imp_size = 80;
+    constexpr size_t Mutex_internal_imp_alignment = 8;
+    constexpr size_t Cond_internal_imp_size = 72;
+    constexpr size_t Cond_internal_imp_alignment = 8;
 
-    using CondHandle = struct _Cnd_internal_imp_t*;
+    using MutexHandle = mutex_internal_imp_t*;
+
+    using CondHandle = cnd_internal_imp_t*;
 
     using SharedMutex = void*;
 
@@ -62,16 +58,14 @@ namespace ARLib {
     void __cdecl sharedmutex_unlock_exclusive(SharedMutex*);
     void __cdecl sharedmutex_unlock_shared(SharedMutex*);
 
-    int __cdecl cond_init(CondHandle*);
+    ThreadState __cdecl cond_init(CondHandle*);
     void __cdecl cond_destroy(CondHandle);
     void __cdecl cond_init_in_situ(CondHandle);
     void __cdecl cond_destroy_in_situ(CondHandle);
-    int __cdecl cond_wait(CondHandle, MutexHandle);
-    int __cdecl cond_timedwait(CondHandle, MutexHandle, const XTime*);
-    int __cdecl cond_broadcast(CondHandle);
-    int __cdecl cond_signal(CondHandle);
-    void __cdecl cond_register_at_thread_exit(CondHandle, MutexHandle, int*);
-    void __cdecl cond_unregister_at_thread_exit(MutexHandle);
+    ThreadState __cdecl cond_wait(CondHandle, MutexHandle);
+    ThreadState __cdecl cond_timedwait(CondHandle, MutexHandle, const XTime*);
+    ThreadState __cdecl cond_broadcast(CondHandle);
+    ThreadState __cdecl cond_signal(CondHandle);
     void __cdecl cond_do_broadcast_at_thread_exit();
 
     typedef void(__cdecl* beginthread_proc_type)(void*);

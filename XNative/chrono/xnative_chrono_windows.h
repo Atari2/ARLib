@@ -1,11 +1,13 @@
 #pragma once
 #include "../../Compat.h"
 #ifdef WINDOWS
-#if not defined(CHRONO_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
+#if not defined(CHRONO_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___) and not defined(INCLUDED_FROM_XNATIVE_THREADS__)
 #error "Don't include the XNative files directly. Use Chrono.h"
 #endif
 
 namespace ARLib {
+
+#define TIME_UTC 1
 
     struct XTimeC { // store time with nanosecond resolution
         __int64 sec;
@@ -20,5 +22,5 @@ namespace ARLib {
 
     long long __cdecl query_perf_counter();
     long long __cdecl query_perf_frequency();
-}
+} // namespace ARLib
 #endif
