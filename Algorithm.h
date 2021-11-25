@@ -103,7 +103,7 @@ namespace ARLib {
     }
 
     template <typename T>
-    requires(LessComparable<T> || MoreComparable<T>) auto max_bt(const T& left, const T& right) {
+    requires(LessComparable<T> || MoreComparable<T>) constexpr auto max_bt(const T& left, const T& right) {
         if constexpr (LessComparable<T>) {
             if (left < right)
                 return right;
@@ -118,7 +118,7 @@ namespace ARLib {
     }
 
     template <typename T>
-    requires(LessComparable<T> || MoreComparable<T>) auto min_bt(const T& left, const T& right) {
+    requires(LessComparable<T> || MoreComparable<T>) constexpr auto min_bt(const T& left, const T& right) {
         if constexpr (LessComparable<T>) {
             if (left < right)
                 return left;
