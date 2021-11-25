@@ -3,6 +3,9 @@
 
 namespace ARLib {
 
+    template <class>
+    inline constexpr bool AlwaysFalse = false;
+
     template <class T>
     inline constexpr T&& ForwardTrait(typename RemoveReference<T>::type& t) noexcept {
         return static_cast<T&&>(t);
@@ -527,6 +530,65 @@ namespace ARLib {
 
     template <class F, class... ArgTypes>
     using InvokeResultT = typename InvokeResult<F, ArgTypes...>::type;
+
+    using MaxAlignT = double;
+
+    template <class T>
+    struct AlignmentOf : IntegralConstant<size_t, alignof(T)> {};
+
+    template <class T>
+    inline constexpr size_t AlignmentOfV = alignof(T);
+
+    template <class T, size_t N>
+    union AlignType {
+        T Val;
+        char Pad[N];
+    };
+
+    template <size_t N, size_t Align, class T, bool Ok>
+    struct Aligned;
+
+    template <size_t N, size_t Align, class T>
+    struct Aligned<N, Align, T, true> {
+        using type = AlignType<T, N>;
+    };
+
+    template <size_t N, size_t Align>
+    struct Aligned<N, Align, double, false> {
+        static_assert(AlwaysFalse<Aligned>, "Wrong alignment for type");
+        using type = AlignType<MaxAlignT, N>;
+    };
+
+    template <size_t N, size_t Align>
+    struct Aligned<N, Align, int, false> {
+        using Next = double;
+        static constexpr bool Fits = Align <= alignof(Next);
+        using type = typename Aligned<N, Align, Next, Fits>::type;
+    };
+
+    template <size_t N, size_t Align>
+    struct Aligned<N, Align, short, false> {
+        using Next = int;
+        static constexpr bool Fits = Align <= alignof(Next);
+        using type = typename Aligned<N, Align, Next, Fits>::type;
+    };
+
+    template <size_t N, size_t Align>
+    struct Aligned<N, Align, char, false> {
+        using Next = short;
+        static constexpr bool Fits = Align <= alignof(Next);
+        using type = typename Aligned<N, Align, Next, Fits>::type;
+    };
+
+    template <size_t N, size_t Align = alignof(MaxAlignT)>
+    struct AlignedStorage {
+        using Next = char;
+        static constexpr bool Fits = Align <= alignof(Next);
+        using type = typename Aligned<N, Align, Next, Fits>::type;
+    };
+
+    template <size_t N, size_t Align = alignof(MaxAlignT)>
+    using AlignedStorageT = typename AlignedStorage<N, Align>::type;
 
     template <class T, class... Args>
     inline constexpr bool ConstructibleV = ConstructibleImpl<T, Args...>::type;
