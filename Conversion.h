@@ -27,9 +27,11 @@ namespace ARLib {
     }
 
     template <typename E>
-    requires IsEnumV<E> E to_enum(UnderlyingTypeT<E> value) { return static_cast<E>(value); }
+    requires IsEnumV<E>
+    constexpr E to_enum(UnderlyingTypeT<E> value) { return static_cast<E>(value); }
 
     template <typename E>
-    requires IsEnumV<E> UnderlyingTypeT<E> from_enum(E value) { return static_cast<UnderlyingTypeT<E>>(value); }
+    requires IsEnumV<E>
+    constexpr UnderlyingTypeT<E> from_enum(E value) { return static_cast<UnderlyingTypeT<E>>(value); }
 
 } // namespace ARLib
