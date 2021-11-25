@@ -2,11 +2,13 @@
 
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
-#include "../cstdio_compat.h"
 #include "../String.h"
+#include "../cstdio_compat.h"
+#include "win_native_structs.h"
 #include <windows.h>
 
 namespace ARLib {
+
     void print_last_error() {
         auto last_error = GetLastError();
         if (last_error != 0) {
