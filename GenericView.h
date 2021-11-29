@@ -17,12 +17,12 @@ namespace ARLib {
 
         // this constructor works only if the container operates on contiguous memory (e.g. not a linked list)
         // actually this whole class only operates on contiguous memory
-        explicit GenericView(const Iterable auto& container) {
+        explicit GenericView(Iterable auto& container) {
             m_begin_view = &(*container.begin());
-            m_end_view = &(*container.end()) - 1;
+            m_end_view = &(*container.end());
         }
 
-        size_t size() { return m_end_view - m_begin_view; }
+        size_t size() { return static_cast<size_t>(m_end_view - m_begin_view); }
 
         Iterator<T> begin() { return Iterator<T>{m_begin_view}; }
 
@@ -57,11 +57,17 @@ namespace ARLib {
     };
 
     template <Iterable Cont>
+    GenericView(Cont&) -> GenericView<typename IterableTraits<Cont>::ItemType>;
+
+    template <Iterable Cont>
+    GenericView(const Cont&) -> GenericView<AddConstT<typename IterableTraits<Cont>::ItemType>>;
+
+    template <Iterable Cont>
     class IteratorView {
-        using Iter = decltype(declval<Cont>().begin());
+        using Iter = typename IterableTraits<Cont>::IterType;
         Iter m_begin;
         Iter m_end;
-        using ItemType = RemoveReferenceT<decltype(*m_begin)>;
+        using ItemType = typename IterableTraits<Cont>::ItemType;
         ItemType* m_stolen_storage = nullptr;
 
         ItemType* release_storage() {
@@ -116,8 +122,7 @@ namespace ARLib {
         template <typename Functor>
         auto filter(Functor func) {
             auto filter_iter = FilterIterate{*this, func};
-            return IteratorView<decltype(filter_iter)>{release_storage(), filter_iter.begin(),
-                                                              filter_iter.end()};
+            return IteratorView<decltype(filter_iter)>{release_storage(), filter_iter.begin(), filter_iter.end()};
         }
 
         template <typename Functor, typename NewCont = Cont, typename Type = ResultOfT<Functor(ItemType)>>
