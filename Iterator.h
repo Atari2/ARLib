@@ -13,6 +13,13 @@ namespace ARLib {
         using Type = T;
     };
 
+    template <Iterable T>
+    struct IterableTraits {
+        using IterType = decltype(declval<T>().begin());
+        using Tp = decltype(*declval<IterType>());
+        using ItemType = RemoveReferenceT<ConditionalT<IsConstV<T>, AddConstT<Tp>, Tp>>;
+    };
+
     template <typename Iter>
     class IteratorOperators {
         public:
