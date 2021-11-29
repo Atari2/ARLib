@@ -364,6 +364,9 @@ namespace ARLib {
         using type = typename AddPointerImpl<T>::type;
     };
 
+    template <class T>
+    using AddPointerT = typename AddPointer<T>::type;
+
     // is same
     template <class T, class U>
     struct IsSame : FalseType {};
