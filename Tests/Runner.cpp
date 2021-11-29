@@ -639,3 +639,14 @@ TEST(ARLibTests, BigIntTest) {
 
     EXPECT_EQ(div_result,  f2 / g2);
 }
+
+TEST(ARLibTests, HashFuncTests) {
+    auto zerolength = HashAlgorithm<HashType::CRC32>::calculate(""_s);
+    EXPECT_EQ(zerolength, 0x00);
+    auto ff = HashAlgorithm<HashType::CRC32>::calculate(Array{0xFF_u8});
+    auto zero = HashAlgorithm<HashType::CRC32>::calculate(Array{0x00_u8});
+    EXPECT_EQ(ff, 0xFF000000);
+    EXPECT_EQ(zero, 0xD202EF8D);
+    auto some_str = HashAlgorithm<HashType::CRC32>::calculate("123456789"_s);
+    EXPECT_EQ(some_str, 0xCBF43926);
+}
