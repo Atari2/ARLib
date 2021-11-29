@@ -113,7 +113,7 @@ namespace ARLib {
     BASIC_PRINT_IMPL(short, IntToStr)
     BASIC_PRINT_IMPL(unsigned short, IntToStr)
     BASIC_PRINT_IMPL(int, IntToStr)
-    BASIC_PRINT_IMPL(unsigned int, IntToStr)
+    BASIC_PRINT_IMPL(unsigned int, IntToStr<SupportedBase::Hexadecimal>);
     BASIC_PRINT_IMPL(long, IntToStr)
     BASIC_PRINT_IMPL(unsigned long, IntToStr)
     BASIC_PRINT_IMPL(long long, IntToStr)
