@@ -112,4 +112,9 @@ namespace ARLib {
         return static_cast<int64_t>(num);
     }
 
+    consteval auto operator""_sz(const unsigned long long num) {
+        CONSTEVAL_STATIC_ASSERT(num <= NumberTraits<uint64_t>::max, "Can't convert to size_t");
+        return static_cast<size_t>(num);
+    }
+
 } // namespace ARLib
