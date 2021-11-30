@@ -1,12 +1,14 @@
 #pragma once
 
+#include "CharConv.h"
 #include "GenericView.h"
+#include "PrintInfo.h"
 #include "TypeTraits.h"
 #include "Types.h"
 
 namespace ARLib {
     // TODO: add support for MD5, SHA1 and SHA256 at the very least.
-    enum class HashType { CRC32 };
+    enum class HashType { CRC32, MD5 };
 
     template <HashType HS>
     class HashAlgorithm {
@@ -54,6 +56,45 @@ namespace ARLib {
         template <Iterable C>
         requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
         static uint32_t calculate(const C& cont) { return calculate(GenericView{cont}); }
+    };
+
+    template <>
+    class HashAlgorithm<HashType::MD5> {
+
+        public:
+        struct MD5Result {
+            uint8_t digest[16];
+            bool operator==(const MD5Result& other) const {
+                for (size_t i = 0; i < 16; i++) {
+                    if (digest[i] != other.digest[i]) return false;
+                }
+                return true;
+            }
+            bool operator!=(const MD5Result& other) const { return !(*this == other); }
+        };
+        static MD5Result calculate(GenericView<const uint8_t>);
+        static MD5Result calculate(GenericView<const int8_t>);
+        template <Iterable C>
+        requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
+        static MD5Result calculate(const C& cont) { return calculate(GenericView{cont}); }
+
+        friend PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result>;
+    };
+
+    template <>
+    struct PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result> {
+        const HashAlgorithm<HashType::MD5>::MD5Result& m_result{};
+        PrintInfo(const HashAlgorithm<HashType::MD5>::MD5Result& result) : m_result(result) {}
+        String repr() const {
+            String repr_result{};
+            for (auto val : m_result.digest) {
+                if (val > 0x0F)
+                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                else
+                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+            }
+            return repr_result;
+        }
     };
 
 } // namespace ARLib

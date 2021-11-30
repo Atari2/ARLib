@@ -637,16 +637,33 @@ TEST(ARLibTests, BigIntTest) {
     auto g2 = BigInt{"12837127389712389123891738127317892312987389217"_s};
     auto div_result = BigInt{"9617165701222654353349541990196129976"_s};
 
-    EXPECT_EQ(div_result,  f2 / g2);
+    EXPECT_EQ(div_result, f2 / g2);
 }
 
 TEST(ARLibTests, HashFuncTests) {
-    auto zerolength = HashAlgorithm<HashType::CRC32>::calculate(""_s);
-    EXPECT_EQ(zerolength, 0x00);
-    auto ff = HashAlgorithm<HashType::CRC32>::calculate(Array{0xFF_u8});
-    auto zero = HashAlgorithm<HashType::CRC32>::calculate(Array{0x00_u8});
-    EXPECT_EQ(ff, 0xFF000000);
-    EXPECT_EQ(zero, 0xD202EF8D);
-    auto some_str = HashAlgorithm<HashType::CRC32>::calculate("123456789"_s);
-    EXPECT_EQ(some_str, 0xCBF43926);
+    {
+        // CRC32
+        auto zerolength = HashAlgorithm<HashType::CRC32>::calculate(""_s);
+        EXPECT_EQ(zerolength, 0x00);
+        auto ff = HashAlgorithm<HashType::CRC32>::calculate(Array{0xFF_u8});
+        auto zero = HashAlgorithm<HashType::CRC32>::calculate(Array{0x00_u8});
+        EXPECT_EQ(ff, 0xFF000000);
+        EXPECT_EQ(zero, 0xD202EF8D);
+        auto some_str = HashAlgorithm<HashType::CRC32>::calculate("123456789"_s);
+        EXPECT_EQ(some_str, 0xCBF43926);
+    }
+    {
+        // MD5
+        auto zerolength = HashAlgorithm<HashType::MD5>::calculate(""_s);
+        auto zerolength_expected = "D41D8CD98F00B204E9800998ECF8427E"_s;
+        EXPECT_EQ(PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result>{zerolength}.repr(), zerolength_expected);
+
+        auto some_str = HashAlgorithm<HashType::MD5>::calculate("The quick brown fox jumps over the lazy dog"_s);
+        auto some_str_expected = "9E107D9D372BB6826BD81D3542A419D6"_s;
+        EXPECT_EQ(PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result>{some_str}.repr(), some_str_expected);
+
+        auto some_other_str = HashAlgorithm<HashType::MD5>::calculate("The quick brown fox jumps over the lazy dog."_s);
+        auto some_other_str_expected = "E4D909C290D0FB1CA068FFADDF22CBD0"_s;
+        EXPECT_EQ(PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result>{some_other_str}.repr(), some_other_str_expected);
+    }
 }
