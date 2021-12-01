@@ -3,6 +3,7 @@
 #include "Concepts.h"
 #include "Enumerate.h"
 #include "Iterator.h"
+#include "PrintInfo.h"
 
 namespace ARLib {
 
@@ -22,7 +23,7 @@ namespace ARLib {
             m_end_view = &(*container.end());
         }
 
-        size_t size() { return static_cast<size_t>(m_end_view - m_begin_view); }
+        size_t size() const { return static_cast<size_t>(m_end_view - m_begin_view); }
 
         Iterator<T> begin() { return Iterator<T>{m_begin_view}; }
 
@@ -176,5 +177,22 @@ namespace ARLib {
         }
 
         ~IteratorView() { delete[] m_stolen_storage; }
+    };
+
+    template <Printable T>
+    struct PrintInfo<GenericView<T>> {
+        const GenericView<T>& m_view;
+        PrintInfo(const GenericView<T>& view) : m_view(view) {}
+        String repr() const {
+            if (m_view.size() == 0) return "[]"_s;
+            String view_str{"[ "};
+            for (const auto& val : m_view) {
+                view_str += PrintInfo<T>{val}.repr();
+                view_str += ", "_s;
+            }
+            view_str = view_str.substring(0, view_str.size() - 2);
+            view_str += " ]"_s;
+            return view_str;
+        }
     };
 } // namespace ARLib
