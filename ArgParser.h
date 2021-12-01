@@ -26,7 +26,14 @@ namespace ARLib {
             void set_value(String value) { m_value.put(Forward<String>(value)); }
             bool operator==(const String& name) { return m_long_name == name || m_short_name == name; }
             bool operator==(const StringView name) { return m_long_name == name || m_short_name == name; }
-            String as_string() { return m_value.value_or(""); }
+            const String& as_string() {
+                static String ret_if_empty {};
+                if (m_value)
+                    return m_value.value();
+                else
+                    return ret_if_empty;
+
+            }
             int as_int() { return StrToInt(as_string()); }
             float as_float() { return StrToFloat(as_string()); }
             bool as_bool() { return StrToBool(as_string()); }
@@ -40,9 +47,9 @@ namespace ARLib {
         ArgParser() = default;
         void add_option(const char* long_name, const char* short_name, const char* optional = nullptr) {
             CmdOption option{};
-            option.set_long_name(long_name);
-            option.set_short_name(short_name);
-            if (optional) option.set_value(optional);
+            option.set_long_name(String{long_name});
+            option.set_short_name(String{short_name});
+            if (optional) option.set_value(String{optional});
             m_options.append(Forward<CmdOption>(option));
         }
 
@@ -58,7 +65,7 @@ namespace ARLib {
         void readopt(char** argv, int argc, ExecPath mode = ExecPath::Skip) {
             m_args.reserve(argc);
             for (size_t i = static_cast<bool>(mode); i < static_cast<size_t>(argc); i++)
-                m_args.append(argv[i]);
+                m_args.append(String{argv[i]});
         }
 
         void parse() {
