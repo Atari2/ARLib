@@ -260,17 +260,29 @@ namespace ARLib {
             return move(m_storage[m_size]);
         }
 
-        T& operator[](size_t index) const {
+        const T& operator[](size_t index) const {
             HARD_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size)
             return m_storage[index];
         }
 
-        T& index(size_t index) const {
+        T& operator[](size_t index) {
             HARD_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size)
             return m_storage[index];
         }
 
-        T& index_unchecked(size_t index) const { return m_storage[index]; }
+        const T& index(size_t index) const {
+            HARD_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size)
+            return m_storage[index];
+        }
+
+        const T& index_unchecked(size_t index) const { return m_storage[index]; }
+
+        T& index(size_t index) {
+            HARD_ASSERT_FMT(assert_size_(index), "Index %lu was out of bounds in vector of size %lu", index, m_size)
+            return m_storage[index];
+        }
+
+        T& index_unchecked(size_t index) { return m_storage[index]; }
 
         template <typename Functor>
         void for_each(Functor&& func) const {
