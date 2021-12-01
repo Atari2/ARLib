@@ -9,6 +9,9 @@ namespace ARLib {
     struct PrintInfo {};
 
     template <typename T>
+    PrintInfo(T) -> PrintInfo<T>;
+
+    template <typename T>
     concept Printable = requires(const T& a) {
         { PrintInfo<T>{a}.repr() } -> SameAs<String>;
     };
