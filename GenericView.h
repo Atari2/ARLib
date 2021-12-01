@@ -62,6 +62,9 @@ namespace ARLib {
     template <Iterable Cont>
     GenericView(const Cont&) -> GenericView<AddConstT<typename IterableTraits<Cont>::ItemType>>;
 
+    template <typename T>
+    using ReadOnlyView = GenericView<AddConstT<T>>;
+
     template <Iterable Cont>
     class IteratorView {
         using Iter = typename IterableTraits<Cont>::IterType;
