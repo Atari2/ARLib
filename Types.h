@@ -52,4 +52,5 @@ namespace ARLib {
     typedef short int16_t;
     typedef char int8_t;
 #endif
+    constexpr size_t BITS_PER_BYTE = 8;
 } // namespace ARLib
