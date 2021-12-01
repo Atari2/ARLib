@@ -643,27 +643,55 @@ TEST(ARLibTests, BigIntTest) {
 TEST(ARLibTests, HashFuncTests) {
     {
         // CRC32
-        auto zerolength = HashAlgorithm<HashType::CRC32>::calculate(""_s);
+        auto zerolength = CRC32::calculate(""_s);
         EXPECT_EQ(zerolength, 0x00);
-        auto ff = HashAlgorithm<HashType::CRC32>::calculate(Array{0xFF_u8});
-        auto zero = HashAlgorithm<HashType::CRC32>::calculate(Array{0x00_u8});
+        auto ff = CRC32::calculate(Array{0xFF_u8});
+        auto zero = CRC32::calculate(Array{0x00_u8});
         EXPECT_EQ(ff, 0xFF000000);
         EXPECT_EQ(zero, 0xD202EF8D);
-        auto some_str = HashAlgorithm<HashType::CRC32>::calculate("123456789"_s);
+        auto some_str = CRC32::calculate("123456789"_s);
         EXPECT_EQ(some_str, 0xCBF43926);
     }
     {
         // MD5
-        auto zerolength = HashAlgorithm<HashType::MD5>::calculate(""_s);
+        auto zerolength = MD5::calculate(""_s);
         auto zerolength_expected = "D41D8CD98F00B204E9800998ECF8427E"_s;
-        EXPECT_EQ(PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result>{zerolength}.repr(), zerolength_expected);
+        EXPECT_EQ(PrintInfo{zerolength}.repr(), zerolength_expected);
 
-        auto some_str = HashAlgorithm<HashType::MD5>::calculate("The quick brown fox jumps over the lazy dog"_s);
+        auto some_str = MD5::calculate("The quick brown fox jumps over the lazy dog"_s);
         auto some_str_expected = "9E107D9D372BB6826BD81D3542A419D6"_s;
-        EXPECT_EQ(PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result>{some_str}.repr(), some_str_expected);
+        EXPECT_EQ(PrintInfo{some_str}.repr(), some_str_expected);
 
-        auto some_other_str = HashAlgorithm<HashType::MD5>::calculate("The quick brown fox jumps over the lazy dog."_s);
+        auto some_other_str = MD5::calculate("The quick brown fox jumps over the lazy dog."_s);
         auto some_other_str_expected = "E4D909C290D0FB1CA068FFADDF22CBD0"_s;
-        EXPECT_EQ(PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result>{some_other_str}.repr(), some_other_str_expected);
+        EXPECT_EQ(PrintInfo{some_other_str}.repr(), some_other_str_expected);
+    }
+    {
+        // SHA1
+        auto zerolength = SHA1::calculate(""_s);
+        auto zerolength_expected = "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709"_s;
+        EXPECT_EQ(PrintInfo{zerolength}.repr(), zerolength_expected);
+
+        auto some_str = SHA1::calculate("Cantami o diva del pelide Achille l'ira funesta"_s);
+        auto some_str_expected = "1F8A690B7366A2323E2D5B045120DA7E93896F47"_s;
+        EXPECT_EQ(PrintInfo{some_str}.repr(), some_str_expected);
+
+        auto some_other_str = SHA1::calculate("Contami o diva del pelide Achille l'ira funesta"_s);
+        auto some_other_str_expected = "E5F08D98BF18385E2F26B904CAD23C734D530FFB"_s;
+        EXPECT_EQ(PrintInfo{some_other_str}.repr(), some_other_str_expected);
+    }
+    {
+        // SHA256
+        auto zerolength = SHA256::calculate(""_s);
+        auto zerolength_expected = "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"_s;
+        EXPECT_EQ(PrintInfo{zerolength}.repr(), zerolength_expected);
+
+        auto some_str = SHA256::calculate("Cantami o diva del pelide Achille l'ira funesta"_s);
+        auto some_str_expected = "BABA6AB2A80F6C3079EC5891EAD5C497306FCD31B0472A627F3BDB3BB9C93F5C"_s;
+        EXPECT_EQ(PrintInfo{some_str}.repr(), some_str_expected);
+
+        auto some_other_str = SHA256::calculate("Contami o diva del pelide Achille l'ira funesta"_s);
+        auto some_other_str_expected = "DAC3D4D2A80F322FD8909F432C5DCCA9DB13F23ACFF49269B77FF87B2FB7C976"_s;
+        EXPECT_EQ(PrintInfo{some_other_str}.repr(), some_other_str_expected);
     }
 }
