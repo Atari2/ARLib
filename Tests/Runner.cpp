@@ -277,6 +277,10 @@ TEST(ARLibTests, StringTest) {
 
 TEST(ARLibTests, StringViewTests) {
     constexpr StringView view = "hello world"_sv;
+    auto vec = view.split();
+    EXPECT_EQ(vec.size(), 2);
+    EXPECT_EQ(vec[0], "hello"_sv);
+    EXPECT_EQ(vec[1], "world"_sv);
     constexpr char c = view[7];
     static_assert(c == 'o'); // this needs to compile
     static_assert(view == "hello world"_sv);

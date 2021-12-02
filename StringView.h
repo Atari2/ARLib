@@ -5,6 +5,10 @@
 #include "String.h"
 
 namespace ARLib {
+
+    template <typename T>
+    class Vector;
+
     // this class is not necessarily null-terminated
     class StringView {
         char* m_start_mut = nullptr;
@@ -110,6 +114,10 @@ namespace ARLib {
                 return StringView{m_start, size};
             }
         }
+
+        [[nodiscard]] size_t index_of(const char* c, size_t start = 0) const;
+        Vector<StringView> split(const char* sep = " ") const;
+
         void print_view() { printf("%.*s\n", size(), m_start); }
         [[nodiscard]] constexpr size_t size() const { return m_size; }
         [[nodiscard]] constexpr size_t length() const { return m_size; }
@@ -122,10 +130,10 @@ namespace ARLib {
         [[nodiscard]] ConstIterator<char> end() { return ConstIterator<char>{m_start + m_size}; }
         [[nodiscard]] String extract_string() const { return {m_start, length()}; }
         explicit operator String() const { return extract_string(); }
-        constexpr StringView substringview(size_t first = 0, size_t last = npos) {
+        constexpr StringView substringview(size_t first = 0, size_t last = npos) const {
             size_t ssize = size();
             if (first > ssize) return {};
-            if (last > ssize) return StringView{m_start + first, m_size};
+            if (last > ssize) return StringView{m_start + first, m_size - first};
             if (m_start_mut) {
                 return StringView{m_start_mut + first, m_start + last};
             } else {
