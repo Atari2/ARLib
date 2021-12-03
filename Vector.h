@@ -108,6 +108,7 @@ namespace ARLib {
             return *this;
         }
         Vector& operator=(Vector&& other) noexcept {
+            deallocate<T, DeallocType::Multiple>(m_storage);
             m_storage = other.m_storage;
             m_end_of_storage = other.m_end_of_storage;
             m_capacity = other.m_capacity;
