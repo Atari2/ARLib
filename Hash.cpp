@@ -270,8 +270,13 @@ namespace ARLib {
         for (auto val : size_in_bits_u8)
             glob.append(val);
 
+
+        // the commented out _u32 causes a linker error on clang??
+        // I don't really understand this one since the same function is used like 4 lines after this
+        // in the other lambda, probably a compiler error, too lazy to investing and/or report
+        // easier to just comment out
         auto rightrotate = [](auto a, auto b) {
-            return (a >> b) | (a << ((sizeof(decltype(a)) * 8_u32) - b));
+            return (a >> b) | (a << ((sizeof(decltype(a)) * 8 /* _u32 */) - b));
         };
 
         constexpr size_t CHUNK_SIZE_BITS = 512;

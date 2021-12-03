@@ -33,15 +33,15 @@ namespace ARLib {
         constexpr StringView(T buf, size_t size) : m_start_mut(buf), m_start(buf), m_size(size) {}
 
         template <size_t N>
-        consteval explicit StringView(const char (&buf)[N]) : m_start(buf), m_size(N - 1) {}
+        consteval StringView(const char (&buf)[N]) : m_start(buf), m_size(N - 1) {}
 
         template <typename T>
         requires IsSameV<T, const char*>
-        explicit constexpr StringView(T buf) : m_start(buf) { m_size = strlen(buf); }
+        constexpr StringView(T buf) : m_start(buf) { m_size = strlen(buf); }
 
         template <typename T>
         requires IsSameV<T, char*>
-        explicit constexpr StringView(T buf) : m_start_mut(buf), m_start(buf) { m_size = strlen(buf); }
+        constexpr StringView(T buf) : m_start_mut(buf), m_start(buf) { m_size = strlen(buf); }
 
         explicit StringView(const String& ref) : m_start(ref.data()) { m_size = ref.length(); }
         explicit StringView(String& ref) : m_start_mut(ref.rawptr()), m_start(ref.data()) { m_size = ref.length(); }

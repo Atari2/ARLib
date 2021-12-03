@@ -13,6 +13,7 @@
 #include <dbghelp.h>
 #else
 #include "String.h"
+#include "StringView.h"
 #include <cxxabi.h>
 #include <cstdlib>      // this header is here literally just for std::free and I'm sad about it
 #include <execinfo.h>

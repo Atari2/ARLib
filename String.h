@@ -63,10 +63,10 @@ namespace ARLib {
             }
         }
 
-        Vector<size_t> all_indexes_internal(const char* any, size_t start_index = 0ull) const;
-        Vector<size_t> all_last_indexes_internal(const char* any, size_t end_index = npos) const;
-        Vector<size_t> all_not_indexes_internal(const char* any, size_t start_index = 0ull) const;
-        Vector<size_t> all_last_not_indexes_internal(const char* any, size_t end_index = npos) const;
+        Vector<size_t> all_indexes_internal(StringView any, size_t start_index = 0ull) const;
+        Vector<size_t> all_last_indexes_internal(StringView any, size_t end_index = npos) const;
+        Vector<size_t> all_not_indexes_internal(StringView any, size_t start_index = 0ull) const;
+        Vector<size_t> all_last_not_indexes_internal(StringView any, size_t end_index = npos) const;
 
         public:
         static constexpr auto npos = static_cast<size_t>(-1);
@@ -248,13 +248,7 @@ namespace ARLib {
             auto res = strncmp(other.get_buf_internal(), get_buf_internal(), other.m_size);
             return res == 0;
         }
-        [[nodiscard]] bool starts_with(const char* other) const {
-            auto o_len = strlen(other);
-            if (o_len > m_size) return false;
-            if (m_size == o_len) return strcmp(other, get_buf_internal()) == 0;
-            auto res = strncmp(other, get_buf_internal(), o_len);
-            return res == 0;
-        }
+        [[nodiscard]] bool starts_with(StringView) const;
         [[nodiscard]] bool ends_with(const String& other) const {
             if (other.m_size > m_size) return false;
             if (other.m_size == m_size) return other == *this;
@@ -264,15 +258,7 @@ namespace ARLib {
             auto res = strncmp(my_buf + ptrdiff, buf, other.m_size);
             return res == 0;
         }
-        [[nodiscard]] bool ends_with(const char* other) const {
-            auto o_len = strlen(other);
-            if (o_len > m_size) return false;
-            if (m_size == o_len) return strcmp(other, get_buf_internal()) == 0;
-            auto ptrdiff = m_size - o_len;
-            const char* my_buf = get_buf_internal();
-            auto res = strncmp(my_buf + ptrdiff, other, o_len);
-            return res == 0;
-        }
+        [[nodiscard]] bool ends_with(StringView other) const;
 
         // concatenation
         void append(char c) {
@@ -397,64 +383,18 @@ namespace ARLib {
         }
 
         // span [last_]index[_not]_of functions
-        [[nodiscard]] size_t index_of(const char* c, size_t start = 0) const {
-            if (m_size == 0 || start >= m_size) return npos;
-            const char* buf = get_buf_internal();
-            auto o_len = strlen(c);
-            if (o_len > m_size) return npos;
-            if (start + o_len > m_size) return npos;
-            if (o_len == m_size && start == 0 && strcmp(buf, c) == 0) return 0;
-            for (size_t i = start; i < m_size; i++) {
-                if (strncmp(buf + i, c, o_len) == 0) return i;
-            }
-            return npos;
-        }
-        [[nodiscard]] size_t last_index_of(const char* c, size_t end = npos) const {
-            if (m_size == 0) return npos;
-            const char* buf = get_buf_internal();
-            auto o_len = strlen(c);
-            if (end < o_len || o_len > m_size) return npos;
-            if (end > m_size) end = m_size;
-            if (o_len == end && strncmp(buf, c, end) == 0) return 0;
-            for (size_t i = end - o_len;; i--) {
-                if (strncmp(buf + i, c, o_len) == 0) return i;
-                if (i == 0) break;
-            }
-            return npos;
-        }
-        [[nodiscard]] size_t index_not_of(const char* c, size_t start = 0) const {
-            if (m_size == 0 || start >= m_size) return npos;
-            const char* buf = get_buf_internal();
-            auto o_len = strlen(c);
-            if (start + o_len > m_size) return npos;
-            if (o_len > m_size) return npos;
-            if (o_len == m_size && start == 0 && strcmp(buf, c) != 0) return 0;
-            for (size_t i = start; i < m_size; i++) {
-                if (strncmp(buf + i, c, o_len) != 0) return i;
-            }
-            return npos;
-        }
-        [[nodiscard]] size_t last_index_not_of(const char* c, size_t end = npos) const {
-            if (m_size == 0) return npos;
-            const char* buf = get_buf_internal();
-            auto o_len = strlen(c);
-            if (end < o_len || o_len > m_size) return npos;
-            if (end > m_size) end = m_size;
-            if (o_len == end && strncmp(buf, c, end) != 0) return 0;
-            for (size_t i = end - o_len;; i--) {
-                if (strncmp(buf + i, c, o_len) != 0) return i;
-                if (i == 0) break;
-            }
-            return npos;
-        }
+        [[nodiscard]] size_t index_of(StringView c, size_t start = 0) const;
+        [[nodiscard]] size_t last_index_of(StringView c, size_t end = npos) const;
+        [[nodiscard]] size_t index_not_of(StringView c, size_t start = 0) const;
+        [[nodiscard]] size_t last_index_not_of(StringView c, size_t end = npos) const;
 
         // any char in span
-        [[nodiscard]] size_t index_of_any(const char* any, size_t start_index = 0ull) const;
-        [[nodiscard]] size_t last_index_of_any(const char* any, size_t end_index = npos) const;
-        [[nodiscard]] size_t index_not_of_any(const char* any, size_t start_index = 0ull) const;
-        [[nodiscard]] size_t last_index_not_of_any(const char* any, size_t end_index = npos) const;
+        [[nodiscard]] size_t index_of_any(StringView any, size_t start_index = 0ull) const;
+        [[nodiscard]] size_t last_index_of_any(StringView any, size_t end_index = npos) const;
+        [[nodiscard]] size_t index_not_of_any(StringView any, size_t start_index = 0ull) const;
+        [[nodiscard]] size_t last_index_not_of_any(StringView any, size_t end_index = npos) const;
 
-        [[nodiscard]] bool contains(const char* other) const { return index_of(other) != npos; }
+        [[nodiscard]] bool contains(StringView other) const;
         [[nodiscard]] bool contains(char c) const { return index_of(c) != npos; }
 
         // trim
@@ -570,12 +510,8 @@ namespace ARLib {
             return cp;
         }
 
-        void ireplace(const char* n, const char* s, size_t times = String::npos);
-        String replace(const char* n, const char* s, size_t times = String::npos) {
-            String str{*this};
-            str.ireplace(n, s, times);
-            return str;
-        }
+        void ireplace(StringView n, StringView s, size_t times = String::npos);
+        String replace(StringView n, StringView s, size_t times = String::npos) const;
 
         void reserve(size_t new_capacity) { grow_if_needed(new_capacity); }
     };

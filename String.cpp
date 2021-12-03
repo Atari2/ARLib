@@ -43,6 +43,80 @@ namespace ARLib {
             return greater;
     }
 
+    [[nodiscard]] bool String::starts_with(StringView other) const {
+        auto o_len = other.size();
+        if (o_len > m_size) return false;
+        if (m_size == o_len) return strcmp(other.data(), get_buf_internal()) == 0;
+        auto res = strncmp(other.data(), get_buf_internal(), o_len);
+        return res == 0;
+    }
+
+    [[nodiscard]] bool String::ends_with(StringView other) const {
+        auto o_len = other.size();
+        if (o_len > m_size) return false;
+        if (m_size == o_len) return strcmp(other.data(), get_buf_internal()) == 0;
+        auto ptrdiff = m_size - o_len;
+        const char* my_buf = get_buf_internal();
+        auto res = strncmp(my_buf + ptrdiff, other.data(), o_len);
+        return res == 0;
+    }
+
+    [[nodiscard]] size_t String::index_of(StringView c, size_t start) const {
+        if (m_size == 0 || start >= m_size) return npos;
+        const char* buf = get_buf_internal();
+        auto o_len = c.size();
+        if (o_len > m_size) return npos;
+        if (start + o_len > m_size) return npos;
+        if (o_len == m_size && start == 0 && strcmp(buf, c.data()) == 0) return 0;
+        for (size_t i = start; i < m_size; i++) {
+            if (strncmp(buf + i, c.data(), o_len) == 0) return i;
+        }
+        return npos;
+    }
+
+    [[nodiscard]] size_t String::last_index_of(StringView c, size_t end) const {
+        if (m_size == 0) return npos;
+        const char* buf = get_buf_internal();
+        auto o_len = c.size();
+        if (end < o_len || o_len > m_size) return npos;
+        if (end > m_size) end = m_size;
+        if (o_len == end && strncmp(buf, c.data(), end) == 0) return 0;
+        for (size_t i = end - o_len;; i--) {
+            if (strncmp(buf + i, c.data(), o_len) == 0) return i;
+            if (i == 0) break;
+        }
+        return npos;
+    }
+
+    [[nodiscard]] size_t String::index_not_of(StringView c, size_t start) const {
+        if (m_size == 0 || start >= m_size) return npos;
+        const char* buf = get_buf_internal();
+        auto o_len = c.size();
+        if (start + o_len > m_size) return npos;
+        if (o_len > m_size) return npos;
+        if (o_len == m_size && start == 0 && strcmp(buf, c.data()) != 0) return 0;
+        for (size_t i = start; i < m_size; i++) {
+            if (strncmp(buf + i, c.data(), o_len) != 0) return i;
+        }
+        return npos;
+    }
+
+    [[nodiscard]] size_t String::last_index_not_of(StringView c, size_t end) const {
+        if (m_size == 0) return npos;
+        const char* buf = get_buf_internal();
+        auto o_len = c.size();
+        if (end < o_len || o_len > m_size) return npos;
+        if (end > m_size) end = m_size;
+        if (o_len == end && strncmp(buf, c.data(), end) != 0) return 0;
+        for (size_t i = end - o_len;; i--) {
+            if (strncmp(buf + i, c.data(), o_len) != 0) return i;
+            if (i == 0) break;
+        }
+        return npos;
+    }
+
+    [[nodiscard]] bool String::contains(StringView other) const { return index_of(other) != npos; }
+
     [[nodiscard]] StringView String::substringview(size_t first, size_t last) const {
         if (first >= m_size) return StringView{get_buf_internal(), static_cast<size_t>(0)};
         if (last == npos || last >= m_size) last = m_size;
@@ -71,7 +145,8 @@ namespace ARLib {
     }
 
     Vector<String> String::split_at_any(const char* sep) const {
-        auto indexes = all_indexes_internal(sep);
+        StringView sep_view{sep};
+        auto indexes = all_indexes_internal(sep_view);
         Vector<String> vec{};
         vec.reserve(indexes.size() + 1);
         size_t prev_index = 0;
@@ -86,20 +161,21 @@ namespace ARLib {
 
     Vector<String> String::split(const char* sep) const {
         Vector<String> vec{};
-        size_t sep_len = strlen(sep);
+        StringView sep_view{sep};
         size_t prev_index = 0ull;
-        size_t index = index_of(sep);
+        size_t index = index_of(sep_view);
         while (index != npos) {
             vec.append(substring(prev_index, index));
-            prev_index = index + sep_len;
-            index = index_of(sep, prev_index);
+            prev_index = index + sep_view.size();
+            index = index_of(sep_view, prev_index);
         }
         vec.append(substring(prev_index));
         return vec;
     }
 
     Vector<StringView> String::split_view_at_any(const char* sep) const {
-        auto indexes = all_indexes_internal(sep);
+        StringView sep_view{sep};
+        auto indexes = all_indexes_internal(sep_view);
         Vector<StringView> vec{};
         vec.reserve(indexes.size() + 1);
         size_t prev_index = 0;
@@ -112,21 +188,22 @@ namespace ARLib {
     }
 
     Vector<StringView> String::split_view(const char* sep) const {
+        StringView sep_view{sep};
         Vector<StringView> vec{};
-        size_t sep_len = strlen(sep);
+        size_t sep_len = sep_view.size();
         size_t prev_index = 0ull;
-        size_t index = index_of(sep);
+        size_t index = index_of(sep_view);
         while (index != npos) {
             vec.append(substringview(prev_index, index));
             prev_index = index + sep_len;
-            index = index_of(sep, prev_index);
+            index = index_of(sep_view, prev_index);
         }
         vec.append(substringview(prev_index));
         return vec;
     }
 
-    Vector<size_t> String::all_indexes_internal(const char* any, size_t start_index) const {
-        auto size = strlen(any);
+    Vector<size_t> String::all_indexes_internal(StringView any, size_t start_index) const {
+        auto size = any.size();
         Vector<size_t> indexes{};
         for (size_t i = 0; i < size; i++) {
             auto index = index_of(any[i], start_index);
@@ -137,8 +214,8 @@ namespace ARLib {
         }
         return indexes;
     }
-    Vector<size_t> String::all_last_indexes_internal(const char* any, size_t end_index) const {
-        auto size = strlen(any);
+    Vector<size_t> String::all_last_indexes_internal(StringView any, size_t end_index) const {
+        auto size = any.size();
         Vector<size_t> indexes{};
         for (size_t i = 0; i < size; i++) {
             auto index = last_index_of(any[i], end_index);
@@ -149,8 +226,8 @@ namespace ARLib {
         }
         return indexes;
     }
-    Vector<size_t> String::all_not_indexes_internal(const char* any, size_t start_index) const {
-        auto size = strlen(any);
+    Vector<size_t> String::all_not_indexes_internal(StringView any, size_t start_index) const {
+        auto size = any.size();
         Vector<size_t> indexes{};
         for (size_t i = 0; i < size; i++) {
             auto index = index_not_of(any[i], start_index);
@@ -161,8 +238,8 @@ namespace ARLib {
         }
         return indexes;
     }
-    Vector<size_t> String::all_last_not_indexes_internal(const char* any, size_t end_index) const {
-        auto size = strlen(any);
+    Vector<size_t> String::all_last_not_indexes_internal(StringView any, size_t end_index) const {
+        auto size = any.size();
         Vector<size_t> indexes{};
         for (size_t i = 0; i < size; i++) {
             auto index = last_index_not_of(any[i], end_index);
@@ -174,31 +251,31 @@ namespace ARLib {
         return indexes;
     }
 
-    [[nodiscard]] size_t String::index_of_any(const char* any, size_t start_index) const {
+    [[nodiscard]] size_t String::index_of_any(StringView any, size_t start_index) const {
         auto indexes = all_indexes_internal(any, start_index);
         return *min(indexes);
     }
-    [[nodiscard]] size_t String::last_index_of_any(const char* any, size_t end_index) const {
+    [[nodiscard]] size_t String::last_index_of_any(StringView any, size_t end_index) const {
         auto indexes = all_last_indexes_internal(any, end_index);
         return *max(indexes);
     }
-    [[nodiscard]] size_t String::index_not_of_any(const char* any, size_t start_index) const {
+    [[nodiscard]] size_t String::index_not_of_any(StringView any, size_t start_index) const {
         auto indexes = all_not_indexes_internal(any, start_index);
         return *min(indexes);
     }
-    [[nodiscard]] size_t String::last_index_not_of_any(const char* any, size_t end_index) const {
+    [[nodiscard]] size_t String::last_index_not_of_any(StringView any, size_t end_index) const {
         auto indexes = all_last_not_indexes_internal(any, end_index);
         return *max(indexes);
     }
 
-    void String::ireplace(const char* n, const char* s, size_t times) {
-        size_t orig_len = strlen(n);
+    void String::ireplace(StringView n, StringView s, size_t times) {
+        size_t orig_len = n.size();
         if (orig_len > m_size) return;
         Vector<size_t> indexes{};
         size_t cur_pos = 0;
         char* buf = get_buf_internal();
         while (cur_pos < m_size && indexes.size() <= times) {
-            if (strncmp(buf + cur_pos, n, orig_len) == 0) {
+            if (strncmp(buf + cur_pos, n.data(), orig_len) == 0) {
                 indexes.push_back(cur_pos);
                 cur_pos += orig_len;
             } else {
@@ -207,7 +284,7 @@ namespace ARLib {
         }
         auto n_occurr = indexes.size();
         if (n_occurr == 0ull) return;
-        size_t repl_len = strlen(s);
+        size_t repl_len = s.size();
         bool repl_is_bigger = repl_len > orig_len;
         size_t diff_len = repl_is_bigger ? repl_len - orig_len : orig_len - repl_len;
         if (diff_len > 0) {
@@ -220,9 +297,15 @@ namespace ARLib {
                 memmove(buf + new_index + diff_len, buf + new_index, m_size - index + 1ull);
             else if (diff_len != 0)
                 memmove(buf + new_index, buf + new_index + diff_len, m_size - index + 1ull);
-            memcpy(buf + new_index, s, repl_len);
+            memcpy(buf + new_index, s.data(), repl_len);
         }
         set_size(repl_is_bigger ? m_size + diff_len * n_occurr : m_size - diff_len * n_occurr);
+    }
+
+    String String::replace(StringView n, StringView s, size_t times) const {
+        String str{*this};
+        str.ireplace(n, s, times);
+        return str;
     }
 
     void String::append(StringView other) {
