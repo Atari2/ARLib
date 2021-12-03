@@ -218,10 +218,19 @@ else()
 	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 endif()
 
+
+if (DEFINED INCLUDE_DEBUG_INFO AND ON_LINUX)
+	list(APPEND ARLIB_COMPILE_OPTIONS "-g")
+endif()
+
+
 target_link_options(ARLib PUBLIC ${ARLIB_LINK_OPTIONS})
 target_link_libraries(ARLib PUBLIC ${ARLIB_LINK_LIBRARIES})
 target_compile_options(ARLib PUBLIC ${ARLIB_COMPILE_OPTIONS})
 target_compile_definitions(ARLib PUBLIC ${ARLIB_COMPILE_DEFINITIONS})
+if (DEBUG_BUILD AND ON_MSVC)
+	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/PROFILE")
+endif()
 
 if (ARLIB_TOP_LEVEL)
 	add_custom_target(
