@@ -211,9 +211,9 @@ namespace ARLib {
             StringView view{str};
             RETURN_IF_NOT_EQ(str, view)
             RETURN_IF_NOT_EQ(sub.index_of('w'), 0ull)
-            String repls = str.replace("l", "foo");
+            String repls = str.replace("l"_sv, "foo"_sv);
             RETURN_IF_NOT_EQ(repls, "hefoofooo worfood"_s)
-            RETURN_IF_NOT_EQ(repls.replace("foo", "te"), "heteteo worted"_s)
+            RETURN_IF_NOT_EQ(repls.replace("foo"_sv, "te"_sv), "heteteo worted"_s)
             return true;
         };
 
