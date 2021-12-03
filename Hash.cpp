@@ -3,6 +3,14 @@
 #include "Conversion.h"
 #include "Vector.h"
 
+#ifdef COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#elif COMPILER_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
 namespace ARLib {
     uint32_t HashAlgorithm<HashType::CRC32>::calculate(ReadOnlyByteView data) {
         uint32_t crc32 = 0xFFFFFFFFu;
@@ -61,7 +69,6 @@ namespace ARLib {
         // do algorithm here:
         // for each 512-bit chunk do
         constexpr size_t CHUNK_SIZE = 512;
-        constexpr size_t BITS_PER_BYTE = 8;
 
         for (size_t chunk_num = 0; chunk_num < glob.size(); chunk_num += CHUNK_SIZE / BITS_PER_BYTE) {
             uint32_t words[16]{0};
@@ -148,10 +155,11 @@ namespace ARLib {
         constexpr size_t CHUNK_SIZE_BITS = 512;
         constexpr size_t CHUNK_SIZE = CHUNK_SIZE_BITS / BITS_PER_BYTE;
 
-        auto chunk_to_u32 = [CHUNK_SIZE](const Vector<uint8_t>& full_msg, uint32_t(&block)[80], size_t idx) {
+        auto chunk_to_u32 = [](const Vector<uint8_t>& full_msg, uint32_t(&block)[80], size_t idx) {
             auto* chunk = &full_msg[idx];
             for (size_t i = 0, j = 0; i < CHUNK_SIZE / sizeof(u32); i++, j += 4) {
-                block[i] = ((chunk[j] << 24) | (chunk[j + 1] << 16) | (chunk[j + 2] << 8) | chunk[j + 3]);
+                block[i] =
+                ((chunk[j] << 24_u32) | (chunk[j + 1] << 16_u32) | (chunk[j + 2] << 8_u32) | chunk[j + 3_u32]);
             }
         };
 
@@ -254,24 +262,26 @@ namespace ARLib {
         uint8_t size_in_bits_u8[sizeof(size_t)]{0};
         size_t og_size_in_bits = (sz * 8_sz); /* % (1 << 64) */
         auto* og_size_ptr = cast<const uint8_t*>(&og_size_in_bits);
-        for (int i = sizeof(size_t) - 1; i >= 0; i--) {
-            size_in_bits_u8[sizeof(size_t) - i - 1] = og_size_ptr[i];
+        for (size_t i = sizeof(size_t) - 1;; i--) {
+            size_in_bits_u8[sizeof(size_t) - i - 1_sz] = og_size_ptr[i];
+            if (i == 0) break;
         }
 
         for (auto val : size_in_bits_u8)
             glob.append(val);
 
         auto rightrotate = [](auto a, auto b) {
-            return (a >> b) | (a << ((sizeof(decltype(a)) * 8) - b));
+            return (a >> b) | (a << ((sizeof(decltype(a)) * 8_u32) - b));
         };
 
         constexpr size_t CHUNK_SIZE_BITS = 512;
         constexpr size_t CHUNK_SIZE = CHUNK_SIZE_BITS / BITS_PER_BYTE;
 
-        auto chunk_to_u32 = [CHUNK_SIZE](const Vector<uint8_t>& full_msg, uint32_t(&block)[64], size_t idx) {
+        auto chunk_to_u32 = [](const Vector<uint8_t>& full_msg, uint32_t(&block)[64], size_t idx) {
             auto* chunk = &full_msg[idx];
             for (size_t i = 0, j = 0; i < CHUNK_SIZE / sizeof(u32); i++, j += 4) {
-                block[i] = ((chunk[j] << 24) | (chunk[j + 1] << 16) | (chunk[j + 2] << 8) | chunk[j + 3]);
+                block[i] =
+                ((chunk[j] << 24_u32) | (chunk[j + 1] << 16_u32) | (chunk[j + 2] << 8_u32) | chunk[j + 3_u32]);
             }
         };
 
@@ -342,4 +352,11 @@ namespace ARLib {
         ReadOnlyByteView{cast<const uint8_t*>(data.data()), cast<const uint8_t*>(data.data() + data.size())});
     }
 
+
 } // namespace ARLib
+
+#ifdef COMPILER_GCC
+#pragma GCC diagnostic pop
+#elif COMPILER_CLANG
+#pragma clang diagnostic pop
+#endif

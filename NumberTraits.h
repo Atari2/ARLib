@@ -101,7 +101,7 @@ namespace ARLib {
     template <>
     struct NumberTraits<long> {
         constexpr static inline bool is_signed = true;
-        constexpr static inline long min = windows_build ? -2147483648l : -9223372036854775808l;
+        constexpr static inline long min = windows_build ? -2147483648l : -9223372036854775807ll-1ll;
         constexpr static inline long max = windows_build ? 2147483647l : 9223372036854775807l;
         constexpr static inline auto size = sizeof(long);
     };
@@ -117,7 +117,7 @@ namespace ARLib {
     template <>
     struct NumberTraits<long long> {
         constexpr static inline bool is_signed = true;
-        constexpr static inline long long min = -9223372036854775808ll;
+        constexpr static inline long long min = -9223372036854775807ll-1ll;
         constexpr static inline long long max = 9223372036854775807ll;
         constexpr static inline auto size = sizeof(long long);
     };

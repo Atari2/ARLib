@@ -42,7 +42,7 @@ namespace ARLib {
                 partial_result.m_buffer.append(00);
             uint8_t carryover = 0;
             for (auto mult : right.buffer()) {
-                uint16_t partial = limb * mult + carryover;
+                uint16_t partial = static_cast<uint16_t>(limb * mult + carryover);
                 carryover = static_cast<uint8_t>(partial / 100);
                 partial_result.m_buffer.append(static_cast<uint8_t>(partial % 100));
             }
@@ -168,7 +168,7 @@ namespace ARLib {
         const auto& right_buffer = right.buffer();
         const auto& longest_buffer = left.size() > right.size() ? left.buffer() : right.buffer();
         for (size_t i = 0; i < min_len; i++) {
-            uint8_t sum_unit_result = left_buffer[i] + right_buffer[i] + carry;
+            uint8_t sum_unit_result = static_cast<uint8_t>(left_buffer[i] + right_buffer[i] + carry);
             if (sum_unit_result > max_buffer_unit) {
                 carry = true;
                 sum_unit_result %= 100;
@@ -219,7 +219,7 @@ namespace ARLib {
                 result.m_buffer.append(left_limb - right_limb);
             } else {
                 borrow = true;
-                result.m_buffer.append((left_limb + 100) - right_limb);
+                result.m_buffer.append(static_cast<uint8_t>((left_limb + 100) - right_limb));
             }
         }
         for (size_t i = min_len; i < max_len; i++) {
@@ -285,7 +285,7 @@ namespace ARLib {
                     m_buffer[i] = left_limb - right_limb;
                 } else {
                     borrow = true;
-                    m_buffer[i] = left_limb + 100 - right_limb;
+                    m_buffer[i] = static_cast<uint8_t>(left_limb + 100 - right_limb);
                 }
             }
             if (this_bigger) {
@@ -345,7 +345,7 @@ namespace ARLib {
             bool carry = false;
             bool this_longer_buffer = max_len == size();
             for (size_t i = 0; i < min_len; i++) {
-                uint8_t sum_unit_result = m_buffer[i] + other.m_buffer[i] + carry;
+                uint8_t sum_unit_result = static_cast<uint8_t>(m_buffer[i] + other.m_buffer[i] + carry);
                 if (sum_unit_result > max_buffer_unit) {
                     carry = true;
                     sum_unit_result %= 100;
