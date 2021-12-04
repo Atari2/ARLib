@@ -399,6 +399,8 @@ namespace ARLib {
 
         // trim
         void irtrim() {
+            if (m_size == 0) return;
+            if (!isspace(m_local_buf[0])) return;
             if (is_local()) {
                 size_t count = 0;
                 while (isspace(m_local_buf[count++]))
@@ -427,6 +429,8 @@ namespace ARLib {
             }
         }
         void iltrim() {
+            if (m_size == 0) return;
+            if (!isspace(m_local_buf[m_size - 1])) return;
             if (is_local()) {
                 while (isspace(m_local_buf[m_size - 1]) && m_size > 0)
                     m_size--;
