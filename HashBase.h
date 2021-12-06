@@ -51,6 +51,12 @@ namespace ARLib {
 
     template <class Key>
     struct ConditionallyEnabledHash<Key, false> { // conditionally disabled hash base
+        static_assert(
+        AlwaysFalse<Key>,
+        "Hash{map|table} key types need to have a template specialization of the struct "
+        "ARLib::Hash<T> to be allowed as keys, such struct template specialization must have an operator() method "
+        "that takes a const ref of type T and returns a size_t value representing the hash. "
+        "The key type must also have an available equality operator.");
         ConditionallyEnabledHash() = delete;
         ConditionallyEnabledHash(const ConditionallyEnabledHash&) = delete;
         ConditionallyEnabledHash(ConditionallyEnabledHash&&) = delete;
