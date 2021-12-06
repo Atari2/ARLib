@@ -12,6 +12,12 @@ namespace ARLib {
         // skip whitespace
         while (isspace(view[cur_index])) {
             cur_index++;
+            if (cur_index == max_index) return 0;
+        }
+        while (isspace(view[max_index - 1])) {
+            max_index--;
+            // on unsigned overflow we trust
+            if (max_index == npos_) return 0;
         }
 
         if (cur_index == max_index) return 0;
@@ -65,6 +71,12 @@ namespace ARLib {
         // skip whitespace
         while (isspace(str[cur_index])) {
             cur_index++;
+            if (cur_index == max_index) return 0;
+        }
+
+        while (isspace(str[max_index - 1])) {
+            max_index--;
+            if (max_index == npos_) return 0;
         }
 
         if (cur_index == max_index) return 0;
