@@ -1,7 +1,5 @@
 #include "cmath_compat.h"
-#include <emmintrin.h>
-#include <smmintrin.h>
-#include <tmmintrin.h>
+#include <immintrin.h>
 
 namespace ARLib {
 

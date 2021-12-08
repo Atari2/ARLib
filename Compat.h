@@ -2,7 +2,6 @@
 #include "std_includes.h"
 
 #ifdef COMPILER_MSVC // MSVC
-#include <intrin.h>
 #define unreachable __assume(0);
 #define forceinline __forceinline
 #define noop        __noop
