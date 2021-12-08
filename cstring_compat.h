@@ -3,7 +3,6 @@
 #include "Compat.h"
 #include "Concepts.h"
 #include "CpuInfo.h"
-#include <immintrin.h>
 
 namespace ARLib {
 
@@ -23,27 +22,26 @@ namespace ARLib {
             return (((v)-0x0101010101010101) & ~(v)&0x8080808080808080);
     }
 
+    size_t strlen_vectorized(const char* ptr);
+
     constexpr size_t strlen(const char* ptr) {
+#ifndef DEBUG
+        if (!is_constant_evaluated()) {
+            return strlen_vectorized(ptr);
+        } else {
+            if (!ptr) return 0;
+            size_t len = 0;
+            while (*(ptr++))
+                len++;
+            return len;
+        }
+#else
         if (!ptr) return 0;
         size_t len = 0;
         while (*(ptr++))
             len++;
         return len;
-    }
-
-    template <size_t NUM>
-    char* strncpy_vectorized(char* dest, const char* src) {
-        static_assert(NUM % 32 == 0, "Size of strncpy vectorized must be a multiple of 32");
-        for (size_t base = 0; base < NUM; base += 32) {
-#ifdef COMPILER_MSVC
-            __m256i buffer = _mm256_loadu_si256((const __m256i*)(src + base));
-            _mm256_storeu_si256((__m256i*)(dest + base), buffer);
-#else
-            __m256i buffer = _mm256_loadu_si256(reinterpret_cast<const __m256i_u*>(src + base));
-            _mm256_storeu_si256(reinterpret_cast<__m256i*>(dest + base), buffer);
 #endif
-        }
-        return dest;
     }
 
     constexpr char* strcpy(char* dest, const char* src) {

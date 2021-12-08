@@ -1,10 +1,59 @@
 #include "cstring_compat.h"
 #include "CpuInfo.h"
+#include <immintrin.h>
+#ifdef COMPILER_MSVC
+#include <intrin.h>
+#endif
 
 namespace ARLib {
     typedef intptr_t word;
-#define wsize sizeof(word)
-#define wmask (wsize - 1)
+    constexpr auto wsize = sizeof(word);
+    constexpr auto wmask = (wsize - 1);
+
+#ifdef COMPILER_MSVC
+    forceinline uint32_t ctz_msvc(uint32_t value) {
+        unsigned long trailing_zero = 0;
+        if (_BitScanForward(&trailing_zero, value)) {
+            return trailing_zero;
+        } else {
+            return sizeof(uint32_t) * BITS_PER_BYTE;
+        }
+    }
+#endif
+
+    forceinline size_t first_zero_bit(uint32_t value) {
+#ifdef COMPILER_MSVC
+        if (cpuinfo.bmi()) {
+            return static_cast<size_t>(_tzcnt_u32(value));
+        } else {
+            return static_cast<size_t>(ctz_msvc(value));
+        }
+#else
+        return static_cast<size_t>(__builtin_ctz(value));
+#endif
+    }
+
+    forceinline size_t zerobyteidx(__m256i value) {
+        int mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_setzero_si256(), value));
+        if (mask == 0) return sizeof(__m256i);
+        return first_zero_bit(static_cast<uint32_t>(mask));
+    }
+
+    size_t strlen_vectorized(const char* src) {
+        auto* ptr = reinterpret_cast<const __m256i*>(src);
+        size_t sz = 0;
+        for (;;) {
+            __m256i partial = _mm256_loadu_si256(ptr);
+            ptr += 1;
+            auto result = zerobyteidx(partial);
+            if (result < sizeof(__m256i)) {
+                sz += result;
+                break;
+            }
+            sz += result;
+        }
+        return sz;
+    }
 
     void* memcpy_vectorized(void* dst0, const void* src0, size_t num) {
         char* dst = static_cast<char*>(dst0);
