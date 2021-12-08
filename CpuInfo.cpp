@@ -18,6 +18,9 @@
 #endif
 
 namespace ARLib {
+
+    CPUInfo cpuinfo{};
+
 #ifdef WINDOWS
     static void cpuid(uint32_t level, uint32_t& eax, uint32_t& ebx, uint32_t& ecx, uint32_t& edx) {
         int info[4];

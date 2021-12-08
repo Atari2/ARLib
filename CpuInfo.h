@@ -208,5 +208,5 @@ namespace ARLib {
         }
     };
 
-    static inline CPUInfo cpuinfo{};
+    extern CPUInfo cpuinfo;
 } // namespace ARLib
