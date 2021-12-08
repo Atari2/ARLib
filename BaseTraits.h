@@ -469,7 +469,7 @@ namespace ARLib {
     template <class T, class... Types>
     inline constexpr bool IsAnyOfCvRefV = DisjunctionV<IsSameCvRef<T, Types>...>;
 
-    [[nodiscard]] consteval bool is_constant_evaluated() noexcept { return __builtin_is_constant_evaluated(); }
+    [[nodiscard]] constexpr bool is_constant_evaluated() noexcept { return __builtin_is_constant_evaluated(); }
 
     template <class T>
     inline constexpr bool IsIntegralV =
