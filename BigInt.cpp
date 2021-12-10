@@ -1,5 +1,4 @@
 #include "BigInt.h"
-#include "Printer.h"
 
 namespace ARLib {
 
@@ -120,6 +119,7 @@ namespace ARLib {
                     if (partial.fits() && divisor_fits) {
                         times = static_cast<uint8_t>(partial.to_absolute_value_for_division() /
                                                      divisor.to_absolute_value_for_division());
+                        subtraend *= times;
                     } else {
                         auto sub_result = partial - subtraend;
                         while (sub_result > divisor) {
