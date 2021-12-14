@@ -98,6 +98,28 @@ namespace ARLib {
         return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
     }
 
+    constexpr const char* strstr(const char* str, const char* needle) {
+        if (str == nullptr || needle == nullptr) return nullptr;
+        size_t len = strlen(str);
+        size_t needle_len = strlen(needle);
+        if (needle_len == 0) return str;
+        if (needle_len > len) return nullptr;
+        if (needle_len == len) { return strcmp(str, needle) == 0 ? str : nullptr; }
+        size_t idx = 0;
+        while (idx < len) {
+            bool found = strncmp(str + idx, needle, needle_len) == 0;
+            if (found)
+                return str + idx;
+            else
+                idx++;
+        }
+        return nullptr;
+    }
+
+    constexpr char* strstr(char* str, const char* needle) {
+        return const_cast<char*>(strstr(static_cast<const char*>(str), needle));
+    }
+
     constexpr bool isdigit(const char c) { return c >= 48_c && c <= 57_c; }
 
     constexpr bool isalnum(const char c) { return isdigit(c) || (c >= 65_c && c <= 90_c) || (c >= 97_c && c <= 122_c); }

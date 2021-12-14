@@ -699,3 +699,15 @@ TEST(ARLibTests, HashFuncTests) {
         EXPECT_EQ(PrintInfo{some_other_str}.repr(), some_other_str_expected);
     }
 }
+
+TEST(ARLibTests, StrStrTests) {
+    auto str = "hello world";
+    auto a = "hello world";
+    auto b = "hello worlda";
+    auto c = "";
+    auto d = " wor";
+    EXPECT_EQ(ARLib::strstr(str, a), str);
+    EXPECT_EQ(ARLib::strstr(str, b), nullptr);
+    EXPECT_EQ(ARLib::strstr(str, c), str);
+    EXPECT_EQ(ARLib::strstr(str, d), str + 5);
+}
