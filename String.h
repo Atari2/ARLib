@@ -81,7 +81,8 @@ namespace ARLib {
         }
 
         explicit String(size_t size, char c) {
-            grow_if_needed(size);
+            if (size > SMALL_STRING_CAP)
+                grow_if_needed(size);
             memset(get_buf_internal(), static_cast<uint8_t>(c), size);
             m_size = size;
             get_buf_internal()[m_size] = '\0';
