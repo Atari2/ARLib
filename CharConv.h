@@ -12,6 +12,15 @@ namespace ARLib {
     String LongDoubleToStr(long double value);
     String FloatToStr(float value);
 
+#ifdef COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wconversion"
+#elif COMPILER_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
     // TODO: Add string_to_unsigned variants
 
     constexpr int64_t StrViewToI64(const StringView view, int base = 10) {
@@ -107,18 +116,8 @@ namespace ARLib {
     constexpr int StrViewToInt(const StringView view, int base = 10) {
         return static_cast<int>(StrViewToI64(view, base));
     }
-    constexpr int64_t StrToI64(const String& str, int base = 10) { return StrViewToI64(str.view(), base); }
-    constexpr int StrToInt(const String& str, int base = 10) {
-        return static_cast<int>(StrViewToI64(str.view(), base));
-    }
-
-#ifdef COMPILER_GCC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#elif COMPILER_CLANG
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
-#endif
+    inline int64_t StrToI64(const String& str, int base = 10) { return StrViewToI64(str.view(), base); }
+    inline int StrToInt(const String& str, int base = 10) { return static_cast<int>(StrViewToI64(str.view(), base)); }
 
     template <SupportedBase Base = SupportedBase::Decimal>
     String IntToStr(Integral auto value) {

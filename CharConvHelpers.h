@@ -7,6 +7,10 @@
 #include "cstdio_compat.h"
 
 namespace ARLib {
+#ifdef COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
     // these functions expect an already whitespace trimmed string
     constexpr int64_t StrViewToI64Decimal(const StringView str) {
         size_t start_idx = 0;
@@ -21,7 +25,7 @@ namespace ARLib {
             if (str[start_idx] != '0') break;
             start_idx++;
         }
-        
+
         if (start_idx == end_idx) return 0;
 
         // out of range check
@@ -162,11 +166,11 @@ namespace ARLib {
     }
 
     constexpr void WriteToCharsImpl(char* ptr, size_t len, Integral auto value) {
-        static constexpr char digits[201] = "0001020304050607080910111213141516171819"
-                                            "2021222324252627282930313233343536373839"
-                                            "4041424344454647484950515253545556575859"
-                                            "6061626364656667686970717273747576777879"
-                                            "8081828384858687888990919293949596979899";
+        constexpr char digits[201] = "0001020304050607080910111213141516171819"
+                                     "2021222324252627282930313233343536373839"
+                                     "4041424344454647484950515253545556575859"
+                                     "6061626364656667686970717273747576777879"
+                                     "8081828384858687888990919293949596979899";
         auto pos = len - 1;
         while (value >= 100) {
             auto const num = (value % 100) * 2;
@@ -182,4 +186,7 @@ namespace ARLib {
         } else
             ptr[0] = '0' + static_cast<char>(value);
     }
+#ifdef COMPILER_GCC
+#pragma GCC diagnostic pop
+#endif
 } // namespace ARLib
