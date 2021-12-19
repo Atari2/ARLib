@@ -165,6 +165,13 @@ namespace ARLib {
     float modf(float x, float* iptr);
     double modf(double x, double* iptr);
     double sqrt(double arg);
+    constexpr int64_t constexpr_int_nonneg_pow(int64_t base, uint64_t exponent) {
+        int64_t res = 1;
+        for (uint64_t i = 0; i < exponent; i++) {
+            res *= base;
+        }
+        return res;
+    }
     double pow(double base, double exponent);
     extern "C" {
     double arlib_exp(double x);

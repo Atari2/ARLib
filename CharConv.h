@@ -1,22 +1,10 @@
 #pragma once
-#include "Assertion.h"
-#include "Concepts.h"
-#include "PrintInfo.h"
-#include "StringView.h"
-#include "cmath_compat.h"
-#include "cstdio_compat.h"
+#include "CharConvHelpers.h"
 
 namespace ARLib {
 
     enum class SupportedBase { Decimal, Hexadecimal, Binary, Octal };
 
-    // FIXME: avoid pow/round calls in Str{View}To{I64/int}
-    // TODO: make StrToInt more efficient
-    // add StrToUInt
-    int64_t StrViewToI64(StringView view, int base = 10);
-    int StrViewToInt(StringView view, int base = 10);
-    int64_t StrToI64(const String& str, int base = 10);
-    int StrToInt(const String& str, int base = 10);
     // FIXME: make this more efficient
     double StrToDouble(const String& str);
     float StrToFloat(const String& str);
@@ -24,44 +12,113 @@ namespace ARLib {
     String LongDoubleToStr(long double value);
     String FloatToStr(float value);
 
-    constexpr size_t StrLenFromIntegral(Integral auto value) noexcept {
-        static_assert(!IsSigned<decltype(value)>, "Value must be unsigned");
-        size_t n = 1;
-        constexpr size_t base = 10;
-        constexpr size_t b2 = base * base;
-        constexpr size_t b3 = b2 * base;
-        constexpr size_t b4 = b3 * base;
-        for (;;) {
-            if (value < static_cast<decltype(value)>(base)) return n;
-            if (value < b2) return n + 1;
-            if (value < b3) return n + 2;
-            if (value < b4) return n + 3;
-            value /= b4;
-            n += 4;
+    // TODO: Add string_to_unsigned variants
+
+    constexpr int64_t StrViewToI64(const StringView view, int base = 10) {
+        if (base < 2 || base > 36) return 0;
+
+        size_t cur_index = 0;
+        size_t max_index = view.length();
+
+        // skip leading and trailing whitespace
+        if (max_index == 0) return 0;
+
+        while (isspace(view[cur_index])) {
+            cur_index++;
+            if (cur_index == max_index) return 0;
         }
+
+        while (isspace(view[max_index - 1])) {
+            max_index--;
+            if (max_index == npos_) return 0;
+        }
+
+        if (cur_index == max_index) return 0;
+
+        switch (base) {
+        case 2:
+            return StrViewToI64Binary(view.substringview(cur_index, max_index));
+        case 8:
+            return StrViewToI64Octal(view.substringview(cur_index, max_index));
+        case 10:
+            return StrViewToI64Decimal(view.substringview(cur_index, max_index));
+        case 16:
+            return StrViewToI64Hexadecimal(view.substringview(cur_index, max_index));
+        default:
+            // bases other than 2, 8, 10 and 16 take the slow path
+            break;
+        }
+
+        int sign = 1;
+        char s = view[cur_index];
+        if (s == '+' || s == '-') {
+            sign = s == '+' ? 1 : -1;
+            cur_index++;
+        }
+
+        if (cur_index == max_index) return 0ll * sign;
+
+        // skip leading zeros
+        while (view[cur_index] == '0') {
+            cur_index++;
+        }
+
+        if (cur_index == max_index) return 0ll * sign;
+
+        // 0-9 => 48-57
+        // A-Z => 65-90
+
+        // base is a power of 2, we can use bitshifts, else, use pow
+        // allowed power of 2s are {4, 32}, because base is bounded [2, 36]
+        // and 2, 8 and 16 are already handled elsewhere
+        int64_t total = 0;
+        if (base == 4 || base == 32) {
+            int64_t shamt = base == 4 ? 2 : 5;
+            for (size_t opp = max_index - 1, sh_idx = 0; opp >= cur_index; opp--, sh_idx++) {
+                char c = toupper(view[opp]);
+                if (!isalnum(c)) return total * sign;
+                int num = c >= 'A' ? (c - 'A' + 10) : (c - '0');
+                if (num >= base) return total;
+                total |= static_cast<int64_t>(num) << (shamt * sh_idx);
+                if (opp == cur_index) break;
+            }
+        } else {
+            uint64_t pw = 0;
+            double base_dbl = static_cast<double>(base);
+            double pw_dbl = 0.0;
+            for (size_t opp = max_index - 1; opp >= cur_index; opp--) {
+                char c = toupper(view[opp]);
+                if (!isalnum(c)) return total * sign;
+                int num = c >= 'A' ? (c - 'A' + 10) : (c - '0');
+                if (num >= base) return total;
+                if (is_constant_evaluated()) {
+                    total += num * constexpr_int_nonneg_pow(base, pw);
+                    pw++;
+                } else {
+                    total += static_cast<int64_t>(round((num * pow(base_dbl, pw_dbl))));
+                    pw_dbl += 1.0;
+                }
+                if (opp == cur_index) break;
+            }
+        }
+        return total * sign;
     }
 
-    void WriteToCharsImpl(char* ptr, size_t len, Integral auto value) {
-        static constexpr char digits[201] = "0001020304050607080910111213141516171819"
-                                            "2021222324252627282930313233343536373839"
-                                            "4041424344454647484950515253545556575859"
-                                            "6061626364656667686970717273747576777879"
-                                            "8081828384858687888990919293949596979899";
-        auto pos = len - 1;
-        while (value >= 100) {
-            auto const num = (value % 100) * 2;
-            value /= 100;
-            ptr[pos] = digits[num + 1];
-            ptr[pos - 1] = digits[num];
-            pos -= 2;
-        }
-        if (value >= 10) {
-            auto const num = value * 2;
-            ptr[1] = digits[num + 1];
-            ptr[0] = digits[num];
-        } else
-            ptr[0] = '0' + static_cast<char>(value);
+    constexpr int StrViewToInt(const StringView view, int base = 10) {
+        return static_cast<int>(StrViewToI64(view, base));
     }
+    constexpr int64_t StrToI64(const String& str, int base = 10) { return StrViewToI64(str.view(), base); }
+    constexpr int StrToInt(const String& str, int base = 10) {
+        return static_cast<int>(StrViewToI64(str.view(), base));
+    }
+
+#ifdef COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#elif COMPILER_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
+#endif
 
     template <SupportedBase Base = SupportedBase::Decimal>
     String IntToStr(Integral auto value) {
@@ -69,9 +126,9 @@ namespace ARLib {
             if constexpr (IsSigned<decltype(value)>) {
                 using Ut = MakeUnsignedT<decltype(value)>;
                 const bool neg = value < 0;
-                const auto uvalue = neg ? static_cast<Ut>(~value) + 1ul : static_cast<Ut>(value);
+                const auto uvalue = neg ? static_cast<Ut>(~value) + static_cast<Ut>(1) : static_cast<Ut>(value);
                 const auto len = StrLenFromIntegral<Ut>(uvalue);
-                String result{neg + len, '-'};
+                String result{len + (neg ? 1 : 0), '-'};
                 WriteToCharsImpl(result.rawptr() + neg, len, uvalue);
                 return result;
             } else {
@@ -107,6 +164,12 @@ namespace ARLib {
             return rev.reversed();
         }
     }
+
+#ifdef COMPILER_GCC
+#pragma GCC diagnostic pop
+#elif COMPILER_CLANG
+#pragma clang diagnostic pop
+#endif
 
     inline bool StrToBool(const String& value) {
         constexpr StringView view{"true"};

@@ -67,6 +67,33 @@ TEST(ARLibTests, HashMap) {
 TEST(ARLibTests, CharConv) {
     String a{"1234"};
     String b{"123.123"};
+
+    constexpr auto expected = NumberTraits<ARLib::int64_t>::max;
+
+    constexpr StringView s_hex{"-0x7fffffffffffffff"};
+    constexpr auto res_hex = StrViewToI64(s_hex, 16);
+    static_assert(res_hex == -expected, "StrViewToI64 failed with base 16");
+
+    constexpr StringView s_oct{"0o137726051051"};
+    constexpr auto res_oct = StrViewToI64(s_oct, 8);
+    static_assert(res_oct == 12873912873, "StrViewToI64 failed with base 8");
+
+    constexpr StringView s_dec{"   -123809"};
+    constexpr auto res_dec = StrViewToI64(s_dec);
+    static_assert(res_dec == -123809, "StrViewToI64 failed with base 10");
+
+    constexpr StringView s_bin{"0b111111111111111111111111111111111111111111111111111111111111111"};
+    constexpr auto res_bin = StrViewToI64(s_bin, 2);
+    static_assert(res_bin == expected, "StrViewToI64 failed with base 2");
+
+    constexpr StringView s_4{"  1233   "};
+    constexpr auto res_4 = StrViewToI64(s_4, 4);
+    static_assert(res_4 == 111, "StrViewToI64 failed with base 4");
+
+    constexpr StringView s_15{"1233"};
+    constexpr auto res_15 = StrViewToI64(s_15, 15);
+    static_assert(res_15 == 3873, "StrViewToI64 failed with base 4");
+
     EXPECT_EQ(StrToInt(a), 1234);
     EXPECT_EQ(StrToFloat(b), 123.123f);
     int c = 101010;

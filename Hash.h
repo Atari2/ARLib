@@ -7,7 +7,6 @@
 #include "Types.h"
 
 namespace ARLib {
-    // TODO: add support for MD5, SHA1 and SHA256 at the very least.
     enum class HashType { CRC32, MD5, SHA1, SHA256 };
 
     using ReadOnlyByteView = ReadOnlyView<uint8_t>;
