@@ -48,7 +48,7 @@ namespace ARLib {
                                                           100000000000000000,
                                                           1000000000000000000};
         // 0-9 => 48-57
-        for (auto idx = end_idx - 1, tbl_idx = 0_u64; idx >= start_idx; idx--, tbl_idx++) {
+        for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
             result += static_cast<int64_t>(str[idx] - '0') * values_table[tbl_idx];
             if (idx == 0) break;
         }
@@ -77,7 +77,7 @@ namespace ARLib {
         constexpr size_t max_int64_size = strlen("111111111111111111111111111111111111111111111111111111111111111");
         if (end_idx - start_idx > max_int64_size) return 0;
         // 0-1 => 48-49
-        for (auto idx = end_idx - 1, tbl_idx = 0_u64; idx >= start_idx; idx--, tbl_idx++) {
+        for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
             result |= static_cast<int64_t>(str[idx] - '0') << tbl_idx;
             if (idx == 0) break;
         }
@@ -106,7 +106,7 @@ namespace ARLib {
         constexpr size_t max_int64_size = strlen("777777777777777777777");
         if (end_idx - start_idx > max_int64_size) return 0;
         // 0-1 => 48-49
-        for (auto idx = end_idx - 1, tbl_idx = 0_u64; idx >= start_idx; idx--, tbl_idx++) {
+        for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
             result |= static_cast<int64_t>(str[idx] - '0') << (tbl_idx * 3);
             if (idx == 0) break;
         }
@@ -135,7 +135,7 @@ namespace ARLib {
         constexpr size_t max_int64_size = strlen("7fffffffffffffff");
         if (end_idx - start_idx > max_int64_size) return 0;
         // 0-1 => 48-49
-        for (auto idx = end_idx - 1, tbl_idx = 0_u64; idx >= start_idx; idx--, tbl_idx++) {
+        for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
             char c = toupper(str[idx]);
             auto num = c >= 'A' ? (c - 'A' + 10) : (c - '0');
             result |= static_cast<int64_t>(num) << (tbl_idx * 4);
