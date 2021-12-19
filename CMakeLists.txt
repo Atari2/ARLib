@@ -133,11 +133,7 @@ add_library(ARLib ${ARLIB_SOURCE_FILES})
 if (ARLIB_TOP_LEVEL)
 	add_subdirectory(Tests)
 	add_subdirectory(Playground)
-endif()
-
-if (PERF_TEST)
-	message(STATUS "Enabling perfomance runner")
-	add_subdirectory(PerformanceTests)
+	add_subdirectory(Benchmark)
 endif()
 
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
@@ -237,12 +233,5 @@ if (ARLIB_TOP_LEVEL)
 		RUN_TEST ALL
 		ARLibTestSuite
 		COMMENT "Running tests"
-	)
-endif()
-if (PERF_TEST)
-	add_custom_target(
-		RUN_PERF ALL
-		ARLibPerformanceSuite
-		COMMENT "Running performance tests"
 	)
 endif()

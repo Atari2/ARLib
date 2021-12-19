@@ -11,7 +11,8 @@ namespace ARLib {
     enum class SupportedBase { Decimal, Hexadecimal, Binary, Octal };
 
     // FIXME: avoid pow/round calls in Str{View}To{I64/int}
-
+    // TODO: make StrToInt more efficient
+    // add StrToUInt
     int64_t StrViewToI64(StringView view, int base = 10);
     int StrViewToInt(StringView view, int base = 10);
     int64_t StrToI64(const String& str, int base = 10);
@@ -23,45 +24,62 @@ namespace ARLib {
     String LongDoubleToStr(long double value);
     String FloatToStr(float value);
 
-    template <class UnsignedIntegral>
-    char* unsigned_to_buffer(char* next, UnsignedIntegral uvalue) {
-#ifdef ENVIRON64
-        auto uvalue_trunc = uvalue;
-#else
-        constexpr bool huge_unsigned = sizeof(UnsignedIntegral) > 4;
-        if constexpr (huge_unsigned) {
-            while (uvalue > 0xFFFFFFFFU) {
-                auto uvalue_chunk = static_cast<unsigned long>(uvalue % 1000000000);
-                uvalue /= 1000000000;
-                for (int i = 0; i != 9; ++i) {
-                    *--next = static_cast<char>('0' + uvalue_chunk % 10);
-                    uvalue_chunk /= 10;
-                }
-            }
+    constexpr size_t StrLenFromIntegral(Integral auto value) noexcept {
+        static_assert(!IsSigned<decltype(value)>, "Value must be unsigned");
+        size_t n = 1;
+        constexpr size_t base = 10;
+        constexpr size_t b2 = base * base;
+        constexpr size_t b3 = b2 * base;
+        constexpr size_t b4 = b3 * base;
+        for (;;) {
+            if (value < static_cast<decltype(value)>(base)) return n;
+            if (value < b2) return n + 1;
+            if (value < b3) return n + 2;
+            if (value < b4) return n + 3;
+            value /= b4;
+            n += 4;
         }
-        auto uvalue_trunc = static_cast<unsigned long>(uvalue);
-#endif
-        do {
-            *--next = static_cast<char>('0' + uvalue_trunc % 10);
-            uvalue_trunc /= 10;
-        } while (uvalue_trunc != 0);
-        return next;
+    }
+
+    void WriteToCharsImpl(char* ptr, size_t len, Integral auto value) {
+        static constexpr char digits[201] = "0001020304050607080910111213141516171819"
+                                            "2021222324252627282930313233343536373839"
+                                            "4041424344454647484950515253545556575859"
+                                            "6061626364656667686970717273747576777879"
+                                            "8081828384858687888990919293949596979899";
+        auto pos = len - 1;
+        while (value >= 100) {
+            auto const num = (value % 100) * 2;
+            value /= 100;
+            ptr[pos] = digits[num + 1];
+            ptr[pos - 1] = digits[num];
+            pos -= 2;
+        }
+        if (value >= 10) {
+            auto const num = value * 2;
+            ptr[1] = digits[num + 1];
+            ptr[0] = digits[num];
+        } else
+            ptr[0] = '0' + static_cast<char>(value);
     }
 
     template <SupportedBase Base = SupportedBase::Decimal>
     String IntToStr(Integral auto value) {
         if constexpr (Base == SupportedBase::Decimal) {
-            char buf[22] = {0};
-            char* const buf_end = end(buf) - 1;
-            char* next = buf_end;
-            const auto uvalue = static_cast<MakeUnsignedT<decltype(value)>>(value);
-            if (value < 0) {
-                next = unsigned_to_buffer(next, 0 - uvalue);
-                *--next = '-';
+            if constexpr (IsSigned<decltype(value)>) {
+                using Ut = MakeUnsignedT<decltype(value)>;
+                const bool neg = value < 0;
+                const auto uvalue = neg ? static_cast<Ut>(~value) + 1ul : static_cast<Ut>(value);
+                const auto len = StrLenFromIntegral<Ut>(uvalue);
+                String result{neg + len, '-'};
+                WriteToCharsImpl(result.rawptr() + neg, len, uvalue);
+                return result;
             } else {
-                next = unsigned_to_buffer(next, uvalue);
+                size_t len = StrLenFromIntegral(value);
+                String result{len, '\0'};
+                WriteToCharsImpl(result.rawptr(), len, value);
+                return result;
             }
-            return String{next, buf_end};
         } else {
             String rev{};
             if constexpr (Base == SupportedBase::Hexadecimal) {
