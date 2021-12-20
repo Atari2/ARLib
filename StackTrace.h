@@ -9,6 +9,7 @@ namespace ARLib {
         char* m_backtrace_info[MAX_BACKTRACE]{};
         size_t m_size{0};
         public:
+        static bool already_generating_backtrace;
         size_t size() { return m_size; }
         const char* backtrace_at(size_t index) { return m_backtrace_info[index]; }
         BackTrace() = default;
@@ -19,7 +20,7 @@ namespace ARLib {
     BackTrace capture_backtrace();
     void print_backtrace();
 } // namespace ARLib
-#define BACKTRACE() ARLib::print_backtrace()
+#define BACKTRACE() if (!ARLib::BackTrace::already_generating_backtrace) ARLib::print_backtrace()
 #else
 #define BACKTRACE()
 #endif

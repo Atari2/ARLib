@@ -14,11 +14,12 @@
 #else
 #include "String.h"
 #include "StringView.h"
+#include <cstdlib> // this header is here literally just for std::free and I'm sad about it
 #include <cxxabi.h>
-#include <cstdlib>      // this header is here literally just for std::free and I'm sad about it
 #include <execinfo.h>
 #endif
 namespace ARLib {
+    bool BackTrace::already_generating_backtrace = false;
     void BackTrace::append_frame(char* information, size_t info_len /* includes null terminator */,
                                  bool need_to_alloc) {
         if (need_to_alloc) {
@@ -40,6 +41,11 @@ namespace ARLib {
         }
     }
     void print_backtrace() {
+        if (BackTrace::already_generating_backtrace) {
+            ARLib::puts(
+            "Trying to construct a backtrace while another backtrace is already being generated, aborting...");
+        }
+        BackTrace::already_generating_backtrace = true;
         BackTrace btrace = capture_backtrace();
         puts("---- BACKTRACE START ----");
         for (size_t i = 0; i < btrace.size(); i++) {
@@ -115,6 +121,8 @@ namespace ARLib {
                     end_of_name = &symbols[i][j];
                 if (end_of_name && start_of_name) break;
             }
+            if (!start_of_name) start_of_name = symbols[i];
+            if (!end_of_name) end_of_name = symbols[i] + len;
             String name_to_demangle{start_of_name, end_of_name};
             char* demangled = abi::__cxa_demangle(name_to_demangle.data(), nullptr, nullptr, &status);
             if (status != 0) {
@@ -125,7 +133,6 @@ namespace ARLib {
                 size_t sz = demangled_full_symbol.size();
                 trace.append_frame(demangled_full_symbol.release(), sz + 1);
             }
-
         }
         std::free(symbols);
         return trace;
