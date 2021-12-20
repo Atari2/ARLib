@@ -6,6 +6,7 @@ list(
 	"${CMAKE_CURRENT_SOURCE_DIR}/exp.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/log.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/log10.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/memset.cpp"
 )
 add_library(ARLib_asm_ext ${ASM_LIB_SOURCE_FILES})
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

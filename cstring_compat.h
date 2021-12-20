@@ -159,7 +159,11 @@ namespace ARLib {
         }
 #endif
     }
-    void* memset(void* ptr, uint8_t value, size_t size);
+
+    extern "C" {
+    void* arlib_memset(void* ptr, int value, size_t size);
+    }
+    inline void* memset(void* ptr, uint8_t value, size_t size) { return arlib_memset(ptr, value, size); }
     constexpr char toupper(char c) {
         if (c >= 96_c && c <= 122_c) return c - 32_c;
         return c;
