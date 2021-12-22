@@ -91,13 +91,13 @@ namespace ARLib {
         auto comp = absolute_comparison(dividend, divisor);
         if (comp == equal) {
             if (dividend.sign() == divisor.sign())
-                return BigInt{1};
+                return __bigint_one;
             else
                 return BigInt{-1};
         } else if (comp == less) {
             return __bigint_zero;
         } else {
-            if (absolute_comparison(divisor, BigInt{1}) == equal) {
+            if (absolute_comparison(divisor, __bigint_one) == equal) {
                 BigInt result = dividend;
                 result.m_sign = to_enum<Sign>(!(dividend.sign() == divisor.sign()));
                 return result;

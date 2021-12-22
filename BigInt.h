@@ -173,6 +173,7 @@ namespace ARLib {
     };
 
     static const inline BigInt __bigint_zero = BigInt{};
+    static const inline BigInt __bigint_one = BigInt{1};
 
     template <>
     struct PrintInfo<BigInt> {
