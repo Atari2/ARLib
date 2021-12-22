@@ -23,6 +23,7 @@
 #include "../SortedVector.h"
 #include "../Stack.h"
 #include "../String.h"
+#include "../StringLiteral.h"
 #include "../Test.h"
 #include "../Threading.h"
 #include "../Tree.h"

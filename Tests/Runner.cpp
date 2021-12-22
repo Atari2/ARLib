@@ -738,3 +738,21 @@ TEST(ARLibTests, StrStrTests) {
     EXPECT_EQ(ARLib::strstr(str, c), str);
     EXPECT_EQ(ARLib::strstr(str, d), str + 5);
 }
+
+#ifdef STRINGLITERAL_AVAILABLE
+TEST(ARLibTests, StringLiteralTests) {
+    constexpr static StringLiteral l{"hello  world my name is"};
+    constexpr char c = l[4];
+    static_assert(c == 'o');
+    constexpr auto sz = l.size();
+    static_assert(sz == 23);
+    constexpr auto occ = l.count("l");
+    static_assert(occ == 3);
+    constexpr auto splits = l.split<l.count("  ")>("  ");
+    constexpr auto idx = l.index_of("rld");
+    static_assert(idx == 9);
+    static_assert(splits.size() == 2);
+    static_assert(splits[0] == "hello");
+    static_assert(splits[1] == "world my name is");
+}
+#endif
