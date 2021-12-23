@@ -5,12 +5,21 @@
 #include "std_includes.h"
 
 namespace ARLib {
-    template <EqualityComparable T>
+    template <typename T>
+    struct SetComparer {
+        static_assert(EqualityComparable<T>,
+                      "Your type must have an equality operator or have a custom SetComprarer "
+                      "implementation. SetComprarer just wants a static bool equal(const T&, const T&)");
+        static bool equal(const T& first, const T& second) { return first == second; }
+    };
+
+    template <typename T, typename CustomComparer = SetComparer<T>>
     class Set {
         using Iter = Iterator<T>;
         using ReverseIter = ReverseIterator<T>;
         using ConstIter = Iterator<T>;
         using ConstReverseIter = ReverseIterator<T>;
+        using Cmp = CustomComparer;
 
         size_t m_capacity = 0;
         size_t m_size = 0;
@@ -33,16 +42,18 @@ namespace ARLib {
         }
 
         void assert_index_(size_t index) {
-            SOFT_ASSERT_FMT((index < m_size), "Index %lu was higher than size %lu", index, m_size)
+            SOFT_ASSERT_FMT((index < m_size), "Index %lu was higher than size %lu", index, m_size);
         }
 
-        void append_internal_(T&& elem) {
+        T& append_internal_(T&& elem) {
             check_capacity_();
             m_storage[m_size++] = move(elem);
+            return m_storage[m_size - 1];
         }
-        void append_internal_(const T& elem) {
+        T& append_internal_(const T& elem) {
             check_capacity_();
             m_storage[m_size++] = elem;
+            return m_storage[m_size - 1];
         }
 
         void clear_() {
@@ -64,24 +75,22 @@ namespace ARLib {
             (append_internal_(Forward<Args>(args)), ...);
         }
 
-        bool insert(const T& elem) requires CopyAssignable<T> {
+        T& insert(const T& elem) requires CopyAssignable<T> {
             Iter it = find(elem);
             if (it != end()) {
-                return false;
+                return *it;
             } else {
-                append_internal_(elem);
+                return append_internal_(elem);
             }
-            return true;
         }
 
-        bool insert(T&& elem) requires MoveAssignable<T> {
+        T& insert(T&& elem) requires MoveAssignable<T> {
             Iter it = find(elem);
             if (it != end()) {
-                return false;
+                return *it;
             } else {
-                append_internal_(Forward<T>(elem));
+                return append_internal_(Forward<T>(elem));
             }
-            return true;
         }
 
         Iter begin() const { return Iter{m_storage}; }
@@ -119,7 +128,7 @@ namespace ARLib {
 
         Iter find(const T& elem) const {
             for (size_t i = 0; i < m_size; i++) {
-                if (m_storage[i] == elem) return Iter{m_storage + i};
+                if (Cmp::equal(m_storage[i], elem)) return Iter{m_storage + i};
             }
             return end();
         }
