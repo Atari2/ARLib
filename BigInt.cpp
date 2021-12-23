@@ -1,8 +1,7 @@
 #include "BigInt.h"
 
 namespace ARLib {
-
-    BigInt::BigInt(const String& value) {
+    void BigInt::init_from_string(StringView value) {
         if (value.is_empty()) return;
         m_buffer.reserve(value.size() / 2);
         if (value[0] == '-') { m_sign = Sign::Minus; }
@@ -13,6 +12,10 @@ namespace ARLib {
             if (i <= 2) break;
         }
     }
+
+    BigInt::BigInt(const String& value) { init_from_string(value.view()); }
+
+    BigInt::BigInt(StringView value) { init_from_string(value); }
 
     // worst case O(N), best case O(1)
     Ordering BigInt::comparison_same_length(const BigInt& left, const BigInt& right) {
@@ -76,7 +79,7 @@ namespace ARLib {
     // this is omega-slow in the case of a bigint with more than 16 digits
     // divided by another bigint with more than 16 digits
     // because it doesn't hit any fast path and it has to do a subtraction on a loop in a loop
-    // worst case complexity (with N = dividend.size()) : O(N * (N + 99*(N*N))) -> O(N^2 + 99N^3) 
+    // worst case complexity (with N = dividend.size()) : O(N * (N + 99*(N*N))) -> O(N^2 + 99N^3)
     // but it works
     BigInt BigInt::division(const BigInt& dividend, const BigInt& divisor) {
         bool dividend_zero = dividend == __bigint_zero;

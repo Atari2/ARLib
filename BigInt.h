@@ -28,6 +28,7 @@ namespace ARLib {
         static BigInt sign_agnostic_difference(const BigInt& left, const BigInt& right);
         static BigInt difference(const BigInt& left, const BigInt& right);
         static BigInt sum(const BigInt& left, const BigInt& right);
+        void init_from_string(StringView view);
         void inplace_sum(const BigInt& other);
         void inplace_difference(const BigInt& other);
         void inplace_multiplication(const BigInt& other);
@@ -58,6 +59,7 @@ namespace ARLib {
 
         // must be a string in decimal
         BigInt(const String& value);
+        BigInt(StringView value);
 
         BigInt& operator++() {
             inplace_sum(BigInt{1});
