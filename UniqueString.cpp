@@ -1,15 +1,32 @@
 #include "UniqueString.h"
-#include "LinkedSet.h"
+#include "Set.h"
 
 namespace ARLib {
     namespace detail {
-        static LinkedSet<String>& get_interned_strings() {
-            static LinkedSet<String> s_interned_strings{};
+        struct UniqueStringSetComparator {
+            static bool equal(const SharedPtr<String>& first, const SharedPtr<String>& second) {
+                return *first == *second;
+            }
+        };
+
+        using UniqueStringSet = Set<SharedPtr<String>, UniqueStringSetComparator>;
+
+        UniqueStringSet& get_interned_strings() {
+            static UniqueStringSet s_interned_strings{};
             return s_interned_strings;
         }
     } // namespace detail
 
-    WeakPtr<String> UniqueString::construct(String s) {
-        return WeakPtr{ARLib::detail::get_interned_strings().prepend(Forward<String>(s))};
+    SharedPtr<String> UniqueString::construct(String s) {
+        SharedPtr<String> ptr{move(s)};
+        return detail::get_interned_strings().insert(ptr);
+    }
+
+    UniqueString::~UniqueString() {
+        auto& tbl = detail::get_interned_strings();
+        auto it = tbl.find(m_ref); 
+        HARD_ASSERT(it != tbl.end(), "UniqueString is not in table, this shouldn't happen");
+        m_ref.reset();
+        if ((*it).refcount() == 1) tbl.remove(*it);
     }
 } // namespace ARLib

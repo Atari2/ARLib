@@ -1,14 +1,14 @@
 #pragma once
 #include "String.h"
 #include "Types.h"
-#include "WeakPtr.h"
+#include "SharedPtr.h"
 #include "PrintInfo.h"
 
 namespace ARLib {
     class UniqueString {
-        WeakPtr<String> m_ref;
+        SharedPtr<String> m_ref;
 
-        static WeakPtr<String> construct(String s);
+        static SharedPtr<String> construct(String s);
 
         public:
         explicit UniqueString(const String& str) : m_ref(construct(str)) {}
@@ -28,8 +28,9 @@ namespace ARLib {
         }
         bool operator==(const UniqueString& other) const { return m_ref == other.m_ref; }
         bool operator==(const String& other) const { return *m_ref == other; }
-        WeakPtr<String> operator->() { return m_ref; }
-        const WeakPtr<String> operator->() const { return m_ref; }
+        SharedPtr<String>& operator->() { return m_ref; }
+        const SharedPtr<String>& operator->() const { return m_ref; }
+        ~UniqueString();
     };
 
     template <>
