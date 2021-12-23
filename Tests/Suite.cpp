@@ -68,9 +68,10 @@ namespace ARLib {
         };
         auto set = []() -> bool {
             Set<int> s{};
-            RETURN_IF_NOT_EQ(s.insert(10), true)
-            RETURN_IF_NOT_EQ(s.insert(20), true)
-            RETURN_IF_NOT_EQ(s.insert(10), false)
+            RETURN_IF_NOT_EQ(s.insert(10), 10)
+            RETURN_IF_NOT_EQ(s.insert(20), 20)
+            RETURN_IF_NOT_EQ(s.insert(10), 10)
+            RETURN_IF_NOT_EQ(s.size(), 2);
             RETURN_IF_NOT_EQ(s.remove(20), true)
             RETURN_IF_NOT_EQ(s.remove(20), false)
             return true;

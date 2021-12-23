@@ -118,9 +118,10 @@ TEST(ARLibTests, SortedVec) {
 
 TEST(ARLibTests, SetTests) {
     Set<int> s{};
-    EXPECT_EQ(s.insert(10), true);
-    EXPECT_EQ(s.insert(20), true);
-    EXPECT_EQ(s.insert(10), false);
+    EXPECT_EQ(s.insert(10), 10);
+    EXPECT_EQ(s.insert(20), 20);
+    EXPECT_EQ(s.insert(10), 10);
+    EXPECT_EQ(s.size(), 2);
     EXPECT_EQ(s.remove(20), true);
     EXPECT_EQ(s.remove(20), false);
 }
