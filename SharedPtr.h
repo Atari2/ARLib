@@ -83,6 +83,7 @@ namespace ARLib {
         void reset() {
             if (decrease_instance_count_()) { delete m_storage; }
             m_storage = nullptr;
+            m_count = nullptr;
         }
 
         void share_with(SharedPtr& other) const {
