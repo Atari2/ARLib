@@ -1,21 +1,19 @@
 #include "CharConv.h"
 #include "Vector.h"
 
+#include <charconv>
+
 namespace ARLib {
 
-    // FIXME: make this more efficient
+    // FIXME: Write a routine that actually works
+    // using the stdlib for now because this is too hard to get right
+    // one day I'll actual write it properly
     double StrToDouble(const String& str) {
-        auto parts = str.split_view_at_any(".,");
-        auto len = parts.size();
-        if (len == 1) return static_cast<double>(StrToI64(str));
-        if (len > 2) return NumericLimits::NanD;
-        auto integral_part = static_cast<double>(StrViewToI64(parts[0]));
-        double sign = 1.0;
-        if (integral_part < 0) sign = -1.0;
-        integral_part = abs(integral_part);
-        auto fract_part = static_cast<double>(StrViewToI64(parts[1]));
-        fract_part /= pow(10.0, static_cast<double>(parts[1].length()));
-        return (integral_part + fract_part) * sign;
+        double val = 0.0;
+        auto res = std::from_chars(&*str.begin(), &*str.end(), val);
+        HARD_ASSERT(res.ec != std::errc::invalid_argument && res.ec != std::errc::result_out_of_range,
+                    "Failed to convert string to double")
+        return val;
     }
 
     float StrToFloat(const String& str) { return static_cast<float>(StrToDouble(str)); }
