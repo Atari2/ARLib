@@ -1,31 +1,55 @@
 #pragma once
+#include "Conversion.h"
 #include "HashBase.h"
 #include "Memory.h"
 #include "PrintInfo.h"
 #include "TypeTraits.h"
-
+#ifdef COMPILER_MSVC
+#include <intrin.h>
+#define SYNC_INC(x) _InterlockedIncrement(x)
+#define SYNC_DEC(x) _InterlockedDecrement(x)
+#else
+#define SYNC_INC(x) __sync_add_and_fetch(x, 1)
+#define SYNC_DEC(x) __sync_sub_and_fetch(x, 1)
+#endif
 namespace ARLib {
+
+    template <typename T>
+    class RefCountBase {
+        uint32_t m_counter = 1;
+        T* m_object = nullptr;
+
+        void destroy() noexcept { delete m_object; }
+
+        public:
+        constexpr RefCountBase() noexcept = default;
+        explicit RefCountBase(T* object) : m_object(object) {}
+        RefCountBase(const RefCountBase&) = delete;
+        RefCountBase& operator=(const RefCountBase&) = delete;
+        void incref() noexcept { SYNC_INC(cast<volatile long*>(&m_counter)); }
+        void decref() noexcept {
+            if (SYNC_DEC(cast<volatile long*>(&m_counter)) == 0) { destroy(); }
+        }
+        T* release_storage() {
+            T* ptr = m_object;
+            m_object = nullptr;
+            return ptr;
+        }
+        auto count() const noexcept { return m_counter; }
+    };
+
     template <typename T>
     class SharedPtr {
         T* m_storage = nullptr;
-        size_t* m_count = nullptr;
+        RefCountBase<T>* m_count = nullptr;
 
-        bool decrease_instance_count_() {
-            if (m_count == nullptr) return false;
-            if (*m_count == 0) {
-                // count may be 0 if object was constructed from nullptr
-                // which is valid, for now, since it makes life a little bit easier
+        void decrease_instance_count_() {
+            if (m_count == nullptr) return;
+            m_count->decref();
+            if (m_count->count() == 0) {
                 delete m_count;
                 m_count = nullptr;
-                return true;
             }
-            (*m_count)--;
-            if (*m_count == 0) {
-                delete m_count;
-                m_count = nullptr;
-                return true;
-            }
-            return false;
         }
 
         public:
@@ -35,29 +59,31 @@ namespace ARLib {
             other.m_count = nullptr;
         }
         SharedPtr& operator=(SharedPtr&& other) noexcept {
-            if (decrease_instance_count_()) { delete m_storage; }
+            decrease_instance_count_();
             m_storage = other.m_storage;
             m_count = other.m_count;
             other.m_storage = nullptr;
             other.m_count = nullptr;
             return *this;
         }
-        SharedPtr(nullptr_t) : m_storage(nullptr), m_count(new size_t{0}) {}
-        SharedPtr(T* ptr) : m_storage(ptr), m_count(ptr ? new size_t{1} : new size_t{0}) {}
+        SharedPtr(nullptr_t) = delete;
+        SharedPtr(T* ptr) : m_storage(ptr), m_count(new RefCountBase<T>{m_storage}) {
+            HARD_ASSERT(ptr, "Pointer passed to SharedPtr must not be null");
+        }
         SharedPtr(T&& storage) {
             m_storage = new T{move(storage)};
-            m_count = new size_t{1};
+            m_count = new RefCountBase<T>{m_storage};
         }
         SharedPtr(const SharedPtr& other) {
             m_storage = other.m_storage;
             m_count = other.m_count;
-            (*m_count)++;
+            m_count->incref();
         }
 
         template <typename... Args>
         SharedPtr(EmplaceT<T>, Args&&... args) {
             m_storage = new T{Forward<Args>(args)...};
-            m_count = new size_t{1};
+            m_count = new RefCountBase<T>{m_storage};
         }
 
         SharedPtr& operator=(const SharedPtr& other) {
@@ -65,7 +91,7 @@ namespace ARLib {
             reset();
             m_storage = other.m_storage;
             m_count = other.m_count;
-            (*m_count)++;
+            m_count->incref();
             return *this;
         }
 
@@ -73,7 +99,7 @@ namespace ARLib {
         bool operator==(const T* other_ptr) const { return m_storage == other_ptr; }
 
         T* release() {
-            T* ptr = m_storage;
+            T* ptr = m_count->release_storage();
             decrease_instance_count_();
             m_count = nullptr;
             m_storage = nullptr;
@@ -81,7 +107,7 @@ namespace ARLib {
         }
 
         void reset() {
-            if (decrease_instance_count_()) { delete m_storage; }
+            decrease_instance_count_();
             m_storage = nullptr;
             m_count = nullptr;
         }
@@ -89,13 +115,13 @@ namespace ARLib {
         void share_with(SharedPtr& other) const {
             other.m_storage = m_storage;
             other.m_count = m_count;
-            (*m_count)++;
+            m_count->incref();
         }
 
         T* get() { return m_storage; }
         const T* get() const { return m_storage; }
 
-        size_t refcount() const { return m_count ? *m_count : 0; }
+        uint32_t refcount() const { return m_count ? m_count->count() : 0u; }
         bool exists() const { return m_storage != nullptr; }
 
         T* operator->() { return m_storage; }
@@ -103,9 +129,7 @@ namespace ARLib {
         T& operator*() { return *m_storage; }
         const T& operator*() const { return *m_storage; }
 
-        ~SharedPtr() {
-            if (decrease_instance_count_()) { delete m_storage; }
-        }
+        ~SharedPtr() { decrease_instance_count_(); }
     };
 
     template <typename T>
