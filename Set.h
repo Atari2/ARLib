@@ -117,9 +117,15 @@ namespace ARLib {
         bool remove(const T& elem) {
             for (size_t i = 0; i < m_size; i++) {
                 if (m_storage[i] == elem) {
-                    m_storage[i].~T();
                     m_size--;
-                    memmove(m_storage + i, m_storage + i + 1, sizeof(T) * (m_size - i));
+                    if constexpr (IsTriviallyCopiableV<T>) {
+                        m_storage[i].~T();
+                        memmove(m_storage + i, m_storage + i + 1, sizeof(T) * (m_size - i));
+                    } else { 
+                        for (size_t j = i; j < m_size; j++) {
+                            m_storage[j] = move(m_storage[j + 1]);
+                        }
+                    }
                     return true;
                 }
             }

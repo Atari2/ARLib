@@ -26,9 +26,9 @@ namespace ARLib {
         explicit RefCountBase(T* object) : m_object(object) {}
         RefCountBase(const RefCountBase&) = delete;
         RefCountBase& operator=(const RefCountBase&) = delete;
-        void incref() noexcept { SYNC_INC(cast<volatile long*>(&m_counter)); }
+        void incref() noexcept { SYNC_INC(cast<volatile int32_t*>(&m_counter)); }
         void decref() noexcept {
-            if (SYNC_DEC(cast<volatile long*>(&m_counter)) == 0) { destroy(); }
+            if (SYNC_DEC(cast<volatile int32_t*>(&m_counter)) == 0) { destroy(); }
         }
         T* release_storage() {
             T* ptr = m_object;
