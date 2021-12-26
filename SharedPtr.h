@@ -14,12 +14,18 @@
 #endif
 namespace ARLib {
 
-    template <typename T>
+    template <typename T, bool Multiple = false>
     class RefCountBase {
         unsigned long m_counter = 1;
         T* m_object = nullptr;
 
-        void destroy() noexcept { delete m_object; }
+        void destroy() noexcept {
+            if constexpr (Multiple) {
+                delete[] m_object;
+            } else {
+                delete m_object;
+            }
+        }
 
         public:
         constexpr RefCountBase() noexcept = default;
@@ -134,19 +140,18 @@ namespace ARLib {
 
     template <typename T>
     class SharedPtr<T[]> {
+        using RefCount = RefCountBase<T, true>;
         T* m_storage = nullptr;
-        size_t* m_count = nullptr;
+        RefCount* m_count = nullptr;
         size_t m_size = 0ull;
 
-        bool decrease_instance_count_() {
-            if (m_count == nullptr) return false;
-            (*m_count)--;
-            if (*m_count == 0) {
+        void decrease_instance_count_() {
+            if (m_count == nullptr) return;
+            m_count->decref();
+            if (m_count->count() == 0) {
                 delete m_count;
                 m_count = nullptr;
-                return true;
             }
-            return false;
         }
 
         public:
@@ -156,7 +161,7 @@ namespace ARLib {
             other.m_count = nullptr;
         }
         SharedPtr& operator=(SharedPtr&& other) noexcept {
-            if (decrease_instance_count_()) { delete m_storage; }
+            decrease_instance_count_();
             m_storage = other.m_storage;
             m_count = other.m_count;
             other.m_storage = nullptr;
@@ -164,18 +169,18 @@ namespace ARLib {
             return *this;
         }
 
-        SharedPtr(T* ptr, size_t size) : m_storage(new T[size]), m_count(new size_t{1}), m_size(size) {
+        SharedPtr(T* ptr, size_t size) : m_storage(new T[size]), m_count(new RefCount{m_storage}), m_size(size) {
             ConditionalBitCopy(m_storage, ptr, size);
         }
 
         template <size_t N>
-        SharedPtr(T (&src)[N]) : m_storage(new T[N]), m_count(new size_t{1}), m_size(N) {
+        SharedPtr(T (&src)[N]) : m_storage(new T[N]), m_count(new RefCount{m_storage}), m_size(N) {
             ConditionalBitCopy(m_storage, src, N);
         }
         SharedPtr(const SharedPtr& other) {
             m_storage = other.m_storage;
             m_count = other.m_count;
-            (*m_count)++;
+            m_count->incref();
         }
 
         SharedPtr& operator=(const SharedPtr& other) {
@@ -183,14 +188,14 @@ namespace ARLib {
             reset();
             m_storage = other.m_storage;
             m_count = other.m_count;
-            (*m_count)++;
+            m_count->incref();
             return *this;
         }
 
         bool operator==(const SharedPtr& other) const { return m_storage == other.m_storage; }
 
         T* release() {
-            T* ptr = m_storage;
+            T* ptr = m_count->release_storage();
             decrease_instance_count_();
             m_count = nullptr;
             m_storage = nullptr;
@@ -198,14 +203,14 @@ namespace ARLib {
         }
 
         void reset() {
-            if (decrease_instance_count_()) { delete[] m_storage; }
+            decrease_instance_count_();
             m_storage = nullptr;
         }
 
         void share_with(SharedPtr& other) const {
             other.m_storage = m_storage;
             other.m_count = m_count;
-            (*m_count)++;
+            m_count->incref();
         }
 
         size_t size() const { return m_size; }
@@ -213,7 +218,7 @@ namespace ARLib {
         T* get() { return m_storage; }
         const T* get() const { return m_storage; }
 
-        size_t refcount() const { return m_count ? *m_count : 0; }
+        auto refcount() const { return m_count ? m_count->count() : 0ul; }
         bool exists() const { return m_storage != nullptr; }
 
         T* operator->() { return m_storage; }
@@ -224,9 +229,7 @@ namespace ARLib {
 
         const T& operator[](size_t index) const { return m_storage[index]; }
 
-        ~SharedPtr() {
-            if (decrease_instance_count_()) { delete[] m_storage; }
-        }
+        ~SharedPtr() { decrease_instance_count_(); }
     };
 
     template <class T>
