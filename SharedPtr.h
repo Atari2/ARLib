@@ -16,7 +16,7 @@ namespace ARLib {
 
     template <typename T>
     class RefCountBase {
-        uint32_t m_counter = 1;
+        unsigned long m_counter = 1;
         T* m_object = nullptr;
 
         void destroy() noexcept { delete m_object; }
@@ -26,9 +26,9 @@ namespace ARLib {
         explicit RefCountBase(T* object) : m_object(object) {}
         RefCountBase(const RefCountBase&) = delete;
         RefCountBase& operator=(const RefCountBase&) = delete;
-        void incref() noexcept { SYNC_INC(cast<volatile int32_t*>(&m_counter)); }
+        void incref() noexcept { SYNC_INC(cast<volatile long*>(&m_counter)); }
         void decref() noexcept {
-            if (SYNC_DEC(cast<volatile int32_t*>(&m_counter)) == 0) { destroy(); }
+            if (SYNC_DEC(cast<volatile long*>(&m_counter)) == 0) { destroy(); }
         }
         T* release_storage() {
             T* ptr = m_object;
@@ -121,7 +121,7 @@ namespace ARLib {
         T* get() { return m_storage; }
         const T* get() const { return m_storage; }
 
-        uint32_t refcount() const { return m_count ? m_count->count() : 0u; }
+        auto refcount() const { return m_count ? m_count->count() : 0ul; }
         bool exists() const { return m_storage != nullptr; }
 
         T* operator->() { return m_storage; }
