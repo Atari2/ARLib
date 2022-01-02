@@ -42,6 +42,6 @@ namespace ARLib {
 } // namespace ARLib
 
 #define PRINT_SOURCE_LOCATION                                                                                          \
-    ARLib::SourceLocation loc = ARLib::SourceLocation::current();                                                      \
-    ARLib::printf("Function `%s` in file %s, at line %u and column %u\n", loc.function_name(), loc.file_name(),        \
-                  loc.line(), loc.column());
+    ARLib::SourceLocation loc_ = ARLib::SourceLocation::current();                                                     \
+    ARLib::printf("Function `%s` in file %s, at line %u and column %u\n", loc_.function_name(), loc_.file_name(),      \
+                  loc_.line(), loc_.column());
