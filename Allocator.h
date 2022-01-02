@@ -1,6 +1,7 @@
 #pragma once
 #include "Concepts.h"
 #include "SourceLocation.h"
+#include "Assertion.h"
 
 #ifdef DEBUG_NEW_DELETE
 #define LOC loc
