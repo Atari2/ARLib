@@ -4,6 +4,7 @@
 #include "Iterator.h"
 #include "Types.h"
 #include "cstring_compat.h"
+#include "Allocator.h"
 
 namespace ARLib {
     class StringView;
@@ -40,17 +41,17 @@ namespace ARLib {
             if (is_local()) {
                 // grow outside of locality, copy buffer and change active member of union
                 requested_capacity = basic_growth(requested_capacity);
-                m_data_buf = new char[requested_capacity];
+                m_data_buf = allocate<char>(requested_capacity);
                 memmove(m_data_buf, m_local_buf, SMALL_STRING_CAP + 1);
                 m_allocated_capacity = requested_capacity;
             } else {
                 m_allocated_capacity = basic_growth(requested_capacity);
                 HARD_ASSERT(m_allocated_capacity >= requested_capacity && m_allocated_capacity > m_size,
                             "Allocated capacity failure")
-                char* new_buf = new char[m_allocated_capacity];
+                char* new_buf = allocate<char>(m_allocated_capacity);
                 new_buf[m_size] = '\0';
                 if (m_size != 0) memmove(new_buf, m_data_buf, m_size + 1);
-                delete[] m_data_buf;
+                deallocate<char, DeallocType::Multiple>(m_data_buf);
                 m_data_buf = new_buf;
             }
         }
@@ -127,7 +128,7 @@ namespace ARLib {
 
         String& operator=(const String& other) {
             if (this != &other) {
-                if (!is_local()) delete[] m_data_buf;
+                if (!is_local()) deallocate<char, DeallocType::Multiple>(m_data_buf);
                 m_size = other.m_size;
                 grow_if_needed(m_size);
                 memcpy(m_data_buf, other.m_data_buf, m_size + 1);
@@ -136,7 +137,7 @@ namespace ARLib {
         }
         String& operator=(String&& other) noexcept {
             if (this != &other) {
-                if (!is_local()) delete[] m_data_buf;
+                if (!is_local()) deallocate<char, DeallocType::Multiple>(m_data_buf);
                 m_size = other.m_size;
                 if (other.is_local()) {
                     memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
@@ -164,7 +165,7 @@ namespace ARLib {
         ~String() {
             m_size = 0;
             if (!is_local()) {
-                delete[] m_data_buf;
+                deallocate<char, DeallocType::Multiple>(m_data_buf);
                 m_data_buf = nullptr;
             }
         }
@@ -173,7 +174,7 @@ namespace ARLib {
         char* release() {
             if (m_size == 0) return nullptr;
             if (is_local()) {
-                char* buffer = new char[m_size];
+                char* buffer = allocate<char>(SMALL_STRING_CAP + 1);
                 strcpy(buffer, local_data_internal());
                 return buffer;
             } else {
@@ -421,7 +422,7 @@ namespace ARLib {
                     // if the m_size is now small enough, let's swap to small String
                     if (m_size <= SMALL_STRING_CAP) {
                         memmove(m_local_buf, m_data_buf + count, m_size);
-                        delete[] m_data_buf;
+                        deallocate<char, DeallocType::Multiple>(m_data_buf);
                         m_data_buf = local_data_internal();
                     } else {
                         memmove(m_data_buf, m_data_buf + count, m_size);
@@ -443,7 +444,7 @@ namespace ARLib {
                 // if the m_size is now small enough, let's swap to small String
                 if (m_size <= SMALL_STRING_CAP) {
                     memcpy(m_local_buf, m_data_buf, SMALL_STRING_CAP + 1);
-                    delete[] m_data_buf;
+                    deallocate<char, DeallocType::Multiple>(m_data_buf);
                     m_data_buf = local_data_internal();
                 }
             }
