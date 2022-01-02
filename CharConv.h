@@ -23,6 +23,89 @@ namespace ARLib {
 #endif
     // TODO: Add string_to_unsigned variants
 
+    constexpr uint64_t StrViewToU64(const StringView view, int base = 10) {
+        if (base < 2 || base > 36) return 0;
+
+        size_t cur_index = 0;
+        size_t max_index = view.length();
+
+        // skip leading and trailing whitespace
+        if (max_index == 0) return 0;
+
+        while (isspace(view[cur_index])) {
+            cur_index++;
+            if (cur_index == max_index) return 0;
+        }
+
+        while (isspace(view[max_index - 1])) {
+            max_index--;
+            if (max_index == npos_) return 0;
+        }
+
+        if (cur_index == max_index) return 0;
+
+        switch (base) {
+        case 2:
+            return StrViewToU64Binary(view.substringview(cur_index, max_index));
+        case 8:
+            return StrViewToU64Octal(view.substringview(cur_index, max_index));
+        case 10:
+            return StrViewToU64Decimal(view.substringview(cur_index, max_index));
+        case 16:
+            return StrViewToU64Hexadecimal(view.substringview(cur_index, max_index));
+        default:
+            // bases other than 2, 8, 10 and 16 take the slow path
+            break;
+        }
+
+        if (cur_index == max_index) return 0ull;
+
+        // skip leading zeros
+        while (view[cur_index] == '0') {
+            cur_index++;
+        }
+
+        if (cur_index == max_index) return 0ull;
+
+        // 0-9 => 48-57
+        // A-Z => 65-90
+
+        // base is a power of 2, we can use bitshifts, else, use pow
+        // allowed power of 2s are {4, 32}, because base is bounded [2, 36]
+        // and 2, 8 and 16 are already handled elsewhere
+        uint64_t total = 0;
+        if (base == 4 || base == 32) {
+            uint64_t shamt = base == 4 ? 2 : 5;
+            for (size_t opp = max_index - 1, sh_idx = 0; opp >= cur_index; opp--, sh_idx++) {
+                char c = toupper(view[opp]);
+                if (!isalnum(c)) return total;
+                int num = c >= 'A' ? (c - 'A' + 10) : (c - '0');
+                if (num >= base) return total;
+                total |= static_cast<uint64_t>(num) << (shamt * sh_idx);
+                if (opp == cur_index) break;
+            }
+        } else {
+            uint64_t pw = 0;
+            double base_dbl = static_cast<double>(base);
+            double pw_dbl = 0.0;
+            for (size_t opp = max_index - 1; opp >= cur_index; opp--) {
+                char c = toupper(view[opp]);
+                if (!isalnum(c)) return total;
+                int num = c >= 'A' ? (c - 'A' + 10) : (c - '0');
+                if (num >= base) return total;
+                if (is_constant_evaluated()) {
+                    total += num * constexpr_int_nonneg_pow(base, pw);
+                    pw++;
+                } else {
+                    total += static_cast<uint64_t>(round((num * pow(base_dbl, pw_dbl))));
+                    pw_dbl += 1.0;
+                }
+                if (opp == cur_index) break;
+            }
+        }
+        return total;
+    }
+
     constexpr int64_t StrViewToI64(const StringView view, int base = 10) {
         if (base < 2 || base > 36) return 0;
 
@@ -116,8 +199,13 @@ namespace ARLib {
     constexpr int StrViewToInt(const StringView view, int base = 10) {
         return static_cast<int>(StrViewToI64(view, base));
     }
+    constexpr unsigned int StrViewToUInt(const StringView view, int base = 10) {
+        return static_cast<int>(StrViewToU64(view, base));
+    }
     inline int64_t StrToI64(const String& str, int base = 10) { return StrViewToI64(str.view(), base); }
+    inline uint64_t StrToU64(const String& str, int base = 10) { return StrViewToU64(str.view(), base); }
     inline int StrToInt(const String& str, int base = 10) { return static_cast<int>(StrViewToI64(str.view(), base)); }
+    inline unsigned int StrToUInt(const String& str, int base = 10) { return static_cast<unsigned int>(StrViewToU64(str.view(), base)); }
 
     template <SupportedBase Base = SupportedBase::Decimal>
     String IntToStr(Integral auto value) {

@@ -69,10 +69,15 @@ TEST(ARLibTests, CharConv) {
     String b{"123.123"};
 
     constexpr auto expected = NumberTraits<ARLib::int64_t>::max;
+    constexpr auto expected_u = NumberTraits<ARLib::uint64_t>::max;
 
     constexpr StringView s_hex{"-0x7fffffffffffffff"};
     constexpr auto res_hex = StrViewToI64(s_hex, 16);
     static_assert(res_hex == -expected, "StrViewToI64 failed with base 16");
+
+    constexpr StringView s_uhex{"0xffffffffffffffff"};
+    constexpr auto res_uhex = StrViewToU64(s_uhex, 16);
+    static_assert(res_uhex == expected_u, "StrViewToU64 failed with base 16");
 
     constexpr StringView s_oct{"0o137726051051"};
     constexpr auto res_oct = StrViewToI64(s_oct, 8);
@@ -94,7 +99,7 @@ TEST(ARLibTests, CharConv) {
     constexpr auto res_15 = StrViewToI64(s_15, 15);
     static_assert(res_15 == 3873, "StrViewToI64 failed with base 4");
 
-    EXPECT_EQ(StrToInt(a), 1234);
+    EXPECT_EQ(StrToUInt(a), 1234);
     EXPECT_EQ(StrToFloat(b), 123.123f);
     int c = 101010;
     float d = 987.65f;

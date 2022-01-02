@@ -7,18 +7,66 @@
 #include "cstdio_compat.h"
 
 namespace ARLib {
+    namespace detail {
+        // clang forced my hand
+        static constexpr inline int64_t values_table_i64[] = {1,
+                                                              10,
+                                                              100,
+                                                              1000,
+                                                              10000,
+                                                              100000,
+                                                              1000000,
+                                                              10000000,
+                                                              100000000,
+                                                              1000000000,
+                                                              10000000000,
+                                                              100000000000,
+                                                              1000000000000,
+                                                              10000000000000,
+                                                              100000000000000,
+                                                              1000000000000000,
+                                                              10000000000000000,
+                                                              100000000000000000,
+                                                              1000000000000000000};
+        static constexpr inline uint64_t value_table_u64[] = {1,
+                                                              10,
+                                                              100,
+                                                              1000,
+                                                              10000,
+                                                              100000,
+                                                              1000000,
+                                                              10000000,
+                                                              100000000,
+                                                              1000000000,
+                                                              10000000000,
+                                                              100000000000,
+                                                              1000000000000,
+                                                              10000000000000,
+                                                              100000000000000,
+                                                              1000000000000000,
+                                                              10000000000000000,
+                                                              100000000000000000,
+                                                              1000000000000000000,
+                                                              10000000000000000000ull};
+    } // namespace detail
 #ifdef COMPILER_GCC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif
     // these functions expect an already whitespace trimmed string
-    constexpr int64_t StrViewToI64Decimal(const StringView str) {
+    template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
+    constexpr RetType StrViewTo64Decimal(const StringView str) {
         size_t start_idx = 0;
         size_t end_idx = str.size();
-        char maybe_sign = str[0];
-        bool neg = maybe_sign == '-';
-        start_idx += (maybe_sign == '-' || maybe_sign == '+');
-        int64_t result = 0;
+
+        bool neg = false;
+        if constexpr (Signed) {
+            char maybe_sign = str[0];
+            neg = maybe_sign == '-';
+            start_idx += (maybe_sign == '-' || maybe_sign == '+');
+        }
+
+        RetType result = 0;
 
         // skip leading zeros
         while (start_idx < end_idx) {
@@ -27,44 +75,52 @@ namespace ARLib {
         }
 
         if (start_idx == end_idx) return 0;
+        constexpr size_t max_uint64_size = strlen("18446744073709551615");
+        constexpr size_t max_int64_size = strlen("9223372036854775807");
 
         // out of range check
-        constexpr size_t max_int64_size = strlen("9223372036854775807");
-        if (end_idx - start_idx > max_int64_size) return 0;
+        auto get_max_size = [&]() {
+            if constexpr (Signed)
+                return max_int64_size;
+            else
+                return max_uint64_size;
+        };
 
-        constexpr int64_t values_table[max_int64_size] = {1,
-                                                          10,
-                                                          100,
-                                                          1000,
-                                                          10000,
-                                                          100000,
-                                                          1000000,
-                                                          10000000,
-                                                          100000000,
-                                                          1000000000,
-                                                          10000000000,
-                                                          100000000000,
-                                                          1000000000000,
-                                                          10000000000000,
-                                                          100000000000000,
-                                                          1000000000000000,
-                                                          10000000000000000,
-                                                          100000000000000000,
-                                                          1000000000000000000};
+        constexpr auto max_size = get_max_size();
+
+        if (end_idx - start_idx > max_size) return 0;
+
+        constexpr auto get_values_table = [&]() -> const RetType(&)[max_size] {
+            if constexpr (Signed)
+                return detail::values_table_i64;
+            else
+                return detail::value_table_u64;
+        };
+
+        constexpr const RetType(&values_table)[max_size] = get_values_table();
+
         // 0-9 => 48-57
         for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
-            result += static_cast<int64_t>(str[idx] - '0') * values_table[tbl_idx];
+            result += static_cast<RetType>(str[idx] - '0') * values_table[tbl_idx];
             if (idx == 0) break;
         }
-        return result * (neg ? -1 : 1);
+        if constexpr (Signed)
+            return result * (neg ? -1 : 1);
+        else
+            return result;
     }
-    constexpr int64_t StrViewToI64Binary(const StringView str) {
+    template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
+    constexpr RetType StrViewTo64Binary(const StringView str) {
         size_t start_idx = 0;
         size_t end_idx = str.size();
-        char maybe_sign = str[0];
-        bool neg = maybe_sign == '-';
-        start_idx += (maybe_sign == '-' || maybe_sign == '+');
-        int64_t result = 0;
+
+        bool neg = false;
+        if constexpr (Signed) {
+            char maybe_sign = str[0];
+            neg = maybe_sign == '-';
+            start_idx += (maybe_sign == '-' || maybe_sign == '+');
+        }
+        RetType result = 0;
 
         // skip b if string is e.g. 0b11
         if (str[start_idx] == '0' && str[start_idx + 1] == 'b') start_idx += 2;
@@ -79,21 +135,39 @@ namespace ARLib {
 
         // out of range check
         constexpr size_t max_int64_size = strlen("111111111111111111111111111111111111111111111111111111111111111");
-        if (end_idx - start_idx > max_int64_size) return 0;
+        constexpr size_t max_uint64_size = strlen("1111111111111111111111111111111111111111111111111111111111111111");
+        auto get_max_size = [&]() {
+            if constexpr (Signed)
+                return max_int64_size;
+            else
+                return max_uint64_size;
+        };
+
+        constexpr auto max_size = get_max_size();
+
+        if (end_idx - start_idx > max_size) return 0;
         // 0-1 => 48-49
         for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
-            result |= static_cast<int64_t>(str[idx] - '0') << tbl_idx;
+            result |= static_cast<RetType>(str[idx] - '0') << tbl_idx;
             if (idx == 0) break;
         }
-        return result * (neg ? -1 : 1);
+        if constexpr (Signed)
+            return result * (neg ? -1 : 1);
+        else
+            return result;
     }
-    constexpr int64_t StrViewToI64Octal(const StringView str) {
+    template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
+    constexpr RetType StrViewTo64Octal(const StringView str) {
         size_t start_idx = 0;
         size_t end_idx = str.size();
-        char maybe_sign = str[0];
-        bool neg = maybe_sign == '-';
-        start_idx += (maybe_sign == '-' || maybe_sign == '+');
-        int64_t result = 0;
+        bool neg = false;
+
+        if constexpr (Signed) {
+            char maybe_sign = str[0];
+            neg = maybe_sign == '-';
+            start_idx += (maybe_sign == '-' || maybe_sign == '+');
+        }
+        RetType result = 0;
 
         // skip b if string is e.g. 0o11
         if (str[start_idx] == '0' && str[start_idx + 1] == 'o') start_idx += 2;
@@ -108,21 +182,39 @@ namespace ARLib {
 
         // out of range check
         constexpr size_t max_int64_size = strlen("777777777777777777777");
-        if (end_idx - start_idx > max_int64_size) return 0;
+        constexpr size_t max_uint64_size = strlen("1777777777777777777777");
+
+        auto get_max_size = [&]() {
+            if constexpr (Signed)
+                return max_int64_size;
+            else
+                return max_uint64_size;
+        };
+
+        constexpr auto max_size = get_max_size();
+
+        if (end_idx - start_idx > max_size) return 0;
         // 0-1 => 48-49
         for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
-            result |= static_cast<int64_t>(str[idx] - '0') << (tbl_idx * 3);
+            result |= static_cast<RetType>(str[idx] - '0') << (tbl_idx * 3);
             if (idx == 0) break;
         }
-        return result * (neg ? -1 : 1);
+        if constexpr (Signed)
+            return result * (neg ? -1 : 1);
+        else
+            return result;
     }
-    constexpr int64_t StrViewToI64Hexadecimal(const StringView str) {
+    template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
+    constexpr RetType StrViewTo64Hexadecimal(const StringView str) {
         size_t start_idx = 0;
         size_t end_idx = str.size();
-        char maybe_sign = str[0];
-        bool neg = maybe_sign == '-';
-        start_idx += (maybe_sign == '-' || maybe_sign == '+');
-        int64_t result = 0;
+        bool neg = false;
+        if constexpr (Signed) {
+            char maybe_sign = str[0];
+            neg = maybe_sign == '-';
+            start_idx += (maybe_sign == '-' || maybe_sign == '+');
+        }
+        RetType result = 0;
 
         // skip b if string is e.g. 0x11
         if (str[start_idx] == '0' && str[start_idx + 1] == 'x') start_idx += 2;
@@ -137,16 +229,40 @@ namespace ARLib {
 
         // out of range check
         constexpr size_t max_int64_size = strlen("7fffffffffffffff");
-        if (end_idx - start_idx > max_int64_size) return 0;
+        constexpr size_t max_uint64_size = strlen("ffffffffffffffff");
+
+        auto get_max_size = [&]() {
+            if constexpr (Signed)
+                return max_int64_size;
+            else
+                return max_uint64_size;
+        };
+
+        constexpr auto max_size = get_max_size();
+
+        if (end_idx - start_idx > max_size) return 0;
         // 0-1 => 48-49
         for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
             char c = toupper(str[idx]);
             auto num = c >= 'A' ? (c - 'A' + 10) : (c - '0');
-            result |= static_cast<int64_t>(num) << (tbl_idx * 4);
+            result |= static_cast<RetType>(num) << static_cast<RetType>(tbl_idx * 4ull);
             if (idx == 0) break;
         }
-        return result * (neg ? -1 : 1);
+        if constexpr (Signed)
+            return result * (neg ? -1 : 1);
+        else
+            return result;
     }
+
+    constexpr auto StrViewToI64Decimal = StrViewTo64Decimal<true>;
+    constexpr auto StrViewToI64Binary = StrViewTo64Binary<true>;
+    constexpr auto StrViewToI64Octal = StrViewTo64Octal<true>;
+    constexpr auto StrViewToI64Hexadecimal = StrViewTo64Hexadecimal<true>;
+
+    constexpr auto StrViewToU64Decimal = StrViewTo64Decimal<false>;
+    constexpr auto StrViewToU64Binary = StrViewTo64Binary<false>;
+    constexpr auto StrViewToU64Octal = StrViewTo64Octal<false>;
+    constexpr auto StrViewToU64Hexadecimal = StrViewTo64Hexadecimal<false>;
 
     constexpr size_t StrLenFromIntegral(Integral auto value) noexcept {
         static_assert(!IsSigned<decltype(value)>, "Value must be unsigned");
