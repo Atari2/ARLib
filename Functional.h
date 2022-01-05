@@ -315,7 +315,7 @@ namespace ARLib {
 
         Function(const Function& x) : FunctionBase() {
             if (static_cast<bool>(x)) {
-                x.m_manager(m_functor, x._M_functor, fntraits::ManagerOp::CloneFunc);
+                x.m_manager(m_functor, x.m_functor, fntraits::ManagerOp::CloneFunc);
                 m_invoker = x.m_invoker;
                 m_manager = x.m_manager;
             }
