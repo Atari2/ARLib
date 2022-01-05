@@ -7,10 +7,11 @@
 // it's only needed because otherwise I can't use <=> in my DefaultOrdering<T> class in SortedVector<T>
 namespace std {
     struct strong_ordering;
+    struct partial_ordering;
 }
 
 namespace ARLib {
-    enum class OrderingType { Less, Equal, Greater };
+    enum class OrderingType { Less, Equal, Greater, NoOrder };
 
     class Ordering {
         OrderingType m_type;
@@ -28,6 +29,7 @@ namespace ARLib {
             return v.type() == w.type();
         }
         Ordering(const std::strong_ordering&);
+        Ordering(const std::partial_ordering&);
     };
 
     static const inline Ordering less{OrderingType::Less};
