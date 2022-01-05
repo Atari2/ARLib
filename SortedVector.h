@@ -4,9 +4,9 @@
 #include "Compat.h"
 #include "Iterator.h"
 #include "Ordering.h"
+#include "PrintInfo.h"
 #include "Utility.h"
 #include "cstring_compat.h"
-#include "PrintInfo.h"
 
 namespace ARLib {
 
@@ -144,6 +144,10 @@ namespace ARLib {
             delete[] m_storage;
             m_storage = nullptr;
             m_capacity = 0;
+        }
+        T pop() {
+            T value = move(m_storage[--m_size]);
+            return value;
         }
         bool empty() const { return m_size == 0; }
         size_t size() const { return m_size; }
