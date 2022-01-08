@@ -102,6 +102,17 @@ if (DEBUG_BUILD)
 	endif()
 endif()
 
+if (ON_WINDOWS)
+	set(pyexe "py")
+else()
+	set(pyexe "python3")
+endif()
+
+execute_process(
+					COMMAND ${pyexe} ${CMAKE_CURRENT_SOURCE_DIR}/genenums.py ${CMAKE_CURRENT_SOURCE_DIR}
+					COMMAND_ECHO STDOUT
+				 )
+
 file(GLOB LIB_SOURCE_FILES_CPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 file(GLOB LIB_SOURCE_FILES_H CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 file(GLOB_RECURSE LIB_SOURCE_FILES_XNATIVE_CPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/XNative/*.cpp")
@@ -118,16 +129,7 @@ list(APPEND ARLIB_SOURCE_FILES ${LIB_SOURCE_FILES_XNATIVE_CPP} ${LIB_SOURCE_FILE
 
 file(GLOB_RECURSE GeneratedEnums "GeneratedEnums/*.h")
 list(APPEND ARLIB_SOURCE_FILES GeneratedEnums)
-if (ON_WINDOWS)
-	set(pyexe "py")
-else()
-	set(pyexe "python3")
-endif()
 
-execute_process(
-					COMMAND ${pyexe} ${CMAKE_CURRENT_SOURCE_DIR}/genenums.py ${CMAKE_CURRENT_SOURCE_DIR}
-					COMMAND_ECHO STDOUT
-				 )
 add_library(ARLib ${ARLIB_SOURCE_FILES})
 
 if (ARLIB_TOP_LEVEL)
