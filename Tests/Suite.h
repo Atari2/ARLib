@@ -16,6 +16,7 @@
 #include "../Map.h"
 #include "../Optional.h"
 #include "../Printer.h"
+#include "../PriorityQueue.h"
 #include "../Random.h"
 #include "../Result.h"
 #include "../SSOVector.h"

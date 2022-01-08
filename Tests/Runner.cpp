@@ -762,3 +762,31 @@ TEST(ARLibTests, StringLiteralTests) {
     static_assert(splits[1] == "world my name is");
 }
 #endif
+
+TEST(ARLibTests, PriorityQueueTests) {
+    struct TestQueueItem {
+        String it;
+        ENABLE_QUERY_ITEM(it)
+    };
+    auto queue_priority = [](const auto& left, const auto& right) {
+        if (left.it.size() > right.it.size())
+            return greater;
+        else if (left.it.size() < right.it.size())
+            return less;
+        else
+            return equal;
+    };
+
+    PriorityQueue<String, TestQueueItem> queue{queue_priority};
+    PriorityQueue<String> queue2{};
+    queue.push(TestQueueItem{"123"_s});
+    queue.push(TestQueueItem{"1234"_s});
+    queue2.push("hello"_s, 10);
+    queue2.push("world"_s, 20);
+    EXPECT_EQ(queue2.pop(), "world"_s);
+    EXPECT_EQ(queue2.pop(), "hello"_s);
+    EXPECT_EQ(queue2.size(), 0);
+    EXPECT_EQ(queue.pop(), "1234"_s);
+    EXPECT_EQ(queue.pop(), "123"_s);
+    EXPECT_EQ(queue.size(), 0);
+}
