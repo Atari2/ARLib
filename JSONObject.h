@@ -71,14 +71,16 @@ namespace ARLib {
         class Number {
             union {
                 double m_double_value;
-                int m_int_value;
+                int64_t m_int_value;
             };
             enum class NumberType { Double, Integer } m_type;
 
             public:
             constexpr Number(double val) : m_double_value(val), m_type(NumberType::Double) {}
+            constexpr Number(int64_t val) : m_int_value(val), m_type(NumberType::Integer) {}
             constexpr Number(int val) : m_int_value(val), m_type(NumberType::Integer) {}
             constexpr Number(detail::NumberTag, double val) : m_double_value(val), m_type(NumberType::Double) {}
+            constexpr Number(detail::NumberTag, int64_t val) : m_int_value(val), m_type(NumberType::Integer) {}
             constexpr Number(detail::NumberTag, int val) : m_int_value(val), m_type(NumberType::Integer) {}
             constexpr double value_double() const {
                 HARD_ASSERT(m_type == NumberType::Double, "Type must be double when this is called");
@@ -92,9 +94,13 @@ namespace ARLib {
                 HARD_ASSERT(m_type == NumberType::Double, "Type must be double when this is called");
                 return m_double_value;
             }
-            operator int() const {
+            operator int64_t() const {
                 HARD_ASSERT(m_type == NumberType::Integer, "Type must be integer when this is called");
                 return m_int_value;
+            }
+            operator int() const {
+                HARD_ASSERT(m_type == NumberType::Integer, "Type must be integer when this is called");
+                return static_cast<int>(m_int_value);
             }
             operator Value() &&;
             String to_string() const {
@@ -105,6 +111,13 @@ namespace ARLib {
                 }
             }
             bool operator==(int value) const {
+                if (m_type == NumberType::Integer) {
+                    return m_int_value == value;
+                } else {
+                    return false;
+                }
+            }
+            bool operator==(int64_t value) const {
                 if (m_type == NumberType::Integer) {
                     return m_int_value == value;
                 }
@@ -127,7 +140,7 @@ namespace ARLib {
         concept JSONType = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null>;
 
         template <typename Tp>
-        concept JSONTypeExt = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null, bool, double, int, String, nullptr_t>;
+        concept JSONTypeExt = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null, bool, double, int, int64_t, String, nullptr_t>;
 
         template <JSONType T>
         constexpr Type enum_from_type() {
@@ -163,15 +176,15 @@ namespace ARLib {
             static consteval Type map_t_to_enum() {
                 if constexpr (SameAs<T, Object>) {
                     return Type::JObject;
-                } else if constexpr (SameAs<T, JString> || SameAs<T, String>) {
+                } else if constexpr (IsAnyOfV<T, JString, String>) {
                     return Type::JString;
-                } else if constexpr (SameAs<T, Number> || SameAs<T, double> || SameAs<T, int>) {
+                } else if constexpr (IsAnyOfV<T, Number, double, int, int64_t>) {
                     return Type::JNumber;
                 } else if constexpr (SameAs<T, Array>) {
                     return Type::JArray;
-                } else if constexpr (SameAs<T, Bool> || SameAs<T, bool>) {
+                } else if constexpr (IsAnyOfV<T, Bool, bool>) {
                     return Type::JBool;
-                } else if constexpr (SameAs<T, Null> || SameAs<T, nullptr_t>) {
+                } else if constexpr (IsAnyOfV<T, Null, nullptr_t>) {
                     return Type::JNull;
                 } else {
                     COMPTIME_ASSERT("Invalid enum value passed to JSON operator=");

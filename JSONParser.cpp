@@ -99,7 +99,7 @@ namespace ARLib {
             if (raw_value.contains('.') || raw_value.contains(',')) {
                 return Number{number_tag, StrToDouble(raw_value)};    
             } else {
-                return Number{number_tag, StrToInt(raw_value)};
+                return Number{number_tag, StrToI64(raw_value)};
             }
         }
 
