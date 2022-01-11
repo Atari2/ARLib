@@ -1,12 +1,10 @@
 #pragma once
-#include "CharConv.h"
 #include "Concepts.h"
 #include "Iterator.h"
 #include "Memory.h"
 #include "Optional.h"
 #include "Pair.h"
 #include "PrintInfo.h"
-#include "Printer.h"
 
 namespace ARLib {
     // clang-format off
@@ -257,12 +255,12 @@ namespace ARLib {
         using SubOpRetType = typename traits::SubOpRetType;
         using ConstSubOpRetType = typename traits::ConstSubOpRetType;
 
-        Optional<double> m_cached_det{};
+        mutable Optional<double> m_cached_det{};
         MatType m_matrix{};
 
-        static void print_debug_matrix(T** og_matrix) {
+        static void print_debug_matrix(typename traits::ConstMatRefType og_matrix) {
             for (size_t i = 0; i < N; i++) {
-                for (size_t j = 0; j < N; j++) {
+                for (size_t j = 0; j < M; j++) {
                     printf("%lf ", og_matrix[i][j]);
                 }
                 puts("");
@@ -341,75 +339,21 @@ namespace ARLib {
                 }
                 if (i != r) { swap_row(matrix, i, r); }
                 //  Divide row r by M[r, lead]
-                if (matrix[r][lead] != T{0}) { // this check is here because otherwise I'd divide by zero
+                if (T divider = matrix[r][lead];
+                    divider != T{0}) { // this check is here because otherwise I'd divide by zero
                     for (size_t j = 0; j < colCount; j++)
-                        matrix[r][j] /= matrix[r][lead];
+                        matrix[r][j] /= divider;
                 }
                 for (size_t j = 0; j < rowCount; j++) {
-                    if (j != r) { 
+                    if (j != r) {
+                        T multiplier = matrix[j][lead];
                         // Subtract M[j, lead] multiplied by row r from row j
                         for (size_t k = 0; k < colCount; k++)
-                            matrix[j][k] -= (matrix[j][lead] * matrix[r][k]);
+                            matrix[j][k] -= (multiplier * matrix[r][k]);
                     }
                 }
                 lead++;
             }
-        }
-
-        static void gauss_jordan_reduce(typename traits::MatRefType matrix) {
-
-            using RowT = typename traits::SubOpRetType;
-
-            // 1. Swap the rows so that all rows with all zero entries are on the bottom
-            size_t row_to_move_to = N - 1;
-            for (size_t i = 0; i < N; i++) {
-                if (check_row_all_zeros(matrix[i])) {
-                    swap_row(matrix, i, row_to_move_to);
-                    row_to_move_to--;
-                }
-            }
-
-            size_t top_row_idx = 0;
-            size_t top_col_idx = 0;
-            do {
-                // 2. Swap the rows so that the row with the largest, leftmost nonzero entry is on top
-                for (size_t j = 0; j < M; j++) {
-                    size_t largest_row_idx = npos_;
-                    T max = matrix[top_row_idx][j];
-                    for (size_t i = top_row_idx; i < N; i++) {
-                        if (matrix[i][j] > max) {
-                            max = matrix[i][j];
-                            largest_row_idx = i;
-                        }
-                    }
-                    if (largest_row_idx != npos_) {
-                        swap_row(matrix, top_row_idx, largest_row_idx);
-                        break;
-                    }
-                }
-
-                // 3. Multiply the top row by a scalar so that top row's leading entry becomes 1.
-                double val = 1.0 / static_cast<double>(matrix[top_row_idx][top_col_idx]);
-                for (size_t i = top_col_idx; i < M; i++)
-                    matrix[top_row_idx][i] *= val;
-
-                // 4. Add/subtract multiples of the top row to the other rows so that all other entries in the column
-                // containing the top row's leading entry are all zero.
-                for (size_t i = top_row_idx + 1; i < N; i++) {
-                    if (matrix[i][top_col_idx] != T{0}) {
-                        for (size_t j = top_col_idx; j < M; j++) {
-                            if (matrix[top_row_idx][j] != T{0}) {
-                                T to_sub = matrix[i][j] / matrix[top_row_idx][j];
-                                matrix[i][j] -= to_sub;
-                            }
-                        }
-                    }
-                }
-
-                // 5. Repeat steps 2-4 for the next leftmost nonzero entry until all the leading entries are 1.
-                top_row_idx++;
-                top_col_idx++;
-            } while (top_row_idx < N && top_col_idx < M);
         }
 
         static double rank_internal(typename traits::ConstMatRefType og_matrix) {
@@ -687,20 +631,7 @@ namespace ARLib {
         constexpr Pair<size_t, size_t> size() const { return {N, M}; }
         constexpr size_t num_rows() const { return N; }
         constexpr size_t num_columns() const { return M; }
-        void reduce() {
-            row_echelon_transform(m_matrix);
-            // constexpr T zero_val{0};
-            // constexpr auto min_size = N < M ? N : M;
-            // // matrix is reduced but not triangular yet
-            // for (size_t i = 0; i < N; i++) {
-            //     for (size_t j = 0; j < min_size; j++) {
-            //         if (m_matrix[i][j] != zero_val && j != i) {
-            //             swap_row(m_matrix, i, j);
-            //             break;
-            //         }
-            //     }
-            // }
-        }
+        void reduce() { row_echelon_transform(m_matrix); }
         int rank() const { return rank_internal(m_matrix); }
         double det() const requires Square {
             if (m_cached_det) return m_cached_det.value();
@@ -756,10 +687,8 @@ namespace ARLib {
             for (size_t j = M; j < M * 2; j++) {
                 mat_glued[{j - M, j}] = T{1};
             }
-            Printer::print("{}", mat_glued);
             mat_glued.reduce();
-            Printer::print("{}", mat_glued);
-            return *this;
+            return mat_glued.sub<4, 4>(0, 4);
         }
 
         ~Matrix2D() {
