@@ -1,24 +1,17 @@
 #include "../CharConv.h"
+#include "../Conversion.h"
+#include "../Matrix.h"
 #include "../Printer.h"
 #include "../PriorityQueue.h"
+#include "../Random.h"
 using namespace ARLib;
 
 int main() {
-    auto queue_priority = [](const auto& left, const auto& right) {
-        if (left.size() > right.size())
-            return greater;
-        else if (left.size() < right.size())
-            return less;
-        return equal;
-    };
-    PriorityQueue<String, String> queue{queue_priority};
-    PriorityQueue<String> queue2{};
-    queue.push("123"_s);
-    queue.push("1234"_s);
-    queue2.push("hello"_s, 10);
-    queue2.push("world"_s, 20);
-    Printer::print("{} {}", queue2, queue);
-    Printer::print("{} {}", queue.pop(), queue2.pop());
-    Printer::print("{} {}", queue.size(), queue2.size());
+    double m[][4] = {{8.1472, 6.3236, 9.5751, 9.5717},
+                     {9.0579, 0.9754, 9.6489, 4.8538},
+                     {1.2699, 2.7850, 1.5761, 8.0028},
+                     {9.1338, 5.4688, 9.7059, 1.4189}};
+    Matrix2D<double, 4> matrix{m};
+    matrix.inv();
     return 0;
 }
