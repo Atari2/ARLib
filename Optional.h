@@ -84,8 +84,8 @@ namespace ARLib {
             }
         }
 
-        bool operator!() { return !m_exists; }
-        explicit operator bool() { return m_exists; }
+        bool operator!() const { return !m_exists; }
+        explicit operator bool() const { return m_exists; }
 
         bool empty() const { return !m_exists; }
         bool has_value() const { return m_exists; };
