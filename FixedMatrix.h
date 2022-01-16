@@ -7,16 +7,19 @@
 #include "Pair.h"
 #include "PrintInfo.h"
 #include "Random.h"
+#include "CharConv.h"
 
 namespace ARLib {
     // clang-format off
-    template <Numeric T, size_t N, size_t M>
+    template <size_t N, size_t M>
     class FixedMatrix2D;
-    template <Numeric T, size_t N, size_t M, bool IsConst, bool ByRow>
+    template <size_t N, size_t M, bool IsConst, bool ByRow>
     class FixedMatrixIterator;
 
-    template <Numeric T, size_t N, size_t M>
+    template <size_t N, size_t M>
     struct FixedMatrixTraits {
+        using T = double;
+
         static constexpr bool Square = N == M;
         static constexpr size_t MAX_INLINE_SIZE = 20;
         static constexpr bool ValidToInline = N <= MAX_INLINE_SIZE && M <= MAX_INLINE_SIZE;
@@ -29,9 +32,10 @@ namespace ARLib {
         using ConstSubOpRetType = AddConstT<SubOpRetType>;
     };
 
-    template <Numeric T, size_t N, size_t M, bool IsConst>
+    template <size_t N, size_t M, bool IsConst>
     class FixedColumnIterator {
-        using traits = FixedMatrixTraits<T, N, M>;
+        using T = double;
+        using traits = FixedMatrixTraits<N, M>;
         using Tp = ConditionalT<IsConst, AddConstT<T>*, T*>;
 
         Tp* m_col;
@@ -70,12 +74,14 @@ namespace ARLib {
         }
     };
 
-    template <Numeric T, size_t N, size_t M = N, bool IsConst = false>
+    template <size_t N, size_t M = N, bool IsConst = false>
     class FixedColumnArray {
-        friend FixedMatrix2D<T, N, M>;
-        friend FixedMatrixIterator<T, N, M, IsConst, false>;
+        using T = double;
 
-        using traits = FixedMatrixTraits<T, N, M>;
+        friend FixedMatrix2D<N, M>;
+        friend FixedMatrixIterator<N, M, IsConst, false>;
+
+        using traits = FixedMatrixTraits<N, M>;
 
         using Tp = ConditionalT<IsConst, AddConstT<T>*, T*>;
         using InputType = typename traits::MatRefType;
@@ -108,20 +114,22 @@ namespace ARLib {
         T& operator[](size_t index) requires(!IsConst) { return *m_column[index]; }
         const T& operator[](size_t index) const { return *m_column[index]; }
 
-        auto begin() const { return FixedColumnIterator<T, N, M, true>{m_column, 0}; }
-        auto end() const { return FixedColumnIterator<T, N, M, true>{m_column, N}; }
+        auto begin() const { return FixedColumnIterator<N, M, true>{m_column, 0}; }
+        auto end() const { return FixedColumnIterator<N, M, true>{m_column, N}; }
 
-        auto begin() { return FixedColumnIterator<T, N, M, false>{m_column, 0}; }
-        auto end() { return FixedColumnIterator<T, N, M, false>{m_column, N}; }
+        auto begin() { return FixedColumnIterator<N, M, false>{m_column, 0}; }
+        auto end() { return FixedColumnIterator<N, M, false>{m_column, N}; }
 
         ~FixedColumnArray() {
             deallocate<Tp, DeallocType::Multiple>(m_column);
         }
     };
 
-    template <Numeric T, size_t N, size_t M, bool IsConst>
+    template <size_t N, size_t M, bool IsConst>
     class FixedRowIterator {
-        using traits = FixedMatrixTraits<T, N, M>;
+        using T = double;
+
+        using traits = FixedMatrixTraits<N, M>;
         using Tp = ConditionalT<IsConst, AddConstT<T>*, T*>;
 
         Tp m_row;
@@ -160,12 +168,14 @@ namespace ARLib {
         }
     };
 
-    template <Numeric T, size_t N, size_t M = N, bool IsConst = false>
+    template <size_t N, size_t M = N, bool IsConst = false>
     class FixedRowArray {
-        friend FixedMatrix2D<T, N, M>;
-        friend FixedMatrixIterator<T, N, M, IsConst, true>;
+        using T = double;
 
-        using traits = FixedMatrixTraits<T, N, M>;
+        friend FixedMatrix2D<N, M>;
+        friend FixedMatrixIterator<N, M, IsConst, true>;
+
+        using traits = FixedMatrixTraits<N, M>;
 
         using Tp = ConditionalT<IsConst, AddConstT<T>*, T*>;
         using InputType = typename traits::MatRefType;
@@ -180,20 +190,21 @@ namespace ARLib {
         T& operator[](size_t index) requires(!IsConst) { return m_row[index]; }
         const T& operator[](size_t index) const { return m_row[index]; }
         
-        auto begin() const { return FixedRowIterator<T, N, M, true>{m_row, 0}; }
-        auto end() const { return FixedRowIterator<T, N, M, true>{m_row, M}; }
+        auto begin() const { return FixedRowIterator<N, M, true>{m_row, 0}; }
+        auto end() const { return FixedRowIterator<N, M, true>{m_row, M}; }
 
-        auto begin() { return FixedRowIterator<T, N, M, false>{m_row, 0}; }
-        auto end() { return FixedRowIterator<T, N, M, false>{m_row, M}; }
+        auto begin() { return FixedRowIterator<N, M, false>{m_row, 0}; }
+        auto end() { return FixedRowIterator<N, M, false>{m_row, M}; }
     };
 
     // clang-format on
-    template <Numeric T, size_t N, size_t M, bool IsConst, bool ByRow = true>
+    template <size_t N, size_t M, bool IsConst, bool ByRow = true>
     class FixedMatrixIterator {
-        using traits = FixedMatrixTraits<T, N, M>;
+        using T = double;
+        using traits = FixedMatrixTraits<N, M>;
 
         using Tp = ConditionalT<IsConst, typename traits::ConstMatRefType, typename traits::MatRefType>;
-        using Ret = ConditionalT<ByRow, FixedRowArray<T, N, M, IsConst>, FixedColumnArray<T, N, M, IsConst>>;
+        using Ret = ConditionalT<ByRow, FixedRowArray<N, M, IsConst>, FixedColumnArray<N, M, IsConst>>;
 
         Tp m_matrix;
         size_t m_current_row;
@@ -246,9 +257,10 @@ namespace ARLib {
         }
     };
 
-    template <Numeric T, size_t N, size_t M = N>
+    template <size_t N, size_t M = N>
     class FixedMatrix2D {
-        using traits = FixedMatrixTraits<T, N, M>;
+        using T = double;
+        using traits = FixedMatrixTraits<N, M>;
 
         static constexpr bool ValidToInline = traits::ValidToInline;
         static constexpr bool Square = traits::Square;
@@ -291,10 +303,10 @@ namespace ARLib {
             size_t current_row = 0;
             size_t current_col = 0;
             while (current_row < N - 1 && current_col < M - 1) {
-                if (matrix[current_row][current_col] == 0) {
+                if (matrix[current_row][current_col] == T{0}) {
                     // search row with non-zero first element
                     for (size_t i = 0; i < N; i++) {
-                        if (matrix[i][current_col] != 0) {
+                        if (matrix[i][current_col] != T{0}) {
                             // swap
                             swap_row(matrix, current_row, i);
                             break;
@@ -302,7 +314,7 @@ namespace ARLib {
                     }
                 }
                 for (size_t i = current_row + 1; i < N; i++) {
-                    if (matrix[i][current_col] != 0) {
+                    if (matrix[i][current_col] != T{0}) {
                         T coeff = -(matrix[i][current_col] / matrix[current_row][current_col]);
                         for (size_t j = current_col; j < M; j++) {
                             T sum = matrix[current_row][j] * coeff + matrix[i][j];
@@ -310,7 +322,7 @@ namespace ARLib {
                         }
                     }
                 }
-                if (matrix[current_row][current_col] == T{0}) return;
+                if (matrix[current_row][current_col] == T{0.0}) return;
                 current_col++;
                 current_row++;
             }
@@ -370,7 +382,7 @@ namespace ARLib {
             int rank = 0;
             for (size_t i = 0; i < N; i++) {
                 for (size_t j = 0; j < M; j++) {
-                    if (matrix[i][j] != 0) {
+                    if (matrix[i][j] != 0.0) {
                         rank++;
                         break;
                     }
@@ -387,15 +399,15 @@ namespace ARLib {
 
         static double det_internal(typename traits::ConstMatRefType og_matrix) requires Square {
             typename traits::MatType matrix{};
-            if constexpr (!ValidToInline) { matrix = allocate<T*>(N); }
+            if constexpr (!ValidToInline) { matrix = allocate<double*>(N); }
             for (size_t i = 0; i < N; i++) {
-                if constexpr (!ValidToInline) { matrix[i] = allocate<T>(N); }
+                if constexpr (!ValidToInline) { matrix[i] = allocate<double>(N); }
                 ConditionalBitCopy(matrix[i], og_matrix[i], N);
             }
             gauss_reduce(matrix);
             double det = 1.0;
             for (size_t i = 0; i < N; i++) {
-                if (matrix[i][i] == T{0}) {
+                if (matrix[i][i] == 0.0) {
                     det = 0.0;
                     break;
                 }
@@ -427,11 +439,11 @@ namespace ARLib {
         // clang-format off
         public: 
         /* CONSTRUCTORS */
-        static FixedMatrix2D random(T top = NumberTraits<T>::max) {
+        static FixedMatrix2D random(uint32_t top = NumberTraits<uint32_t>::max) {
             FixedMatrix2D mat{};
             for (size_t i = 0; i < N; i++) {
                 for (size_t j = 0; j < M; j++) {
-                    mat[{i, j}] = Random::PCG::bounded_random_s(top);
+                    mat[{i, j}] = static_cast<T>(Random::PCG::bounded_random_s(top));
                 }
             }
             return mat;
@@ -449,9 +461,9 @@ namespace ARLib {
         }
         // clang-format on
 
-        template <typename... Args>
-        FixedMatrix2D(Args... args) requires(AllOfV<T, Args...> && sizeof...(Args) == (N * M)) {
-            T mm[N * M]{args...};
+        template <Numeric... Args>
+        FixedMatrix2D(Args... args) requires(sizeof...(Args) == (N * M)) {
+            double mm[N * M]{args...};
             if constexpr (!ValidToInline) m_matrix = allocate<T*>(N);
             for (size_t i = 0; i < N; i++) {
                 if constexpr (!ValidToInline) m_matrix[i] = allocate<T>(M);
@@ -490,6 +502,7 @@ namespace ARLib {
             for (size_t i = 0; i < N; i++) {
                 ConditionalBitCopy(m_matrix[i], other.m_matrix[i], M);
             }
+            return *this;
         }
 
         FixedMatrix2D& operator=(FixedMatrix2D&& other) noexcept {
@@ -502,56 +515,57 @@ namespace ARLib {
                 m_matrix = other.m_matrix;
                 other.m_matrix = nullptr;
             }
+            return *this;
         }
 
         /* ITERATORS */
         template <bool ByRow = true>
         auto begin() const {
-            return FixedMatrixIterator<T, N, M, true, ByRow>{m_matrix, 0};
+            return FixedMatrixIterator<N, M, true, ByRow>{m_matrix, 0};
         }
 
         template <bool ByRow = true>
         auto end() const {
-            return FixedMatrixIterator<T, N, M, true, ByRow>{m_matrix, N};
+            return FixedMatrixIterator<N, M, true, ByRow>{m_matrix, N};
         }
 
         template <bool ByRow = true>
         auto begin() {
-            return FixedMatrixIterator<T, N, M, false, ByRow>{m_matrix, 0};
+            return FixedMatrixIterator<N, M, false, ByRow>{m_matrix, 0};
         }
 
         template <bool ByRow = true>
         auto end() {
-            return FixedMatrixIterator<T, N, M, false, ByRow>{m_matrix, N};
+            return FixedMatrixIterator<N, M, false, ByRow>{m_matrix, N};
         }
 
         auto columns_begin(size_t begin_idx = 0) const {
-            return FixedMatrixIterator<T, N, M, true, false>{m_matrix, begin_idx};
+            return FixedMatrixIterator<N, M, true, false>{m_matrix, begin_idx};
         }
-        auto columns_end() const { return FixedMatrixIterator<T, N, M, true, false>{m_matrix, N}; }
+        auto columns_end() const { return FixedMatrixIterator<N, M, true, false>{m_matrix, N}; }
 
         auto columns_begin(size_t begin_idx = 0) {
-            return FixedMatrixIterator<T, N, M, false, false>{m_matrix, begin_idx};
+            return FixedMatrixIterator<N, M, false, false>{m_matrix, begin_idx};
         }
-        auto columns_end() { return FixedMatrixIterator<T, N, M, false, false>{m_matrix, N}; }
+        auto columns_end() { return FixedMatrixIterator<N, M, false, false>{m_matrix, N}; }
 
         auto rows_begin(size_t begin_idx = 0) const {
-            return FixedMatrixIterator<T, N, M, true, true>{m_matrix, begin_idx};
+            return FixedMatrixIterator<N, M, true, true>{m_matrix, begin_idx};
         }
-        auto rows_end() const { return FixedMatrixIterator<T, N, M, true, true>{m_matrix, N}; }
+        auto rows_end() const { return FixedMatrixIterator<N, M, true, true>{m_matrix, N}; }
 
-        auto rows_begin(size_t begin_idx = 0) { return FixedMatrixIterator<T, N, M, false, true>{m_matrix, begin_idx}; }
-        auto rows_end() { return FixedMatrixIterator<T, N, M, false, true>{m_matrix, N}; }
+        auto rows_begin(size_t begin_idx = 0) { return FixedMatrixIterator<N, M, false, true>{m_matrix, begin_idx}; }
+        auto rows_end() { return FixedMatrixIterator<N, M, false, true>{m_matrix, N}; }
 
         /* INDEX OPERATORS */
         T& operator[](Pair<size_t, size_t> idx) { return m_matrix[idx.first()][idx.second()]; }
         const T& operator[](Pair<size_t, size_t> idx) const { return m_matrix[idx.first()][idx.second()]; }
-        auto columns(size_t index) const { return FixedColumnArray<T, N, M, true>{m_matrix, index}; }
-        auto columns(size_t index) { return FixedColumnArray<T, N, M, false>{m_matrix, index}; }
-        auto rows(size_t index) const { return FixedRowArray<T, N, M, true>{m_matrix, index}; }
-        auto rows(size_t index) { return FixedRowArray<T, N, M, false>{m_matrix, index}; }
-        auto operator[](size_t index) const { return FixedRowArray<T, N, M, true>{m_matrix, index}; }
-        auto operator[](size_t index) { return FixedRowArray<T, N, M, false>{m_matrix, index}; }
+        auto columns(size_t index) const { return FixedColumnArray<N, M, true>{m_matrix, index}; }
+        auto columns(size_t index) { return FixedColumnArray<N, M, false>{m_matrix, index}; }
+        auto rows(size_t index) const { return FixedRowArray<N, M, true>{m_matrix, index}; }
+        auto rows(size_t index) { return FixedRowArray<N, M, false>{m_matrix, index}; }
+        auto operator[](size_t index) const { return FixedRowArray<N, M, true>{m_matrix, index}; }
+        auto operator[](size_t index) { return FixedRowArray<N, M, false>{m_matrix, index}; }
 
 #define MAT_LOOP(op)                                                                                                   \
     for (size_t i = 0; i < N; i++) {                                                                                   \
@@ -648,7 +662,7 @@ namespace ARLib {
         auto sub(size_t start_row = 0, size_t start_col = 0) const {
             HARD_ASSERT(start_row + NewSizeRows <= N, "Submatrix is impossible to construct");
             HARD_ASSERT(start_col + NewSizeCols <= M, "Submatrix is impossible to construct");
-            FixedMatrix2D<T, NewSizeRows, NewSizeCols> submat{};
+            FixedMatrix2D<NewSizeRows, NewSizeCols> submat{};
             for (size_t i = start_row; i < start_row + NewSizeRows; i++) {
                 for (size_t j = start_col; j < start_col + NewSizeCols; j++) {
                     submat[{i - start_row, j - start_col}] = m_matrix[i][j];
@@ -658,7 +672,7 @@ namespace ARLib {
         }
 
         FixedMatrix2D inv() const requires Square {
-            FixedMatrix2D<T, N, M * 2> mat_glued{};
+            FixedMatrix2D<N, M * 2> mat_glued{};
             for (size_t i = 0; i < N; i++) {
                 for (size_t j = 0; j < M; j++) {
                     mat_glued[{i, j}] = m_matrix[i][j];
@@ -671,8 +685,8 @@ namespace ARLib {
             return mat_glued.template sub<N, N>(0, N);
         }
 
-        FixedMatrix2D<T, M, N> transpose() const {
-            FixedMatrix2D<T, M, N> mat{};
+        FixedMatrix2D<M, N> transpose() const {
+            FixedMatrix2D<M, N> mat{};
             for (size_t i = 0; i < N; i++) {
                 for (size_t j = 0; j < M; j++) {
                     mat[{j, i}] = m_matrix[i][j];
@@ -691,12 +705,12 @@ namespace ARLib {
     };
 
     // OPERATORS
-    template <Numeric T, size_t N1, size_t N2, size_t M>
-    FixedMatrix2D<T, N1, N2> operator*(const FixedMatrix2D<T, N1, M>& first, const FixedMatrix2D<T, M, N2>& second) {
-        FixedMatrix2D<T, N1, N2> mat{};
+    template <size_t N1, size_t N2, size_t M>
+    FixedMatrix2D<N1, N2> operator*(const FixedMatrix2D<N1, M>& first, const FixedMatrix2D<M, N2>& second) {
+        FixedMatrix2D<N1, N2> mat{};
         for (size_t col = 0; col < N2; col++) {
             for (size_t row = 0; row < N1; row++) {
-                T intermediate{0};
+                double intermediate{0};
                 for (size_t i = 0; i < M; i++) {
                     intermediate += first[{row, i}] * second[{i, col}];
                 }
@@ -706,12 +720,11 @@ namespace ARLib {
         return mat;
     }
 
-    template <Numeric T, size_t N1, size_t N2, size_t M, bool IsConst>
-    FixedMatrix2D<T, N1, 1> operator*(const FixedMatrix2D<T, N1, M>& first,
-                                      const FixedColumnArray<T, M, N2, IsConst>& column) {
-        FixedMatrix2D<T, N1, 1> mat{};
+    template <size_t N1, size_t N2, size_t M, bool IsConst>
+    FixedMatrix2D<N1, 1> operator*(const FixedMatrix2D<N1, M>& first, const FixedColumnArray<M, N2, IsConst>& column) {
+        FixedMatrix2D<N1, 1> mat{};
         for (size_t row = 0; row < N1; row++) {
-            T intermediate{0};
+            double intermediate{0};
             for (size_t i = 0; i < M; i++) {
                 intermediate += first[{row, i}] * column[i];
             }
@@ -720,12 +733,11 @@ namespace ARLib {
         return mat;
     }
 
-    template <Numeric T, size_t N1, size_t N2, size_t M, bool IsConst>
-    FixedMatrix2D<T, 1, N2> operator*(const FixedRowArray<T, N1, M, IsConst>& row,
-                                      const FixedMatrix2D<T, M, N2>& second) {
-        FixedMatrix2D<T, 1, N2> mat{};
+    template <size_t N1, size_t N2, size_t M, bool IsConst>
+    FixedMatrix2D<1, N2> operator*(const FixedRowArray<N1, M, IsConst>& row, const FixedMatrix2D<M, N2>& second) {
+        FixedMatrix2D<1, N2> mat{};
         for (size_t col = 0; col < N2; col++) {
-            T intermediate{0};
+            double intermediate{0};
             for (size_t i = 0; i < M; i++) {
                 intermediate += row[i] * second[{i, col}];
             }
@@ -734,15 +746,15 @@ namespace ARLib {
         return mat;
     }
 
-    template <Numeric T, size_t N1, size_t N2>
-    auto operator/(const FixedMatrix2D<T, N1, N2>& first, const FixedMatrix2D<T, N2, N2>& second) {
+    template <size_t N1, size_t N2>
+    auto operator/(const FixedMatrix2D<N1, N2>& first, const FixedMatrix2D<N2, N2>& second) {
         HARD_ASSERT(second.det() != 0, "Determinant of second matrix must not be 0 to be able to divide");
         return first * second.inv();
     }
 
-    template <Numeric T, size_t N, size_t M>
-    FixedMatrix2D<T, N, M> operator+(const FixedMatrix2D<T, N, M>& first, const FixedMatrix2D<T, N, M>& second) {
-        FixedMatrix2D<T, N, M> mat{};
+    template <size_t N, size_t M>
+    FixedMatrix2D<N, M> operator+(const FixedMatrix2D<N, M>& first, const FixedMatrix2D<N, M>& second) {
+        FixedMatrix2D<N, M> mat{};
         for (size_t i = 0; i < N; i++) {
             for (size_t j = 0; j < M; j++) {
                 mat[{i, j}] = first[{i, j}] + second[{i, j}];
@@ -751,9 +763,9 @@ namespace ARLib {
         return mat;
     }
 
-    template <Numeric T, size_t N, size_t M>
-    FixedMatrix2D<T, N, M> operator-(const FixedMatrix2D<T, N, M>& first, const FixedMatrix2D<T, N, M>& second) {
-        FixedMatrix2D<T, N, M> mat{};
+    template <size_t N, size_t M>
+    FixedMatrix2D<N, M> operator-(const FixedMatrix2D<N, M>& first, const FixedMatrix2D<N, M>& second) {
+        FixedMatrix2D<N, M> mat{};
         for (size_t i = 0; i < N; i++) {
             for (size_t j = 0; j < M; j++) {
                 mat[{i, j}] = first[{i, j}] - second[{i, j}];
@@ -762,16 +774,16 @@ namespace ARLib {
         return mat;
     }
 
-    template <Numeric T, size_t N, size_t M>
-    struct PrintInfo<FixedMatrix2D<T, N, M>> {
-        const FixedMatrix2D<T, N, M>& m_matrix;
-        PrintInfo(const FixedMatrix2D<T, N, M>& matrix) : m_matrix(matrix) {}
+    template <size_t N, size_t M>
+    struct PrintInfo<FixedMatrix2D<N, M>> {
+        const FixedMatrix2D<N, M>& m_matrix;
+        PrintInfo(const FixedMatrix2D<N, M>& matrix) : m_matrix(matrix) {}
         String repr() const {
             String ret{};
             for (size_t i = 0; i < N; i++) {
                 ret += "[ "_s;
                 for (size_t j = 0; j < M; j++) {
-                    ret += PrintInfo<T>{m_matrix[{i, j}]}.repr();
+                    ret += PrintInfo<double>{m_matrix[{i, j}]}.repr();
                     if (j != M - 1) ret += ", "_s;
                 }
                 ret += " ]"_s;
