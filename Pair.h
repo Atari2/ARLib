@@ -7,52 +7,52 @@
 namespace ARLib {
     template <typename T, typename U>
     struct Pair {
-        T m_first;
-        U m_second;
+        T _m_first;
+        U _m_second;
 
         Pair() = default;
-        Pair(const T& first, const U& second) : m_first(first), m_second(second) {}
-        Pair(T&& first, U&& second) : m_first(move(first)), m_second(move(second)) {}
+        Pair(const T& first, const U& second) : _m_first(first), _m_second(second) {}
+        Pair(T&& first, U&& second) : _m_first(move(first)), _m_second(move(second)) {}
 
         Pair(const Pair&) = default;
         Pair(Pair&&) noexcept = default;
         Pair& operator=(Pair&&) noexcept = default;
         Pair& operator=(const Pair&) = default;
 
-        bool operator==(const Pair& other) const { return m_first == other.m_first && m_second == other.m_second; }
-        bool operator!=(const Pair& other) const { return m_first != other.m_first || m_second != other.m_second; }
+        bool operator==(const Pair& other) const { return _m_first == other._m_first && _m_second == other._m_second; }
+        bool operator!=(const Pair& other) const { return _m_first != other._m_first || _m_second != other._m_second; }
 
-        T& first() { return m_first; }
-        U& second() { return m_second; }
+        T& first() { return _m_first; }
+        U& second() { return _m_second; }
 
-        const T& first() const { return m_first; }
-        const U& second() const { return m_second; }
+        const T& first() const { return _m_first; }
+        const U& second() const { return _m_second; }
 
         template <size_t Index>
         auto& get() & {
             static_assert(Index == 0 || Index == 1);
             if constexpr (Index == 0)
-                return m_first;
+                return _m_first;
             else if constexpr (Index == 1)
-                return m_second;
+                return _m_second;
         }
 
         template <size_t Index>
         auto const& get() const& {
             static_assert(Index == 0 || Index == 1);
             if constexpr (Index == 0)
-                return m_first;
+                return _m_first;
             else if constexpr (Index == 1)
-                return m_second;
+                return _m_second;
         }
 
         template <size_t Index>
         auto&& get() && {
             static_assert(Index == 0 || Index == 1);
             if constexpr (Index == 0)
-                return move(m_first);
+                return move(_m_first);
             else if constexpr (Index == 1)
-                return move(m_second);
+                return move(_m_second);
         }
 
         ~Pair() = default;
@@ -60,45 +60,45 @@ namespace ARLib {
 
     template <typename T, typename U>
     struct Pair<T&, U&> {
-        T& m_first;
-        U& m_second;
+        T& _m_first;
+        U& _m_second;
 
-        Pair(T& first, U& second) : m_first(first), m_second(second) {}
+        Pair(T& first, U& second) : _m_first(first), _m_second(second) {}
 
-        Pair(const Pair& other) : m_first(other.m_first), m_second(other.m_second){};
-        Pair(Pair&& other) noexcept : m_first(other.m_first), m_second(other.m_second){};
+        Pair(const Pair& other) : _m_first(other._m_first), _m_second(other._m_second){};
+        Pair(Pair&& other) noexcept : _m_first(other._m_first), _m_second(other._m_second){};
 
-        T& first() { return m_first; }
-        U& second() { return m_second; }
+        T& first() { return _m_first; }
+        U& second() { return _m_second; }
 
-        const T& first() const { return m_first; }
-        const U& second() const { return m_second; }
+        const T& first() const { return _m_first; }
+        const U& second() const { return _m_second; }
 
         template <size_t Index>
         auto& get() & {
             static_assert(Index == 0 || Index == 1);
             if constexpr (Index == 0)
-                return m_first;
+                return _m_first;
             else if constexpr (Index == 1)
-                return m_second;
+                return _m_second;
         }
 
         template <size_t Index>
         auto const& get() const& {
             static_assert(Index == 0 || Index == 1);
             if constexpr (Index == 0)
-                return m_first;
+                return _m_first;
             else if constexpr (Index == 1)
-                return m_second;
+                return _m_second;
         }
 
         template <size_t Index>
         auto&& get() && {
             static_assert(Index == 0 || Index == 1);
             if constexpr (Index == 0)
-                return move(m_first);
+                return move(_m_first);
             else if constexpr (Index == 1)
-                return move(m_second);
+                return move(_m_second);
         }
 
         ~Pair() = default;

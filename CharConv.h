@@ -205,7 +205,9 @@ namespace ARLib {
     inline int64_t StrToI64(const String& str, int base = 10) { return StrViewToI64(str.view(), base); }
     inline uint64_t StrToU64(const String& str, int base = 10) { return StrViewToU64(str.view(), base); }
     inline int StrToInt(const String& str, int base = 10) { return static_cast<int>(StrViewToI64(str.view(), base)); }
-    inline unsigned int StrToUInt(const String& str, int base = 10) { return static_cast<unsigned int>(StrViewToU64(str.view(), base)); }
+    inline unsigned int StrToUInt(const String& str, int base = 10) {
+        return static_cast<unsigned int>(StrViewToU64(str.view(), base));
+    }
 
     template <SupportedBase Base = SupportedBase::Decimal>
     String IntToStr(Integral auto value) {
@@ -213,7 +215,7 @@ namespace ARLib {
             if constexpr (IsSigned<decltype(value)>) {
                 using Ut = MakeUnsignedT<decltype(value)>;
                 const bool neg = value < 0;
-                const auto uvalue = neg ? static_cast<Ut>(~value) + static_cast<Ut>(1) : static_cast<Ut>(value);
+                const auto uvalue = neg ? static_cast<Ut>((~value) + 1) : static_cast<Ut>(value);
                 const auto len = StrLenFromIntegral<Ut>(uvalue);
                 String result{len + (neg ? 1 : 0), '-'};
                 WriteToCharsImpl(result.rawptr() + neg, len, uvalue);

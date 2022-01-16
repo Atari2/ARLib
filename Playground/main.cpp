@@ -1,5 +1,6 @@
 #include "../CharConv.h"
 #include "../Conversion.h"
+#include "../FixedMatrix.h"
 #include "../Matrix.h"
 #include "../Printer.h"
 #include "../PriorityQueue.h"
@@ -7,11 +8,11 @@
 using namespace ARLib;
 
 int main() {
-    double m[][4] = {{8.1472, 6.3236, 9.5751, 9.5717},
-                     {9.0579, 0.9754, 9.6489, 4.8538},
-                     {1.2699, 2.7850, 1.5761, 8.0028},
-                     {9.1338, 5.4688, 9.7059, 1.4189}};
-    Matrix2D<double, 4> matrix{m};
-    matrix.inv();
+    auto m1 = FixedMatrix2D<int, 4, 2>::random(100);
+    auto m2 = FixedMatrix2D<int, 2, 2>::random(100);
+    auto cols = FixedMatrix2D<int, 1, 4>{1, 2, 3, 4};
+    auto m4 = Matrix2D<int>{10, 10};
+    auto m3 = cols[0] * m1;
+    Printer::print("{}", m4);
     return 0;
 }

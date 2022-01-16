@@ -308,4 +308,14 @@ namespace ARLib {
         for (size_t i = prev_size; i < num; i++)
             container[i] = move(T{args...});
     }
+
+    template <Numeric T>
+    constexpr T clamp(T val, T bottom, T top) {
+        if (val <= top && val >= bottom)
+            return val;
+        else if (val > top)
+            return top;
+        else
+            return bottom;
+    }
 } // namespace ARLib
