@@ -526,7 +526,7 @@ namespace ARLib {
 
         template <bool ByRow = true>
         auto end() const {
-            return FixedMatrixIterator<N, M, true, ByRow>{m_matrix, N};
+            return FixedMatrixIterator<N, M, true, ByRow>{m_matrix, ByRow ? N : M};
         }
 
         template <bool ByRow = true>
@@ -536,18 +536,18 @@ namespace ARLib {
 
         template <bool ByRow = true>
         auto end() {
-            return FixedMatrixIterator<N, M, false, ByRow>{m_matrix, N};
+            return FixedMatrixIterator<N, M, false, ByRow>{m_matrix, ByRow ? N : M};
         }
 
         auto columns_begin(size_t begin_idx = 0) const {
             return FixedMatrixIterator<N, M, true, false>{m_matrix, begin_idx};
         }
-        auto columns_end() const { return FixedMatrixIterator<N, M, true, false>{m_matrix, N}; }
+        auto columns_end() const { return FixedMatrixIterator<N, M, true, false>{m_matrix, M}; }
 
         auto columns_begin(size_t begin_idx = 0) {
             return FixedMatrixIterator<N, M, false, false>{m_matrix, begin_idx};
         }
-        auto columns_end() { return FixedMatrixIterator<N, M, false, false>{m_matrix, N}; }
+        auto columns_end() { return FixedMatrixIterator<N, M, false, false>{m_matrix, M}; }
 
         auto rows_begin(size_t begin_idx = 0) const {
             return FixedMatrixIterator<N, M, true, true>{m_matrix, begin_idx};

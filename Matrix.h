@@ -1,12 +1,241 @@
 #pragma once
 #include "Concepts.h"
+#include "FixedMatrix.h"
+#include "Memory.h"
 #include "Optional.h"
 #include "Pair.h"
-#include "Memory.h"
 
 namespace ARLib {
     template <typename T>
     struct PrintInfo;
+
+    class Matrix2D;
+
+    template <bool IsConst, bool ByRow>
+    class MatrixIterator;
+
+    // clang-format off
+    template <bool IsConst>
+    class ColumnIterator {
+        using Tp = ConditionalT<IsConst, AddConstT<double>*, double*>;
+        Tp* m_col;
+        size_t m_current_index;
+
+        public:
+        ColumnIterator(Tp* col, size_t current_index) : m_col(col), m_current_index(current_index) {}
+        auto& operator*() { return *m_col[m_current_index]; }
+        const auto& operator*() const { return *m_col[m_current_index]; }
+
+        ColumnIterator& operator++() {
+            m_current_index++;
+            return *this;
+        }
+        ColumnIterator operator++(int) {
+            auto copy = *this;
+            m_current_index++;
+            return copy;
+        }
+
+        ColumnIterator& operator--() {
+            m_current_index--;
+            return *this;
+        }
+        ColumnIterator operator--(int) {
+            auto copy = *this;
+            m_current_index--;
+            return copy;
+        }
+
+        bool operator==(const ColumnIterator& other) const {
+            return m_col == other.m_col && m_current_index == other.m_current_index;
+        }
+        bool operator!=(const ColumnIterator& other) const {
+            return m_col != other.m_col || m_current_index != other.m_current_index;
+        }
+    };
+
+    template <bool IsConst = false>
+    class ColumnArray {
+        friend Matrix2D;
+        friend MatrixIterator<IsConst, false>;
+        using Tp = ConditionalT<IsConst, AddConstT<double>*, double*>;
+
+        Tp* m_column = nullptr;
+        size_t m_size{0}; 
+
+        ColumnArray() = default;
+
+        ColumnArray(double** matrix, size_t idx, size_t size) requires(!IsConst) : m_size(size) {
+            if (idx >= size)
+                m_column = nullptr;
+            else {
+                m_column = allocate<Tp>(m_size);
+                for (size_t i = 0; i < m_size; i++) {
+                    m_column[i] = &matrix[i][idx];
+                };
+            }
+        }
+        ColumnArray(double** const matrix, size_t idx, size_t size) requires IsConst : m_size(size) {
+            if (idx >= size)
+                m_column = nullptr;
+            else {
+                m_column = allocate<Tp>(m_size);
+                for (size_t i = 0; i < m_size; i++) {
+                    m_column[i] = &matrix[i][idx];
+                };
+            }
+        }
+
+        public :
+
+        ColumnArray& operator=(ColumnArray&& other) {
+            deallocate<Tp, DeallocType::Multiple>(m_column);
+            m_column = other.m_column;
+            m_size = other.m_size;
+            other.m_column = nullptr;
+            return *this;
+        }
+
+        double& operator[](size_t index) requires(!IsConst) { return *m_column[index]; }
+        const double& operator[](size_t index) const { return *m_column[index]; }
+
+        size_t size() const { return m_size; }
+
+        auto begin() const { return ColumnIterator<true>{m_column, 0}; }
+        auto end() const { return ColumnIterator<true>{m_column, m_size}; }
+
+        auto begin() { return ColumnIterator<false>{m_column, 0}; }
+        auto end() { return ColumnIterator<false>{m_column, m_size}; }
+
+        ~ColumnArray() { deallocate<Tp, DeallocType::Multiple>(m_column); }
+    };
+
+    template <bool IsConst>
+    class RowIterator {
+        using Tp = ConditionalT<IsConst, AddConstT<double>*, double*>;
+
+        Tp m_row;
+        size_t m_current_index;
+
+        public:
+        RowIterator(Tp row, size_t current_index) : m_row(row), m_current_index(current_index) {}
+        auto& operator*() { return m_row[m_current_index]; }
+        const auto& operator*() const { return m_row[m_current_index]; }
+
+        RowIterator& operator++() {
+            m_current_index++;
+            return *this;
+        }
+        RowIterator operator++(int) {
+            auto copy = *this;
+            m_current_index++;
+            return copy;
+        }
+
+        RowIterator& operator--() {
+            m_current_index--;
+            return *this;
+        }
+        RowIterator operator--(int) {
+            auto copy = *this;
+            m_current_index--;
+            return copy;
+        }
+
+        bool operator==(const RowIterator& other) const {
+            return m_row == other.m_row && m_current_index == other.m_current_index;
+        }
+        bool operator!=(const RowIterator& other) const {
+            return m_row != other.m_row || m_current_index != other.m_current_index;
+        }
+    };
+
+    template <bool IsConst = false>
+    class RowArray {
+        friend Matrix2D;
+        friend MatrixIterator<IsConst, true>;
+
+        using Tp = ConditionalT<IsConst, AddConstT<double>*, double*>;
+
+        Tp m_row;
+        size_t m_size;
+
+        RowArray(double** matrix, size_t idx, size_t size) requires(!IsConst) : m_size(size) {
+            if (idx >= size)
+               m_row = nullptr;
+            else
+               m_row = matrix[idx]; 
+        }
+        RowArray(double** const matrix, size_t idx, size_t size) requires IsConst : m_size(size) { 
+            if (idx >= size)
+               m_row = nullptr;
+            else
+               m_row = matrix[idx];  
+        }
+
+        public: 
+        double& operator[](size_t index) requires(!IsConst) { return m_row[index]; }
+        const double& operator[](size_t index) const { return m_row[index]; }
+
+        size_t size() const { return m_size; }
+
+        auto begin() const { return RowIterator<true>{m_row, 0}; }
+        auto end() const { return RowIterator<true>{m_row, m_size}; }
+
+        auto begin() { return RowIterator<false>{m_row, 0}; }
+        auto end() { return RowIterator<false>{m_row, m_size}; }
+    };
+
+    template <bool IsConst, bool ByRow = true>
+    class MatrixIterator {
+        using Tp = ConditionalT<IsConst, AddConstT<double**>, double**>;
+        using Ret = ConditionalT<ByRow, RowArray<IsConst>, ColumnArray<IsConst>>;
+
+        Tp m_matrix;
+        size_t m_current_row;
+        Ret m_current;
+        size_t m_size;
+
+        public:
+        MatrixIterator(Tp matrix, size_t current_row, size_t size) :
+            m_matrix(matrix), m_current_row(current_row), m_current(matrix, current_row, size), m_size(size) {}
+
+        Ret& operator*() { return m_current; }
+        const Ret& operator*() const { return m_current; }
+
+        MatrixIterator& operator++() {
+            m_current_row++;
+            m_current = Ret{m_matrix, m_current_row, m_size};
+            return *this;
+        }
+        MatrixIterator operator++(int) {
+            auto copy = *this;
+            m_current_row++;
+            m_current = Ret{m_matrix, m_current_row, m_size};
+            return copy;
+        }
+
+        MatrixIterator& operator--() {
+            m_current_row--;
+            m_current = Ret{m_matrix, m_current_row, m_size};
+            return *this;
+        }
+        MatrixIterator operator--(int) {
+            auto copy = *this;
+            m_current_row--;
+            m_current = Ret{m_matrix, m_current_row, m_size};
+            return copy;
+        }
+
+        bool operator==(const MatrixIterator& other) const {
+            return addressof(m_matrix) == addressof(other.m_matrix) && m_current_row == other.m_current_row && m_size == other.m_size;
+        }
+        bool operator!=(const MatrixIterator& other) const {
+            return m_matrix != other.m_matrix || m_current_row != other.m_current_row || m_size != other.m_size;
+        }
+    };
+
+    // clang-format on
 
     class Matrix2D {
         mutable Optional<double> m_cached_det{};
@@ -59,6 +288,16 @@ namespace ARLib {
             return mat;
         }
 
+        template <size_t N, size_t M>
+        Matrix2D(const FixedMatrix2D<N, M>& matrix) : m_rows(N), m_columns(M) {
+            allocate_memory();
+            for (size_t i = 0; i < N; i++) {
+                for (size_t j = 0; j < M; j++) {
+                    m_matrix[i][j] = matrix[{i, j}];
+                }
+            }
+        }
+
         Matrix2D(size_t rows, size_t columns) : m_rows(rows), m_columns(columns) { allocate_memory(true); }
 
         template <size_t N, size_t M>
@@ -99,6 +338,43 @@ namespace ARLib {
             other.m_matrix = nullptr;
             return *this;
         }
+
+        /* ITERATORS */
+        template <bool ByRow = true>
+        auto begin() const {
+            return MatrixIterator<true, ByRow>{m_matrix, 0, ByRow ? m_rows : m_columns};
+        }
+
+        template <bool ByRow = true>
+        auto end() const {
+            return MatrixIterator<true, ByRow>{m_matrix, ByRow ? m_rows : m_columns, ByRow ? m_rows : m_columns};
+        }
+
+        template <bool ByRow = true>
+        auto begin() {
+            return MatrixIterator<false, ByRow>{m_matrix, 0, ByRow ? m_rows : m_columns};
+        }
+
+        template <bool ByRow = true>
+        auto end() {
+            return MatrixIterator<false, ByRow>{m_matrix, ByRow ? m_rows : m_columns, ByRow ? m_rows : m_columns};
+        }
+
+        auto columns_begin(size_t begin_idx = 0) const {
+            return MatrixIterator<true, false>{m_matrix, begin_idx, m_columns};
+        }
+        auto columns_end() const { return MatrixIterator<true, false>{m_matrix, m_columns, m_columns}; }
+
+        auto columns_begin(size_t begin_idx = 0) {
+            return MatrixIterator<false, false>{m_matrix, begin_idx, m_columns};
+        }
+        auto columns_end() { return MatrixIterator<false, false>{m_matrix, m_columns, m_columns}; }
+
+        auto rows_begin(size_t begin_idx = 0) const { return MatrixIterator<true, true>{m_matrix, begin_idx, m_rows}; }
+        auto rows_end() const { return MatrixIterator<true, true>{m_matrix, m_rows, m_rows}; }
+
+        auto rows_begin(size_t begin_idx = 0) { return MatrixIterator<false, true>{m_matrix, begin_idx, m_rows}; }
+        auto rows_end() { return MatrixIterator<false, true>{m_matrix, m_rows, m_rows}; }
 
         size_t row_number() const { return m_rows; }
         size_t column_number() const { return m_columns; }
@@ -156,7 +432,8 @@ namespace ARLib {
             return copy;
         }
 
-        Pair<size_t, size_t> size() const { return {m_rows, m_columns}; }
+        Pair<size_t, size_t> shape() const { return {m_rows, m_columns}; }
+        size_t size() const { return m_rows; }
         size_t num_rows() const { return m_rows; }
         size_t num_columns() const { return m_columns; }
         void reduce() { row_echelon_transform(m_matrix, m_rows, m_columns); }
@@ -217,6 +494,38 @@ namespace ARLib {
             if (m_matrix) deallocate_memory();
         }
     };
+
+    template <size_t N, size_t M>
+    Matrix2D operator*(const FixedMatrix2D<N, M>& first, const Matrix2D& second) {
+        HARD_ASSERT(M == second.row_number(), "Impossible to do the multiplication, sizes do not match");
+        Matrix2D mat{N, second.column_number()};
+        for (size_t col = 0; col < second.column_number(); col++) {
+            for (size_t row = 0; row < N; row++) {
+                double intermediate{0};
+                for (size_t i = 0; i < M; i++) {
+                    intermediate += first[{row, i}] * second[{i, col}];
+                }
+                mat[{row, col}] = intermediate;
+            }
+        }
+        return mat;
+    }
+
+    template <size_t N, size_t M>
+    Matrix2D operator*(const Matrix2D& first, const FixedMatrix2D<N, M>& second) {
+        HARD_ASSERT(N == first.column_number(), "Impossible to do the multiplication, sizes do not match");
+        Matrix2D mat{first.row_number(), M};
+        for (size_t col = 0; col < M; col++) {
+            for (size_t row = 0; row < first.row_number(); row++) {
+                double intermediate{0};
+                for (size_t i = 0; i < N; i++) {
+                    intermediate += first[{row, i}] * second[{i, col}];
+                }
+                mat[{row, col}] = intermediate;
+            }
+        }
+        return mat;
+    }
 
     template <>
     struct PrintInfo<Matrix2D> {

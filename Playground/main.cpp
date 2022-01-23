@@ -2,6 +2,7 @@
 #include "../Matrix.h"
 #include "../Printer.h"
 #include "../CharConv.h"
+#include "../Enumerate.h"
 using namespace ARLib;
 
 int main() {
@@ -18,11 +19,17 @@ int main() {
     for (size_t i = 0; i < 10; i++) {
         for (size_t j = 0; j < 10; j++) {
             m4[{j, i}] = vect[i * 10 + j];
-            // m5[{j, i}] = vect[i * 10 + j];
+            m5[{j, i}] = vect[i * 10 + j];
+        }
+    }
+
+    for (const auto& [i, row] : Enumerate{m4}) {
+        for (const auto& [j, dbl] : Enumerate{row}) {
+            Printer::print("[{}, {}] => {}", i, j, dbl);
         }
     }
 
     // m4.det() expected => -3715391934961051648.000000
-    Printer::print("{}\n{}\n{}", m4, m4.det(), m4.inv());
+    Printer::print("{}\n\n{}", m5 * m4, m4 * m5);
     return 0;
 }
