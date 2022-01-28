@@ -1,15 +1,19 @@
 #ifdef DEBUG
 #include "StackTrace.h"
+#include "CharConvHelpers.h"
 #include "Utility.h"
 #include "cmath_compat.h"
 #include "cstdio_compat.h"
 #include "cstring_compat.h"
+#include "String.h"
 
 #ifdef ON_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 #include <windows.h>
 // clang-format no reorder these 2 headers
+#include "Threading.h"
+#include "arlib_osapi.h"
 #include <dbghelp.h>
 #else
 #include "String.h"
@@ -19,7 +23,30 @@
 #include <execinfo.h>
 #endif
 namespace ARLib {
+#ifdef ON_WINDOWS
+    BackTrace::BackTraceGlobalState BackTrace::s_state = BackTrace::BackTraceGlobalState{nullptr, false};
+
+    BackTrace::BackTrace(bool failing) {
+        if (failing) [[unlikely]]
+            return;
+        if (!s_state.are_symbols_loaded) {
+            auto proc = GetCurrentProcess();
+            s_state.are_symbols_loaded =
+            DuplicateHandle(proc, proc, proc, &s_state.process_handle, PROCESS_QUERY_INFORMATION, false, 0) &&
+            SymInitialize(s_state.process_handle, nullptr, true);
+            if (!s_state.are_symbols_loaded) {
+                s_state.process_handle = nullptr;
+                char err[]{"Failed to initialize symbols"};
+                append_frame(err, sizeof_array(err));
+            }
+            SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_ALLOW_ABSOLUTE_SYMBOLS);
+        }
+    }
+
+#endif
+
     bool BackTrace::already_generating_backtrace = false;
+
     void BackTrace::append_frame(char* information, size_t info_len /* includes null terminator */,
                                  bool need_to_alloc) {
         if (need_to_alloc) {
@@ -44,8 +71,8 @@ namespace ARLib {
         if (BackTrace::already_generating_backtrace) {
             ARLib::puts(
             "Trying to construct a backtrace while another backtrace is already being generated, aborting...");
+            return;
         }
-        BackTrace::already_generating_backtrace = true;
         BackTrace btrace = capture_backtrace();
         puts("---- BACKTRACE START ----");
         for (size_t i = 0; i < btrace.size(); i++) {
@@ -55,17 +82,22 @@ namespace ARLib {
     }
 #ifdef ON_WINDOWS
     BackTrace capture_backtrace() {
+        if (BackTrace::already_generating_backtrace) {
+            ARLib::puts(
+            "Trying to construct a backtrace while another backtrace is already being generated, aborting...");
+            return BackTrace{true};
+        }
+        Mutex mtx{};
+        ScopedLock lock{mtx};
+        BackTrace::already_generating_backtrace = true;
         BackTrace trace{};
-        constexpr DWORD frames_to_skip = 1;                // skip the frame from this function, it's not needed
-        constexpr DWORD frames_to_capture = MAX_BACKTRACE; // we get as many frames as we can
-        PVOID* backtrace = new PVOID[frames_to_capture];
-        auto hdl = GetCurrentProcess();
-        if (!SymInitialize(hdl, nullptr, true)) {
-            char err[]{"Failed to initialize symbols"};
-            trace.append_frame(err, sizeof_array(err));
+        if (trace.process_handle() == nullptr) {
+            BackTrace::already_generating_backtrace = false;
             return trace;
         }
-        SymSetOptions(SYMOPT_LOAD_LINES);
+        constexpr DWORD frames_to_skip = 1;                // skip the frame from this function, it's not needed
+        constexpr DWORD frames_to_capture = MAX_BACKTRACE; // we get as many frames as we can
+        PVOID backtrace[frames_to_capture];
         auto res = RtlCaptureStackBackTrace(frames_to_skip, frames_to_capture, backtrace, nullptr);
         for (auto i = 0; i < res; ++i) {
             constexpr size_t ptr_fmt_len = 15; // how many chars to print a pointer on MSVC (e.g. `00007FFBED00703`)
@@ -73,33 +105,44 @@ namespace ARLib {
             PSYMBOL_INFO psymbol = reinterpret_cast<PSYMBOL_INFO>(buffer);
             psymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
             psymbol->MaxNameLen = MAX_SYM_NAME;
-            if (!SymFromAddr(hdl, reinterpret_cast<DWORD64>(backtrace[i]), nullptr, psymbol)) {
-                constexpr size_t len = sizeof_array("Failed to retrieve debug info for address %p") + ptr_fmt_len;
-                char message[len]{};
-                snprintf(message, len, "Failed to retrieve debug info for address %p", backtrace[i]);
-                trace.append_frame(message, len);
+            if (!SymFromAddr(trace.process_handle(), reinterpret_cast<DWORD64>(backtrace[i]), nullptr, psymbol)) {
+                constexpr size_t len =
+                sizeof_array("Failed to retrieve debug info for address %p, error was %s") + ptr_fmt_len;
+                String error = last_error();
+                char* message = new char[len + error.size()];
+                snprintf(message, len + error.size(), "Failed to retrieve debug info for address %p, error was %s",
+                         backtrace[i], error.data());
+                trace.append_frame(message, len, false);
             } else {
                 IMAGEHLP_LINE64 line{};
                 DWORD displ = 0;
                 line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-                if (!SymGetLineFromAddr64(hdl, reinterpret_cast<DWORD64>(backtrace[i]), &displ, &line)) {
+                if (!SymGetLineFromAddr64(trace.process_handle(), reinterpret_cast<DWORD64>(backtrace[i]), &displ,
+                                          &line)) {
                     constexpr size_t len =
-                    sizeof_array("Failed to retrieve debug info for line at address %p") + ptr_fmt_len;
-                    char message[len]{};
-                    snprintf(message, len, "Failed to retrieve debug info for line at address %p", backtrace[i]);
-                    trace.append_frame(message, len);
+                    sizeof_array("Failed to retrieve line info for `%s` at address %p, error was \"%s\"") + ptr_fmt_len;
+                    String error = last_error();
+                    error.itrim();
+                    size_t total_len = psymbol->NameLen + len + error.size();
+                    char* message = new char[total_len];
+                    snprintf(message, total_len,
+                             "Failed to retrieve line info for `%s` at address %p, error was \"%s\"", psymbol->Name,
+                             backtrace[i], error.data());
+                    trace.append_frame(message, len, false);
+                } else {
+                    constexpr size_t len = sizeof_array("`%s` in %s at [%d]:[%d]");
+                    size_t number_len = StrLenFromIntegral(line.LineNumber);
+                    size_t displ_len = StrLenFromIntegral(displ);
+                    size_t total_length =
+                    psymbol->NameLen + ARLib::strlen(line.FileName) + number_len + displ_len + len;
+                    char* backtrace_msg = new char[total_length];
+                    snprintf(backtrace_msg, total_length, "`%s` in %s at [%d]:[%d]", psymbol->Name, line.FileName,
+                             line.LineNumber, displ);
+                    trace.append_frame(backtrace_msg, total_length, false);
                 }
-                constexpr size_t len = sizeof_array("`%s` in %s at [%d]:[%d]");
-                size_t number_len =
-                line.LineNumber > 0 ? static_cast<size_t>(ARLib::log10(static_cast<double>(line.LineNumber))) + 1 : 1;
-                size_t displ_len = displ > 0 ? static_cast<size_t>(ARLib::log10(static_cast<double>(displ))) + 1 : 1;
-                size_t total_length = psymbol->NameLen + ARLib::strlen(line.FileName) + number_len + displ_len + len;
-                char* backtrace_msg = new char[total_length];
-                snprintf(backtrace_msg, total_length, "`%s` in %s at [%d]:[%d]", psymbol->Name, line.FileName,
-                         line.LineNumber, displ);
-                trace.append_frame(backtrace_msg, total_length, false);
             }
         }
+        BackTrace::already_generating_backtrace = false;
         return trace;
     }
 #else
@@ -138,5 +181,22 @@ namespace ARLib {
         return trace;
     }
 #endif
+#ifdef ON_WINDOWS
+    BackTrace::BackTraceGlobalState::~BackTraceGlobalState() {
+        if (are_symbols_loaded && process_handle) { SymCleanup(process_handle); }
+    }
+#endif
+
+    String PrintInfo<BackTrace>::repr() const {
+        String backtrace{"---- BACKTRACE START ----\n"};
+        for (size_t i = 0; i < m_trace.size(); i++) {
+            backtrace += '\t';
+            backtrace += m_trace.backtrace_at(i);
+            backtrace += '\n';
+        }
+        backtrace += "---- BACKTRACE END ----"_s;
+        return backtrace;
+    }
+
 } // namespace ARLib
 #endif

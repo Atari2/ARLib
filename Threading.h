@@ -347,7 +347,8 @@ namespace ARLib {
         void detach() {
             if (!joinable()) { arlib_terminate(); }
             auto state = ThreadNative::detach(m_thread);
-            HARD_ASSERT_FMT(static_cast<int>(state) == 0, "Thread %lu didn't detach successfully, error number was %d\n",
+            HARD_ASSERT_FMT(static_cast<int>(state) == 0,
+                            "Thread %lu didn't detach successfully, error number was %d\n",
                             ThreadNative::get_id(m_thread), static_cast<int>(state));
             m_thread = {};
         }
