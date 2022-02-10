@@ -7,6 +7,61 @@
 namespace ARLib {
     // anything that wants to be printed from this function has to specialize PrintInfo
 
+    namespace Detail {
+
+        template <typename... Args>
+        void compiletime_assertion_fail(Args...);
+
+        template <size_t N, size_t ArgsSize>
+        consteval bool check_format_string(const char (&str)[N]) {
+            size_t count = 0;
+            enum class FormatState { EscapeNextOpen, EscapeNextClosed, Continue } state{FormatState::Continue};
+            for (size_t idx = 0; idx < N; idx++) {
+                const char c = str[idx];
+                if (c == '{') {
+                    switch (state) {
+                    case FormatState::Continue:
+                    case FormatState::EscapeNextClosed:
+                        state = FormatState::EscapeNextOpen;
+                        break;
+                    case FormatState::EscapeNextOpen:
+                        state = FormatState::Continue;
+                        break;
+                    }
+                } else if (c == '}') {
+                    switch (state) {
+                    case FormatState::EscapeNextOpen:
+                        count++;
+                        [[fallthrough]];
+                    case FormatState::EscapeNextClosed:
+                        state = FormatState::Continue;
+                        break;
+                    case FormatState::Continue:
+                        state = FormatState::EscapeNextClosed;
+                        break;
+                    }
+                } else {
+                    state = FormatState::Continue;
+                }
+            }
+            return count == ArgsSize;
+        }
+
+        template <size_t ArgsSize>
+        struct CheckedFormatString {
+
+            StringView fmt;
+
+            template <size_t N>
+            consteval CheckedFormatString(const char (&fmt_)[N]) : fmt{fmt_, N - 1} {
+#ifndef COMPILER_CLANG
+                bool result = check_format_string<N, ArgsSize>(fmt_);
+                if (!result) compiletime_assertion_fail("Format arguments are not the same number as formats to fill");
+#endif
+            }
+        };
+    } // namespace Detail
+
     class Printer {
         size_t current_index = 0;
         Vector<size_t> indexes{};
@@ -26,11 +81,11 @@ namespace ARLib {
             }
         }
 
-        template <size_t N, typename... Args>
-        explicit Printer(const char (&format)[N], const Args&... args) : format_string{format} {
+        template <typename... Args>
+        explicit Printer(StringView format, const Args&... args) : format_string{format} {
             enum class FormatState { EscapeNextOpen, EscapeNextClosed, Continue } state{FormatState::Continue};
             String escaped_format_string{};
-            escaped_format_string.reserve(N);
+            escaped_format_string.reserve(format.size());
             for (size_t idx = 0; idx < format_string.size(); idx++) {
                 char c = format_string[idx];
                 if (c == '{') {
@@ -64,12 +119,17 @@ namespace ARLib {
                 }
             }
             format_string = move(escaped_format_string);
+            // this check is moved to compile time for MSVC and GCC
+            // using Detail::CheckedFormatString
+            // since Clang-14 complains about fmt_ being an unknown value
             constexpr auto num_args = sizeof...(args);
+#ifdef COMPILER_CLANG
             HARD_ASSERT_FMT(
             (indexes.size() == num_args),
             "Format arguments are not the same number as formats to fill, arguments are %d, to fill there are %d",
             num_args, indexes.size())
-            builder.reserve(N);
+#endif
+            builder.reserve(format.size());
             if constexpr (num_args == 0) {
                 builder = move(format_string);
             } else {
@@ -81,19 +141,19 @@ namespace ARLib {
         void print_puts() { puts(builder.data()); }
 
         public:
-        template <size_t N, typename... Args>
-        static void print(const char (&format)[N], const Args&... args) {
+        template <typename... Args>
+        static void print(Detail::CheckedFormatString<sizeof...(Args)>&& format, const Args&... args) {
             if constexpr (sizeof...(args) == 0) {
                 puts(format);
             } else {
-                Printer printer{format, args...};
+                Printer printer{format.fmt, args...};
                 printer.print_puts();
             }
         }
 
-        template <size_t N, typename... Args>
-        [[nodiscard]] static String format(const char (&format)[N], const Args&... args) {
-            Printer printer{format, args...};
+        template <typename... Args>
+        [[nodiscard]] static String format(Detail::CheckedFormatString<sizeof...(Args)>&& format, const Args&... args) {
+            Printer printer{format.fmt, args...};
             return move(printer.builder);
         }
     };
