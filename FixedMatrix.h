@@ -1,5 +1,6 @@
 #pragma once
 #include "Algorithm.h"
+#include "CharConv.h"
 #include "Concepts.h"
 #include "Iterator.h"
 #include "Memory.h"
@@ -7,7 +8,6 @@
 #include "Pair.h"
 #include "PrintInfo.h"
 #include "Random.h"
-#include "CharConv.h"
 
 namespace ARLib {
     // clang-format off
@@ -598,6 +598,16 @@ namespace ARLib {
         DEFINE_OP(*, *=);
         DEFINE_OP(/, /=);
 
+        FixedMatrix2D& operator*=(const FixedMatrix2D& other) {
+            *this = *this * other;
+            return *this;
+        }
+
+        FixedMatrix2D& operator/=(const FixedMatrix2D& other) {
+            *this = *this / other;
+            return *this;
+        }
+
         FixedMatrix2D& operator++() {
             MAT_LOOP(m_matrix[i][j] += 1);
             return *this;
@@ -618,7 +628,7 @@ namespace ARLib {
         }
 
         /* MATHEMATICAL OPERATIONS */
-        constexpr Pair<size_t, size_t> size() const { return {N, M}; }
+        constexpr Pair<size_t, size_t> shape() const { return {N, M}; }
         constexpr size_t num_rows() const { return N; }
         constexpr size_t num_columns() const { return M; }
         void reduce() { row_echelon_transform(m_matrix); }
@@ -695,6 +705,24 @@ namespace ARLib {
             return mat;
         }
 
+        bool operator==(const FixedMatrix2D& other) const {
+            for (size_t i = 0; i < N; i++) {
+                for (size_t j = 0; j < M; j++) {
+                    if (m_matrix[i][j] != other.m_matrix[i][j]) return false;
+                }
+            }
+            return true;
+        }
+
+        bool operator!=(const FixedMatrix2D& other) const {
+            for (size_t i = 0; i < N; i++) {
+                for (size_t j = 0; j < M; j++) {
+                    if (m_matrix[i][j] != other.m_matrix[i][j]) return true;
+                }
+            }
+            return false;
+        }
+
         ~FixedMatrix2D() {
             if constexpr (!ValidToInline) { deallocate_memory(); }
         }
@@ -764,6 +792,16 @@ namespace ARLib {
     }
 
     template <size_t N, size_t M>
+    FixedMatrix2D<N, M>& operator+=(FixedMatrix2D<N, M>& first, const FixedMatrix2D<N, M>& second) {
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                first[{i, j}] += second[{i, j}];
+            }
+        }
+        return first;
+    }
+
+    template <size_t N, size_t M>
     FixedMatrix2D<N, M> operator-(const FixedMatrix2D<N, M>& first, const FixedMatrix2D<N, M>& second) {
         FixedMatrix2D<N, M> mat{};
         for (size_t i = 0; i < N; i++) {
@@ -772,6 +810,16 @@ namespace ARLib {
             }
         }
         return mat;
+    }
+
+    template <size_t N, size_t M>
+    FixedMatrix2D<N, M>& operator-=(FixedMatrix2D<N, M>& first, const FixedMatrix2D<N, M>& second) {
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                first[{i, j}] -= second[{i, j}];
+            }
+        }
+        return first;
     }
 
     template <size_t N, size_t M>

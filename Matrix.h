@@ -289,7 +289,7 @@ namespace ARLib {
         }
 
         template <size_t N, size_t M>
-        Matrix2D(const FixedMatrix2D<N, M>& matrix) : m_rows(N), m_columns(M) {
+        explicit Matrix2D(const FixedMatrix2D<N, M>& matrix) : m_rows(N), m_columns(M) {
             allocate_memory();
             for (size_t i = 0; i < N; i++) {
                 for (size_t j = 0; j < M; j++) {
@@ -405,13 +405,40 @@ namespace ARLib {
         /* MATHEMATICAL OPERATORS */
         DEFINE_INPLACE_OP(+=);
         DEFINE_INPLACE_OP(-=);
-        DEFINE_INPLACE_OP(*=);
-        DEFINE_INPLACE_OP(/=);
 
         DEFINE_OP(+, +=);
         DEFINE_OP(-, -=);
-        DEFINE_OP(*, *=);
-        DEFINE_OP(/, /=);
+
+        Matrix2D operator*(const Matrix2D& other) const {
+            HARD_ASSERT(m_rows == other.row_number(), "Impossible to do the multiplication, sizes do not match");
+            Matrix2D mat{m_rows, other.column_number()};
+            for (size_t col = 0; col < other.column_number(); col++) {
+                for (size_t row = 0; row < m_rows; row++) {
+                    double intermediate{0};
+                    for (size_t i = 0; i < m_columns; i++) {
+                        intermediate += m_matrix[row][i] * other[{i, col}];
+                    }
+                    mat[{row, col}] = intermediate;
+                }
+            }
+            return mat;
+        }
+
+        Matrix2D& operator*=(const Matrix2D& other) {
+            *this = *this * other;
+            return *this;
+        }
+
+        Matrix2D operator/(const Matrix2D& other) const {
+            HARD_ASSERT(shape() == other.shape(), "Matrices must have the same shape");
+            HARD_ASSERT(other.det() != 0, "Determinant of second matrix must be non-zero");
+            return *this * other.inv();
+        }
+
+        Matrix2D& operator/=(const Matrix2D& other) {
+            *this = *this / other;
+            return *this;
+        }
 
         Matrix2D& operator++() {
             MAT_LOOP(m_matrix[i][j] += 1);
@@ -490,6 +517,26 @@ namespace ARLib {
             return mat;
         }
 
+        bool operator==(const Matrix2D& other) const {
+            if (shape() != other.shape()) return false;
+            for (size_t i = 0; i < m_rows; i++) {
+                for (size_t j = 0; j < m_columns; j++) {
+                    if (m_matrix[i][j] != other.m_matrix[i][j]) return false;
+                }
+            }
+            return true;
+        }
+
+        bool operator!=(const Matrix2D& other) const {
+            if (shape() != other.shape()) return true;
+            for (size_t i = 0; i < m_rows; i++) {
+                for (size_t j = 0; j < m_columns; j++) {
+                    if (m_matrix[i][j] != other.m_matrix[i][j]) return true;
+                }
+            }
+            return false;
+        }
+
         ~Matrix2D() {
             if (m_matrix) deallocate_memory();
         }
@@ -525,6 +572,134 @@ namespace ARLib {
             }
         }
         return mat;
+    }
+
+    template <size_t N, size_t M>
+    Matrix2D operator/(const FixedMatrix2D<N, M>& first, const Matrix2D& second) {
+        HARD_ASSERT(first.shape() == second.shape(), "Matrices must have the same shape");
+        HARD_ASSERT(second.det() != 0, "Determinant of second matrix must be non-zero");
+        return first * second.inv();
+    }
+
+    template <size_t N, size_t M>
+    Matrix2D operator/(const Matrix2D& first, const FixedMatrix2D<N, M>& second) {
+        HARD_ASSERT(first.shape() == second.shape(), "Matrices must have the same shape");
+        HARD_ASSERT(second.det() != 0, "Determinant of second matrix must be non-zero");
+        return first * second.inv();
+    }
+
+    template <size_t N, size_t M>
+    Matrix2D operator+(const FixedMatrix2D<N, M>& first, const Matrix2D& second) {
+        HARD_ASSERT(first.shape() == second.shape(), "Matrices must have the same shape");
+        Matrix2D mat{first};
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                mat[{i, j}] += second[{i, j}];
+            }
+        }
+        return mat;
+    }
+
+    template <size_t N, size_t M>
+    Matrix2D operator+(const Matrix2D& first, const FixedMatrix2D<N, M>& second) {
+        HARD_ASSERT(first.shape() == second.shape(), "Matrices must have the same shape");
+        Matrix2D mat{first};
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                mat[{i, j}] += second[{i, j}];
+            }
+        }
+        return mat;
+    }
+
+    template <size_t N, size_t M>
+    FixedMatrix2D<N, M>& operator+=(FixedMatrix2D<N, M>& first, const Matrix2D& second) {
+        HARD_ASSERT(first.shape() == second.shape(), "Matrices must have the same shape");
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                first[{i, j}] += second[{i, j}];
+            }
+        }
+        return first;
+    }
+
+    template <size_t N, size_t M>
+    Matrix2D& operator+=(Matrix2D& first, const FixedMatrix2D<N, M>& second) {
+        HARD_ASSERT(first.shape() == second.shape(), "Matrices must have the same shape");
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                first[{i, j}] += second[{i, j}];
+            }
+        }
+        return first;
+    }
+
+    template <size_t N, size_t M>
+    Matrix2D operator-(const FixedMatrix2D<N, M>& first, const Matrix2D& second) {
+        HARD_ASSERT(first.shape() == second.shape(), "Matrices must have the same shape");
+        Matrix2D mat{first};
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                mat[{i, j}] -= second[{i, j}];
+            }
+        }
+        return mat;
+    }
+
+    template <size_t N, size_t M>
+    Matrix2D operator-(const Matrix2D& first, const FixedMatrix2D<N, M>& second) {
+        HARD_ASSERT(first.shape() == second.shape(), "Matrices must have the same shape");
+        Matrix2D mat{first};
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                mat[{i, j}] -= second[{i, j}];
+            }
+        }
+        return mat;
+    }
+
+    template <size_t N, size_t M>
+    bool operator==(const Matrix2D& first, const FixedMatrix2D<N, M>& second) {
+        if (first.shape() != second.shape()) return false;
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                if (first[{i, j}] != second[{i, j}]) return false;
+            }
+        }
+        return true;
+    }
+
+    template <size_t N, size_t M>
+    bool operator==(const FixedMatrix2D<N, M>& first, const Matrix2D& second) {
+        if (first.shape() != second.shape()) return false;
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                if (first[{i, j}] != second[{i, j}]) return false;
+            }
+        }
+        return true;
+    }
+
+    template <size_t N, size_t M>
+    bool operator!=(const Matrix2D& first, const FixedMatrix2D<N, M>& second) {
+        if (first.shape() != second.shape()) return true;
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                if (first[{i, j}] != second[{i, j}]) return true;
+            }
+        }
+        return false;
+    }
+
+    template <size_t N, size_t M>
+    bool operator!=(const FixedMatrix2D<N, M>& first, const Matrix2D& second) {
+        if (first.shape() != second.shape()) return true;
+        for (size_t i = 0; i < N; i++) {
+            for (size_t j = 0; j < M; j++) {
+                if (first[{i, j}] != second[{i, j}]) return true;
+            }
+        }
+        return false;
     }
 
     template <>
