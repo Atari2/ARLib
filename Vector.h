@@ -336,17 +336,21 @@ namespace ARLib {
 
         const T* data() { return m_storage; }
 
-        Iter begin() const { return Iter{m_storage}; }
+        Iter begin() { return Iter{m_storage}; }
 
-        Iter end() const { return Iter{m_storage + m_size}; }
+        Iter end() { return Iter{m_storage + m_size}; }
+
+        ConstIter begin() const { return ConstIter{m_storage}; }
+
+        ConstIter end() const { return ConstIter{m_storage + m_size}; }
 
         ConstIter cbegin() const { return ConstIter{m_storage}; }
 
         ConstIter cend() const { return ConstIter{m_storage + m_size}; }
 
-        ReverseIter rbegin() const { return ReverseIter{m_storage + m_size - 1}; }
+        ReverseIter rbegin() { return ReverseIter{m_storage + m_size - 1}; }
 
-        ReverseIter rend() const { return ReverseIter{m_storage - 1}; }
+        ReverseIter rend() { return ReverseIter{m_storage - 1}; }
 
         ConstReverseIter crbegin() const { return ConstReverseIter{m_storage + m_size - 1}; }
 

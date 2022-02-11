@@ -417,7 +417,7 @@ TEST(ARLibTests, LinkedListTests) {
 TEST(ARLibTests, GenericViewTests) {
     Vector<int> vec{};
     vec.fill_pattern([](int i) { return ++i; }, 1000);
-    Vector veccp{vec};
+    const Vector veccp{vec};
     IteratorView view{vec};
     IteratorView view2{veccp};
     String form_filtered{
