@@ -124,14 +124,18 @@ namespace ARLib {
 
         ConstIterator(ConstIterator<Ct>&& other) noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
 
-        ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) { m_current = other.m_current; }
+        ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) {
+            m_current = other.m_current;
+            return *this;
+        }
 
         ConstIterator<Ct>& operator=(ConstIterator<Ct>&& other) noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
+            return *this;
         }
 
-        const T& operator*() { return *m_current; }
+        const T& operator*() const { return *m_current; }
 
         ConstIterator<Ct>& operator++() {
             m_current++;
@@ -168,6 +172,9 @@ namespace ARLib {
         }
 
         ConstIterator<Ct> operator-(int offset) { return ConstIterator<Ct>{m_current - offset}; }
+        size_t operator-(const ConstIterator<Ct>& other) const {
+            return static_cast<size_t>(m_current - other.m_current);
+        }
     };
 
     template <typename T>

@@ -216,7 +216,7 @@ namespace ARLib {
     // in-place sorting
     template <typename C>
     requires Iterable<C>
-    void sort(const C& cont) { quicksort_internal(cont.begin(), cont.end() - 1); }
+    void sort(C& cont) { quicksort_internal(cont.begin(), cont.end() - 1); }
 
     template <Iterable C>
     auto begin(C& cont) {

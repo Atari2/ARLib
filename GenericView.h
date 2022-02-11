@@ -68,10 +68,10 @@ namespace ARLib {
 
     template <Iterable Cont>
     class IteratorView {
-        using Iter = typename IterableTraits<Cont>::IterType;
+        using Iter = decltype(declval<Cont>().begin());
         Iter m_begin;
         Iter m_end;
-        using ItemType = typename IterableTraits<Cont>::ItemType;
+        using ItemType = RemoveReferenceT<decltype(*declval<Iter>())>;
         ItemType* m_stolen_storage = nullptr;
 
         ItemType* release_storage() {
@@ -84,14 +84,15 @@ namespace ARLib {
         IteratorView(ItemType* storage, Iter begin, Iter end) : m_begin(begin), m_end(end), m_stolen_storage(storage) {}
         IteratorView(ItemType* storage, size_t size) :
             m_begin(storage), m_end(storage + size), m_stolen_storage(storage) {}
-        explicit IteratorView(const Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
+        explicit IteratorView(Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
         Iter begin() { return m_begin; }
         Iter end() { return m_end; }
         size_t size() requires IterCanSubtractForSize<Iter> { return m_end - m_begin; }
 
         // in-place transform
-        template <typename Functor, typename = EnableIfT<IsSameV<ResultOfT<Functor(ItemType)>, ItemType>>>
-        IteratorView transform(Functor&& func) {
+        template <typename Functor>
+        requires(IsSameV<decltype(declval<Functor>()(declval<ItemType>())), ItemType>) IteratorView
+        transform(Functor&& func) {
             for (auto it = m_begin; it != m_end; ++it) {
                 *it = func(*it);
             }
