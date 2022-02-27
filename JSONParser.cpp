@@ -97,7 +97,7 @@ namespace ARLib {
 
         Number parse_number(const String& raw_value) {
             if (raw_value.contains('.') || raw_value.contains(',')) {
-                return Number{number_tag, StrToDouble(raw_value)};    
+                return Number{number_tag, StrToDouble(raw_value)};
             } else {
                 return Number{number_tag, StrToI64(raw_value)};
             }
@@ -220,7 +220,7 @@ namespace ARLib {
                     repr.append(indent_string + BoolToStr(val.get<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append(indent_string + val.get<Type::JString>());
+                    repr.append(indent_string + "\""_s + val.get<Type::JString>() + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -233,6 +233,77 @@ namespace ARLib {
                 }
             }
             repr.append(indent_string + "]"_s);
+            return repr;
+        }
+
+        String dump_array_compact(const Array& arr) {
+            String repr{"["};
+            size_t i = 0;
+            for (const auto& val_ptr : arr) {
+                const auto& val = *val_ptr;
+                switch (val.type()) {
+                case Type::JArray:
+                    repr.append(dump_array_compact(val.get<Type::JArray>()));
+                    break;
+                case Type::JObject:
+                    repr.append(dump_json_compact(val.get<Type::JObject>()));
+                    break;
+                case Type::JNumber:
+                    repr.append(val.get<Type::JNumber>().to_string());
+                    break;
+                case Type::JNull:
+                    repr.append("null"_s);
+                    break;
+                case Type::JBool:
+                    repr.append(BoolToStr(val.get<Type::JBool>().value()));
+                    break;
+                case Type::JString:
+                    repr.append("\""_s + val.get<Type::JString>() + '"');
+                    break;
+                default:
+                    ASSERT_NOT_REACHED("Invalid type in JSON object");
+                    break;
+                }
+                if (++i < arr.size()) {
+                    repr.append(",");
+                }
+            }
+            repr.append(']');
+            return repr;
+        }
+
+        String dump_json_compact(const Object& obj) {
+            String repr{"{"};
+            for (const auto& entry : obj) {
+                const auto& val = *entry.value();
+                const auto& key = entry.key();
+                repr.append("\""_s + key + '"');
+                repr.append(":"_s);
+                switch (val.type()) {
+                case Type::JArray:
+                    repr.append(dump_array_compact(val.get<Type::JArray>()));
+                    break;
+                case Type::JObject:
+                    repr.append(dump_json_compact(val.get<Type::JObject>()));
+                    break;
+                case Type::JNumber:
+                    repr.append(val.get<Type::JNumber>().to_string());
+                    break;
+                case Type::JNull:
+                    repr.append("null"_s);
+                    break;
+                case Type::JBool:
+                    repr.append(BoolToStr(val.get<Type::JBool>().value()));
+                    break;
+                case Type::JString:
+                    repr.append("\""_s + val.get<Type::JString>() + '"');
+                    break;
+                default:
+                    ASSERT_NOT_REACHED("Invalid type in JSON object");
+                    break;
+                }
+            }
+            repr.append("}");
             return repr;
         }
 
