@@ -25,6 +25,8 @@ namespace ARLib {
         Parsed<Array> parse_array(StringView view, size_t current_index);
         String dump_array(const Array& arr, size_t indent = 1);
         String dump_json(const Object& obj, size_t indent = 1);
+        String dump_array_compact(const Array& arr);
+        String dump_json_compact(const Object& obj);
 
         struct ErrorInfo {
             String error_string{};
@@ -100,6 +102,13 @@ namespace ARLib {
         };
 
     } // namespace JSON
+
+    inline JSON::Document operator""_json(const char* str, size_t len) { 
+        StringView view{str, len};
+        auto result = JSON::Parser::parse(view);
+        HARD_ASSERT(result.is_ok(), "Parsing failed");
+        return result.to_ok();
+    }
 
     template <>
     struct PrintInfo<JSON::ParseError> {
