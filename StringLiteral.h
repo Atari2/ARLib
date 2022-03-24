@@ -97,10 +97,8 @@ namespace ARLib {
     StringLiteral(const char (&str)[N]) -> StringLiteral<N>;
 
     template <size_t N>
-    class PrintInfo<StringLiteral<N>> {
+    struct PrintInfo<StringLiteral<N>> {
         const StringLiteral<N>& m_string;
-
-        public:
         PrintInfo(const StringLiteral<N>& string) : m_string(string) {}
         String repr() const { return String{m_string.ptr()}; }
     };

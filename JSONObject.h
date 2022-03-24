@@ -279,10 +279,6 @@ namespace ARLib {
         };
     } // namespace JSON
 
-#ifndef COMPILER_CLANG
-    // until I figure out what's wrong with this on Clang...
-    // this is the solution.
-
     template <>
     struct PrintInfo<JSON::Null> {
         const JSON::Null& m_null;
@@ -312,7 +308,20 @@ namespace ARLib {
             return PrintInfo<HashMap<String, JSON::Value>>{m_object}.repr();
         }
     };
-#endif
+
+    template <>
+    struct PrintInfo<JSON::Number> {
+        const JSON::Number& m_number;
+        PrintInfo(const JSON::Number& num) : m_number(num) {}
+        String repr() const { return m_number.to_string(); }
+    };
+
+    template <>
+    struct PrintInfo<JSON::JString> {
+        const JSON::JString& m_string;
+        PrintInfo(const JSON::JString& string) : m_string(string) {}
+        String repr() const { return m_string; }
+    };
 
     template <>
     struct PrintInfo<JSON::ValueObj> {
@@ -321,17 +330,17 @@ namespace ARLib {
         String repr() const {
             switch (m_value.type()) {
             case JSON::Type::JArray:
-                return PrintInfo<Vector<JSON::Value>>{m_value.get<JSON::Type::JArray>()}.repr();
+                return PrintInfo<JSON::Array>{m_value.get<JSON::Type::JArray>()}.repr();
             case JSON::Type::JString:
-                return m_value.get<JSON::Type::JString>();
+                return PrintInfo<JSON::JString>{m_value.get<JSON::Type::JString>()}.repr();
             case JSON::Type::JObject:
-                return PrintInfo<HashMap<String, JSON::Value>>{m_value.get<JSON::Type::JObject>()}.repr();
+                return PrintInfo<JSON::Object>{m_value.get<JSON::Type::JObject>()}.repr();
             case JSON::Type::JBool:
-                return BoolToStr(m_value.get<JSON::Type::JBool>().value());
+                return PrintInfo<JSON::Bool>{m_value.get<JSON::Type::JBool>()}.repr();
             case JSON::Type::JNull:
-                return "null"_s;
+                return PrintInfo<JSON::Null>{m_value.get<JSON::Type::JNull>()}.repr();
             case JSON::Type::JNumber:
-                return m_value.get<JSON::Type::JNumber>().to_string();
+                return PrintInfo<JSON::Number>{m_value.get<JSON::Type::JNumber>()}.repr();
             default:
                 ASSERT_NOT_REACHED("Invalid JSON type.");
             }

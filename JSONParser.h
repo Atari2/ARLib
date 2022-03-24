@@ -46,6 +46,15 @@ namespace ARLib {
         using ParseResult = Result<Document, ParseError>;
         using FileParseResult = Result<Document, Variant<OpenFileError, ReadFileError, ParseError>>;
 
+        template <typename T>
+        using ParseResultT = Result<T, ParseError>;
+
+        template <typename T>
+        using FileParseResultT = Result<T, Variant<OpenFileError, ReadFileError, ParseError>>;
+
+        template <typename T>
+        using FileWriteResultT = Result<T, Variant<OpenFileError, WriteFileError, ParseError>>;
+
         class Parser {
             StringView m_view;
 
@@ -57,6 +66,39 @@ namespace ARLib {
             static ParseResult parse(StringView);
             static FileParseResult from_file(StringView);
         };
+
+        template <typename T>
+        concept Serializable = requires(const T& t) {
+            { T::deserialize(declval<StringView>()) } -> SameAs<ParseResultT<T>>;
+            { t.serialize() } -> SameAs<String>;
+        };
+
+        template <Serializable T>
+        class Serializer {
+            public:
+            static FileParseResultT<T> deserialize_from_file(StringView filename) {
+                File f{filename.extract_string()};
+                auto maybe_error = f.open(OpenFileMode::Read);
+                if (maybe_error) { return FileParseResultT<T>::from_error(maybe_error.extract()); }
+                auto read_res = f.read_all();
+                if (read_res.is_error()) { return FileParseResultT<T>::from_error(read_res.to_error()); }
+                auto val = read_res.to_ok();
+                auto deserialize_res = T::deserialize(val.view());
+                if (deserialize_res.is_error()) { return FileParseResultT<T>::from_error(deserialize_res.to_error()); }
+                return deserialize_res.to_ok();
+            }
+            static FileWriteResultT<size_t> serialize_to_file(const T& object, StringView filename) {
+                auto result = object.serialize();
+                File f{filename.extract_string()};
+                auto maybe_error = f.open(OpenFileMode::Write);
+                if (maybe_error) { return FileWriteResultT<size_t>::from_error(maybe_error.extract()); }
+                auto write_res = f.write(result);
+                if (write_res.is_error()) { return FileWriteResultT<size_t>::from_error(write_res.to_error()); }
+                auto val = write_res.to_ok();
+                return val;
+            }
+        };
+
     } // namespace JSON
 
     template <>
