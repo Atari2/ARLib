@@ -1,6 +1,6 @@
 #include "Matrix.h"
-#include "Memory.h"
 #include "CharConv.h"
+#include "Memory.h"
 
 namespace ARLib {
 
@@ -129,11 +129,10 @@ namespace ARLib {
 
     double Matrix2D::det() const {
         HARD_ASSERT(m_rows == m_columns, "Matrix must be square to calculate the determinant");
-        if (m_cached_det) return m_cached_det.value();
 
         // i'll have hardcoded math for 2x2 and 3x3
         if (m_rows == 2) {
-            m_cached_det = m_matrix[0][0] * m_matrix[1][1] - m_matrix[0][1] * m_matrix[1][0];
+            return m_matrix[0][0] * m_matrix[1][1] - m_matrix[0][1] * m_matrix[1][0];
         } else if (m_rows == 3) {
             // ignore first row first column
             double first_partial = m_matrix[1][1] * m_matrix[2][2] - m_matrix[1][2] * m_matrix[2][1];
@@ -142,13 +141,12 @@ namespace ARLib {
             // ignore first row third column
             double third_partial = m_matrix[1][0] * m_matrix[2][1] - m_matrix[1][1] * m_matrix[2][0];
 
-            m_cached_det =
-            (first_partial * m_matrix[0][0]) - (second_partial * m_matrix[0][1]) + (third_partial * m_matrix[0][2]);
+            return (first_partial * m_matrix[0][0]) - (second_partial * m_matrix[0][1]) +
+                   (third_partial * m_matrix[0][2]);
         } else {
             // generic math for 4x4 and up
-            m_cached_det = det_internal(m_matrix, m_rows, m_columns);
+            return det_internal(m_matrix, m_rows, m_columns);
         }
-        return m_cached_det.value();
     }
 
     String PrintInfo<Matrix2D>::repr() const {
@@ -164,4 +162,4 @@ namespace ARLib {
         }
         return ret;
     }
-}
+} // namespace ARLib

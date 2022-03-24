@@ -4,7 +4,6 @@
 #include "Concepts.h"
 #include "Iterator.h"
 #include "Memory.h"
-#include "Optional.h"
 #include "Pair.h"
 #include "PrintInfo.h"
 #include "Random.h"
@@ -269,8 +268,6 @@ namespace ARLib {
         using SubOpRetType = typename traits::SubOpRetType;
         using ConstSubOpRetType = typename traits::ConstSubOpRetType;
 
-        mutable Optional<double> m_cached_det{};
-        mutable Optional<int> m_cached_rank{};
         MatType m_matrix{};
 
         static void print_debug_matrix(typename traits::ConstMatRefType og_matrix) {
@@ -632,17 +629,11 @@ namespace ARLib {
         constexpr size_t num_rows() const { return N; }
         constexpr size_t num_columns() const { return M; }
         void reduce() { row_echelon_transform(m_matrix); }
-        int rank() const {
-            if (m_cached_rank) return m_cached_rank.value();
-            m_cached_rank = rank_internal(m_matrix);
-            return m_cached_rank.value();
-        }
+        int rank() const { return rank_internal(m_matrix); }
         double det() const requires Square {
-            if (m_cached_det) return m_cached_det.value();
-
             // i'll have hardcoded math for 2x2 and 3x3
             if constexpr (N == 2) {
-                m_cached_det = m_matrix[0][0] * m_matrix[1][1] - m_matrix[0][1] * m_matrix[1][0];
+                return m_matrix[0][0] * m_matrix[1][1] - m_matrix[0][1] * m_matrix[1][0];
             } else if constexpr (N == 3) {
                 // ignore first row first column
                 double first_partial = m_matrix[1][1] * m_matrix[2][2] - m_matrix[1][2] * m_matrix[2][1];
@@ -651,13 +642,12 @@ namespace ARLib {
                 // ignore first row third column
                 double third_partial = m_matrix[1][0] * m_matrix[2][1] - m_matrix[1][1] * m_matrix[2][0];
 
-                m_cached_det =
-                (first_partial * m_matrix[0][0]) - (second_partial * m_matrix[0][1]) + (third_partial * m_matrix[0][2]);
+                return (first_partial * m_matrix[0][0]) - (second_partial * m_matrix[0][1]) +
+                       (third_partial * m_matrix[0][2]);
             } else {
                 // generic math for 4x4 and up
-                m_cached_det = det_internal(m_matrix);
+                return det_internal(m_matrix);
             }
-            return m_cached_det.value();
         }
 
         T sum() const {

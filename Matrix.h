@@ -2,7 +2,6 @@
 #include "Concepts.h"
 #include "FixedMatrix.h"
 #include "Memory.h"
-#include "Optional.h"
 #include "Pair.h"
 
 namespace ARLib {
@@ -238,8 +237,6 @@ namespace ARLib {
     // clang-format on
 
     class Matrix2D {
-        mutable Optional<double> m_cached_det{};
-        mutable Optional<int> m_cached_rank{};
         double** m_matrix{};
         size_t m_rows;
         size_t m_columns;
@@ -465,9 +462,7 @@ namespace ARLib {
         size_t num_columns() const { return m_columns; }
         void reduce() { row_echelon_transform(m_matrix, m_rows, m_columns); }
         int rank() const {
-            if (m_cached_rank) return m_cached_rank.value();
-            m_cached_rank = rank_internal(m_matrix, m_rows, m_columns);
-            return m_cached_rank.value();
+            return rank_internal(m_matrix, m_rows, m_columns);
         }
 
         double det() const;
