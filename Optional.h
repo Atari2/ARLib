@@ -33,11 +33,13 @@ namespace ARLib {
 
         Optional& operator=(const Optional& other) {
             if (this == &other) return *this;
+            evict_();
             if (other.m_exists) *m_object = *other.m_object;
             m_exists = other.m_exists;
             return *this;
         }
         Optional& operator=(Optional&& other) noexcept {
+            evict_();
             m_object = other.m_object;
             m_exists = other.m_exists;
             other.m_object = nullptr;
