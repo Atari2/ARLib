@@ -162,6 +162,8 @@ namespace ARLib {
             return val;
         }
 
+        void evict() { evict_(); }
+
         ~Optional() { evict_(); }
     };
 
