@@ -8,6 +8,8 @@ namespace ARLib {
     // FIXME: make this more efficient
     double StrToDouble(const String& str);
     float StrToFloat(const String& str);
+    double StrViewToDouble(const StringView& str);
+    float StrViewToFloat(const StringView& str);
     String DoubleToStr(double value);
     String LongDoubleToStr(long double value);
     String FloatToStr(float value);

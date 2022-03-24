@@ -1,6 +1,6 @@
 #include "CharConv.h"
+#include "StringView.h"
 #include "Vector.h"
-
 #include <charconv>
 
 namespace ARLib {
@@ -8,15 +8,16 @@ namespace ARLib {
     // FIXME: Write a routine that actually works
     // using the stdlib for now because this is too hard to get right
     // one day I'll actual write it properly
-    double StrToDouble(const String& str) {
+    double StrViewToDouble(const StringView& str) {
         double val = 0.0;
-        auto res = std::from_chars(&*str.begin(), &*str.end(), val);
+        auto res = std::from_chars(str.data(), str.data() + str.size(), val);
         HARD_ASSERT(res.ec != std::errc::invalid_argument && res.ec != std::errc::result_out_of_range,
                     "Failed to convert string to double")
         return val;
     }
-
-    float StrToFloat(const String& str) { return static_cast<float>(StrToDouble(str)); }
+    float StrViewToFloat(const StringView& str) { return static_cast<float>(StrViewToDouble(str)); }
+    double StrToDouble(const String& str) { return StrViewToDouble(str.view()); }
+    float StrToFloat(const String& str) { return StrViewToFloat(str.view()); }
 
     String DoubleToStr(double value) {
 #ifdef WINDOWS
