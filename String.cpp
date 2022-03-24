@@ -115,6 +115,10 @@ namespace ARLib {
         return npos;
     }
 
+    [[nodiscard]] Vector<size_t> String::all_indexes_of(StringView c, size_t start_idx) const {
+        return all_indexes_internal(c, start_idx);
+    }
+
     [[nodiscard]] bool String::contains(StringView other) const { return index_of(other) != npos; }
 
     [[nodiscard]] StringView String::substringview(size_t first, size_t last) const {
@@ -253,18 +257,22 @@ namespace ARLib {
 
     [[nodiscard]] size_t String::index_of_any(StringView any, size_t start_index) const {
         auto indexes = all_indexes_internal(any, start_index);
+        if (indexes.size() == 0) return npos;
         return *min(indexes);
     }
     [[nodiscard]] size_t String::last_index_of_any(StringView any, size_t end_index) const {
         auto indexes = all_last_indexes_internal(any, end_index);
+        if (indexes.size() == 0) return npos;
         return *max(indexes);
     }
     [[nodiscard]] size_t String::index_not_of_any(StringView any, size_t start_index) const {
         auto indexes = all_not_indexes_internal(any, start_index);
+        if (indexes.size() == 0) return npos;
         return *min(indexes);
     }
     [[nodiscard]] size_t String::last_index_not_of_any(StringView any, size_t end_index) const {
         auto indexes = all_last_not_indexes_internal(any, end_index);
+        if (indexes.size() == 0) return npos;
         return *max(indexes);
     }
 

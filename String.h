@@ -399,6 +399,9 @@ namespace ARLib {
         [[nodiscard]] bool contains(StringView other) const;
         [[nodiscard]] bool contains(char c) const { return index_of(c) != npos; }
 
+        // indexes 
+        [[nodiscard]] Vector<size_t> all_indexes_of(StringView c, size_t start_idx = 0) const;
+
         // trim
         void irtrim() {
             if (m_size == 0) return;
