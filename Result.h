@@ -4,6 +4,7 @@
 #include "Macros.h"
 #include "PrintInfo.h"
 #include "Utility.h"
+#include "RefBox.h"
 
 namespace ARLib {
     struct DefaultErr {};
@@ -15,8 +16,10 @@ namespace ARLib {
     template <typename T_ok, typename T_err = DefaultErr>
     class Result {
         CurrType m_type;
+        constexpr static inline bool IsReference = IsLvalueReferenceV<T_ok>;
+        using T_ok_f = ConditionalT<IsLvalueReferenceV<T_ok>, RefBox<RemoveReferenceT<T_ok>>, T_ok>;
         union {
-            T_ok m_ok;
+            T_ok_f m_ok;
             T_err m_err;
         };
 
@@ -24,14 +27,14 @@ namespace ARLib {
             if (other.is_error()) {
                 new (&m_err) T_err{other.m_err};
             } else {
-                new (&m_ok) T_ok{other.m_ok};
+                new (&m_ok) T_ok_f{other.m_ok};
             }
         }
         Result(Result&& other) noexcept : m_type(other.m_type) {
             if (other.is_error()) {
                 new (&m_err) T_err{move(other.m_err)};
             } else {
-                new (&m_ok) T_ok{move(other.m_ok)};
+                new (&m_ok) T_ok_f{move(other.m_ok)};
             }
         }
         Result& operator=(Result&& other) noexcept {
@@ -42,7 +45,7 @@ namespace ARLib {
             } else {
                 m_type = other.m_type;
                 if (other.is_ok()) {
-                    m_ok.~T_ok();
+                    m_ok.~T_ok_f();
                     m_err = move(other.m_err);
                 } else {
                     m_err.~T_err();
@@ -59,7 +62,7 @@ namespace ARLib {
             } else {
                 m_type = other.m_type;
                 if (other.is_ok()) {
-                    m_ok.~T_ok();
+                    m_ok.~T_ok_f();
                     m_err = other.m_err;
                 } else {
                     m_err.~T_err();
@@ -70,7 +73,8 @@ namespace ARLib {
         }
 
         public:
-        Result(T_ok&& ok) : m_type(CurrType::Ok), m_ok(move(ok)) {}
+        Result(T_ok&& ok) requires(!IsReference) : m_type(CurrType::Ok), m_ok(move(ok)) {}
+        Result(T_ok& ok) requires(IsReference) : m_type(CurrType::Ok), m_ok(ok) {}
         Result(T_err&& err) : m_type(CurrType::Error), m_err(move(err)) {}
 
         template <typename... Args>
@@ -82,14 +86,14 @@ namespace ARLib {
 
         template <typename... Args>
         static Result from_ok(Args... args) {
-            T_ok ok{args...};
-            Result res{Forward<T_ok>(ok)};
+            T_ok_f ok{args...};
+            Result res{Forward<T_ok_f>(ok)};
             return res;
         }
 
         template <typename... Args>
         static Result from(Args... args) {
-            if constexpr (Constructible<T_ok, Args...>) {
+            if constexpr (Constructible<T_ok_f, Args...>) {
                 return from_ok(args...);
             } else if constexpr (Constructible<T_err, Args...>) {
                 return from_error(args...);
@@ -107,7 +111,11 @@ namespace ARLib {
         }
         T_ok& ok_value() {
             HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
-            return m_ok;
+            if constexpr (IsReference) {
+                return m_ok.get();
+            } else {
+                return m_ok;
+            }
         }
 
         const T_err& error_value() const {
@@ -132,7 +140,7 @@ namespace ARLib {
 
         ~Result() {
             if (m_type == CurrType::Ok) {
-                m_ok.~T_ok();
+                m_ok.~T_ok_f();
             } else {
                 m_err.~T_err();
             }

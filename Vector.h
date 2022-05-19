@@ -308,6 +308,12 @@ namespace ARLib {
             }
         }
 
+        Iter remove(Iter it) {
+            size_t idx = (&*it) - m_storage;
+            remove_at(idx);
+            return Iterator{m_storage + idx};
+        }
+
         void remove(const T& val) {
             for (size_t i = 0; i < m_size; i++) {
                 if (val == m_storage[i]) {
@@ -320,6 +326,13 @@ namespace ARLib {
         Iter find(const T& val) {
             for (auto it = begin(); it != end(); it++)
                 if (*it == val) return it;
+            return end();
+        }
+
+        template <CallableWithRes<bool, const T&> Functor>
+        Iter find(Functor func) {
+            for (auto it = begin(); it != end(); it++)
+                if (func(*it)) return it;
             return end();
         }
 
