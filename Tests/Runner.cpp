@@ -790,3 +790,26 @@ TEST(ARLibTests, PriorityQueueTests) {
     EXPECT_EQ(queue.pop(), "123"_s);
     EXPECT_EQ(queue.size(), 0);
 }
+
+TEST(ARLibTests, MatrixTests) {
+    FixedMatrix2D<10> fmat{};
+    auto [l, h] = fmat.shape();
+    for (size_t i = 0; i < l; i++) {
+        for (size_t j = 0; j < h; j++) {
+            fmat[{i, j}] = static_cast<double>(i * l + j);
+        }
+    }
+    Matrix2D mat{fmat};
+    EXPECT_EQ(mat, fmat);
+    EXPECT_EQ(mat.det(), fmat.det());
+    EXPECT_EQ(mat.rank(), fmat.rank());
+    EXPECT_EQ(mat.rank(), 2);
+    auto mat_inv = mat.inv();
+    auto fmat_inv = fmat.inv();
+    EXPECT_EQ(mat_inv, fmat_inv);
+    EXPECT_EQ(mat_inv.det(), fmat_inv.det());
+    mat -= 1.0;
+    fmat *= 2.0;
+    double val = mat[{5, 5}];
+    EXPECT_EQ(val, 5.0 + 5.0 * 10.0 - 1.0);
+}

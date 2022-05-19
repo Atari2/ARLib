@@ -7,8 +7,36 @@
 #include "Pair.h"
 #include "PrintInfo.h"
 #include "Random.h"
+#include "StringLiteral.h"
 
 namespace ARLib {
+
+#ifdef COMPILER_CLANG
+#if __clang_major__ == 14
+#define SIZELITERAL_AVAILABLE
+#endif
+#else
+#define SIZELITERAL_AVAILABLE
+#endif
+
+#ifdef SIZELITERAL_AVAILABLE
+    template <size_t N>
+    struct SizeLiteral {};
+
+    template <char... Chars>
+    struct StaticStr {
+        static constexpr char str[]{Chars..., '\0'};
+    };
+
+    template <char... Chars>
+    constexpr auto operator""_sl() {
+        StaticStr<Chars...> str;
+        constexpr StringView view{str.str};
+        constexpr size_t size = StrViewToU64(view);
+        return SizeLiteral<size>();
+    }
+#endif
+
     // clang-format off
     template <size_t N, size_t M>
     class FixedMatrix2D;
@@ -452,6 +480,13 @@ namespace ARLib {
             }
             return mat;
         }
+#ifdef SIZELITERAL_AVAILABLE
+        FixedMatrix2D(SizeLiteral<N>, SizeLiteral<M>) {
+            if constexpr (!ValidToInline) {
+                allocate_memory(true);
+            }
+        }
+#endif
         FixedMatrix2D() requires ValidToInline = default;
         FixedMatrix2D() requires(!ValidToInline) {
             allocate_memory(true);
@@ -539,30 +574,56 @@ namespace ARLib {
         auto columns_begin(size_t begin_idx = 0) const {
             return FixedMatrixIterator<N, M, true, false>{m_matrix, begin_idx};
         }
-        auto columns_end() const { return FixedMatrixIterator<N, M, true, false>{m_matrix, M}; }
+        auto columns_end() const {
+            return FixedMatrixIterator<N, M, true, false>{m_matrix, M};
+        }
 
         auto columns_begin(size_t begin_idx = 0) {
             return FixedMatrixIterator<N, M, false, false>{m_matrix, begin_idx};
         }
-        auto columns_end() { return FixedMatrixIterator<N, M, false, false>{m_matrix, M}; }
+        auto columns_end() {
+            return FixedMatrixIterator<N, M, false, false>{m_matrix, M};
+        }
 
         auto rows_begin(size_t begin_idx = 0) const {
             return FixedMatrixIterator<N, M, true, true>{m_matrix, begin_idx};
         }
-        auto rows_end() const { return FixedMatrixIterator<N, M, true, true>{m_matrix, N}; }
+        auto rows_end() const {
+            return FixedMatrixIterator<N, M, true, true>{m_matrix, N};
+        }
 
-        auto rows_begin(size_t begin_idx = 0) { return FixedMatrixIterator<N, M, false, true>{m_matrix, begin_idx}; }
-        auto rows_end() { return FixedMatrixIterator<N, M, false, true>{m_matrix, N}; }
+        auto rows_begin(size_t begin_idx = 0) {
+            return FixedMatrixIterator<N, M, false, true>{m_matrix, begin_idx};
+        }
+        auto rows_end() {
+            return FixedMatrixIterator<N, M, false, true>{m_matrix, N};
+        }
 
         /* INDEX OPERATORS */
-        T& operator[](Pair<size_t, size_t> idx) { return m_matrix[idx.first()][idx.second()]; }
-        const T& operator[](Pair<size_t, size_t> idx) const { return m_matrix[idx.first()][idx.second()]; }
-        auto columns(size_t index) const { return FixedColumnArray<N, M, true>{m_matrix, index}; }
-        auto columns(size_t index) { return FixedColumnArray<N, M, false>{m_matrix, index}; }
-        auto rows(size_t index) const { return FixedRowArray<N, M, true>{m_matrix, index}; }
-        auto rows(size_t index) { return FixedRowArray<N, M, false>{m_matrix, index}; }
-        auto operator[](size_t index) const { return FixedRowArray<N, M, true>{m_matrix, index}; }
-        auto operator[](size_t index) { return FixedRowArray<N, M, false>{m_matrix, index}; }
+        T& operator[](Pair<size_t, size_t> idx) {
+            return m_matrix[idx.first()][idx.second()];
+        }
+        const T& operator[](Pair<size_t, size_t> idx) const {
+            return m_matrix[idx.first()][idx.second()];
+        }
+        auto columns(size_t index) const {
+            return FixedColumnArray<N, M, true>{m_matrix, index};
+        }
+        auto columns(size_t index) {
+            return FixedColumnArray<N, M, false>{m_matrix, index};
+        }
+        auto rows(size_t index) const {
+            return FixedRowArray<N, M, true>{m_matrix, index};
+        }
+        auto rows(size_t index) {
+            return FixedRowArray<N, M, false>{m_matrix, index};
+        }
+        auto operator[](size_t index) const {
+            return FixedRowArray<N, M, true>{m_matrix, index};
+        }
+        auto operator[](size_t index) {
+            return FixedRowArray<N, M, false>{m_matrix, index};
+        }
 
 #define MAT_LOOP(op)                                                                                                   \
     for (size_t i = 0; i < N; i++) {                                                                                   \
@@ -625,11 +686,21 @@ namespace ARLib {
         }
 
         /* MATHEMATICAL OPERATIONS */
-        constexpr Pair<size_t, size_t> shape() const { return {N, M}; }
-        constexpr size_t num_rows() const { return N; }
-        constexpr size_t num_columns() const { return M; }
-        void reduce() { row_echelon_transform(m_matrix); }
-        int rank() const { return rank_internal(m_matrix); }
+        constexpr Pair<size_t, size_t> shape() const {
+            return {N, M};
+        }
+        constexpr size_t num_rows() const {
+            return N;
+        }
+        constexpr size_t num_columns() const {
+            return M;
+        }
+        void reduce() {
+            row_echelon_transform(m_matrix);
+        }
+        int rank() const {
+            return rank_internal(m_matrix);
+        }
         double det() const requires Square {
             // i'll have hardcoded math for 2x2 and 3x3
             if constexpr (N == 2) {
@@ -656,7 +727,9 @@ namespace ARLib {
             return res;
         }
 
-        T avg() const { return sum() / T{N * M}; }
+        T avg() const {
+            return sum() / T{N * M};
+        }
 
         template <size_t NewSizeRows, size_t NewSizeCols = NewSizeRows>
         auto sub(size_t start_row = 0, size_t start_col = 0) const {
