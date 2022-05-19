@@ -1,89 +1,144 @@
 #pragma once
 #include "CharConv.h"
+#include "Concepts.h"
 #include "Optional.h"
+#include "Pair.h"
+#include "RefBox.h"
+#include "Result.h"
+#include "String.h"
 #include "StringView.h"
+#include "Variant.h"
 #include "Vector.h"
 
 namespace ARLib {
+
+    struct NoValueTag {};
+
+    using StringRef = RefBox<String>;
+    using BoolRef = RefBox<bool>;
+    using IntRef = RefBox<int>;
+
+    template <typename T>
+    concept OptionType = SameAs<T, IntRef> || SameAs<T, StringRef> || SameAs<T, NoValueTag> || SameAs<T, BoolRef>;
+
     class ArgParser {
-        public:
-        enum class ExecPath : bool {
-            Keep = false,
-            Skip = true,
-        };
-        struct CmdOption {
-            private:
-            String m_long_name;
-            String m_short_name;
-            Optional<String> m_value;
+        Vector<String> m_unmatched_arguments{};
+        String m_program_name;
+        Vector<StringView> m_arguments{};
 
-            public:
-            const String& long_name() { return m_long_name; }
-            const String& short_name() { return m_short_name; }
-            const Optional<String>& value() { return m_value; }
-            void set_long_name(String long_name) { m_long_name = move(long_name); }
-            void set_short_name(String short_name) { m_short_name = move(short_name); }
-            void set_value(String value) { m_value.put(Forward<String>(value)); }
-            bool operator==(const String& name) { return m_long_name == name || m_short_name == name; }
-            bool operator==(const StringView name) { return m_long_name == name || m_short_name == name; }
-            const String& as_string() {
-                static String ret_if_empty {};
-                if (m_value)
-                    return m_value.value();
-                else
-                    return ret_if_empty;
+        using ArgIter = decltype(m_arguments.begin());
+        struct Option {
+            enum class Type { String, Bool, Int, NoValue } type;
+            StringView description;
+            StringView value_name;
 
-            }
-            int as_int() { return StrToInt(as_string()); }
-            float as_float() { return StrToFloat(as_string()); }
-            bool as_bool() { return StrToBool(as_string()); }
-        };
+            Variant<NoValueTag, BoolRef, StringRef, IntRef> value;
+            bool found;
+            static constexpr inline size_t npos = static_cast<size_t>(-1);
 
-        private:
-        Vector<String> m_args{};
-        Vector<CmdOption> m_options{};
-
-        public:
-        ArgParser() = default;
-        void add_option(const char* long_name, const char* short_name, const char* optional = nullptr) {
-            CmdOption option{};
-            option.set_long_name(String{long_name});
-            option.set_short_name(String{short_name});
-            if (optional) option.set_value(String{optional});
-            m_options.append(Forward<CmdOption>(option));
-        }
-
-        static String strip_prefix(const String& arg) {
-            if (arg.starts_with("--"))
-                return arg.substring(2);
-            else if (arg.starts_with("-")) {
-                return arg.substring(1);
-            }
-            return arg;
-        }
-
-        void readopt(char** argv, int argc, ExecPath mode = ExecPath::Skip) {
-            m_args.reserve(argc);
-            for (size_t i = static_cast<bool>(mode); i < static_cast<size_t>(argc); i++)
-                m_args.append(String{argv[i]});
-        }
-
-        void parse() {
-            for (auto& arg : m_args) {
-                auto name_value = strip_prefix(arg).split("=");
-                SOFT_ASSERT((name_value.size() == 2), "Name=value pair of command line arguments isn't respected")
-                for (auto& cmd : m_options) {
-                    if (cmd == name_value[0]) cmd.set_value(name_value[1]);
+            static constexpr inline Type map_t_to_type(const OptionType auto& val) {
+                using T = RemoveCvRefT<decltype(val)>;
+                if constexpr (SameAs<T, StringRef>) {
+                    return Type::String;
+                } else if constexpr (SameAs<T, BoolRef>) {
+                    return Type::Bool;
+                } else if constexpr (SameAs<T, IntRef>) {
+                    return Type::Int;
+                } else if constexpr (SameAs<T, NoValueTag>) {
+                    return Type::NoValue;
                 }
             }
+            Option() : type{Type::NoValue}, description{}, value_name{}, value(NoValueTag{}), found{false} {}
+            Option(StringView desc, StringView name, OptionType auto&& val) :
+                type{map_t_to_type(val)}, description{desc}, value_name{name}, found{false} {
+                value = move(val);
+            }
+            bool requires_value() const;
+            bool assign(StringView arg_value);
+            bool assign(bool arg_value);
+            bool assign(int arg_value);
+            bool has_default() const;
+        };
+
+        using OptT = Pair<StringView, Option>;
+        Vector<OptT> m_options{};
+        bool m_help_requested = false;
+        uint8_t m_version_partial = 0;
+        uint8_t m_version_edition = 0;
+        size_t m_leftover_args_needed = 0;
+        StringView m_usage_string{};
+
+        template <typename T>
+        static constexpr bool inline dependant_false = false;
+
+        public:
+        struct ArgParserError {
+            String error;
+        };
+
+        struct GetOptionError {
+            StringView error;
+        };
+
+        template <typename T>
+        using GetResult = Result<AddLvalueReferenceT<T>, GetOptionError>;
+        using ParseResult = DiscardResult<ArgParserError>;
+
+        static constexpr inline auto no_value = NoValueTag{};
+        ArgParser(int argc, const char** argv);
+        ArgParser(int argc, char** argv);
+        void add_version(uint8_t version_partial, uint8_t version_edition);
+        void allow_unmatched(size_t quantity = Option::npos);
+        const Vector<String>& unmatched() const { return m_unmatched_arguments; }
+        void add_usage_string(StringView usage_string);
+        ParseResult parse();
+        bool help_requested() const;
+        ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, String& value_ref);
+        ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, int& value_ref);
+        ArgParser& add_option(StringView opt_name, StringView description, bool& value_ref);
+        ArgParser& add_option(StringView opt_name, StringView description, NoValueTag);
+        void print_help() const;
+
+        bool is_present(StringView opt_name) {
+            auto it = m_options.find([&](const auto& kvp) { return kvp.first() == opt_name; });
+            if (it == m_options.end()) return false;
+            const auto& [_, value] = *it;
+            return value.found;
         }
 
-        CmdOption& operator[](StringView name) {
-            static CmdOption blank_option{};
-            for (auto& option : m_options) {
-                if (option == name) return option;
+        template <typename T>
+        requires OptionType<RefBox<RemoveCvRefT<T>>>
+        auto get(StringView opt_name) {
+            using Tp = RemoveCvRefT<T>;
+            auto it = m_options.find([&](const auto& kvp) { return kvp.first() == opt_name; });
+            if (it == m_options.end()) return GetResult<Tp>{GetOptionError{"Invalid option"}};
+            auto& [_, value] = *it;
+            if constexpr (SameAs<Tp, bool>) {
+                if (value.type == Option::Type::Bool) {
+                    return GetResult<Tp>{value.value.get<BoolRef>().get()};
+                } else if (value.type == Option::Type::NoValue) {
+                    return GetResult<Tp>{value.found};
+                } else {
+                    return GetResult<Tp>{GetOptionError{"Requested type `bool` for option containing int or string"}};
+                }
+            } else if constexpr (SameAs<Tp, String>) {
+                if (value.type == Option::Type::String) {
+                    return GetResult<Tp>{value.value.get<StringRef>().get()};
+                } else {
+                    return GetResult<Tp>{
+                    GetOptionError{"Requested type `string` for option containing int, string or none"}};
+                }
+            } else if constexpr (SameAs<Tp, int>) {
+                if (value.type == Option::Type::Int) {
+                    return GetResult<Tp>{value.value.get<BoolRef>().get()};
+                } else {
+                    return GetResult<Tp>{
+                    GetOptionError{"Requested type `int` for option containing bool, string or none"}};
+                }
+            } else {
+                static_assert(dependant_false<T>, "Invalid get() call");
             }
-            return blank_option;
         }
     };
+
 } // namespace ARLib
