@@ -21,11 +21,6 @@ namespace ARLib {
     static_assert(alignof(cnd_internal_imp_t) <= Cond_internal_imp_alignment,
                   "incorrect condition variable implementation");
 
-    static ThreadImplType ThreadToNative(ThreadHandle t) {
-        ThreadImplType t_{t._Hnd, t._Id};
-        return t_;
-    }
-
     ThreadState __cdecl thread_detach(ThreadHandle thread) {
         return CloseHandle(thread._Hnd) == 0 ? ThreadState::Error : ThreadState::Success;
     }
@@ -44,7 +39,7 @@ namespace ARLib {
         do {
             Sleep(time_diff_to_millis2(time, &now));
             time_get(&now, TIME_UTC);
-        } while (now.sec < time->sec || now.sec == time->sec && now.nsec < time->nsec);
+        } while (now.sec < time->sec || (now.sec == time->sec && now.nsec < time->nsec));
     }
     void __cdecl thread_yield() { SwitchToThread(); }
     unsigned int __cdecl thread_hardware_concurrency() {
@@ -104,7 +99,7 @@ namespace ARLib {
 
                 res = WAIT_OBJECT_0;
 
-            } else if (target->sec < 0 || target->sec == 0 && target->nsec <= 0) {
+            } else if (target->sec < 0 || (target->sec == 0 && target->nsec <= 0)) {
                 if (mutex->thread_id != static_cast<long>(GetCurrentThreadId())) {
                     if (mutex->_get_cs()->try_lock()) {
                         res = WAIT_OBJECT_0;
@@ -118,7 +113,7 @@ namespace ARLib {
             } else {
                 XTime now{};
                 time_get(&now, TIME_UTC);
-                while (now.sec < target->sec || now.sec == target->sec && now.nsec < target->nsec) {
+                while (now.sec < target->sec || (now.sec == target->sec && now.nsec < target->nsec)) {
                     if (mutex->thread_id == static_cast<long>(GetCurrentThreadId()) ||
                         mutex->_get_cs()->try_lock_for(time_diff_to_millis2(target, &now))) {
                         res = WAIT_OBJECT_0;

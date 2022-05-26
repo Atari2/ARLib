@@ -67,9 +67,12 @@ namespace ARLib {
         uint8_t m_version_edition = 0;
         size_t m_leftover_args_needed = 0;
         StringView m_usage_string{};
+        mutable String m_help_string{};
 
         template <typename T>
         static constexpr bool inline dependant_false = false;
+
+        String construct_help_string() const;
 
         public:
         struct ArgParserError {
@@ -98,6 +101,7 @@ namespace ARLib {
         ArgParser& add_option(StringView opt_name, StringView description, bool& value_ref);
         ArgParser& add_option(StringView opt_name, StringView description, NoValueTag);
         void print_help() const;
+        const String& help_string() const;
 
         bool is_present(StringView opt_name) {
             auto it = m_options.find([&](const auto& kvp) { return kvp.first() == opt_name; });
@@ -115,7 +119,7 @@ namespace ARLib {
             auto& [_, value] = *it;
             if constexpr (SameAs<Tp, bool>) {
                 if (value.type == Option::Type::Bool) {
-                    return GetResult<Tp>{value.value.get<BoolRef>().get()};
+                    return GetResult<Tp>{value.value.template get<BoolRef>().get()};
                 } else if (value.type == Option::Type::NoValue) {
                     return GetResult<Tp>{value.found};
                 } else {
@@ -123,14 +127,14 @@ namespace ARLib {
                 }
             } else if constexpr (SameAs<Tp, String>) {
                 if (value.type == Option::Type::String) {
-                    return GetResult<Tp>{value.value.get<StringRef>().get()};
+                    return GetResult<Tp>{value.value.template get<StringRef>().get()};
                 } else {
                     return GetResult<Tp>{
                     GetOptionError{"Requested type `string` for option containing int, string or none"}};
                 }
             } else if constexpr (SameAs<Tp, int>) {
                 if (value.type == Option::Type::Int) {
-                    return GetResult<Tp>{value.value.get<BoolRef>().get()};
+                    return GetResult<Tp>{value.value.template get<BoolRef>().get()};
                 } else {
                     return GetResult<Tp>{
                     GetOptionError{"Requested type `int` for option containing bool, string or none"}};

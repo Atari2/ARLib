@@ -119,8 +119,7 @@ namespace ARLib {
         return *this;
     }
 
-    // TODO: fix formatting in print_help
-    void ArgParser::print_help() const {
+    String ArgParser::construct_help_string() const {
         String builder{};
         builder +=
         Printer::format("{}, Version: {}.{}\n", m_program_name, (int)m_version_edition, (int)m_version_partial);
@@ -145,15 +144,13 @@ namespace ARLib {
             }
         }
         size_t needed_width = *max(IteratorView{name_value_list}.transform_map<Vector<size_t>>(
-        [](const String& s) -> size_t { return s.size(); }));
-        2;
+                              [](const String& s) -> size_t { return s.size(); })) +
+                              2;
         size_t idx = 0;
         for (const auto& [name, opt] : m_options) {
             builder += '\t';
-            // auto f{builder.flags()};
-            // builder << std::setw(needed_width) << std::left;
-            builder += name_value_list[idx++];
-            // builder.flags(f);
+            const auto& name_value = name_value_list[idx++];
+            builder += name_value + String{needed_width - name_value.size(), ' '};
             builder += String{opt.description};
             if (opt.has_default()) {
                 if (opt.type == Option::Type::String) {
@@ -169,7 +166,16 @@ namespace ARLib {
             }
             builder += '\n';
         }
-        Printer::print("{}", builder);
+        return builder;
+    }
+
+    const String& ArgParser::help_string() const {
+        if (m_help_string.is_empty()) { m_help_string = construct_help_string(); }
+        return m_help_string;
+    }
+
+    void ArgParser::print_help() const {
+        Printer::print("{}", help_string());
     }
 
     bool ArgParser::Option::requires_value() const {
