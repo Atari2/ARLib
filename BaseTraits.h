@@ -2,10 +2,17 @@
 #include "Types.h"
 #include <type_traits>
 
+/*
+    the very basic type traits and some of the more complex ones (such as std::invoke_result)
+    are derived from MSVC's STL implementation https://github.com/microsoft/STL
+	which operates under the Apache License with LLVM exception, with notice included here:
+
+    Copyright (c) Microsoft Corporation.
+    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+*/
+
 namespace ARLib {
-    // the overwhelming majority of the type traits are copy-pasted from msvc's implementation
-    // since those are reliable and this is a finnicky thing
-    // it just made sense to use those, so I can both have a correct and malleable implementation.
+
     // aliases to std:: members that I have no clue how to implement
     template <class T, class... Args>
     using ConstructibleImpl = std::is_constructible<T, Args...>;
