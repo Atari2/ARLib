@@ -112,6 +112,8 @@ execute_process(
 					COMMAND ${pyexe} ${CMAKE_CURRENT_SOURCE_DIR}/genenums.py ${CMAKE_CURRENT_SOURCE_DIR}
 					COMMAND_ECHO STDOUT
 				 )
+include(CheckAvx.cmake)
+CheckAvx()
 
 file(GLOB LIB_SOURCE_FILES_CPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 file(GLOB LIB_SOURCE_FILES_H CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
@@ -140,7 +142,7 @@ endif()
 
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
-	list(APPEND ARLIB_COMPILE_OPTIONS /std:c++20 /arch:AVX2 /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
+	list(APPEND ARLIB_COMPILE_OPTIONS /std:c++20 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
 	if (DEBUG_BUILD)
 		list(APPEND ARLIB_COMPILE_OPTIONS /Oy-)
 	else()
@@ -176,7 +178,7 @@ if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 else()
 	add_subdirectory(ASM_GCC)
-	list(APPEND ARLIB_COMPILE_OPTIONS -std=c++20 -msse4.1 -mavx -mavx2 -fno-exceptions)
+	list(APPEND ARLIB_COMPILE_OPTIONS -std=c++20 -msse4.1 ${AVX_FLAGS} -fno-exceptions)
 	if (DEBUG_BUILD AND NOT ON_WINDOWS)
 		list(APPEND ARLIB_COMPILE_OPTIONS -fsanitize=address,undefined,leak)
 		list(APPEND ARLIB_LINK_OPTIONS -fsanitize=address,undefined,leak)
@@ -228,12 +230,4 @@ target_compile_options(ARLib PUBLIC ${ARLIB_COMPILE_OPTIONS})
 target_compile_definitions(ARLib PUBLIC ${ARLIB_COMPILE_DEFINITIONS})
 if (DEBUG_BUILD AND ON_MSVC)
 	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/PROFILE")
-endif()
-
-if (ARLIB_TOP_LEVEL)
-	add_custom_target(
-		RUN_TEST ALL
-		ARLibTestSuite
-		COMMENT "Running tests"
-	)
 endif()
