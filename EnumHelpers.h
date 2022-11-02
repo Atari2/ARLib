@@ -35,18 +35,22 @@ namespace ARLib {
             size_t m_size = 0;
 
             public:
-            constexpr void insert(V key, StringView val) {
+            constexpr bool insert(V key, StringView val) {
+                if (m_size == m_internal_map.size()) return false;
                 size_t idx = from_enum(key) & FOR_MOD_OPS;
                 while (m_internal_map[idx].first().used) {
                     idx = (idx + 1) & FOR_MOD_OPS;
                 }
                 m_internal_map[idx] = Pair{KeyBkt{move(key), true}, val};
                 m_size++;
+                return true;
             }
             constexpr StringView operator[](V key) const {
                 size_t idx = from_enum(key) & FOR_MOD_OPS;
+                size_t n_tries = 0;
                 while (m_internal_map[idx].first().key != key) {
                     idx = (idx + 1) & FOR_MOD_OPS;
+                    if (n_tries++ == m_size) return "InvalidEnumValue"_sv;
                 }
                 return m_internal_map[idx].second();
             }
@@ -79,11 +83,13 @@ namespace ARLib {
                 } else {
                     auto first_nospace_idx = sub.index_not_of(' ');
                     auto last_nospace_idx = sub.index_of(' ', first_nospace_idx);
+                    const auto value = to_enum<T>(Signed ? StrViewToI64(sub.substringview_fromlen(equal_idx + 1)) :
+                                                           StrViewToU64(sub.substringview_fromlen(equal_idx + 1)));
+                    current_val = from_enum(value) + UnderlyingTypeT<T>{1};
                     return Pair{sub.substringview_fromlen(
                                 first_nospace_idx,
                                 (last_nospace_idx < equal_idx ? last_nospace_idx : equal_idx) - first_nospace_idx),
-                                to_enum<T>(Signed ? StrViewToInt(sub.substringview_fromlen(equal_idx + 1)) :
-                                                    StrViewToUInt(sub.substringview_fromlen(equal_idx + 1)))};
+                                value};
                 }
             };
             size_t first_idx = 0;
@@ -103,7 +109,11 @@ namespace ARLib {
             constexpr size_t sz = count_enum_values(get_enum_full_string<T>({}));
             EnumStrHashMap<T, sz> map;
             for (const auto& [k, v] : enum_array) {
-                map.insert(v, k);
+                const bool inserted = map.insert(v, k);
+                if (is_constant_evaluated()) {
+                    // this allocation is here for the same reason as the one at line 178
+                    if (!inserted) { new int[from_enum(v)]; }
+                }
             }
             return map;
         }
