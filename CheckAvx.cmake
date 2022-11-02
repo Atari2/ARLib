@@ -52,7 +52,7 @@ macro(CheckAvx)
 
     if (AVX_AVAILABLE)
         if (MSVC)
-            set(AVX_FLAGS "/arch:AVX")
+            set(AVX_FLAGS "/arch:AVX2")
         else()
             set(AVX_FLAGS -mavx -mavx2)
         endif()
