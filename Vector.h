@@ -72,7 +72,7 @@ namespace ARLib {
 
         public:
         Vector() = default;
-        Vector(std::initializer_list<T> ilist) : m_size(ilist.size()) {
+        Vector(std::initializer_list<T> ilist) {
             reserve(ilist.size());
             for (const auto& elem : ilist) {
                 append(elem);
