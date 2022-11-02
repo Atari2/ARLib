@@ -72,6 +72,12 @@ namespace ARLib {
 
         public:
         Vector() = default;
+        Vector(std::initializer_list<T> ilist) : m_size(ilist.size()) {
+            reserve(ilist.size());
+            for (const auto& elem : ilist) {
+                append(elem);
+            }
+        }
         Vector(T*& storage_ptr, size_t size) :
             m_storage(storage_ptr), m_end_of_storage(storage_ptr + size), m_capacity(size), m_size(size) {
             storage_ptr = nullptr;
@@ -287,6 +293,12 @@ namespace ARLib {
 
         template <typename Functor>
         void for_each(Functor&& func) const {
+            for (auto& v : *this)
+                func(v);
+        }
+
+        template <typename Functor>
+        void for_each(Functor&& func) {
             for (auto& v : *this)
                 func(v);
         }
