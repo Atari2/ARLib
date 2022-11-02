@@ -7,26 +7,26 @@
 namespace ARLib {
     template <typename T, typename U>
     struct Pair {
-        T m_first;
-        U m_second;
+        T m_first{};
+        U m_second{};
 
-        Pair() = default;
-        Pair(const T& first, const U& second) : m_first(first), m_second(second) {}
-        Pair(T&& first, U&& second) : m_first(move(first)), m_second(move(second)) {}
+        constexpr Pair() = default;
+        constexpr Pair(const T& first, const U& second) : m_first(first), m_second(second) {}
+        constexpr Pair(T&& first, U&& second) : m_first(move(first)), m_second(move(second)) {}
 
-        Pair(const Pair&) = default;
-        Pair(Pair&&) noexcept = default;
-        Pair& operator=(Pair&&) noexcept = default;
-        Pair& operator=(const Pair&) = default;
+        constexpr Pair(const Pair&) = default;
+        constexpr Pair(Pair&&) noexcept = default;
+        constexpr Pair& operator=(Pair&&) noexcept = default;
+        constexpr Pair& operator=(const Pair&) = default;
 
-        bool operator==(const Pair& other) const { return m_first == other.m_first && m_second == other.m_second; }
-        bool operator!=(const Pair& other) const { return m_first != other.m_first || m_second != other.m_second; }
+        constexpr bool operator==(const Pair& other) const { return m_first == other.m_first && m_second == other.m_second; }
+        constexpr bool operator!=(const Pair& other) const { return m_first != other.m_first || m_second != other.m_second; }
 
-        T& first() { return m_first; }
-        U& second() { return m_second; }
+        constexpr T& first() { return m_first; }
+        constexpr U& second() { return m_second; }
 
-        const T& first() const { return m_first; }
-        const U& second() const { return m_second; }
+        constexpr const T& first() const { return m_first; }
+        constexpr const U& second() const { return m_second; }
 
         template <size_t Index>
         auto& get() & {
@@ -149,7 +149,7 @@ namespace ARLib {
     };
 
     template <typename T>
-    class Enumerator : public IteratorOperators<Enumerator<T>>, IteratorType<T> {
+    class Enumerator {
         Iterator<T> m_iter;
         size_t m_index;
 
@@ -172,15 +172,15 @@ namespace ARLib {
             this->operator++();
             return copy;
         }
-        bool operator==(const Enumerator& other) const override { return m_index == other.m_index; }
-        bool operator!=(const Enumerator& other) const override { return m_index != other.m_index; }
-        bool operator<(const Enumerator& other) override { return m_index < other.m_index; }
-        bool operator>(const Enumerator& other) override { return m_index > other.m_index; }
+        bool operator==(const Enumerator& other) const { return m_index == other.m_index; }
+        bool operator!=(const Enumerator& other) const { return m_index != other.m_index; }
+        bool operator<(const Enumerator& other) { return m_index < other.m_index; }
+        bool operator>(const Enumerator& other) { return m_index > other.m_index; }
         size_t operator-(const Enumerator& other) { return m_iter - other.m_iter; }
     };
 
     template <typename T>
-    class ConstEnumerator : public IteratorOperators<ConstEnumerator<T>>, IteratorType<T> {
+    class ConstEnumerator {
         ConstIterator<T> m_iter;
         size_t m_index;
 
@@ -203,10 +203,10 @@ namespace ARLib {
             this->operator++();
             return copy;
         }
-        bool operator==(const ConstEnumerator& other) const override { return m_index == other.m_index; }
-        bool operator!=(const ConstEnumerator& other) const override { return m_index != other.m_index; }
-        bool operator<(const ConstEnumerator& other) override { return m_index < other.m_index; }
-        bool operator>(const ConstEnumerator& other) override { return m_index > other.m_index; }
+        bool operator==(const ConstEnumerator& other) const { return m_index == other.m_index; }
+        bool operator!=(const ConstEnumerator& other) const { return m_index != other.m_index; }
+        bool operator<(const ConstEnumerator& other) { return m_index < other.m_index; }
+        bool operator>(const ConstEnumerator& other) { return m_index > other.m_index; }
         size_t operator-(const ConstEnumerator& other) { return m_iter - other.m_iter; }
     };
 

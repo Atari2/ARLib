@@ -14,8 +14,8 @@ namespace ARLib {
     constexpr inline size_t npos_ = static_cast<size_t>(-1);
 
     template <IteratorConcept Iter>
-    requires EqualityComparable<typename Iter::Type> size_t find(Iter begin, Iter end,
-                                                                 const typename Iter::Type& elem) {
+    requires EqualityComparable<typename Iter::Type>
+    constexpr size_t find(Iter begin, Iter end, const typename Iter::Type& elem) {
         if (begin == end) return npos_;
         size_t index = 0;
         for (; begin != end; ++begin, index++)
@@ -25,10 +25,25 @@ namespace ARLib {
 
     template <typename C, typename T>
     requires Iterable<C>
-    auto find(const C& cont, const T& elem) { return find(cont.begin(), cont.end(), elem); }
+    constexpr auto find(const C& cont, const T& elem) {
+        return find(cont.begin(), cont.end(), elem);
+    }
+
+    template <typename C, typename Func>
+    requires Iterable<C> && CallableWithRes<Func, bool, decltype(*declval<C>().begin())>
+    constexpr auto find_if(const C& cont, Func condition) {
+        auto begin = cont.begin();
+        const auto end = cont.end();
+        if (begin == end) return npos_;
+        size_t index = 0;
+        for (; begin != end; ++begin, index++)
+            if (condition(*begin)) return index;
+        return npos_;
+    }
 
     template <IteratorConcept Iter>
-    requires MoreComparable<typename Iter::Type> Iter max(Iter begin, Iter end) {
+    requires MoreComparable<typename Iter::Type>
+    constexpr Iter max(Iter begin, Iter end) {
         if (begin == end) return begin;
         Iter value{begin};
         for (; begin != end; ++begin)
@@ -37,7 +52,8 @@ namespace ARLib {
     }
 
     template <IteratorConcept Iter>
-    requires LessComparable<typename Iter::Type> Iter min(Iter begin, Iter end) {
+    requires LessComparable<typename Iter::Type>
+    constexpr Iter min(Iter begin, Iter end) {
         if (begin == end) return begin;
         Iter value{begin};
         for (; begin != end; ++begin)
@@ -46,7 +62,7 @@ namespace ARLib {
     }
 
     template <IteratorConcept Iter, typename Functor = decltype(sum_default<typename Iter::Type>)>
-    auto sum(Iter begin, Iter end, Functor func = sum_default<typename Iter::Type>) {
+    constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<typename Iter::Type>) {
         if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
         auto total = func(*begin);
         begin++;
@@ -56,7 +72,7 @@ namespace ARLib {
     }
 
     template <IteratorConcept Iter, bool ROUND = false>
-    auto avg(Iter begin, Iter end) {
+    constexpr auto avg(Iter begin, Iter end) {
         size_t sz = 0;
         if constexpr (ROUND) {
             RemoveReferenceT<decltype(*begin)> total{0};
@@ -76,7 +92,7 @@ namespace ARLib {
 
     template <IteratorConcept Iter, typename Functor>
     requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
-    auto all_of(Iter begin, Iter end, Functor func) {
+    constexpr auto all_of(Iter begin, Iter end, Functor func) {
         for (; begin != end; ++begin) {
             if (!func(*begin)) return false;
         }
@@ -85,7 +101,7 @@ namespace ARLib {
 
     template <IteratorConcept Iter, typename Functor>
     requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
-    auto any_of(Iter begin, Iter end, Functor func) {
+    constexpr auto any_of(Iter begin, Iter end, Functor func) {
         for (; begin != end; ++begin) {
             if (func(*begin)) return true;
         }
@@ -94,7 +110,7 @@ namespace ARLib {
 
     template <IteratorConcept Iter, typename Functor>
     requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
-    auto exactly_n(Iter begin, Iter end, Functor func, size_t n) {
+    constexpr auto exactly_n(Iter begin, Iter end, Functor func, size_t n) {
         size_t how_many = 0;
         for (; begin != end; ++begin) {
             if (func(*begin)) how_many++;
@@ -134,19 +150,25 @@ namespace ARLib {
 
     template <typename C>
     requires Iterable<C>
-    auto max(const C& cont) { return max(cont.begin(), cont.end()); }
+    constexpr auto max(const C& cont) {
+        return max(cont.begin(), cont.end());
+    }
 
     template <typename C>
     requires Iterable<C>
-    auto min(const C& cont) { return min(cont.begin(), cont.end()); }
+    constexpr auto min(const C& cont) {
+        return min(cont.begin(), cont.end());
+    }
 
     template <typename C, typename Functor>
     requires Iterable<C>
-    auto sum(const C& cont, Functor func) { return sum(cont.begin(), cont.end(), func); }
+    constexpr auto sum(const C& cont, Functor func) {
+        return sum(cont.begin(), cont.end(), func);
+    }
 
     template <typename C, bool ROUND = false>
     requires Iterable<C>
-    auto avg(const C& cont) {
+    constexpr auto avg(const C& cont) {
         if constexpr (CanKnowSize<C>) {
             if constexpr (ROUND) {
                 return static_cast<decltype(cont.size())>(sum(cont, [](auto& i) { return i; })) / cont.size();
@@ -160,15 +182,21 @@ namespace ARLib {
 
     template <Iterable C, typename Functor>
     requires CallableWithRes<Functor, bool, decltype(*declval<C>().begin())>
-    auto all_of(const C& cont, Functor func) { return all_of(cont.begin(), cont.end(), func); }
+    constexpr auto all_of(const C& cont, Functor func) {
+        return all_of(cont.begin(), cont.end(), func);
+    }
 
     template <Iterable C, typename Functor>
     requires CallableWithRes<Functor, bool, decltype(*declval<C>().begin())>
-    auto any_of(const C& cont, Functor func) { return any_of(cont.begin(), cont.end(), func); }
+    constexpr auto any_of(const C& cont, Functor func) {
+        return any_of(cont.begin(), cont.end(), func);
+    }
 
     template <Iterable C, typename Functor>
     requires CallableWithRes<Functor, bool, decltype(*declval<C>().begin())>
-    auto exactly_n(const C& cont, Functor func, size_t n) { return exactly_n(cont.begin(), cont.end(), func, n); }
+    constexpr auto exactly_n(const C& cont, Functor func, size_t n) {
+        return exactly_n(cont.begin(), cont.end(), func, n);
+    }
 
     template <typename C, typename Functor>
     requires Iterable<C> && Pushable<C, decltype(*declval<C>().begin())> &&
@@ -216,35 +244,37 @@ namespace ARLib {
     // in-place sorting
     template <typename C>
     requires Iterable<C>
-    void sort(C& cont) { quicksort_internal(cont.begin(), cont.end() - 1); }
+    void sort(C& cont) {
+        quicksort_internal(cont.begin(), cont.end() - 1);
+    }
 
     template <Iterable C>
-    auto begin(C& cont) {
+    constexpr auto begin(C& cont) {
         return cont.begin();
     }
 
     template <Iterable C>
-    auto end(C& cont) {
+    constexpr auto end(C& cont) {
         return cont.end();
     }
 
     template <Iterable C>
-    auto begin(const C& cont) {
+    constexpr auto begin(const C& cont) {
         return cont.begin();
     }
 
     template <Iterable C>
-    auto end(const C& cont) {
+    constexpr auto end(const C& cont) {
         return cont.end();
     }
 
     template <typename C, size_t N>
-    C* begin(C (&cont)[N]) {
+    constexpr C* begin(C (&cont)[N]) {
         return PointerTraits<C*>::pointer_to(*cont);
     }
 
     template <typename C, size_t N>
-    C* end(C (&cont)[N]) {
+    constexpr C* end(C (&cont)[N]) {
         return PointerTraits<C*>::pointer_to(*cont) + N;
     }
 
@@ -259,13 +289,13 @@ namespace ARLib {
         return v;
     }
 
-    auto bit_round_growth(Sized auto requested_size) {
+    constexpr auto bit_round_growth(Sized auto requested_size) {
         if (requested_size == 0) return static_cast<decltype(requested_size)>(2);
         size_t ret = bit_round(requested_size);
         return ret;
     }
 
-    auto basic_growth(Sized auto requested_size) {
+    constexpr auto basic_growth(Sized auto requested_size) {
         if (requested_size < 4096) {
             return bit_round_growth(requested_size);
         } else

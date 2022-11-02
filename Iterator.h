@@ -20,34 +20,24 @@ namespace ARLib {
         using ItemType = RemoveReferenceT<ConditionalT<IsConstV<T>, AddConstT<Tp>, Tp>>;
     };
 
-    template <typename Iter>
-    class IteratorOperators {
-        public:
-        virtual bool operator==(const Iter&) const = 0;
-        virtual bool operator!=(const Iter&) const = 0;
-        virtual bool operator<(const Iter&) = 0;
-        virtual bool operator>(const Iter&) = 0;
-
-        virtual ~IteratorOperators() = default;
-    };
-
     template <typename T>
-    class IteratorBase : public IteratorOperators<IteratorBase<T>> {
+    class IteratorBase {
         protected:
         T* m_current;
-        explicit IteratorBase(T* ptr) : m_current(ptr) {}
+        constexpr explicit IteratorBase(T* ptr) : m_current(ptr) {}
 
-        IteratorBase(const IteratorBase<T>& other) : m_current(other.m_current) {}
+        constexpr IteratorBase(const IteratorBase<T>& other) : m_current(other.m_current) {}
 
-        IteratorBase(IteratorBase<T>&& other) noexcept : m_current(other.m_current) { other.m_current = nullptr; }
+        constexpr IteratorBase(IteratorBase<T>&& other) noexcept : m_current(other.m_current) {
+            other.m_current = nullptr;
+        }
 
         public:
         using Type = T;
-        bool operator==(const IteratorBase<T>& other) const override { return m_current == other.m_current; }
-        bool operator!=(const IteratorBase<T>& other) const override { return m_current != other.m_current; }
-        bool operator<(const IteratorBase<T>& other) override { return m_current < other.m_current; }
-        bool operator>(const IteratorBase<T>& other) override { return m_current > other.m_current; }
-        virtual ~IteratorBase() = default;
+        constexpr bool operator==(const IteratorBase<T>& other) const { return m_current == other.m_current; }
+        constexpr bool operator!=(const IteratorBase<T>& other) const { return m_current != other.m_current; }
+        constexpr bool operator<(const IteratorBase<T>& other) { return m_current < other.m_current; }
+        constexpr bool operator>(const IteratorBase<T>& other) { return m_current > other.m_current; }
     };
 
     // for some godforsaken reason
@@ -118,61 +108,63 @@ namespace ARLib {
         using T = typename AddConst<Ct>::type;
 
         public:
-        explicit ConstIterator(T* start) : IteratorBase<T>(start) {}
+        constexpr explicit ConstIterator(T* start) : IteratorBase<T>(start) {}
 
-        ConstIterator(const ConstIterator<Ct>& other) : IteratorBase<T>(other) {}
+        constexpr ConstIterator(const ConstIterator<Ct>& other) : IteratorBase<T>(other) {}
 
-        ConstIterator(ConstIterator<Ct>&& other) noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
+        constexpr ConstIterator(ConstIterator<Ct>&& other) noexcept : IteratorBase<T>(other) {
+            other.m_current = nullptr;
+        }
 
-        ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) {
+        constexpr ConstIterator<Ct>& operator=(const ConstIterator<Ct>& other) {
             m_current = other.m_current;
             return *this;
         }
 
-        ConstIterator<Ct>& operator=(ConstIterator<Ct>&& other) noexcept {
+        constexpr ConstIterator<Ct>& operator=(ConstIterator<Ct>&& other) noexcept {
             m_current = other.m_current;
             other.m_current = nullptr;
             return *this;
         }
 
-        const T& operator*() const { return *m_current; }
+        constexpr const T& operator*() const { return *m_current; }
 
-        ConstIterator<Ct>& operator++() {
+        constexpr ConstIterator<Ct>& operator++() {
             m_current++;
             return *this;
         }
 
-        ConstIterator<Ct> operator++(int) {
+        constexpr ConstIterator<Ct> operator++(int) {
             auto copy = *this;
             m_current++;
             return copy;
         }
 
-        ConstIterator<Ct>& operator+=(int offset) {
+        constexpr ConstIterator<Ct>& operator+=(int offset) {
             m_current += offset;
             return *this;
         }
 
-        ConstIterator<Ct> operator+(int offset) { return ConstIterator<Ct>{m_current + offset}; }
+        constexpr ConstIterator<Ct> operator+(int offset) { return ConstIterator<Ct>{m_current + offset}; }
 
-        ConstIterator<Ct>& operator--() {
+        constexpr ConstIterator<Ct>& operator--() {
             m_current--;
             return *this;
         }
 
-        ConstIterator<Ct> operator--(int) {
+        constexpr ConstIterator<Ct> operator--(int) {
             auto copy = *this;
             m_current--;
             return copy;
         }
 
-        ConstIterator<Ct>& operator-=(int offset) {
+        constexpr ConstIterator<Ct>& operator-=(int offset) {
             m_current -= offset;
             return *this;
         }
 
-        ConstIterator<Ct> operator-(int offset) { return ConstIterator<Ct>{m_current - offset}; }
-        size_t operator-(const ConstIterator<Ct>& other) const {
+        constexpr ConstIterator<Ct> operator-(int offset) { return ConstIterator<Ct>{m_current - offset}; }
+        constexpr size_t operator-(const ConstIterator<Ct>& other) const {
             return static_cast<size_t>(m_current - other.m_current);
         }
     };
@@ -293,7 +285,7 @@ namespace ARLib {
 #undef m_current
 
     template <typename T, ComparatorType CMP, typename = EnableIfT<IsNonboolIntegral<T>>>
-    class LoopIterator : public IteratorOperators<LoopIterator<T, CMP>>, IteratorType<T> {
+    class LoopIterator {
         T m_current;
         T m_step;
         Comparator<T, CMP> m_cmp{};
@@ -315,10 +307,10 @@ namespace ARLib {
             m_current += m_step;
             return copy;
         }
-        bool operator==(const LoopIterator& other) const override { return m_current == other.m_current; }
-        bool operator!=(const LoopIterator& other) const override { return m_cmp.compare(m_current, other.m_current); }
-        bool operator<(const LoopIterator& other) override { return m_current < other.m_current; }
-        bool operator>(const LoopIterator& other) override { return m_current > other.m_current; }
+        bool operator==(const LoopIterator& other) const { return m_current == other.m_current; }
+        bool operator!=(const LoopIterator& other) const { return m_cmp.compare(m_current, other.m_current); }
+        bool operator<(const LoopIterator& other) { return m_current < other.m_current; }
+        bool operator>(const LoopIterator& other) { return m_current > other.m_current; }
         size_t operator-(const LoopIterator& other) {
             return static_cast<size_t>(m_current) - static_cast<size_t>(other.m_current);
         }
