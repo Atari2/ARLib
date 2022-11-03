@@ -298,4 +298,11 @@ namespace ARLib {
 
     template <typename T>
     concept IsSigned = IsIntegralV<T> && static_cast<T>(-1) < 0;
+
+    template <typename T>
+    concept SignedIntegral = Integral<T> && IsSigned<T>;
+
+    template <typename T>
+    concept UnsignedIntegral = Integral<T> && !IsSigned<T>;
+
 } // namespace ARLib
