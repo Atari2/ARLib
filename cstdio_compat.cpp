@@ -3,10 +3,25 @@
 #include "arlib_osapi.h"
 #include <cstdarg>
 #include <cstdio>
+#ifdef WINDOWS
+#include "Windows/win_native_io.h"
+#endif
 namespace ARLib {
 
-    int remove(const char* filename) { return ::remove(filename); }
-    int rename(const char* old_filename, const char* new_filename) { return ::rename(old_filename, new_filename); }
+    int remove(const char* filename) {
+#ifdef WINDOWS
+        return Win32DeleteFile(filename);
+#else
+        return ::remove(filename);
+#endif
+    }
+    int rename(const char* old_filename, const char* new_filename) {
+#ifdef WINDOWS
+        return Win32RenameFile(old_filename, new_filename);
+#else
+        return ::rename(old_filename, new_filename);
+#endif
+    }
 
     int fscanf(FILE* fp, const char* format, ...) {
         va_list argptr{};
@@ -29,41 +44,101 @@ namespace ARLib {
         va_end(argptr);
         return ret;
     }
-    int fgetc(FILE* fp) { return ::fgetc(fp); }
-    char* fgets(char* str, int n, FILE* fp) { return ::fgets(str, n, fp); }
-    int fputc(int ch, FILE* fp) { return ::fputc(ch, fp); }
-    int getc(FILE* fp) { return ::getc(fp); }
-    int getchar() { return ::getchar(); }
+    int fgetc(FILE* fp) {
+#ifdef WINDOWS
+        return ReadChar(fp);
+#else
+        return ::fgetc(fp);
+#endif
+    }
+    char* fgets(char* str, int n, FILE* fp) {
+        #ifdef WINDOWS
+        return ReadLine(str, n, fp);
+#else
+        return ::fgets(str, n, fp);
+        #endif
+    }
+    int fputc(int ch, FILE* fp) {
+#ifdef WINDOWS
+        return WriteChar(static_cast<char>(ch), fp);
+#else
+        return ::fputc(ch, fp);
+#endif
+    }
+    int getc(FILE* fp) {
+        return ARLib::fgetc(fp);
+    }
+    int getchar() {
+        return ARLib::fgetc(stdin);
+    }
+
+    size_t filesize(FILE* fp) {
+#ifdef WINDOWS
+        return Win32SizeFile(fp);
+#else
+        return 0;
+#endif
+    }
 
     FILE* fopen(const char* filename, const char* mode) {
 #ifdef WINDOWS
-        FILE* pfile = nullptr;
-        errno_t err = ::fopen_s(&pfile, filename, mode);
-#ifndef DEBUG
-        (void)err;
-#else
-        if (err != 0) print_last_error();
-        HARD_ASSERT_FMT((err == 0), "Failed to open %s in mode %s", filename, mode)
-#endif
-        return pfile;
+        return Win32OpenFile(filename, mode);
 #else
         return ::fopen(filename, mode);
 #endif
     }
 
-    int fclose(FILE* fp) { return ::fclose(fp); }
+    int fclose(FILE* fp) {
+#ifdef WINDOWS
+        return Win32CloseFile(fp);
+#else
+        return ::fclose(fp);
+#endif
+    }
 
-    int fseek(FILE* fp, long off, int whence) { return ::fseek(fp, off, whence); }
+    int fseek(FILE* fp, long off, int whence) {
+#ifdef WINDOWS
+        return Win32SeekFile(fp, off, whence);
+#else
+        return ::fseek(fp, off, whence);
+#endif
+    }
 
-    size_t ftell(FILE* fp) { return static_cast<size_t>(::ftell(fp)); }
+    size_t ftell(FILE* fp) {
+#ifdef WINDOWS
+        return Win32TellFile(fp);
+#else
+        return static_cast<size_t>(::ftell(fp));
+#endif
+    }
 
-    size_t fread(void* buffer, size_t size, size_t count, FILE* fp) { return ::fread(buffer, size, count, fp); }
+    size_t fread(void* buffer, size_t size, size_t count, FILE* fp) {
+        return ::fread(buffer, size, count, fp);
+    }
 
-    size_t fwrite(const void* buffer, size_t size, size_t count, FILE* fp) { return ::fwrite(buffer, size, count, fp); }
+    size_t fwrite(const void* buffer, size_t size, size_t count, FILE* fp) {
+#ifdef WINDOWS
+        return WriteFileGeneric(buffer, size, count, fp);
+#else
+        return ::fwrite(buffer, size, count, fp);
+#endif
+    }
 
-    int puts(const char* buf) { return ::puts(buf); }
+    int puts(const char* buf) {
+#ifdef WINDOWS
+        return static_cast<int>(WriteStringOutGeneric(buf));
+#else
+        return ::puts(buf);
+#endif
+    }
 
-    int fputs(const char* buf, FILE* fp) { return ::fputs(buf, fp); }
+    int fputs(const char* buf, FILE* fp) {
+#ifdef WINDOWS
+        return WriteStringFileGeneric(buf, fp);
+#else
+        return ::fputs(buf, fp);
+#endif
+    }
 
     int printf(const char* fmt, ...) {
         va_list argptr{};
