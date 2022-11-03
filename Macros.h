@@ -23,7 +23,9 @@
 #endif
 
 #define COMPTIME_ASSERT(msg)                                                                                           \
-    []<bool flag = false>() { static_assert(flag, msg); }                                                              \
+    []<bool flag = false>() {                                                                                          \
+        static_assert(flag, msg);                                                                                      \
+    }                                                                                                                  \
     ();                                                                                                                \
     unreachable
 

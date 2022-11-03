@@ -49,16 +49,24 @@ namespace ARLib {
 
 #define HARD_ASSERT(val, msg)                                                                                          \
     if (!(val)) {                                                                                                      \
-        ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                                  \
-        PRINT_SOURCE_LOCATION                                                                                          \
-        assertion_failed__();                                                                                          \
+        if (is_constant_evaluated()) {                                                                                 \
+            CONSTEVAL_STATIC_ASSERT(val, msg);                                                                         \
+        } else {                                                                                                       \
+            ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                              \
+            PRINT_SOURCE_LOCATION                                                                                      \
+            assertion_failed__();                                                                                      \
+        }                                                                                                              \
         unreachable                                                                                                    \
     }
 #define HARD_ASSERT_FMT(val, fmt, ...)                                                                                 \
     if (!(val)) {                                                                                                      \
-        ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                              \
-        PRINT_SOURCE_LOCATION                                                                                          \
-        assertion_failed__();                                                                                          \
+        if (is_constant_evaluated()) {                                                                                 \
+            CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                         \
+        } else {                                                                                                       \
+            ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                          \
+            PRINT_SOURCE_LOCATION                                                                                      \
+            assertion_failed__();                                                                                      \
+        }                                                                                                              \
         unreachable                                                                                                    \
     }
 
@@ -68,16 +76,30 @@ namespace ARLib {
 
 #define SOFT_ASSERT(val, msg)                                                                                          \
     if (!(val)) {                                                                                                      \
-        ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                                  \
-        PRINT_SOURCE_LOCATION                                                                                          \
+        if (is_constant_evaluated()) {                                                                                 \
+            CONSTEVAL_STATIC_ASSERT(val, msg);                                                                         \
+        } else {                                                                                                       \
+            ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                              \
+            PRINT_SOURCE_LOCATION                                                                                      \
+        }                                                                                                              \
+        unreachable                                                                                                    \
     }
 #define SOFT_ASSERT_FMT(val, fmt, ...)                                                                                 \
     if (!(val)) {                                                                                                      \
-        ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                              \
-        PRINT_SOURCE_LOCATION                                                                                          \
+        if (is_constant_evaluated()) {                                                                                 \
+            CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                         \
+        } else {                                                                                                       \
+            ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                          \
+            PRINT_SOURCE_LOCATION                                                                                      \
+        }                                                                                                              \
+        unreachable                                                                                                    \
     }
 
 #define TODO_CLS(cls)                                                                                                  \
-    cls() { todo__(); };                                                                                               \
-    static void todo__() { HARD_ASSERT(false, CONCAT(STRINGIFY(cls), " is not implemented yet")) }
+    cls() {                                                                                                            \
+        todo__();                                                                                                      \
+    };                                                                                                                 \
+    static void todo__() {                                                                                             \
+        HARD_ASSERT(false, CONCAT(STRINGIFY(cls), " is not implemented yet"))                                          \
+    }
 #define TODO(func) HARD_ASSERT(false, CONCAT(STRINGIFY(func), " not implemented yet"))
