@@ -792,22 +792,30 @@ TEST(ARLibTests, PriorityQueueTests) {
 }
 
 TEST(ARLibTests, ArgParserTests) {
-    const char* argv[]{"ARLibPlayground.exe", "-b", "-t", "help.txt", "-n", "10"};
+    const char* argv[]{"ARLibPlayground.exe", "-b", "-t", "help.txt", "-n", "10", "-un", "200", "-v", "3.5"};
     ArgParser parser{sizeof_array(argv), argv};
     parser.add_version(1, 0);
     parser.allow_unmatched(0);
     parser.add_usage_string("ARLibPlayground <options>");
     String t{};
     int n{};
+    unsigned int un{};
+    double v{};
     parser.add_option("-b", "testing boolean option", NoValueTag{});
     parser.add_option("-t", "test string", "testing string option", t);
     parser.add_option("-n", "test int", "testing int option", n);
+    parser.add_option("-un", "test uint", "testing uint option", un);
+    parser.add_option("-v", "test double", "testing double option", v);
     auto result = parser.parse();
     EXPECT_FALSE(result.is_error());
     EXPECT_TRUE(result.is_ok());
     EXPECT_EQ(parser.get<bool>("-b").ok_value(), true);
+    EXPECT_EQ(parser.get<int>("-n").ok_value(), 10);
+    EXPECT_EQ(parser.get<unsigned int>("-un").ok_value(), 200);
     EXPECT_EQ(t, "help.txt");
     EXPECT_EQ(n, 10);
+    EXPECT_EQ(un, 200);
+    EXPECT_EQ(v, 3.5);
 
     const char* argv2[]{"ARLibPlayground.exe", "aasdf"};
     ArgParser parser2{sizeof_array(argv2), argv2};

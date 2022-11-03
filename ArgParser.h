@@ -17,9 +17,12 @@ namespace ARLib {
     using StringRef = RefBox<String>;
     using BoolRef = RefBox<bool>;
     using IntRef = RefBox<int>;
+    using UintRef = RefBox<unsigned int>;
+    using RealRef = RefBox<double>;
 
     template <typename T>
-    concept OptionType = SameAs<T, IntRef> || SameAs<T, StringRef> || SameAs<T, NoValueTag> || SameAs<T, BoolRef>;
+    concept OptionType = SameAs<T, IntRef> || SameAs<T, UintRef> || SameAs<T, RealRef> || SameAs<T, StringRef> ||
+    SameAs<T, NoValueTag> || SameAs<T, BoolRef>;
 
     class ArgParser {
         Vector<String> m_unmatched_arguments{};
@@ -28,11 +31,11 @@ namespace ARLib {
 
         using ArgIter = decltype(m_arguments.begin());
         struct Option {
-            enum class Type { String, Bool, Int, NoValue } type;
+            enum class Type { String, Bool, Int, Uint, Real, NoValue } type;
             StringView description;
             StringView value_name;
 
-            Variant<NoValueTag, BoolRef, StringRef, IntRef> value;
+            Variant<NoValueTag, BoolRef, StringRef, IntRef, UintRef, RealRef> value;
             bool found;
             static constexpr inline size_t npos = static_cast<size_t>(-1);
 
@@ -44,6 +47,10 @@ namespace ARLib {
                     return Type::Bool;
                 } else if constexpr (SameAs<T, IntRef>) {
                     return Type::Int;
+                } else if constexpr (SameAs<T, UintRef>) {
+                    return Type::Uint;
+                } else if constexpr (SameAs<T, RealRef>) {
+                    return Type::Real;
                 } else if constexpr (SameAs<T, NoValueTag>) {
                     return Type::NoValue;
                 }
@@ -56,7 +63,30 @@ namespace ARLib {
             bool requires_value() const;
             bool assign(StringView arg_value);
             bool assign(bool arg_value);
-            bool assign(int arg_value);
+            bool assign(SignedIntegral auto arg_value) {
+                if (type == Type::Int) {
+                    value.get<IntRef>().get() = static_cast<int>(arg_value);
+                } else {
+                    return false;
+                }
+                return true;
+            }
+            bool assign(UnsignedIntegral auto arg_value) {
+                if (type == Type::Uint) {
+                    value.get<UintRef>().get() = static_cast<unsigned int>(arg_value);
+                } else {
+                    return false;
+                }
+                return true;
+            }
+            bool assign(FloatingPoint auto arg_value) {
+                if (type == Type::Real) {
+                    value.get<RealRef>().get() = static_cast<double>(arg_value);
+                } else {
+                    return false;
+                }
+                return true;
+            }
             bool has_default() const;
         };
 
@@ -98,6 +128,9 @@ namespace ARLib {
         bool help_requested() const;
         ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, String& value_ref);
         ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, int& value_ref);
+        ArgParser& add_option(StringView opt_name, StringView value_name, StringView description,
+                              unsigned int& value_ref);
+        ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, double& value_ref);
         ArgParser& add_option(StringView opt_name, StringView description, bool& value_ref);
         ArgParser& add_option(StringView opt_name, StringView description, NoValueTag);
         void print_help() const;
@@ -132,12 +165,26 @@ namespace ARLib {
                     return GetResult<Tp>{
                     GetOptionError{"Requested type `string` for option containing int, string or none"}};
                 }
-            } else if constexpr (SameAs<Tp, int>) {
+            } else if constexpr (SignedIntegral<Tp>) {
                 if (value.type == Option::Type::Int) {
-                    return GetResult<Tp>{value.value.template get<BoolRef>().get()};
+                    return GetResult<Tp>{value.value.template get<IntRef>().get()};
                 } else {
                     return GetResult<Tp>{
                     GetOptionError{"Requested type `int` for option containing bool, string or none"}};
+                }
+            } else if constexpr (UnsignedIntegral<Tp>) {
+                if (value.type == Option::Type::Uint) {
+                    return GetResult<Tp>{value.value.template get<UintRef>().get()};
+                } else {
+                    return GetResult<Tp>{
+                    GetOptionError{"Requested type `uint` for option containing bool, string or none"}};
+                }
+            } else if constexpr (FloatingPoint<Tp>) {
+                if (value.type == Option::Type::Real) {
+                    return GetResult<Tp>{value.value.template get<RealRef>().get()};
+                } else {
+                    return GetResult<Tp>{
+                    GetOptionError{"Requested type `real` for option containing bool, string or none"}};
                 }
             } else {
                 static_assert(dependant_false<T>, "Invalid get() call");

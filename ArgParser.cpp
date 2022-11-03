@@ -68,6 +68,22 @@ namespace ARLib {
                             return ArgParserError{
                             "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s};
                         }
+                    } else if (opt.type == Option::Type::Uint) {
+                        unsigned int value = opt.value.get<UintRef>().get();
+                        const auto& strval = *it;
+                        value = StrViewToUInt(strval);
+                        if (!opt.assign(value)) {
+                            return ArgParserError{
+                            "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s};
+                        }
+                    } else if (opt.type == Option::Type::Real) {
+                        double value = opt.value.get<RealRef>().get();
+                        const auto& strval = *it;
+                        value = StrViewToDouble(strval);
+                        if (!opt.assign(value)) {
+                            return ArgParserError{
+                            "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s};
+                        }
                     }
                     m_arguments.remove(*it);
                 } else if (opt.type == Option::Type::Bool) {
@@ -118,6 +134,16 @@ namespace ARLib {
         m_options.push_back(OptT{opt_name, Option{description, value_name, IntRef{value_ref}}});
         return *this;
     }
+    ArgParser& ArgParser::add_option(StringView opt_name, StringView value_name, StringView description,
+                                     unsigned int& value_ref) {
+        m_options.push_back(OptT{opt_name, Option{description, value_name, UintRef{value_ref}}});
+        return *this;
+    }
+    ArgParser& ArgParser::add_option(StringView opt_name, StringView value_name, StringView description,
+                                     double& value_ref) {
+        m_options.push_back(OptT{opt_name, Option{description, value_name, RealRef{value_ref}}});
+        return *this;
+    }
 
     String ArgParser::construct_help_string() const {
         String builder{};
@@ -162,6 +188,12 @@ namespace ARLib {
                 } else if (opt.type == Option::Type::Int) {
                     const auto& intv = opt.value.get<IntRef>().get();
                     builder += Printer::format(" (Default value: {})", intv);
+                } else if (opt.type == Option::Type::Uint) {
+                    const auto& uintv = opt.value.get<UintRef>().get();
+                    builder += Printer::format(" (Default value: {})", uintv);
+                } else if (opt.type == Option::Type::Real) {
+                    const auto& realv = opt.value.get<RealRef>().get();
+                    builder += Printer::format(" (Default value: {})", realv);
                 }
             }
             builder += '\n';
@@ -179,7 +211,7 @@ namespace ARLib {
     }
 
     bool ArgParser::Option::requires_value() const {
-        return type == Type::Int || type == Type::String;
+        return type == Type::Int || type == Type::String || type == Type::Uint || type == Type::Real;
     }
 
     bool ArgParser::Option::assign(StringView arg_value) {
@@ -194,15 +226,6 @@ namespace ARLib {
     bool ArgParser::Option::assign(bool arg_value) {
         if (type == Type::Bool) {
             value.get<BoolRef>().get() = arg_value;
-        } else {
-            return false;
-        }
-        return true;
-    }
-
-    bool ArgParser::Option::assign(int arg_value) {
-        if (type == Type::Int) {
-            value.get<IntRef>().get() = arg_value;
         } else {
             return false;
         }
