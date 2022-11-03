@@ -6,6 +6,8 @@ namespace ARLib {
     enum class SupportedBase { Decimal, Hexadecimal, Binary, Octal };
 
     // FIXME: make this more efficient
+    double StrViewToDouble(const StringView str);
+    float StrViewToFloat(const StringView str);
     double StrToDouble(const String& str);
     float StrToFloat(const String& str);
     String DoubleToStr(double value);
