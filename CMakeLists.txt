@@ -224,7 +224,7 @@ if (DEFINED INCLUDE_DEBUG_INFO AND ON_LINUX)
 endif()
 
 
-target_link_options(ARLib PUBLIC ${ARLIB_LINK_OPTIONS})
+target_link_options(ARLib PUBLIC ${ARLIB_LINK_OPTIONS} /PROFILE /DEBUG:FULL)
 target_link_libraries(ARLib PUBLIC ${ARLIB_LINK_LIBRARIES})
 target_compile_options(ARLib PUBLIC ${ARLIB_COMPILE_OPTIONS})
 target_compile_definitions(ARLib PUBLIC ${ARLIB_COMPILE_DEFINITIONS})

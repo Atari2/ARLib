@@ -264,10 +264,11 @@ namespace ARLib {
     constexpr auto StrViewToU64Octal = StrViewTo64Octal<false>;
     constexpr auto StrViewToU64Hexadecimal = StrViewTo64Hexadecimal<false>;
 
+    template <size_t Base>
     constexpr size_t StrLenFromIntegral(Integral auto value) noexcept {
         static_assert(!IsSigned<decltype(value)>, "Value must be unsigned");
         size_t n = 1;
-        constexpr size_t base = 10;
+        constexpr size_t base = Base;
         constexpr size_t b2 = base * base;
         constexpr size_t b3 = b2 * base;
         constexpr size_t b4 = b3 * base;

@@ -153,18 +153,43 @@ namespace ARLib {
     }
 
     char* ReadLine(char* buf, int n, FILE* fp) {
-        // FIXME: do this better
-        for (int cur = 0; cur < n; cur++) {
-            char c = ReadChar(fp);
-            if (c == EOF) {
+        if (n <= 0 || buf == nullptr || fp == nullptr) return nullptr;
+
+        constexpr size_t chunk_size = 256;
+        size_t buf_space = static_cast<size_t>(n) - 1;
+
+        const size_t rem = n % chunk_size;
+        const size_t bursts = n / chunk_size + (rem > 0);
+
+        size_t file_offset = ARLib::ftell(fp);
+
+        HANDLE hdl = FileToHandle(fp);
+        ptrdiff_t offset = 0;
+
+        for (size_t i = 0; i < bursts; i++) {
+            DWORD bytesRead{};
+            BOOL res = ReadFile(hdl, buf + offset, buf_space > chunk_size ? chunk_size : buf_space, &bytesRead, NULL);
+            buf_space -= bytesRead;
+            offset += bytesRead;
+            // !res aka failure to read should probably be a harder error
+            if (!res || bytesRead == 0) {
+                buf[offset] = '\0';
                 return buf;
-            } else if (c == '\n') {
-                buf[cur] = c;
+            } else if (buf_space <= 0) {
+                // we ran out of buf space but no \n in sight, place a \0 at the end and return
+                buf[n] = '\0';
                 return buf;
-            } else {
-                buf[cur] = c;
+            }
+            for (size_t j = offset; j < offset + bytesRead; j++) {
+                if (buf[j] == '\n') {
+                    // if newline is encountered, chop off the buf and seek back
+                    buf[j + 1] = '\0';
+                    ARLib::fseek(fp, file_offset + j + 1, SEEK_SET);
+                    return buf;
+                }
             }
         }
+        buf[n] = '\0';
         return buf;
     }
 

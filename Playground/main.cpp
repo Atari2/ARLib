@@ -1,23 +1,18 @@
-#include "../BigInt.h"
-#include "../CharConv.h"
-#include "../File.h"
-#include "../Printer.h"
-#include "../Variant.h"
-
-#include <cstdio>
+#include "../Assertion.h"
+#include "../PrintfImpl.h"
+#include "../NumberTraits.h"
+#include <inttypes.h>
 
 using namespace ARLib;
 int main() {
-    BigInt a{99};
-    BigInt b{99};
-    auto c = a + b;
-    Printer::print("{}", c);
-    Vector<Variant<String, int>> vars{10, "hello world"};
-    vars.for_each(
-    [](const auto& vsi) { visit(vsi, [](const auto& e) { Printer::print("Variant contains: {}", e); }); });
-    vars.for_each([](const auto& vsi) { vsi.visit([](const auto& e) { Printer::print("Variant contains: {}", e); }); });
-    File file{"HelloWorld.txt"_s};
-    file.open(OpenFileMode::Read);
-    auto res = file.read_all();
-    Printer::print("{} {}", res, file.size());
+    float val = 1234.1234;
+    const char* s = "my name is alessio";
+    int hex = 0x50;
+    ARLib::int64_t int64val = NumberTraits<ARLib::int64_t>::max;
+    ::printf("Hello World %+10.4f %% %s %#02o %#02" PRIX64 " %%\n", val, s, hex, int64val);
+    HARD_ASSERT(printf_impl("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val) == PrintfErrorCodes::Ok,
+                "Wrong printf impl");
+    HARD_ASSERT(printf_impl("Hello World %10+.4f %s %02X %02I64X %%\n", val, s, hex, int64val) ==
+                PrintfErrorCodes::InvalidFormat,
+                "Wrong printf impl");
 }

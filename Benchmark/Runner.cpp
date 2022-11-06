@@ -1,34 +1,34 @@
 #include "../CharConv.h"
 #include "../HashMap.h"
-#include "../Random.h"
-#include "../String.h"
 #include <benchmark/benchmark.h>
-#include <iostream>
-#include <string>
-#include <unordered_map>
+#include "../Assertion.h"
+#include "../PrintfImpl.h"
+#include <inttypes.h>
 
 using namespace ARLib;
 
 static void BM_SomeFunction(benchmark::State& state) {
-    auto rnd = Random::PCG::create();
     for (auto _ : state) {
-        auto num = rnd.random();
-        String str = IntToStr(num);
-        benchmark::DoNotOptimize(str.data());
+        float val = 1234.1234;
+        const char* s = "my name is alessio";
+        int hex = 0x50;
+        ARLib::uint64_t int64val = UINT64_MAX;
+        printf_impl("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }
 }
 
 static void BM_SomeFunctionStd(benchmark::State& state) {
-    auto rnd = Random::PCG::create();
     for (auto _ : state) {
-        auto num = rnd.random();
-        std::string str = std::to_string(num);
-        benchmark::DoNotOptimize(str.data());
+        float val = 1234.1234;
+        const char* s = "my name is alessio";
+        int hex = 0x50;
+        ARLib::uint64_t int64val = UINT64_MAX;
+        ::printf("Hello World %+10.4f %% %s %#02o %#02" PRIX64 " %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }
 }
 
-BENCHMARK(BM_SomeFunctionStd);
+// BENCHMARK(BM_SomeFunctionStd);
 BENCHMARK(BM_SomeFunction);
 BENCHMARK_MAIN();

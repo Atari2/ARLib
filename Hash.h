@@ -132,9 +132,9 @@ namespace ARLib {
             String repr_result{};
             for (auto val : m_result.digest) {
                 if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
                 else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
             }
             return repr_result;
         }
@@ -148,9 +148,9 @@ namespace ARLib {
             String repr_result{};
             for (auto val : m_result.digest) {
                 if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
                 else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
             }
             return repr_result;
         }
@@ -164,9 +164,9 @@ namespace ARLib {
             String repr_result{};
             for (auto val : m_result.digest) {
                 if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
                 else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
             }
             return repr_result;
         }
