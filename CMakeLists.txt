@@ -94,6 +94,17 @@ else()
 	message(STATUS "In release mode")
 endif()
 
+if (
+	CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR 
+	CMAKE_BUILD_TYPE STREQUAL "Debug" OR 
+	CMAKE_CONFIGURATION_TYPES STREQUAL "RelWithDebInfo" OR 
+	CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
+)
+	set(INCLUDE_DEBUG_INFO TRUE)
+else()
+	set(INCLUDE_DEBUG_INFO FALSE)
+endif()
+
 if (DEBUG_BUILD)
 	if (ON_WINDOWS)
 		list(APPEND ARLIB_LINK_LIBRARIES dbghelp)
@@ -219,15 +230,17 @@ else()
 endif()
 
 
-if (DEFINED INCLUDE_DEBUG_INFO AND ON_LINUX)
-	list(APPEND ARLIB_COMPILE_OPTIONS "-g")
+if (INCLUDE_DEBUG_INFO)
+	message(STATUS "Including debug info")
+	if (ON_MSVC)
+		list(APPEND ARLIB_LINK_OPTIONS /PROFILE /DEBUG:FULL)
+	else()
+		list(APPEND ARLIB_COMPILE_OPTIONS -g)
+	endif()
 endif()
 
 
-target_link_options(ARLib PUBLIC ${ARLIB_LINK_OPTIONS} /PROFILE /DEBUG:FULL)
+target_link_options(ARLib PUBLIC ${ARLIB_LINK_OPTIONS})
 target_link_libraries(ARLib PUBLIC ${ARLIB_LINK_LIBRARIES})
 target_compile_options(ARLib PUBLIC ${ARLIB_COMPILE_OPTIONS})
 target_compile_definitions(ARLib PUBLIC ${ARLIB_COMPILE_DEFINITIONS})
-if (DEBUG_BUILD AND ON_MSVC)
-	set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "/PROFILE")
-endif()
