@@ -12,13 +12,14 @@ namespace ARLib {
         TPtr m_boxed{};
 
         public:
-        explicit RefBox(TRef obj) : m_boxed(&obj) {}
+        constexpr RefBox() : m_boxed(nullptr) {}
+        constexpr explicit RefBox(TRef obj) : m_boxed(&obj) {}
 
-        TRef operator*() { return *m_boxed; }
-        TRef operator*() const { return *m_boxed; }
-        auto operator->() { return m_boxed; }
-        auto operator->() const { return m_boxed; }
-        CTRef get() const { return *m_boxed; }
-        TRef get() { return *m_boxed; }
+        constexpr TRef operator*() { return *m_boxed; }
+        constexpr TRef operator*() const { return *m_boxed; }
+        constexpr auto operator->() { return m_boxed; }
+        constexpr auto operator->() const { return m_boxed; }
+        constexpr CTRef get() const { return *m_boxed; }
+        constexpr TRef get() { return *m_boxed; }
     };
 } // namespace ARLib

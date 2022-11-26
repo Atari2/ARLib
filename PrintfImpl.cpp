@@ -7,7 +7,7 @@
 #include <cstdarg>
 
 namespace ARLib {
-
+    // https://learn.microsoft.com/en-us/cpp/c-runtime-library/format-specification-syntax-printf-and-wprintf-functions?view=msvc-170
     namespace PrintfTypes {
         enum class Type : char {
             None = 0,
