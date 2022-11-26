@@ -117,4 +117,28 @@ namespace ARLib {
         return static_cast<size_t>(num);
     }
 
+    constexpr auto CountLZero(Integral auto val) noexcept {
+        using T = decltype(val);
+        T yy = 0;
+
+        unsigned int nn = (sizeof(T) * 8);
+        unsigned int cc = nn / 2;
+        do {
+            yy = static_cast<T>(val >> cc);
+            if (yy != 0) {
+                nn -= cc;
+                val = yy;
+            }
+            cc >>= 1;
+        } while (cc != 0);
+        return static_cast<int>(nn) - static_cast<int>(val);
+    }
+
+    constexpr auto BitCeil(Integral auto val) noexcept {
+        using T = decltype(val);
+        if (val <= 1u) { return T{1}; }
+        const int n = (sizeof(T) * 8) - CountLZero(static_cast<T>(val - 1));
+        return static_cast<T>(T{1} << n);
+    }
+
 } // namespace ARLib

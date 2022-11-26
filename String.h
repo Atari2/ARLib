@@ -1,10 +1,10 @@
 #pragma once
 #include "Algorithm.h"
+#include "Allocator.h"
 #include "Assertion.h"
 #include "Iterator.h"
 #include "Types.h"
 #include "cstring_compat.h"
-#include "Allocator.h"
 
 namespace ARLib {
     class StringView;
@@ -82,8 +82,7 @@ namespace ARLib {
         }
 
         explicit String(size_t size, char c) {
-            if (size > SMALL_STRING_CAP)
-                grow_if_needed(size);
+            if (size > SMALL_STRING_CAP) grow_if_needed(size);
             memset(get_buf_internal(), static_cast<uint8_t>(c), size);
             m_size = size;
             get_buf_internal()[m_size] = '\0';
@@ -170,7 +169,8 @@ namespace ARLib {
             }
         }
 
-        // releases the inner char* buffer. May allocate if buffer is in-situ. May return nullptr if the string is empty.
+        // releases the inner char* buffer. May allocate if buffer is in-situ. May return nullptr if the string is
+        // empty.
         char* release() {
             if (m_size == 0) return nullptr;
             if (is_local()) {
@@ -234,6 +234,12 @@ namespace ARLib {
             m_size = size;
             get_buf_internal()[m_size] = '\0';
         }
+
+        void resize(size_t size) {
+            reserve(size);
+            set_size(size);
+        }
+
         [[nodiscard]] size_t size() const { return m_size; }
         [[nodiscard]] size_t length() const { return m_size; }
         [[nodiscard]] size_t capacity() const { return is_local() ? SMALL_STRING_CAP : m_allocated_capacity; }
@@ -491,13 +497,23 @@ namespace ARLib {
                 buf[i] = tolower(buf[i]);
             }
         }
-        [[nodiscard]] String upper() const {
+        [[nodiscard]] String upper() const& {
             String str(*this);
             str.iupper();
             return str;
         }
-        [[nodiscard]] String lower() const {
+        [[nodiscard]] String lower() const& {
             String str(*this);
+            str.ilower();
+            return str;
+        }
+        [[nodiscard]] String upper() && {
+            String str{move(*this)};
+            str.iupper();
+            return str;
+        }
+        [[nodiscard]] String lower() && {
+            String str{move(*this)};
             str.ilower();
             return str;
         }
@@ -525,7 +541,9 @@ namespace ARLib {
         void reserve(size_t new_capacity) { grow_if_needed(new_capacity); }
     };
 
-    inline String operator""_s(const char* source, size_t len) { return String{source, len}; }
+    inline String operator""_s(const char* source, size_t len) {
+        return String{source, len};
+    }
 
     template <>
     struct Hash<String> {

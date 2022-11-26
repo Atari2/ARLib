@@ -98,6 +98,8 @@ namespace ARLib {
             return strncmp(m_start, view.m_start, sz) != 0;
         }
 
+        constexpr bool empty() const { return size() == 0; }
+
         [[nodiscard]] Ordering operator<=>(const StringView& other) const;
 
         constexpr char operator[](size_t index) const noexcept { return m_start[index]; }
@@ -115,7 +117,19 @@ namespace ARLib {
             }
         }
 
-        [[nodiscard]] size_t index_of(const char* c, size_t start = 0) const;
+        [[nodiscard]] constexpr size_t index_of(const char* c, size_t start = 0) const {
+            if (m_size == 0 || start >= m_size) return npos;
+            const char* buf = m_start;
+            auto o_len = strlen(c);
+            if (o_len > m_size) return npos;
+            if (start + o_len > m_size) return npos;
+            if (o_len == m_size && start == 0 && strcmp(buf, c) == 0) return 0;
+            for (size_t i = start; i < m_size; i++) {
+                if (strncmp(buf + i, c, o_len) == 0) return i;
+            }
+            return npos;
+        }
+
         Vector<StringView> split(const char* sep = " ") const;
 
         void print_view() { printf("%.*s\n", size(), m_start); }
@@ -126,8 +140,8 @@ namespace ARLib {
             HARD_ASSERT(m_start_mut, "This stringview is not mutable")
             return m_start_mut;
         }
-        [[nodiscard]] ConstIterator<char> begin() { return ConstIterator<char>{m_start}; }
-        [[nodiscard]] ConstIterator<char> end() { return ConstIterator<char>{m_start + m_size}; }
+        [[nodiscard]] constexpr ConstIterator<char> begin() const { return ConstIterator<char>{m_start}; }
+        [[nodiscard]] constexpr ConstIterator<char> end() const { return ConstIterator<char>{m_start + m_size}; }
         [[nodiscard]] String extract_string() const { return {m_start, length()}; }
         explicit operator String() const { return extract_string(); }
         constexpr StringView substringview(size_t first = 0, size_t last = npos) const {
@@ -140,10 +154,33 @@ namespace ARLib {
                 return StringView{m_start + first, m_start + last};
             }
         }
+        constexpr StringView substringview_fromlen(size_t first = 0, size_t len = npos) const {
+            const size_t rcount = min_bt(len, size() - first);
+            return StringView{data() + first, rcount};
+        }
+        [[nodiscard]] constexpr size_t index_of(char c, size_t off = 0) const {
+            const char* ptr = data();
+            if (off > m_size) return npos;
+            for (size_t i = off; i < m_size; i++) {
+                if (ptr[i] == c) return i;
+            }
+            return npos;
+        }
+
+        [[nodiscard]] constexpr size_t index_not_of(char c, size_t off = 0) const {
+            const char* ptr = data();
+            if (off > m_size) return npos;
+            for (size_t i = off; i < m_size; i++) {
+                if (ptr[i] != c) return i;
+            }
+            return npos;
+        }
         constexpr bool is_empty() const { return !m_start; }
     };
 
-    constexpr StringView operator""_sv(const char* source, size_t len) { return StringView{source, len}; }
+    constexpr StringView operator""_sv(const char* source, size_t len) {
+        return StringView{source, len};
+    }
 
     template <>
     struct Hash<StringView> {

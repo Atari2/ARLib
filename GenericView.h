@@ -13,44 +13,44 @@ namespace ARLib {
         T* m_end_view = nullptr;
 
         public:
-        GenericView(T* begin, T* end) : m_begin_view(begin), m_end_view(end) {}
-        GenericView(T* begin, size_t size) : m_begin_view(begin), m_end_view(begin + size) {}
+        constexpr GenericView(T* begin, T* end) : m_begin_view(begin), m_end_view(end) {}
+        constexpr GenericView(T* begin, size_t size) : m_begin_view(begin), m_end_view(begin + size) {}
 
         // this constructor works only if the container operates on contiguous memory (e.g. not a linked list)
         // actually this whole class only operates on contiguous memory
-        explicit GenericView(Iterable auto& container) {
+        constexpr explicit GenericView(Iterable auto& container) {
             m_begin_view = &(*container.begin());
             m_end_view = &(*container.end());
         }
 
-        size_t size() const { return static_cast<size_t>(m_end_view - m_begin_view); }
+        constexpr size_t size() const { return static_cast<size_t>(m_end_view - m_begin_view); }
 
-        Iterator<T> begin() { return Iterator<T>{m_begin_view}; }
+        constexpr Iterator<T> begin() { return Iterator<T>{m_begin_view}; }
 
-        Iterator<T> end() { return Iterator<T>{m_end_view}; }
+        constexpr Iterator<T> end() { return Iterator<T>{m_end_view}; }
 
-        ReverseIterator<T> rbegin() { return ReverseIterator<T>{m_end_view - 1}; }
+        constexpr ReverseIterator<T> rbegin() { return ReverseIterator<T>{m_end_view - 1}; }
 
-        ReverseIterator<T> rend() { return ReverseIterator<T>{m_begin_view - 1}; }
+        constexpr ReverseIterator<T> rend() { return ReverseIterator<T>{m_begin_view - 1}; }
 
-        ConstIterator<T> begin() const { return ConstIterator<T>{m_begin_view}; }
+        constexpr ConstIterator<T> begin() const { return ConstIterator<T>{m_begin_view}; }
 
-        ConstIterator<T> end() const { return ConstIterator<T>{m_end_view}; }
+        constexpr ConstIterator<T> end() const { return ConstIterator<T>{m_end_view}; }
 
-        ConstReverseIterator<T> rbegin() const { return ConstReverseIterator<T>{m_end_view - 1}; }
+        constexpr ConstReverseIterator<T> rbegin() const { return ConstReverseIterator<T>{m_end_view - 1}; }
 
-        ConstReverseIterator<T> rend() const { return ConstReverseIterator<T>{m_begin_view - 1}; }
+        constexpr ConstReverseIterator<T> rend() const { return ConstReverseIterator<T>{m_begin_view - 1}; }
 
-        T& operator[](size_t index) { return m_begin_view[index]; }
+        constexpr T& operator[](size_t index) { return m_begin_view[index]; }
 
-        const T& operator[](size_t index) const { return m_begin_view[index]; }
+        constexpr const T& operator[](size_t index) const { return m_begin_view[index]; }
 
-        const T* data() const { return m_begin_view; }
+        constexpr const T* data() const { return m_begin_view; }
 
-        T* data() { return m_begin_view; }
+        constexpr T* data() { return m_begin_view; }
 
         template <typename Functor>
-        void for_each(Functor func) {
+        constexpr void for_each(Functor func) {
             for (auto& item : *this) {
                 func(item);
             }

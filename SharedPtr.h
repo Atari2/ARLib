@@ -97,6 +97,7 @@ namespace ARLib {
             reset();
             m_storage = other.m_storage;
             m_count = other.m_count;
+            if (m_storage == nullptr || m_count == nullptr) return *this;
             m_count->incref();
             return *this;
         }
@@ -239,11 +240,18 @@ namespace ARLib {
         }
     };
 
-    template <Printable T>
+    template <typename T>
     struct PrintInfo<SharedPtr<T>> {
         const SharedPtr<T>& m_ptr;
         PrintInfo(const SharedPtr<T>& ptr) : m_ptr(ptr) {}
-        String repr() const { return "SharedPtr { "_s + PrintInfo<T>{*m_ptr.get()}.repr() + " }"_s; }
+        String repr() const {
+            if constexpr (Printable<T>) {
+                return "SharedPtr { "_s + PrintInfo<T>{*m_ptr.get()}.repr() + " }"_s;
+            } else {
+                DemangledInfo info{MANGLED_TYPENAME_TO_STRING(T)};
+                return "SharedPtr { "_s + String{info.name()} + " }"_s;
+            };
+        }
     };
 
     template <Printable T>

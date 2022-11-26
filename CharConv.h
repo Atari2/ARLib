@@ -6,6 +6,8 @@ namespace ARLib {
     enum class SupportedBase { Decimal, Hexadecimal, Binary, Octal };
 
     // FIXME: make this more efficient
+    double StrViewToDouble(const StringView str);
+    float StrViewToFloat(const StringView str);
     double StrToDouble(const String& str);
     float StrToFloat(const String& str);
     double StrViewToDouble(const StringView& str);
@@ -204,55 +206,92 @@ namespace ARLib {
     constexpr unsigned int StrViewToUInt(const StringView view, int base = 10) {
         return static_cast<int>(StrViewToU64(view, base));
     }
-    inline int64_t StrToI64(const String& str, int base = 10) { return StrViewToI64(str.view(), base); }
-    inline uint64_t StrToU64(const String& str, int base = 10) { return StrViewToU64(str.view(), base); }
-    inline int StrToInt(const String& str, int base = 10) { return static_cast<int>(StrViewToI64(str.view(), base)); }
+    inline int64_t StrToI64(const String& str, int base = 10) {
+        return StrViewToI64(str.view(), base);
+    }
+    inline uint64_t StrToU64(const String& str, int base = 10) {
+        return StrViewToU64(str.view(), base);
+    }
+    inline int StrToInt(const String& str, int base = 10) {
+        return static_cast<int>(StrViewToI64(str.view(), base));
+    }
     inline unsigned int StrToUInt(const String& str, int base = 10) {
         return static_cast<unsigned int>(StrViewToU64(str.view(), base));
     }
 
-    template <SupportedBase Base = SupportedBase::Decimal>
+    template <SupportedBase Base = SupportedBase::Decimal, bool WantsBase = false>
     String IntToStr(Integral auto value) {
+        auto make_unsigned = [](auto v) {
+            if constexpr (IsSigned<decltype(v)>) {
+                using Ut = MakeUnsignedT<decltype(v)>;
+                const bool neg = v < 0;
+                const Ut uv = neg ? static_cast<Ut>(~v) + static_cast<Ut>(1) : static_cast<Ut>(v);
+                return uv;
+            } else {
+                return v;
+            }
+        };
         if constexpr (Base == SupportedBase::Decimal) {
             if constexpr (IsSigned<decltype(value)>) {
-                using Ut = MakeUnsignedT<decltype(value)>;
-                const bool neg = value < 0;
-                const auto uvalue = neg ? static_cast<Ut>((~value) + 1) : static_cast<Ut>(value);
-                const auto len = StrLenFromIntegral<Ut>(uvalue);
+                const auto uvalue = make_unsigned(value);
+                const auto len = StrLenFromIntegral<10>(uvalue);
+                const auto neg = value < 0;
                 String result{len + (neg ? 1 : 0), '-'};
                 WriteToCharsImpl(result.rawptr() + neg, len, uvalue);
                 return result;
             } else {
-                size_t len = StrLenFromIntegral(value);
+                size_t len = StrLenFromIntegral<10>(value);
                 String result{len, '\0'};
                 WriteToCharsImpl(result.rawptr(), len, value);
                 return result;
             }
         } else {
             String rev{};
+            auto uvalue = make_unsigned(value);
             if constexpr (Base == SupportedBase::Hexadecimal) {
-                if (value == 0) rev.append('0');
-                while (value > 0) {
-                    Integral auto rem = value % 16;
+                size_t len = StrLenFromIntegral<16>(uvalue) + (WantsBase ? 2 : 0);
+                rev.resize(len);
+                if constexpr (WantsBase) {
+                    rev[0] = '0';
+                    rev[1] = 'x';
+                }
+                size_t idx = len - 1;
+                if (uvalue == 0) { rev[idx] = '0'; }
+                while (uvalue > 0) {
+                    Integral auto rem = uvalue % 16;
                     if (rem > 9)
-                        rev.append(static_cast<char>(rem) + '7');
+                        rev[idx--] = (static_cast<char>(rem) + '7');
                     else
-                        rev.append(static_cast<char>(rem) + '0');
-                    value >>= 4;
+                        rev[idx--] = (static_cast<char>(rem) + '0');
+                    uvalue >>= 4;
                 }
-                rev.append('x');
-                rev.append('0');
             } else if constexpr (Base == SupportedBase::Binary) {
-                if (value == 0) rev.append('0');
-                while (value > 0) {
-                    Integral auto rem = value % 2;
-                    rev.append(static_cast<char>(rem) + '0');
-                    value >>= 1;
+                size_t len = StrLenFromIntegral<2>(uvalue) + (WantsBase ? 2 : 0);
+                rev.resize(len);
+                if constexpr (WantsBase) {
+                    rev[0] = '0';
+                    rev[1] = 'b';
                 }
-                rev.append('b');
-                rev.append('0');
+                size_t idx = len - 1;
+                if (uvalue == 0) { rev[idx] = '0'; }
+                while (uvalue > 0) {
+                    Integral auto rem = uvalue % 2;
+                    rev[idx--] = (static_cast<char>(rem) + '0');
+                    uvalue >>= 1;
+                }
+            } else if constexpr (Base == SupportedBase::Octal) {
+                size_t len = StrLenFromIntegral<8>(uvalue) + (WantsBase ? 1 : 0);
+                rev.resize(len);
+                if constexpr (WantsBase) { rev[0] = '0'; }
+                size_t idx = len - 1;
+                if (uvalue == 0) { rev[idx] = '0'; }
+                while (uvalue > 0) {
+                    Integral auto rem = uvalue % 8;
+                    rev[idx--] = (static_cast<char>(rem) + '0');
+                    uvalue >>= 3;
+                }
             }
-            return rev.reversed();
+            return rev;
         }
     }
 
@@ -275,7 +314,9 @@ namespace ARLib {
         return String{"false"};
     }
 
-    inline String CharToStr(char value) { return String{1, value}; }
+    inline String CharToStr(char value) {
+        return String{1, value};
+    }
 
     inline String ToString(Stringable auto& value) {
         if constexpr (IsSameV<decltype(value), String>) return value;

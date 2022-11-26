@@ -13,19 +13,6 @@ namespace ARLib {
             return greater;
     }
 
-    [[nodiscard]] size_t StringView::index_of(const char* c, size_t start) const {
-        if (m_size == 0 || start >= m_size) return npos;
-        const char* buf = m_start;
-        auto o_len = strlen(c);
-        if (o_len > m_size) return npos;
-        if (start + o_len > m_size) return npos;
-        if (o_len == m_size && start == 0 && strcmp(buf, c) == 0) return 0;
-        for (size_t i = start; i < m_size; i++) {
-            if (strncmp(buf + i, c, o_len) == 0) return i;
-        }
-        return npos;
-    }
-
     Vector<StringView> StringView::split(const char* sep) const {
         Vector<StringView> vec{};
         size_t sep_len = strlen(sep);

@@ -6,14 +6,14 @@
 
 namespace ARLib {
     template <typename T>
-    struct PrintInfo {};
+    struct PrintInfo;
 
     template <typename T>
     PrintInfo(T) -> PrintInfo<T>;
 
     template <typename T>
-    concept Printable = requires(const T& a) {
-        { PrintInfo<T>{a}.repr() } -> SameAs<String>;
+    concept Printable = requires() {
+        { declval<PrintInfo<T>>().repr() } -> SameAs<String>;
     };
 
     template <typename T>

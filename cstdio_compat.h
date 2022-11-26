@@ -55,6 +55,8 @@ namespace ARLib {
     int getc(FILE* fp);
     int getchar();
 
+    size_t filesize(FILE* fp);
+
     FILE* fopen(const char* filename, const char* mode);
     int fclose(FILE* fp);
     int fseek(FILE* fp, long off, int whence);

@@ -140,6 +140,15 @@ namespace ARLib {
                              line.LineNumber, displ);
                     trace.append_frame(backtrace_msg, total_length, false);
                 }
+                constexpr size_t len = sizeof_array("`%s` in %s at %d:%d");
+                size_t number_len =
+                line.LineNumber > 0 ? static_cast<size_t>(ARLib::log10(static_cast<double>(line.LineNumber))) + 1 : 1;
+                size_t displ_len = displ > 0 ? static_cast<size_t>(ARLib::log10(static_cast<double>(displ))) + 1 : 1;
+                size_t total_length = psymbol->NameLen + ARLib::strlen(line.FileName) + number_len + displ_len + len;
+                char* backtrace_msg = new char[total_length];
+                snprintf(backtrace_msg, total_length, "`%s` in %s at %d:%d", psymbol->Name, line.FileName,
+                         line.LineNumber, displ);
+                trace.append_frame(backtrace_msg, total_length, false);
             }
         }
         BackTrace::already_generating_backtrace = false;

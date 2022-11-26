@@ -72,6 +72,12 @@ namespace ARLib {
 
         public:
         Vector() = default;
+        Vector(std::initializer_list<T> ilist) {
+            reserve(ilist.size());
+            for (const auto& elem : ilist) {
+                append(elem);
+            }
+        }
         Vector(T*& storage_ptr, size_t size) :
             m_storage(storage_ptr), m_end_of_storage(storage_ptr + size), m_capacity(size), m_size(size) {
             storage_ptr = nullptr;
@@ -291,6 +297,12 @@ namespace ARLib {
                 func(v);
         }
 
+        template <typename Functor>
+        void for_each(Functor&& func) {
+            for (auto& v : *this)
+                func(v);
+        }
+
         void for_each(void (*func)(const T&)) const {
             for (const auto& v : *this)
                 func(v);
@@ -308,6 +320,12 @@ namespace ARLib {
             }
         }
 
+        Iter remove(Iter it) {
+            size_t idx = (&*it) - m_storage;
+            remove_at(idx);
+            return Iterator{m_storage + idx};
+        }
+
         void remove(const T& val) {
             for (size_t i = 0; i < m_size; i++) {
                 if (val == m_storage[i]) {
@@ -320,6 +338,13 @@ namespace ARLib {
         Iter find(const T& val) {
             for (auto it = begin(); it != end(); it++)
                 if (*it == val) return it;
+            return end();
+        }
+
+        template <CallableWithRes<bool, const T&> Functor>
+        Iter find(Functor func) {
+            for (auto it = begin(); it != end(); it++)
+                if (func(*it)) return it;
             return end();
         }
 

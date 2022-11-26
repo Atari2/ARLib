@@ -6,19 +6,20 @@ namespace ARLib {
     // simple box for a reference type, should not be used
     template <typename T>
     class RefBox {
-
-        using TRef = typename RemoveReference<T>::type&;
-        TRef m_boxed;
+        using TRef = AddLvalueReferenceT<RemoveReferenceT<T>>;
+        using CTRef = AddConstT<AddLvalueReferenceT<RemoveReferenceT<T>>>;
+        using TPtr = AddPointerT<RemoveReferenceT<T>>;
+        TPtr m_boxed{};
 
         public:
-        explicit RefBox(TRef obj) : m_boxed(obj) {}
-        RefBox(const RefBox& other) : m_boxed(other.m_boxed) { }
-        RefBox(RefBox&& other) noexcept : m_boxed(move(other.m_boxed)) { }
+        constexpr RefBox() : m_boxed(nullptr) {}
+        constexpr explicit RefBox(TRef obj) : m_boxed(&obj) {}
 
-        TRef operator*() { return m_boxed; }
-        TRef operator*() const { return m_boxed; }
-        auto operator->() { return &m_boxed; }
-        auto operator->() const { return &m_boxed; }
-        TRef get() { return m_boxed; }
+        constexpr TRef operator*() { return *m_boxed; }
+        constexpr TRef operator*() const { return *m_boxed; }
+        constexpr auto operator->() { return m_boxed; }
+        constexpr auto operator->() const { return m_boxed; }
+        constexpr CTRef get() const { return *m_boxed; }
+        constexpr TRef get() { return *m_boxed; }
     };
 } // namespace ARLib

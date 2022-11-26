@@ -6,17 +6,17 @@
 
 namespace ARLib {
 
-    // gcc 11+ and msvc 19.3+ support everything in here
-    // clang 13 however (latest clang) doesn't, clang 14 (not available yet) does
-    #ifdef COMPILER_CLANG
-    #if __clang_major__ == 14
-    #define STRINGLITERAL_AVAILABLE
-    #endif
-    #else
-    #define STRINGLITERAL_AVAILABLE
-    #endif
+// gcc 11+ and msvc 19.3+ support everything in here
+// clang 13 however (latest clang) doesn't, clang 14 (not available yet) does
+#ifdef COMPILER_CLANG
+#if __clang_major__ == 14
+#define STRINGLITERAL_AVAILABLE
+#endif
+#else
+#define STRINGLITERAL_AVAILABLE
+#endif
 
-    #ifdef STRINGLITERAL_AVAILABLE
+#ifdef STRINGLITERAL_AVAILABLE
     // this is a weird class
     // it attempts at adding a convenience API around a compile time string
     // e.g. "hello world"
@@ -97,12 +97,10 @@ namespace ARLib {
     StringLiteral(const char (&str)[N]) -> StringLiteral<N>;
 
     template <size_t N>
-    class PrintInfo<StringLiteral<N>> {
+    struct PrintInfo<StringLiteral<N>> {
         const StringLiteral<N>& m_string;
-
-        public:
         PrintInfo(const StringLiteral<N>& string) : m_string(string) {}
         String repr() const { return String{m_string.ptr()}; }
     };
-    #endif
+#endif
 } // namespace ARLib

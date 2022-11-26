@@ -8,6 +8,7 @@ namespace ARLib {
 #ifdef COMPILER_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wsign-conversion"
+#pragma clang diagnostic ignored "-Wconstant-conversion"
 #pragma clang diagnostic ignored "-Wimplicitly-unsigned-literal"
 #elif COMPILER_MSVC
 #pragma warning(push)

@@ -106,6 +106,9 @@ namespace ARLib {
             case OpenFileMode::ReadWrite:
                 m_ptr = fopen(m_filename.data(), "w+");
                 break;
+            case OpenFileMode::Append:
+                m_ptr = fopen(m_filename.data(), "a+");
+                break;
             default:
                 break;
             }
@@ -117,7 +120,7 @@ namespace ARLib {
         }
 
         WriteResult write(const String& str) {
-            if (m_mode != OpenFileMode::Write) { return WriteResult::from_error(); }
+            if (m_mode != OpenFileMode::Write && m_mode != OpenFileMode::Append) { return WriteResult::from_error(); }
             auto len = ARLib::fwrite(str.data(), str.size(), sizeof(char), m_ptr);
             if (len != str.size()) { return WriteResult::from_error(); }
             return WriteResult::from_ok(len);
@@ -151,6 +154,12 @@ namespace ARLib {
 #endif
             return ReadResult{Forward<String>(line)};
         }
+
+        size_t size() const {
+            HARD_ASSERT(m_ptr != nullptr, "File has to be open to ask for the size");
+            return filesize(m_ptr);
+        }
+
         ~File() {
             if (m_ptr) ARLib::fclose(m_ptr);
         }

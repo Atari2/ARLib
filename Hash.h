@@ -53,11 +53,26 @@ namespace ARLib {
         static_assert(sizeof_array(s_CRCTable) == 256, "Incorrect length of CRC table");
 
         public:
-        static uint32_t calculate(ReadOnlyByteView);
-        static uint32_t calculate(ReadOnlyCharView);
+        constexpr static uint32_t calculate(ReadOnlyByteView data) {
+            uint32_t crc32 = 0xFFFFFFFFu;
+            for (size_t i = 0; i < data.size(); i++) {
+                const uint32_t idx = data[i] ^ (crc32 & 0xFF);
+                crc32 = (crc32 >> 8) ^ s_CRCTable[idx];
+            }
+            return ~crc32;
+        }
+
+        constexpr static uint32_t calculate(ReadOnlyCharView data) {
+            uint32_t crc32 = 0xFFFFFFFFu;
+            for (size_t i = 0; i < data.size(); i++) {
+                const uint32_t idx = static_cast<uint8_t>(data[i]) ^ (crc32 & 0xFF);
+                crc32 = (crc32 >> 8) ^ s_CRCTable[idx];
+            }
+            return ~crc32;
+        }
         template <Iterable C>
         requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
-        static uint32_t calculate(const C& cont) { return calculate(GenericView{cont}); }
+        static constexpr uint32_t calculate(const C& cont) { return calculate(GenericView{cont}); }
     };
 
     template <>
@@ -117,9 +132,9 @@ namespace ARLib {
             String repr_result{};
             for (auto val : m_result.digest) {
                 if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
                 else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
             }
             return repr_result;
         }
@@ -133,9 +148,9 @@ namespace ARLib {
             String repr_result{};
             for (auto val : m_result.digest) {
                 if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
                 else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
             }
             return repr_result;
         }
@@ -149,9 +164,9 @@ namespace ARLib {
             String repr_result{};
             for (auto val : m_result.digest) {
                 if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
                 else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val).substring(2);
+                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
             }
             return repr_result;
         }

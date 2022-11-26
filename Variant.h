@@ -30,7 +30,6 @@ namespace ARLib {
             requires IsAnyOfV<Sc, Rest...>
             explicit VariantStorage(const Sc& value) : tail(value), is_active(false) {}
 
-            
             template <class Sc>
             requires IsAnyOfV<Sc, Rest...>
             explicit VariantStorage(Sc&& value) : tail(Forward<Sc>(value)), is_active(false) {}
@@ -192,6 +191,24 @@ namespace ARLib {
                     return tail.active();
             }
 
+            template <class Callable>
+            void visit(Callable visitor) {
+                if (is_active) {
+                    if constexpr (CallableWith<Callable, First>) { visitor(head); }
+                } else {
+                    tail.template visit<Callable>(visitor);
+                }
+            }
+
+            template <class Callable>
+            void visit(Callable visitor) const {
+                if (is_active) {
+                    if constexpr (CallableWith<Callable, First>) { visitor(head); }
+                } else {
+                    tail.template visit<Callable>(visitor);
+                }
+            }
+
             ~VariantStorage() {
                 if (is_active)
                     head.~First();
@@ -297,6 +314,20 @@ namespace ARLib {
 
             bool active() const { return is_active; }
 
+            template <class Callable>
+            void visit(Callable visitor) const {
+                if constexpr (CallableWith<Callable, Type>) {
+                    if (is_active) { visitor(head); }
+                }
+            }
+
+            template <class Callable>
+            void visit(Callable visitor) {
+                if constexpr (CallableWith<Callable, Type>) {
+                    if (is_active) { visitor(head); }
+                }
+            }
+
             ~VariantStorage() {
                 if (is_active) head.~Type();
             };
@@ -362,15 +393,13 @@ namespace ARLib {
 
         public:
         template <typename T>
-        requires IsAnyOfV<T, Types...>
-        explicit Variant(const T& value) : m_storage(value) {}
+        requires IsAnyOfV<T, Types...> Variant(const T& value) : m_storage(value) {}
 
         template <typename T>
-        requires IsAnyOfV<T, Types...>
-        explicit Variant(T&& value) : m_storage(Forward<T>(value)) {}
+        requires IsAnyOfV<T, Types...> Variant(T&& value) : m_storage(Forward<T>(value)) {}
 
         template <typename... Args>
-        explicit Variant(Args&&... args) : m_storage(Forward<Args>(args)...) {}
+        Variant(Args&&... args) : m_storage(Forward<Args>(args)...) {}
 
         Variant(const Variant& other) : m_storage(other.m_storage) {}
         Variant(Variant&& other) noexcept : m_storage(move(other.m_storage)) {}
@@ -415,6 +444,16 @@ namespace ARLib {
         }
 
         bool is_active() const { return m_storage.active(); }
+
+        template <class Callable>
+        void visit(Callable visitor) const {
+            m_storage.template visit<Callable>(visitor);
+        }
+
+        template <class Callable>
+        void visit(Callable visitor) {
+            m_storage.template visit<Callable>(visitor);
+        }
 
         ~Variant() = default;
     };
@@ -465,13 +504,19 @@ namespace ARLib {
     // free functions to avoid template keyword when calling member functions in templated functions.
     template <typename Tp, typename... Args>
     requires IsAnyOfV<Tp, Args...>
-    auto& get(Variant<Args...>& variant) { return variant.template get<Tp>(); }
+    auto& get(Variant<Args...>& variant) {
+        return variant.template get<Tp>();
+    }
     template <typename Tp, typename... Args>
     requires IsAnyOfV<Tp, Args...>
-    const auto& get(const Variant<Args...>& variant) { return variant.template get<Tp>(); }
+    const auto& get(const Variant<Args...>& variant) {
+        return variant.template get<Tp>();
+    }
 
     template <size_t Idx, typename... Args>
-    requires(Idx < sizeof...(Args)) auto& get(Variant<Args...>& variant) { return variant.template get<Idx>(); }
+    requires(Idx < sizeof...(Args)) auto& get(Variant<Args...>& variant) {
+        return variant.template get<Idx>();
+    }
     template <size_t Idx, typename... Args>
     requires(Idx < sizeof...(Args)) const auto& get(const Variant<Args...>& variant) {
         return variant.template get<Idx>();
@@ -479,13 +524,30 @@ namespace ARLib {
 
     template <typename Tp, typename... Args>
     requires IsAnyOfV<Tp, Args...>
-    void set(Variant<Args...>& variant, Tp value) { variant.template set<Tp>(move(value)); }
+    void set(Variant<Args...>& variant, Tp value) {
+        variant.template set<Tp>(move(value));
+    }
+
+    template <typename Callable, typename... Args>
+    void visit(Variant<Args...>& variant, Callable visitor) {
+        variant.template visit<Callable>(visitor);
+    }
+
+    template <typename Callable, typename... Args>
+    void visit(const Variant<Args...>& variant, Callable visitor) {
+        variant.template visit<Callable>(visitor);
+    }
 
     template <Printable Arg, Printable... Args>
     struct PrintInfo<Variant<Arg, Args...>> {
         const Variant<Arg, Args...>& m_variant;
         explicit PrintInfo(const Variant<Arg, Args...>& variant) : m_variant(variant) {}
         String repr() const { return m_variant.get_printinfo_string(); }
+    };
+
+    template <class... Ts>
+    struct VariantVisitor : Ts... {
+        using Ts::operator()...;
     };
 
 } // namespace ARLib

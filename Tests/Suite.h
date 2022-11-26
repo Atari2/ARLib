@@ -34,6 +34,7 @@
 #include "../UniqueString.h"
 #include "../Variant.h"
 #include "../Vector.h"
+#include "../ArgParser.h"
 #include "../cstdio_compat.h"
 
 namespace ARLib {

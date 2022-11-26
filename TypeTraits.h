@@ -1,6 +1,15 @@
 #pragma once
 #include "BaseTraits.h"
 
+/*
+    the very basic type traits and some of the more complex ones (such as std::invoke_result)
+    are derived from MSVC's STL implementation https://github.com/microsoft/STL
+    which operates under the Apache License with LLVM exception, with notice included here:
+
+    Copyright (c) Microsoft Corporation.
+    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+*/
+
 namespace ARLib {
 
     template <class>

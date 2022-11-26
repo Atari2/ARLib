@@ -12,20 +12,6 @@
 #endif
 
 namespace ARLib {
-    uint32_t HashAlgorithm<HashType::CRC32>::calculate(ReadOnlyByteView data) {
-        uint32_t crc32 = 0xFFFFFFFFu;
-        for (size_t i = 0; i < data.size(); i++) {
-            const uint32_t idx = data[i] ^ (crc32 & 0xFF);
-            crc32 = (crc32 >> 8) ^ s_CRCTable[idx];
-        }
-        return ~crc32;
-    }
-
-    uint32_t HashAlgorithm<HashType::CRC32>::calculate(ReadOnlyCharView data) {
-        return calculate(
-        ReadOnlyByteView{cast<const uint8_t*>(data.data()), cast<const uint8_t*>(data.data() + data.size())});
-    }
-
     HashAlgorithm<HashType::MD5>::MD5Result HashAlgorithm<HashType::MD5>::calculate(ReadOnlyByteView data) {
         constexpr uint32_t s[] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
                                   5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
