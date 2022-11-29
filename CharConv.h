@@ -10,11 +10,34 @@ namespace ARLib {
     float StrViewToFloat(const StringView str);
     double StrToDouble(const String& str);
     float StrToFloat(const String& str);
-    double StrViewToDouble(const StringView& str);
-    float StrViewToFloat(const StringView& str);
-    String DoubleToStr(double value);
-    String LongDoubleToStr(long double value);
-    String FloatToStr(float value);
+
+    
+    enum class FloatFmtOpt : uint8_t { f, F, g, G, e, E };
+
+    String DoubleToStrImpl(double value, const char* fmt);
+    String LongDoubleToStrImpl(long double value, const char* fmt);
+    String FloatToStrImpl(float value, const char* fmt);
+
+    template <FloatFmtOpt Format = FloatFmtOpt::f>
+    String DoubleToStr(double value) {
+        constexpr const char* const fmt_opts[]{"%f", "%F", "%g", "%G", "%e", "%E"};
+        constexpr const char* const fmt = fmt_opts[static_cast<uint8_t>(Format)];
+        return DoubleToStrImpl(value, fmt);
+    }
+
+    template <FloatFmtOpt Format = FloatFmtOpt::f>
+    String LongDoubleToStr(long double value) {
+        constexpr const char* const fmt_opts[]{"%Lf", "%LF", "%Lg", "%LG", "%Le", "%LE"};
+        constexpr const char* const fmt = fmt_opts[static_cast<uint8_t>(Format)];
+        return LongDoubleToStrImpl(value, fmt);
+
+    }
+    template <FloatFmtOpt Format = FloatFmtOpt::f>
+    String FloatToStr(float value) {
+        constexpr const char* const fmt_opts[]{"%f", "%F", "%g", "%G", "%e", "%E"};
+        constexpr const char* const fmt = fmt_opts[static_cast<uint8_t>(Format)];
+        return FloatToStrImpl(value, fmt);
+    }
 
 #ifdef COMPILER_GCC
 #pragma GCC diagnostic push

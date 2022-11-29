@@ -102,7 +102,7 @@ namespace ARLib {
     template <>
     struct NumberTraits<long> {
         constexpr static inline bool is_signed = true;
-        constexpr static inline long min = windows_build ? -2147483648l : -9223372036854775807ll-1ll;
+        constexpr static inline long min = windows_build ? -2147483648l : -9223372036854775807ll - 1ll;
         constexpr static inline long max = windows_build ? 2147483647l : 9223372036854775807l;
         constexpr static inline auto size = sizeof(long);
     };
@@ -118,7 +118,7 @@ namespace ARLib {
     template <>
     struct NumberTraits<long long> {
         constexpr static inline bool is_signed = true;
-        constexpr static inline long long min = -9223372036854775807ll-1ll;
+        constexpr static inline long long min = -9223372036854775807ll - 1ll;
         constexpr static inline long long max = 9223372036854775807ll;
         constexpr static inline auto size = sizeof(long long);
     };
@@ -159,6 +159,18 @@ namespace ARLib {
 #endif
         constexpr static inline auto size = sizeof(long double);
     };
+
+    template <typename T>
+        requires Integral<T> || FloatingPoint<T>
+    constexpr T max([[maybe_unused]] T val) {
+        return NumberTraits<RemoveCvRefT<T>>::max;
+    }
+
+    template <typename T>
+        requires Integral<T> || FloatingPoint<T>
+    constexpr T min([[maybe_unused]] T val) {
+        return NumberTraits<RemoveCvRefT<T>>::min;
+    }
 
 #ifdef COMPILER_CLANG
 #pragma clang diagnostic pop

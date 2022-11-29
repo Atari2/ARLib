@@ -15,59 +15,57 @@ namespace ARLib {
                     "Failed to convert string to double")
         return val;
     }
-    float StrViewToFloat(const StringView& str) { return static_cast<float>(StrViewToDouble(str)); }
-    double StrToDouble(const String& str) { return StrViewToDouble(str.view()); }
-    float StrToFloat(const String& str) { return StrViewToFloat(str.view()); }
-
-    float StrViewToFloat(const StringView str) { return static_cast<float>(StrViewToDouble(str)); }
+    float StrViewToFloat(const StringView str) {
+        return static_cast<float>(StrViewToDouble(str));
+    }
     double StrToDouble(const String& str) {
         return StrViewToDouble(str.view());
     }
-
     float StrToFloat(const String& str) {
         return StrViewToFloat(str.view());
     }
 
-    String DoubleToStr(double value) {
+    String DoubleToStrImpl(double value, const char* fmt) {
 #ifdef WINDOWS
-        const auto len = static_cast<size_t>(scprintf("%f", value));
+        const auto len = static_cast<size_t>(scprintf(fmt, value));
         String str{};
         str.reserve(len);
-        sprintf(str.rawptr(), "%f", value);
+        sprintf(str.rawptr(), fmt, value);
         str.set_size(len);
         return str;
 #else
         const int n = 308 /* numeric limits length for dbl */ + 20;
         String str{};
         str.reserve(n);
-        int written = snprintf(str.rawptr(), n, "%f", value);
+        int written = snprintf(str.rawptr(), n, fmt, value);
         HARD_ASSERT((written > 0), "Failed to write double to string");
         str.set_size(static_cast<size_t>(written));
         return str;
 #endif
     }
 
-    String LongDoubleToStr(long double value) {
+    String LongDoubleToStrImpl(long double value, const char* fmt) {
 #ifdef WINDOWS
-        return DoubleToStr(value);
+        return DoubleToStrImpl(value, fmt);
 #else
         const int n = 4932 /* numeric limits length for dbl */ + 20;
         String str{};
         str.reserve(n);
-        int written = snprintf(str.rawptr(), n, "%Lf", value);
+        int written = snprintf(str.rawptr(), n, fmt, value);
         HARD_ASSERT((written > 0), "Failed to write long double to string");
         str.set_size(static_cast<size_t>(written));
         return str;
 #endif
     }
-    String FloatToStr(float value) {
+
+    String FloatToStrImpl(float value, const char* fmt) {
 #ifdef WINDOWS
-        return DoubleToStr(static_cast<double>(value));
+        return DoubleToStrImpl(static_cast<double>(value), fmt);
 #else
         const int n = 38 /* numeric limits length for flt */ + 20;
         String str{};
         str.reserve(38);
-        int written = snprintf(str.rawptr(), n, "%f", static_cast<double>(value));
+        int written = snprintf(str.rawptr(), n, fmt, static_cast<double>(value));
         HARD_ASSERT((written > 0), "Failed to write float to string");
         str.set_size(static_cast<size_t>(written));
         return str;

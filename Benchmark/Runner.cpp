@@ -9,21 +9,21 @@ using namespace ARLib;
 
 static void BM_SomeFunction(benchmark::State& state) {
     for (auto _ : state) {
-        float val = 1234.1234;
+        double val = 1234.1234;
         const char* s = "my name is alessio";
         int hex = 0x50;
-        ARLib::uint64_t int64val = UINT64_MAX;
-        printf_impl("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val);
+        ARLib::int64_t int64val = INT64_MAX;
+        _printf("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }
 }
 
 static void BM_SomeFunctionStd(benchmark::State& state) {
     for (auto _ : state) {
-        float val = 1234.1234;
+        double val = 1234.1234;
         const char* s = "my name is alessio";
         int hex = 0x50;
-        ARLib::uint64_t int64val = UINT64_MAX;
+        ARLib::int64_t int64val = INT64_MAX;
         ::printf("Hello World %+10.4f %% %s %#02o %#02" PRIX64 " %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }

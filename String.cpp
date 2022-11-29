@@ -140,11 +140,11 @@ namespace ARLib {
     String::String(StringView other) : m_size(other.length()) {
         bool local = m_size <= SMALL_STRING_CAP;
         if (local) {
-            strcpy(m_local_buf, other.data());
+            strncpy(m_local_buf, other.data(), m_size);
             m_data_buf = local_data_internal();
         } else {
             m_data_buf = new char[m_size + 1];
-            strcpy(m_data_buf, other.data());
+            strncpy(m_data_buf, other.data(), m_size);
         }
     }
 

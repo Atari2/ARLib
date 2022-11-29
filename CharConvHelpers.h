@@ -80,7 +80,7 @@ namespace ARLib {
 
         // out of range check
         auto get_max_size = [&]() {
-            if constexpr (Signed)
+            if (Signed)
                 return max_int64_size;
             else
                 return max_uint64_size;
@@ -137,7 +137,7 @@ namespace ARLib {
         constexpr size_t max_int64_size = strlen("111111111111111111111111111111111111111111111111111111111111111");
         constexpr size_t max_uint64_size = strlen("1111111111111111111111111111111111111111111111111111111111111111");
         auto get_max_size = [&]() {
-            if constexpr (Signed)
+            if (Signed)
                 return max_int64_size;
             else
                 return max_uint64_size;
@@ -185,7 +185,7 @@ namespace ARLib {
         constexpr size_t max_uint64_size = strlen("1777777777777777777777");
 
         auto get_max_size = [&]() {
-            if constexpr (Signed)
+            if (Signed)
                 return max_int64_size;
             else
                 return max_uint64_size;
@@ -231,11 +231,10 @@ namespace ARLib {
         constexpr size_t max_int64_size = strlen("7fffffffffffffff");
         constexpr size_t max_uint64_size = strlen("ffffffffffffffff");
 
+        static_assert(max_int64_size == max_uint64_size);
+
         auto get_max_size = [&]() {
-            if constexpr (Signed)
-                return max_int64_size;
-            else
-                return max_uint64_size;
+            return max_uint64_size;
         };
 
         constexpr auto max_size = get_max_size();

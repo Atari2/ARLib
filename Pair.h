@@ -7,26 +7,30 @@
 namespace ARLib {
     template <typename T, typename U>
     struct Pair {
-        T m_first{};
-        U m_second{};
+        T _m_first{};
+        U _m_second{};
 
         constexpr Pair() = default;
-        constexpr Pair(const T& first, const U& second) : m_first(first), m_second(second) {}
-        constexpr Pair(T&& first, U&& second) : m_first(move(first)), m_second(move(second)) {}
+        constexpr Pair(const T& first, const U& second) : _m_first(first), _m_second(second) {}
+        constexpr Pair(T&& first, U&& second) : _m_first(move(first)), _m_second(move(second)) {}
 
         constexpr Pair(const Pair&) = default;
         constexpr Pair(Pair&&) noexcept = default;
         constexpr Pair& operator=(Pair&&) noexcept = default;
         constexpr Pair& operator=(const Pair&) = default;
 
-        constexpr bool operator==(const Pair& other) const { return m_first == other.m_first && m_second == other.m_second; }
-        constexpr bool operator!=(const Pair& other) const { return m_first != other.m_first || m_second != other.m_second; }
+        constexpr bool operator==(const Pair& other) const {
+            return _m_first == other._m_first && _m_second == other._m_second;
+        }
+        constexpr bool operator!=(const Pair& other) const {
+            return _m_first != other._m_first || _m_second != other._m_second;
+        }
 
-        constexpr T& first() { return m_first; }
-        constexpr U& second() { return m_second; }
+        constexpr T& first() { return _m_first; }
+        constexpr U& second() { return _m_second; }
 
-        constexpr const T& first() const { return m_first; }
-        constexpr const U& second() const { return m_second; }
+        constexpr const T& first() const { return _m_first; }
+        constexpr const U& second() const { return _m_second; }
 
         template <size_t Index>
         auto& get() & {
@@ -148,9 +152,11 @@ namespace ARLib {
         }
     };
 
-    template <typename T>
+    template <IteratorConcept Iter>
     class Enumerator {
-        Iterator<T> m_iter;
+        using T = decltype(*declval<Iter>());
+        using Rt = RemoveReferenceT<T>;
+        Iter m_iter;
         size_t m_index;
 
         using Unit = Pair<size_t, AddLvalueReferenceT<Rt>>;

@@ -5,6 +5,7 @@
 #include "Concepts.h"
 #include "Conversion.h"
 #include "Pair.h"
+#include "PrintInfo.h"
 #include "StringView.h"
 
 namespace ARLib {
@@ -66,7 +67,8 @@ namespace ARLib {
             return "";
         }
         template <Enum T>
-        requires(!get_enum_full_string<T>({}).empty()) constexpr auto construct_enum_array(TagType<T>) {
+            requires(!get_enum_full_string<T>({}).empty())
+        constexpr auto construct_enum_array(TagType<T>) {
             constexpr StringView view = get_enum_full_string<T>({});
             Array<Pair<StringView, T>, count_enum_values(view)> enum_map_l;
             UnderlyingTypeT<T> current_val{};
@@ -118,14 +120,15 @@ namespace ARLib {
             return map;
         }
         template <Enum T>
-        requires(requires { construct_enum_array<T>({}); }) struct EnumMapProvider {
+            requires(requires { construct_enum_array<T>({}); })
+        struct EnumMapProvider {
             constexpr static auto enum_array = construct_enum_array<T>({});
             constexpr static auto map = construct_enum_map<T>(enum_array);
         };
         template <typename T>
         concept EnumSupportsMap = Enum<T> && requires {
-            {EnumMapProvider<T>{}};
-        };
+                                                 { EnumMapProvider<T>{} };
+                                             };
         template <EnumSupportsMap T>
         class EnumIterator {
             size_t index = 0;
@@ -209,7 +212,8 @@ namespace ARLib {
         return ForEachEnum<T>{};
     }
     template <EnumHelpers::EnumSupportsMap T, typename Functor>
-    requires(requires { declval<Functor>()(declval<T>()); }) constexpr auto for_each_enum(Functor func) {
+        requires(requires { declval<Functor>()(declval<T>()); })
+    constexpr auto for_each_enum(Functor func) {
         using Res = InvokeResultT<Functor, T>;
         if constexpr (IsVoid<Res>::value) {
             for (auto val : ForEachEnum<T>{}) {
@@ -225,7 +229,7 @@ namespace ARLib {
         }
     }
 #define ENUM_TO_STR(en, ...)                                                                                           \
-    namespace ARLib::EnumHelpers {                                                                                     \
+    namespace EnumHelpers {                                                                                            \
         template <>                                                                                                    \
         constexpr StringView get_enum_full_string(TagType<en>) {                                                       \
             return #__VA_ARGS__;                                                                                       \
@@ -237,34 +241,20 @@ namespace ARLib {
     ENUM_TO_STR(en, __VA_ARGS__)
 
 #define BITFIELD_ENUM_OP_OR(E)                                                                                         \
-    auto operator|(E self, E other) {                                                                                  \
-        return UpCast<E>(ToUnderlying(self) | ToUnderlying(other));                                                    \
-    }
+    auto operator|(E self, E other) { return UpCast<E>(ToUnderlying(self) | ToUnderlying(other)); }
 #define BITFIELD_ENUM_OP_AND(E)                                                                                        \
-    auto operator&(E self, E other) {                                                                                  \
-        return UpCast<E>(ToUnderlying(self) & ToUnderlying(other));                                                    \
-    }
+    auto operator&(E self, E other) { return UpCast<E>(ToUnderlying(self) & ToUnderlying(other)); }
 
 #define BITFIELD_ENUM_OP_NONE(E)                                                                                       \
-    auto operator!(E self) {                                                                                           \
-        return self == E::None;                                                                                        \
-    }
+    auto operator!(E self) { return self == E::None; }
 #define BITFIELD_ENUM_OP_LOG_AND(E)                                                                                    \
-    auto operator&&(E self, E other) {                                                                                 \
-        return ToUnderlying(self) && ToUnderlying(other);                                                              \
-    }
+    auto operator&&(E self, E other) { return ToUnderlying(self) && ToUnderlying(other); }
 #define BITFIELD_ENUM_OP_LOG_OR(E)                                                                                     \
-    auto operator||(E self, E other) {                                                                                 \
-        return ToUnderlying(self) || ToUnderlying(other);                                                              \
-    }
+    auto operator||(E self, E other) { return ToUnderlying(self) || ToUnderlying(other); }
 #define BITFIELD_ENUM_OP_XOR(E)                                                                                        \
-    auto operator^(E self, E other) {                                                                                  \
-        return UpCast<E>(ToUnderlying(self) ^ ToUnderlying(other));                                                    \
-    }
+    auto operator^(E self, E other) { return UpCast<E>(ToUnderlying(self) ^ ToUnderlying(other)); }
 #define BITFIELD_ENUM_OP_NOT(E)                                                                                        \
-    auto operator~(E self) {                                                                                           \
-        return UpCast<E>(~ToUnderlying(self));                                                                         \
-    }
+    auto operator~(E self) { return UpCast<E>(~ToUnderlying(self)); }
 
 #define MAKE_BITFIELD_ENUM(E)                                                                                          \
     BITFIELD_ENUM_OP_OR(E)                                                                                             \
@@ -274,4 +264,11 @@ namespace ARLib {
     BITFIELD_ENUM_OP_LOG_OR(E)                                                                                         \
     BITFIELD_ENUM_OP_XOR(E)                                                                                            \
     BITFIELD_ENUM_OP_NOT(E)
+
+    template <EnumHelpers::EnumSupportsMap E>
+    struct PrintInfo<E> {
+        E m_val;
+        PrintInfo(E val) : m_val(val) {}
+        String repr() const { return enum_to_str(m_val); }
+    };
 } // namespace ARLib

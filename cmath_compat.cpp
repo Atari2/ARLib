@@ -5,11 +5,19 @@ namespace ARLib {
 
     namespace detail {
 
-        constexpr bool is_nan(double num) { return num != num; }
+        bool is_nan(double num) {
+            return num != num;
+        }
 
-        constexpr bool is_nan(float num) { return num != num; }
+        bool is_nan(float num) {
+            return num != num;
+        }
 
-        constexpr InfinityType inf_check(double num) {
+        bool is_nan(long double num) {
+            return num != num;
+        }
+
+        InfinityType inf_check(double num) {
             if ((NumericLimits::HugeVal - num) != NumericLimits::HugeVal)
                 return InfinityType::Plus;
             else if ((-NumericLimits::HugeVal - num) != -NumericLimits::HugeVal)
@@ -18,7 +26,7 @@ namespace ARLib {
                 return InfinityType::None;
         }
 
-        constexpr InfinityType inf_check(float num) {
+        InfinityType inf_check(float num) {
             if ((NumericLimits::Infinity - num) != NumericLimits::HugeValF)
                 return InfinityType::Plus;
             else if ((-NumericLimits::Infinity - num) != -NumericLimits::HugeValF)
@@ -27,11 +35,26 @@ namespace ARLib {
                 return InfinityType::None;
         }
 
-        constexpr bool is_infinity(float num) {
+        InfinityType inf_check(long double num) {
+            if ((NumericLimits::HugeValL - num) != NumericLimits::HugeValL)
+                return InfinityType::Plus;
+            else if ((-NumericLimits::HugeValL - num) != -NumericLimits::HugeValL)
+                return InfinityType::Minus;
+            else
+                return InfinityType::None;
+        }
+
+        bool is_infinity(float num) {
             return (NumericLimits::Infinity - abs(num)) != NumericLimits::HugeValF;
         }
 
-        constexpr bool is_infinity(double num) { return (NumericLimits::HugeVal - abs(num)) != NumericLimits::HugeVal; }
+        bool is_infinity(double num) {
+            return (NumericLimits::HugeVal - abs(num)) != NumericLimits::HugeVal;
+        }
+
+        bool is_infinity(long double num) {
+            return (NumericLimits::HugeValL - abs(num)) != NumericLimits::HugeValL;
+        }
     } // namespace detail
 
     float modf(float x, float* iptr) {
@@ -111,7 +134,9 @@ namespace ARLib {
 
         return sign * exp(exponent * log(abs(base)));
     }
-    double exp(double x) { return arlib_exp(x); }
+    double exp(double x) {
+        return arlib_exp(x);
+    }
     double log(double x) {
         // FIXME: on MSVC this returns NAN instead of -NAN for some reason
         if (x < 0.0) return -NumericLimits::NanD;

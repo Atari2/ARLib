@@ -148,7 +148,7 @@ namespace ARLib {
     String ArgParser::construct_help_string() const {
         String builder{};
         builder +=
-        Printer::format("{}, Version: {}.{}\n", m_program_name, (int)m_version_edition, (int)m_version_partial);
+        Printer::format("{}, Version: {}.{}\n", m_program_name, static_cast<int>(m_version_edition), static_cast<int>(m_version_partial));
         if (m_usage_string.size() == 0) {
             builder += "Usage: "_s + m_program_name + " <options> "_s;
             if (m_leftover_args_needed > 0) {

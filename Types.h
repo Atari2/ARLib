@@ -35,8 +35,35 @@ namespace ARLib {
 #else
 #error "This library is 64-bit only"
 #endif
+
+    template <typename A, typename B, size_t N>
+    struct __SizePickerImpl {
+        
+    };
+
+    template <typename A, typename B>
+    struct __SizePickerImpl<A, B, 8> {
+        using Type = A;
+    };
+
+   template <typename A, typename B>
+    struct __SizePickerImpl<A, B, 4> {
+        using Type = B;
+    };
+    
+    struct __I64BitPicker {
+        using Type = __SizePickerImpl<long, long long, 8>::Type;
+    };
+
+    struct __U64BitPicker {
+        using Type = __SizePickerImpl<unsigned long, unsigned long long, 8>::Type;
+    };
+
+    using __I64BitPickerT = __I64BitPicker::Type;
+    using __U64BitPickerT = __U64BitPicker::Type;
+
     static_assert(sizeof(long long) == 8);
-    typedef unsigned long long uint64_t;
+    typedef __U64BitPickerT uint64_t;
 
     static_assert(sizeof(int) == 4);
     typedef unsigned int uint32_t;
@@ -47,7 +74,7 @@ namespace ARLib {
     static_assert(sizeof(char) == 1);
     typedef unsigned char uint8_t;
 
-    typedef long long int64_t;
+    typedef __I64BitPickerT int64_t;
     typedef int int32_t;
     typedef short int16_t;
     typedef char int8_t;

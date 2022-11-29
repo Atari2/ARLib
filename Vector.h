@@ -321,7 +321,7 @@ namespace ARLib {
         }
 
         Iter remove(Iter it) {
-            size_t idx = (&*it) - m_storage;
+            size_t idx = static_cast<size_t>((&*it) - m_storage);
             remove_at(idx);
             return Iterator{m_storage + idx};
         }

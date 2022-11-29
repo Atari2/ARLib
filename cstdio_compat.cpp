@@ -76,7 +76,11 @@ namespace ARLib {
 #ifdef WINDOWS
         return Win32SizeFile(fp);
 #else
-        return 0;
+        auto cur = ARLib::ftell(fp);
+        ARLib::fseek(fp, SEEK_END, 0);
+        auto size = ARLib::ftell(fp);
+        ARLib::fseek(fp, SEEK_SET, cur);
+        return size;
 #endif
     }
 
@@ -134,7 +138,7 @@ namespace ARLib {
 
     int fputs(const char* buf, FILE* fp) {
 #ifdef WINDOWS
-        return WriteStringFileGeneric(buf, fp);
+        return static_cast<int>(WriteStringFileGeneric(buf, fp));
 #else
         return ::fputs(buf, fp);
 #endif

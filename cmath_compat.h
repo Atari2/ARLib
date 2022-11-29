@@ -6,12 +6,15 @@
 namespace ARLib {
     namespace detail {
         enum class InfinityType : uint8_t { None, Plus, Minus };
-        constexpr bool is_nan(double num);
-        constexpr bool is_nan(float num);
-        constexpr InfinityType inf_check(double num);
-        constexpr InfinityType inf_check(float num);
-        constexpr bool is_infinity(double num);
-        constexpr bool is_infinity(float num);
+        bool is_nan(double num);
+        bool is_nan(float num);
+        bool is_nan(long double num);
+        InfinityType inf_check(double num);
+        InfinityType inf_check(float num);
+        InfinityType inf_check(long double num);
+        bool is_infinity(double num);
+        bool is_infinity(float num);
+        bool is_infinity(long double num);
     } // namespace detail
 
     namespace NumericLimits {

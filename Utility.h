@@ -131,13 +131,13 @@ namespace ARLib {
             }
             cc >>= 1;
         } while (cc != 0);
-        return static_cast<int>(nn) - static_cast<int>(val);
+        return static_cast<T>(nn) - static_cast<T>(val);
     }
 
     constexpr auto BitCeil(Integral auto val) noexcept {
         using T = decltype(val);
         if (val <= 1u) { return T{1}; }
-        const int n = (sizeof(T) * 8) - CountLZero(static_cast<T>(val - 1));
+        const T n = (sizeof(T) * 8) - CountLZero(static_cast<T>(val - 1));
         return static_cast<T>(T{1} << n);
     }
 

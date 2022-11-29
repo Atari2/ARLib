@@ -131,8 +131,8 @@ namespace ARLib {
                     trace.append_frame(message, len, false);
                 } else {
                     constexpr size_t len = sizeof_array("`%s` in %s at [%d]:[%d]");
-                    size_t number_len = StrLenFromIntegral(line.LineNumber);
-                    size_t displ_len = StrLenFromIntegral(displ);
+                    size_t number_len = StrLenFromIntegral<10>(line.LineNumber);
+                    size_t displ_len = StrLenFromIntegral<10>(displ);
                     size_t total_length =
                     psymbol->NameLen + ARLib::strlen(line.FileName) + number_len + displ_len + len;
                     char* backtrace_msg = new char[total_length];

@@ -186,7 +186,7 @@ namespace ARLib {
         }
 
         [[nodiscard]] String substring(size_t first = 0, size_t last = npos) const {
-            if (last == npos) last = length();
+            if (last == npos || last > length()) last = length();
             return String{get_buf_internal() + first, get_buf_internal() + last};
         }
         [[nodiscard]] StringView view();

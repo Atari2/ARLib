@@ -21,7 +21,7 @@ namespace ARLib {
     }
 #endif
 
-    forceinline size_t first_zero_bit(uint32_t value) {
+    size_t first_zero_bit(uint32_t value) {
 #ifdef COMPILER_MSVC
         if (cpuinfo.bmi()) {
             return static_cast<size_t>(_tzcnt_u32(value));
@@ -33,7 +33,7 @@ namespace ARLib {
 #endif
     }
 
-    forceinline size_t zerobyteidx(__m256i value) {
+    size_t zerobyteidx(__m256i value) {
         int mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(_mm256_setzero_si256(), value));
         if (mask == 0) return sizeof(__m256i);
         return first_zero_bit(static_cast<uint32_t>(mask));
