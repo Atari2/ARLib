@@ -8,6 +8,18 @@
 
 namespace ARLib {
 
+    struct SetupUTF8Output {
+        SetupUTF8Output() {
+            _set_printf_count_output(1);
+            UINT cp = GetConsoleCP();
+            if (cp != CP_UTF8) {
+                HARD_ASSERT(SetConsoleOutputCP(CP_UTF8), "Failed to initialize CP_UTF8 console output");
+            }
+        }
+    };
+
+    SetupUTF8Output __utf8Set{};
+
     static bool GenericWrite(HANDLE hFile, LPCVOID buffer, DWORD nBytes, LPDWORD bytesWritten) {
         return WriteFile(hFile, buffer, nBytes, bytesWritten, nullptr);
     }
