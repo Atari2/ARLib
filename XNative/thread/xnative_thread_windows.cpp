@@ -1,6 +1,7 @@
 #define INCLUDED_FROM_OWN_CPP___
 #include "xnative_thread_windows.h"
 #ifdef WINDOWS
+#include "../../EnumHelpers.h"
 #include "../../Conversion.h"
 #include "../../TypeTraits.h"
 #include "../../cstring_compat.h"
@@ -12,6 +13,9 @@
 #include <xthreads.h>
 
 namespace ARLib {
+
+    
+    MAKE_BITFIELD_ENUM(MutexType);
 
     static_assert(sizeof(mutex_internal_imp_t) <= Mutex_internal_imp_size, "incorrect size of mutex implementation");
     static_assert(alignof(mutex_internal_imp_t) <= Mutex_internal_imp_alignment,
@@ -84,7 +88,7 @@ namespace ARLib {
     }
 
     static ThreadState mtx_do_lock(MutexHandle mutex, const XTime* target) {
-        if (to_enum<MutexType>((mutex->type & ~from_enum(MutexType::Recursive))) == MutexType::Plain) {
+        if ((to_enum<MutexType>((mutex->type & ~from_enum(MutexType::Recursive))) & MutexType::Plain) != MutexType::None) {
             if (mutex->thread_id != static_cast<long>(GetCurrentThreadId())) {
                 mutex->_get_cs()->lock();
                 mutex->thread_id = static_cast<long>(GetCurrentThreadId());
@@ -228,7 +232,7 @@ namespace ARLib {
     void __cdecl cond_init_in_situ(CondHandle condition) { ConditionVariable::Create(condition->_get_cv()); }
     void __cdecl cond_destroy_in_situ(CondHandle condition) { condition->_get_cv()->destroy(); }
     ThreadState __cdecl cond_wait(CondHandle condition, MutexHandle mutex) {
-        const auto cs = static_cast<CriticalSection::Interface*>(mutex_getconcrtcs(mutex));
+        const auto cs = static_cast<CriticalSection*>(mutex_getconcrtcs(mutex));
         mutex_clear_owner(mutex);
         condition->_get_cv()->wait(cs);
         mutex_reset_owner(mutex);
@@ -236,7 +240,7 @@ namespace ARLib {
     }
     ThreadState __cdecl cond_timedwait(CondHandle condition, MutexHandle mutex, const XTime* target) {
         ThreadState res = ThreadState::Success;
-        const auto cs = static_cast<CriticalSection::Interface*>(mutex_getconcrtcs(mutex));
+        const auto cs = static_cast<CriticalSection*>(mutex_getconcrtcs(mutex));
         if (target == nullptr) {
             mutex_clear_owner(mutex);
             condition->_get_cv()->wait(cs);

@@ -13,122 +13,67 @@ namespace ARLib {
     static_assert(alignof(win32_struct) == alignof(arlib_struct),                                                      \
                   "Alignment of struct " #arlib_struct " is wrong when compared to the original " #win32_struct)
 
-    VERIFY_WIN32_STRUCT(CRITICAL_SECTION, CriticalSection::CriticalSectionT);
-    VERIFY_WIN32_STRUCT(LIST_ENTRY, CriticalSection::ListEntry);
-    VERIFY_WIN32_STRUCT(CRITICAL_SECTION_DEBUG, CriticalSection::CriticalSectionDebugT);
-    VERIFY_WIN32_STRUCT(SRWLOCK, CriticalSection::SRWLock);
-    VERIFY_WIN32_STRUCT(CONDITION_VARIABLE, ConditionVariable::ConditionVariable);
+    VERIFY_WIN32_STRUCT(CRITICAL_SECTION, internal::CriticalSectionT);
+    VERIFY_WIN32_STRUCT(LIST_ENTRY, internal::ListEntry);
+    VERIFY_WIN32_STRUCT(CRITICAL_SECTION_DEBUG, internal::CriticalSectionDebugT);
+    VERIFY_WIN32_STRUCT(SRWLOCK, internal::SRWLock);
+    VERIFY_WIN32_STRUCT(CONDITION_VARIABLE, internal::ConditionVariable);
 
-    SyncApiModes SyncApiImplMode = SyncApiModes::Normal;
+    CriticalSection::CriticalSection() {
+        InitializeSRWLock(cast<::PSRWLOCK>(&m_srw_lock));
+    }
 
-    namespace CriticalSection {
+    void CriticalSection::destroy() {}
 
-        Vista::Vista() { InitializeCriticalSectionEx(cast<::LPCRITICAL_SECTION>(&m_critical_section), 4000, 0); }
-        void Vista::destroy() { DeleteCriticalSection(cast<::LPCRITICAL_SECTION>(&m_critical_section)); }
+    void CriticalSection::lock() {
+        AcquireSRWLockExclusive(cast<::PSRWLOCK>(&m_srw_lock));
+    }
 
-        void Vista::lock() { EnterCriticalSection(cast<::LPCRITICAL_SECTION>(&m_critical_section)); }
+    bool CriticalSection::try_lock() {
+        return TryAcquireSRWLockExclusive(cast<::PSRWLOCK>(&m_srw_lock)) != 0;
+    }
 
-        bool Vista::try_lock() { return TryEnterCriticalSection(cast<::LPCRITICAL_SECTION>(&m_critical_section)) != 0; }
+    bool CriticalSection::try_lock_for(unsigned int) {
+        return CriticalSection::try_lock();
+    }
 
-        bool Vista::try_lock_for(unsigned int) { return Vista::try_lock(); }
+    void CriticalSection::unlock() {
+        ReleaseSRWLockExclusive(cast<::PSRWLOCK>(&m_srw_lock));
+    }
 
-        void Vista::unlock() { LeaveCriticalSection(cast<::LPCRITICAL_SECTION>(&m_critical_section)); }
+    internal::SRWLockPtr CriticalSection::native_handle() {
+        return &m_srw_lock;
+    }
 
-        CriticalSectionPtr Vista::native_handle() { return &m_critical_section; }
+    void CriticalSection::Create(CriticalSection* cs) {
+        new (cs) CriticalSection;
+    }
 
-        Win7::Win7() { InitializeSRWLock(cast<::PSRWLOCK>(&m_srw_lock)); }
+    ConditionVariable::ConditionVariable() {
+        InitializeConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable));
+    }
 
-        void Win7::destroy() {}
+    void ConditionVariable::destroy() {}
 
-        void Win7::lock() { AcquireSRWLockExclusive(cast<::PSRWLOCK>(&m_srw_lock)); }
+    void ConditionVariable::wait(CriticalSection* lock) {
+        if (!ConditionVariable::wait_for(lock, INFINITE)) { abort_arlib(); }
+    }
 
-        bool Win7::try_lock() { return TryAcquireSRWLockExclusive(cast<::PSRWLOCK>(&m_srw_lock)) != 0; }
+    bool ConditionVariable::wait_for(CriticalSection* lock, unsigned int timeout) {
+        return SleepConditionVariableSRW(cast<::PCONDITION_VARIABLE>(&m_condition_variable),
+                                         cast<::PSRWLOCK>(lock->native_handle()), timeout, 0) != 0;
+    }
 
-        bool Win7::try_lock_for(unsigned int) { return Win7::try_lock(); }
+    void ConditionVariable::notify_one() {
+        WakeConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable));
+    }
 
-        void Win7::unlock() { ReleaseSRWLockExclusive(cast<::PSRWLOCK>(&m_srw_lock)); }
+    void ConditionVariable::notify_all() {
+        WakeAllConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable));
+    }
 
-        SRWLockPtr Win7::native_handle() { return &m_srw_lock; }
+    void ConditionVariable::Create(ConditionVariable* cond) {
+        new (cond) ConditionVariable;
+    }
 
-        void Create(Interface* p) {
-#ifdef _CRT_WINDOWS
-            new (p) Win7;
-#else
-            switch (SyncApiImplMode) {
-            case SyncApiModes::Normal:
-            case SyncApiModes::Win7:
-                if (are_win7_sync_apis_available()) {
-                    new (p) Win7;
-                    return;
-                }
-            case SyncApiModes::Vista:
-                new (p) Vista;
-                return;
-            default:
-                abort_arlib();
-            }
-#endif
-        }
-
-    } // namespace CriticalSection
-
-    namespace ConditionVariable {
-        Vista::Vista() { InitializeConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable)); }
-
-        void Vista::destroy() {}
-
-        void Vista::wait(CriticalSection::Interface* lock) {
-            if (!Vista::wait_for(lock, INFINITE)) { abort_arlib(); }
-        }
-
-        bool Vista::wait_for(CriticalSection::Interface* lock, unsigned int timeout) {
-            return SleepConditionVariableCS(
-                   cast<::PCONDITION_VARIABLE>(&m_condition_variable),
-                   cast<::LPCRITICAL_SECTION>(static_cast<CriticalSection::Vista*>(lock)->native_handle()),
-                   timeout) != 0;
-        }
-
-        void Vista::notify_one() { WakeConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable)); }
-
-        void Vista::notify_all() { WakeAllConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable)); }
-
-        Win7::Win7() { InitializeConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable)); }
-
-        void Win7::destroy() {}
-
-        void Win7::wait(CriticalSection::Interface* lock) {
-            if (!Win7::wait_for(lock, INFINITE)) { abort_arlib(); }
-        }
-
-        bool Win7::wait_for(CriticalSection::Interface* lock, unsigned int timeout) {
-            return SleepConditionVariableSRW(
-                   cast<::PCONDITION_VARIABLE>(&m_condition_variable),
-                   cast<::PSRWLOCK>(static_cast<CriticalSection::Win7*>(lock)->native_handle()), timeout, 0) != 0;
-        }
-
-        void Win7::notify_one() { WakeConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable)); }
-
-        void Win7::notify_all() { WakeAllConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable)); }
-
-        void Create(Interface* p) {
-#ifdef _CRT_WINDOWS
-            new (p) Win7;
-#else
-            switch (SyncApiImplMode) {
-            case SyncApiModes::Normal:
-            case SyncApiModes::Win7:
-                if (CriticalSection::are_win7_sync_apis_available()) {
-                    new (p) Win7;
-                    return;
-                }
-            case SyncApiModes::Vista:
-                new (p) Vista;
-                return;
-            default:
-                abort_arlib();
-            }
-#endif
-        }
-
-    } // namespace ConditionVariable
 } // namespace ARLib

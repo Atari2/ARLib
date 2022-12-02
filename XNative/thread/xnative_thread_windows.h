@@ -28,7 +28,7 @@ namespace ARLib {
     using SharedMutex = void*;
 
     enum class ThreadState { Success, Nomem, Timeout, Busy, Error };
-    enum class MutexType { Plain = 0x01, Try = 0x02, Timed = 0x04, Recursive = 0x100 };
+    enum class MutexType { None = 0x00, Plain = 0x01, Try = 0x02, Timed = 0x04, Recursive = 0x100 };
 
     ThreadState __cdecl thread_detach(ThreadHandle);
     ThreadState __cdecl thread_join(ThreadHandle, int*);
