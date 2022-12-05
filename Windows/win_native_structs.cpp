@@ -6,7 +6,6 @@
 #include <windows.h>
 
 namespace ARLib {
-
 #define VERIFY_WIN32_STRUCT(win32_struct, arlib_struct)                                                                \
     static_assert(sizeof(win32_struct) == sizeof(arlib_struct),                                                        \
                   "Size of struct " #arlib_struct " is wrong when compared to the original " #win32_struct);           \

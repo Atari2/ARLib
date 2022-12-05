@@ -1,6 +1,7 @@
 #include "cstdio_compat.h"
 #include "Assertion.h"
 #include "arlib_osapi.h"
+#include "PrintfImpl.h"
 #include <cstdarg>
 #include <cstdio>
 #ifdef WINDOWS
@@ -147,32 +148,36 @@ namespace ARLib {
     int printf(const char* fmt, ...) {
         va_list argptr{};
         va_start(argptr, fmt);
-        auto ret = ::vprintf(fmt, argptr);
+        auto ret = _vsprintf(fmt, argptr);
+        ARLib::fwrite(ret.result.data(), sizeof(char), ret.result.size(), stdout);
         va_end(argptr);
-        return ret;
+        return ret.written_arguments;
     }
 
     int fprintf(FILE* fp, const char* fmt, ...) {
         va_list argptr{};
         va_start(argptr, fmt);
-        auto ret = ::vfprintf(fp, fmt, argptr);
+        auto ret = _vsprintf(fmt, argptr);
+        ARLib::fwrite(ret.result.data(), sizeof(char), ret.result.size(), fp);
         va_end(argptr);
-        return ret;
+        return ret.written_arguments;
     }
 
     int sprintf(char* str, const char* format, ...) {
         va_list argptr{};
         va_start(argptr, format);
-        auto ret = ::vsprintf(str, format, argptr);
+        auto ret = _vsprintf(format, argptr);
+        ARLib::strncpy(str, ret.result.data(), ret.result.size());
         va_end(argptr);
-        return ret;
+        return ret.result.size();
     }
     int snprintf(char* str, size_t n, const char* format, ...) {
         va_list argptr{};
         va_start(argptr, format);
-        auto ret = ::vsnprintf(str, n, format, argptr);
+        auto ret = _vsprintf(format, argptr);
+        ARLib::strncpy(str, ret.result.data(), n);
         va_end(argptr);
-        return ret;
+        return ret.result.size();
     }
     int scprintf(const char* format, ...) {
         va_list argptr{};

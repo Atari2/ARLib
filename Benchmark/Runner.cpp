@@ -13,7 +13,7 @@ static void BM_SomeFunction(benchmark::State& state) {
         const char* s = "my name is alessio";
         int hex = 0x50;
         ARLib::int64_t int64val = INT64_MAX;
-        _printf("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val);
+        ARLib::printf("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }
 }
