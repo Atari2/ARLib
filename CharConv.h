@@ -14,29 +14,32 @@ namespace ARLib {
     
     enum class FloatFmtOpt : uint8_t { f, F, g, G, e, E };
 
-    String DoubleToStrImpl(double value, const char* fmt);
-    String LongDoubleToStrImpl(long double value, const char* fmt);
-    String FloatToStrImpl(float value, const char* fmt);
+    String DoubleToStrImpl(double value, const char* fmt, int precision);
+    String LongDoubleToStrImpl(long double value, const char* fmt, int precision);
+    String FloatToStrImpl(float value, const char* fmt, int precision);
 
     template <FloatFmtOpt Format = FloatFmtOpt::f>
-    String DoubleToStr(double value) {
+    String DoubleToStr(double value, int precision = 6) {
+        // e = scientific
+        // f = fixed
+        // g = general
         constexpr const char* const fmt_opts[]{"%f", "%F", "%g", "%G", "%e", "%E"};
         constexpr const char* const fmt = fmt_opts[static_cast<uint8_t>(Format)];
-        return DoubleToStrImpl(value, fmt);
+        return DoubleToStrImpl(value, fmt, precision);
     }
 
     template <FloatFmtOpt Format = FloatFmtOpt::f>
-    String LongDoubleToStr(long double value) {
+    String LongDoubleToStr(long double value, int precision = 6) {
         constexpr const char* const fmt_opts[]{"%Lf", "%LF", "%Lg", "%LG", "%Le", "%LE"};
         constexpr const char* const fmt = fmt_opts[static_cast<uint8_t>(Format)];
-        return LongDoubleToStrImpl(value, fmt);
+        return LongDoubleToStrImpl(value, fmt, precision);
 
     }
     template <FloatFmtOpt Format = FloatFmtOpt::f>
-    String FloatToStr(float value) {
+    String FloatToStr(float value, int precision = 6) {
         constexpr const char* const fmt_opts[]{"%f", "%F", "%g", "%G", "%e", "%E"};
         constexpr const char* const fmt = fmt_opts[static_cast<uint8_t>(Format)];
-        return FloatToStrImpl(value, fmt);
+        return FloatToStrImpl(value, fmt, precision);
     }
 
 #ifdef COMPILER_GCC

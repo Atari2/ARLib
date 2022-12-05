@@ -25,51 +25,38 @@ namespace ARLib {
         return StrViewToFloat(str.view());
     }
 
-    String DoubleToStrImpl(double value, const char* fmt) {
-#ifdef WINDOWS
-        const auto len = static_cast<size_t>(scprintf(fmt, value));
+    String DoubleToStrImpl(double value, const char* fmt, int precision) {
+        const auto len = static_cast<size_t>(scprintf(fmt, value)) + static_cast<size_t>(precision);
         String str{};
         str.reserve(len);
-        sprintf(str.rawptr(), fmt, value);
-        str.set_size(len);
-        return str;
-#else
-        const int n = 308 /* numeric limits length for dbl */ + 20;
-        String str{};
-        str.reserve(n);
-        int written = snprintf(str.rawptr(), n, fmt, value);
-        HARD_ASSERT((written > 0), "Failed to write double to string");
-        str.set_size(static_cast<size_t>(written));
-        return str;
-#endif
+        char fmtc = ARLib::tolower(fmt[1]);
+        bool upper = fmtc != fmt[1];
+        std::chars_format char_format[]{std::chars_format::scientific, std::chars_format::fixed,
+                                        std::chars_format::general};
+        char* ptr = str.rawptr();
+        auto ec = std::to_chars(ptr, ptr + len, value, char_format[fmtc - 'e'], precision);
+        size_t wrlen = static_cast<size_t>(ec.ptr - str.rawptr());
+        str.set_size(wrlen);
+        return upper ? str.upper() : str;
     }
 
-    String LongDoubleToStrImpl(long double value, const char* fmt) {
-#ifdef WINDOWS
-        return DoubleToStrImpl(value, fmt);
-#else
-        const int n = 4932 /* numeric limits length for dbl */ + 20;
+    String LongDoubleToStrImpl(long double value, const char* fmt, int precision) {
+        const auto len = static_cast<size_t>(scprintf(fmt, value)) + static_cast<size_t>(precision);
         String str{};
-        str.reserve(n);
-        int written = snprintf(str.rawptr(), n, fmt, value);
-        HARD_ASSERT((written > 0), "Failed to write long double to string");
-        str.set_size(static_cast<size_t>(written));
-        return str;
-#endif
+        str.reserve(len);
+        char fmtc  = ARLib::tolower(fmt[1]);
+        bool upper = fmtc != fmt[1];
+        std::chars_format char_format[]{ std::chars_format::scientific, std::chars_format::fixed,
+                                         std::chars_format::general };
+        char* ptr    = str.rawptr();
+        auto ec      = std::to_chars(ptr, ptr + len, value, char_format[fmtc - 'e'], precision);
+        size_t wrlen = static_cast<size_t>(ec.ptr - str.rawptr());
+        str.set_size(wrlen);
+        return upper ? str.upper() : str;
     }
 
-    String FloatToStrImpl(float value, const char* fmt) {
-#ifdef WINDOWS
-        return DoubleToStrImpl(static_cast<double>(value), fmt);
-#else
-        const int n = 38 /* numeric limits length for flt */ + 20;
-        String str{};
-        str.reserve(38);
-        int written = snprintf(str.rawptr(), n, fmt, static_cast<double>(value));
-        HARD_ASSERT((written > 0), "Failed to write float to string");
-        str.set_size(static_cast<size_t>(written));
-        return str;
-#endif
+    String FloatToStrImpl(float value, const char* fmt, int precision) {
+        return DoubleToStrImpl(value, fmt, precision);
     }
 
 } // namespace ARLib
