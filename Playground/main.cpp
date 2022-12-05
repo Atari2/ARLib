@@ -9,22 +9,19 @@
 #include <stdio.h>
 
 using namespace ARLib;
-
 void double_tests() {
     double v = 25.65;
 
     ::printf("%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
     ARLib::printf("%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
 }
-
 #define PRINT_CHECK(expr) Printer::print(#expr ": {}", expr);
-
 int main() {
-    double val = 1234.1234;
+    double val    = 1234.1234;
     const char* s = "my name is alessio";
-    int hex = 0x50;
-    String buf = "狗"_s;
-    String s2 = "smör"_s;
+    int hex       = 0x50;
+    String buf    = "狗"_s;
+    String s2     = "smör"_s;
     PRINT_CHECK("abababc"_s.index_of("ababc"));
     PRINT_CHECK("åäåäåäö"_s.index_of("åäåäö"));
     PRINT_CHECK(s2.index_of("ö"));

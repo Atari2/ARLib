@@ -5,189 +5,175 @@
 #include <cstdarg>
 #include <cstdio>
 #ifdef WINDOWS
-#include "Windows/win_native_io.h"
+    #include "Windows/win_native_io.h"
 #endif
 namespace ARLib {
-
-    int remove(const char* filename) {
+int remove(const char* filename) {
 #ifdef WINDOWS
-        return Win32DeleteFile(filename);
+    return Win32DeleteFile(filename);
 #else
-        return ::remove(filename);
+    return ::remove(filename);
 #endif
-    }
-    int rename(const char* old_filename, const char* new_filename) {
+}
+int rename(const char* old_filename, const char* new_filename) {
 #ifdef WINDOWS
-        return Win32RenameFile(old_filename, new_filename);
+    return Win32RenameFile(old_filename, new_filename);
 #else
-        return ::rename(old_filename, new_filename);
+    return ::rename(old_filename, new_filename);
 #endif
-    }
-
-    int fscanf(FILE* fp, const char* format, ...) {
-        va_list argptr{};
-        va_start(argptr, format);
-        auto ret = ::vfscanf(fp, format, argptr);
-        va_end(argptr);
-        return ret;
-    }
-    int scanf(const char* format, ...) {
-        va_list argptr{};
-        va_start(argptr, format);
-        auto ret = ::vscanf(format, argptr);
-        va_end(argptr);
-        return ret;
-    }
-    int sscanf(const char* str, const char* format, ...) {
-        va_list argptr{};
-        va_start(argptr, format);
-        auto ret = ::vsscanf(str, format, argptr);
-        va_end(argptr);
-        return ret;
-    }
-    int fgetc(FILE* fp) {
+}
+int fscanf(FILE* fp, const char* format, ...) {
+    va_list argptr{};
+    va_start(argptr, format);
+    auto ret = ::vfscanf(fp, format, argptr);
+    va_end(argptr);
+    return ret;
+}
+int scanf(const char* format, ...) {
+    va_list argptr{};
+    va_start(argptr, format);
+    auto ret = ::vscanf(format, argptr);
+    va_end(argptr);
+    return ret;
+}
+int sscanf(const char* str, const char* format, ...) {
+    va_list argptr{};
+    va_start(argptr, format);
+    auto ret = ::vsscanf(str, format, argptr);
+    va_end(argptr);
+    return ret;
+}
+int fgetc(FILE* fp) {
 #ifdef WINDOWS
-        return ReadChar(fp);
+    return ReadChar(fp);
 #else
-        return ::fgetc(fp);
+    return ::fgetc(fp);
 #endif
-    }
-    char* fgets(char* str, int n, FILE* fp) {
-        #ifdef WINDOWS
-        return ReadLine(str, n, fp);
-#else
-        return ::fgets(str, n, fp);
-        #endif
-    }
-    int fputc(int ch, FILE* fp) {
+}
+char* fgets(char* str, int n, FILE* fp) {
 #ifdef WINDOWS
-        return WriteChar(static_cast<char>(ch), fp);
+    return ReadLine(str, n, fp);
 #else
-        return ::fputc(ch, fp);
+    return ::fgets(str, n, fp);
 #endif
-    }
-    int getc(FILE* fp) {
-        return ARLib::fgetc(fp);
-    }
-    int getchar() {
-        return ARLib::fgetc(stdin);
-    }
-
-    size_t filesize(FILE* fp) {
+}
+int fputc(int ch, FILE* fp) {
 #ifdef WINDOWS
-        return Win32SizeFile(fp);
+    return WriteChar(static_cast<char>(ch), fp);
 #else
-        auto cur = ARLib::ftell(fp);
-        ARLib::fseek(fp, SEEK_END, 0);
-        auto size = ARLib::ftell(fp);
-        ARLib::fseek(fp, SEEK_SET, cur);
-        return size;
+    return ::fputc(ch, fp);
 #endif
-    }
-
-    FILE* fopen(const char* filename, const char* mode) {
+}
+int getc(FILE* fp) {
+    return ARLib::fgetc(fp);
+}
+int getchar() {
+    return ARLib::fgetc(stdin);
+}
+size_t filesize(FILE* fp) {
 #ifdef WINDOWS
-        return Win32OpenFile(filename, mode);
+    return Win32SizeFile(fp);
 #else
-        return ::fopen(filename, mode);
+    auto cur = ARLib::ftell(fp);
+    ARLib::fseek(fp, SEEK_END, 0);
+    auto size = ARLib::ftell(fp);
+    ARLib::fseek(fp, SEEK_SET, cur);
+    return size;
 #endif
-    }
-
-    int fclose(FILE* fp) {
+}
+FILE* fopen(const char* filename, const char* mode) {
 #ifdef WINDOWS
-        return Win32CloseFile(fp);
+    return Win32OpenFile(filename, mode);
 #else
-        return ::fclose(fp);
+    return ::fopen(filename, mode);
 #endif
-    }
-
-    int fseek(FILE* fp, long off, int whence) {
+}
+int fclose(FILE* fp) {
 #ifdef WINDOWS
-        return Win32SeekFile(fp, off, whence);
+    return Win32CloseFile(fp);
 #else
-        return ::fseek(fp, off, whence);
+    return ::fclose(fp);
 #endif
-    }
-
-    size_t ftell(FILE* fp) {
+}
+int fseek(FILE* fp, long off, int whence) {
 #ifdef WINDOWS
-        return Win32TellFile(fp);
+    return Win32SeekFile(fp, off, whence);
 #else
-        return static_cast<size_t>(::ftell(fp));
+    return ::fseek(fp, off, whence);
 #endif
-    }
-
-    size_t fread(void* buffer, size_t size, size_t count, FILE* fp) {
-        return ::fread(buffer, size, count, fp);
-    }
-
-    size_t fwrite(const void* buffer, size_t size, size_t count, FILE* fp) {
+}
+size_t ftell(FILE* fp) {
 #ifdef WINDOWS
-        return WriteFileGeneric(buffer, size, count, fp);
+    return Win32TellFile(fp);
 #else
-        return ::fwrite(buffer, size, count, fp);
+    return static_cast<size_t>(::ftell(fp));
 #endif
-    }
-
-    int puts(const char* buf) {
+}
+size_t fread(void* buffer, size_t size, size_t count, FILE* fp) {
+    return ::fread(buffer, size, count, fp);
+}
+size_t fwrite(const void* buffer, size_t size, size_t count, FILE* fp) {
 #ifdef WINDOWS
-        return static_cast<int>(WriteStringOutGeneric(buf));
+    return WriteFileGeneric(buffer, size, count, fp);
 #else
-        return ::puts(buf);
+    return ::fwrite(buffer, size, count, fp);
 #endif
-    }
-
-    int fputs(const char* buf, FILE* fp) {
+}
+int puts(const char* buf) {
 #ifdef WINDOWS
-        return static_cast<int>(WriteStringFileGeneric(buf, fp));
+    return static_cast<int>(WriteStringOutGeneric(buf));
 #else
-        return ::fputs(buf, fp);
+    return ::puts(buf);
 #endif
-    }
-
-    int printf(const char* fmt, ...) {
-        va_list argptr{};
-        va_start(argptr, fmt);
-        auto ret = _vsprintf(fmt, argptr);
-        ARLib::fwrite(ret.result.data(), sizeof(char), ret.result.size(), stdout);
-        va_end(argptr);
-        return ret.written_arguments;
-    }
-
-    int fprintf(FILE* fp, const char* fmt, ...) {
-        va_list argptr{};
-        va_start(argptr, fmt);
-        auto ret = _vsprintf(fmt, argptr);
-        ARLib::fwrite(ret.result.data(), sizeof(char), ret.result.size(), fp);
-        va_end(argptr);
-        return ret.written_arguments;
-    }
-
-    int sprintf(char* str, const char* format, ...) {
-        va_list argptr{};
-        va_start(argptr, format);
-        auto ret = _vsprintf(format, argptr);
-        ARLib::strncpy(str, ret.result.data(), ret.result.size());
-        va_end(argptr);
-        return ret.result.size();
-    }
-    int snprintf(char* str, size_t n, const char* format, ...) {
-        va_list argptr{};
-        va_start(argptr, format);
-        auto ret = _vsprintf(format, argptr);
-        ARLib::strncpy(str, ret.result.data(), n);
-        va_end(argptr);
-        return ret.result.size();
-    }
-    int scprintf(const char* format, ...) {
-        va_list argptr{};
-        va_start(argptr, format);
+}
+int fputs(const char* buf, FILE* fp) {
 #ifdef WINDOWS
-        auto ret = ::_vscprintf_l(format, nullptr, argptr);
+    return static_cast<int>(WriteStringFileGeneric(buf, fp));
 #else
-        auto ret = ::vsnprintf(nullptr, 0, format, argptr);
+    return ::fputs(buf, fp);
 #endif
-        va_end(argptr);
-        return ret;
-    }
-} // namespace ARLib
+}
+int printf(const char* fmt, ...) {
+    va_list argptr{};
+    va_start(argptr, fmt);
+    auto ret = _vsprintf(fmt, argptr);
+    ARLib::fwrite(ret.result.data(), sizeof(char), ret.result.size(), stdout);
+    va_end(argptr);
+    return ret.written_arguments;
+}
+int fprintf(FILE* fp, const char* fmt, ...) {
+    va_list argptr{};
+    va_start(argptr, fmt);
+    auto ret = _vsprintf(fmt, argptr);
+    ARLib::fwrite(ret.result.data(), sizeof(char), ret.result.size(), fp);
+    va_end(argptr);
+    return ret.written_arguments;
+}
+int sprintf(char* str, const char* format, ...) {
+    va_list argptr{};
+    va_start(argptr, format);
+    auto ret = _vsprintf(format, argptr);
+    ARLib::strncpy(str, ret.result.data(), ret.result.size());
+    va_end(argptr);
+    return ret.result.size();
+}
+int snprintf(char* str, size_t n, const char* format, ...) {
+    va_list argptr{};
+    va_start(argptr, format);
+    auto ret = _vsprintf(format, argptr);
+    ARLib::strncpy(str, ret.result.data(), n);
+    va_end(argptr);
+    return ret.result.size();
+}
+int scprintf(const char* format, ...) {
+    va_list argptr{};
+    va_start(argptr, format);
+#ifdef WINDOWS
+    auto ret = ::_vscprintf_l(format, nullptr, argptr);
+#else
+    auto ret = ::vsnprintf(nullptr, 0, format, argptr);
+#endif
+    va_end(argptr);
+    return ret;
+}
+}    // namespace ARLib

@@ -6,29 +6,26 @@
 #include <inttypes.h>
 
 using namespace ARLib;
-
 static void BM_SomeFunction(benchmark::State& state) {
     for (auto _ : state) {
-        double val = 1234.1234;
-        const char* s = "my name is alessio";
-        int hex = 0x50;
+        double val              = 1234.1234;
+        const char* s           = "my name is alessio";
+        int hex                 = 0x50;
         ARLib::int64_t int64val = INT64_MAX;
         ARLib::printf("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }
 }
-
 static void BM_SomeFunctionStd(benchmark::State& state) {
     for (auto _ : state) {
-        double val = 1234.1234;
-        const char* s = "my name is alessio";
-        int hex = 0x50;
+        double val              = 1234.1234;
+        const char* s           = "my name is alessio";
+        int hex                 = 0x50;
         ARLib::int64_t int64val = INT64_MAX;
         ::printf("Hello World %+10.4f %% %s %#02o %#02" PRIX64 " %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }
 }
-
 // BENCHMARK(BM_SomeFunctionStd);
 BENCHMARK(BM_SomeFunction);
 BENCHMARK_MAIN();

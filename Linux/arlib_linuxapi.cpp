@@ -5,20 +5,17 @@
 
 #include <errno.h>
 #include <string.h>
-
 namespace ARLib {
-    void print_last_error() {
-        auto error = *__errno_location();
-        if (error != 0) { puts(strerror(error)); }
+void print_last_error() {
+    auto error = *__errno_location();
+    if (error != 0) { puts(strerror(error)); }
+}
+String last_error() {
+    auto error = *__errno_location();
+    if (error != 0) {
+        return String{ strerror(error) };
+    } else {
+        return String{};
     }
-
-    String last_error() {
-        auto error = *__errno_location();
-        if (error != 0) {
-            return String{strerror(error)};
-        } else {
-            return String{};
-        }
-    }
-
-} // namespace ARLib
+}
+}    // namespace ARLib

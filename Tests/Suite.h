@@ -36,25 +36,23 @@
 #include "../Vector.h"
 #include "../ArgParser.h"
 #include "../cstdio_compat.h"
-
 namespace ARLib {
-    size_t test_partial_func(int a, String b, Tuple<String, int> c);
+size_t test_partial_func(int a, String b, Tuple<String, int> c);
 #define TEST_DECL_NAMED(name, lambda, ...)                                                                             \
     Test<decltype(lambda), ##__VA_ARGS__> name { lambda }
 #define TEST_DECL(type, ...) Test<type, ##__VA_ARGS__>
-
-    template <typename T, typename... Args>
-    bool decl_and_run(T lambda, Args... args) {
-        TEST_DECL(T, Args...) test{lambda};
-        return test.run(args...);
-    }
+template <typename T, typename... Args>
+bool decl_and_run(T lambda, Args... args) {
+    TEST_DECL(T, Args...) test{ lambda };
+    return test.run(args...);
+}
 #define RUN_TEST(lambda, ...) decl_and_run(lambda, ##__VA_ARGS__)
 #define ASSERT_TEST(message, lambda, ...)                                                                              \
     {                                                                                                                  \
         auto res = RUN_TEST(lambda, ##__VA_ARGS__);                                                                    \
         if (res) passed_count++;                                                                                       \
         test_count++;                                                                                                  \
-    } // namespace ARLib
+    }    // namespace ARLib
 #define RETURN_IF_NOT_EQ(x, y)                                                                                         \
     if (!assert_eq(x, y)) {                                                                                            \
         PRINT_SOURCE_LOCATION                                                                                          \
@@ -65,5 +63,5 @@ namespace ARLib {
         PRINT_SOURCE_LOCATION                                                                                          \
         return false;                                                                                                  \
     }
-    bool run_all_legacy_tests();
-} // namespace ARLib
+bool run_all_legacy_tests();
+}    // namespace ARLib
