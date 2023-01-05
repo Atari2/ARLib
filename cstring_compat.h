@@ -96,9 +96,6 @@ constexpr const char* strstr(const char* str, const char* needle) {
     }
     return nullptr;
 }
-constexpr char* strstr(char* str, const char* needle) {
-    return const_cast<char*>(strstr(static_cast<const char*>(str), needle));
-}
 constexpr bool isdigit(const char c) {
     return c >= 48_c && c <= 57_c;
 }

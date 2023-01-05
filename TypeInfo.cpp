@@ -26,8 +26,7 @@ DemangledInfo::DemangledInfo(const char* mangled_name, bool critical) {
 }
 DemangledInfo::~DemangledInfo() {
 #ifdef ON_LINUX
-    // if we should dealloc we know for sure that it's safe to const_cast this.
-    if (m_should_dealloc) std::free(const_cast<char*>(m_demangled_name));
+    if (m_should_dealloc) std::free(m_demangled_name);
 #endif
 }
 }    // namespace ARLib

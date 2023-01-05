@@ -143,7 +143,7 @@ class IteratorView {
     requires Pushable<OtherCont, ResultOfT<Functor(ItemType)>>
     {
         OtherCont cont{};
-        if constexpr (Reservable<Cont>) { cont.reserve(size()); }
+        if constexpr (Reservable<OtherCont>) { cont.reserve(size()); }
         for (auto it = m_begin; it != m_end; ++it) { cont.push_back(func(*it)); }
         return cont;
     }
