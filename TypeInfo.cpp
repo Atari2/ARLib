@@ -26,7 +26,7 @@ DemangledInfo::DemangledInfo(const char* mangled_name, bool critical) {
 }
 DemangledInfo::~DemangledInfo() {
 #ifdef ON_LINUX
-    if (m_should_dealloc) std::free(m_demangled_name);
+    if (m_should_dealloc) std::free(const_cast<char*>(m_demangled_name));
 #endif
 }
 }    // namespace ARLib

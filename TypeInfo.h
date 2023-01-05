@@ -3,11 +3,7 @@
 namespace ARLib {
 using TypeInfo = std::type_info;
 class DemangledInfo {
-    #ifdef ON_LINUX
-    char* m_demangled_name  = nullptr;
-    #else
-    const char* m_demangled_name = nullptr;
-    #endif
+    const char* m_demangled_name  = nullptr;
     mutable bool m_should_dealloc = true;
 
     public:
