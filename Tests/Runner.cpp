@@ -814,6 +814,8 @@ TEST(ARLibTests, PrintfTest) {
     double v = 25.65;
     int b1sz = ::sprintf(buffer1, "%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
     int b2sz = ARLib::sprintf(buffer2, "%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
+    EXPECT_GT(b1sz, 0);
+    EXPECT_GT(b2sz, 0);
     EXPECT_EQ(b1sz, b2sz);
     buffer1[b1sz] = '\0';
     buffer2[b2sz] = '\0';

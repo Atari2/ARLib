@@ -153,6 +153,7 @@ int sprintf(char* str, const char* format, ...) {
     va_list argptr{};
     va_start(argptr, format);
     auto ret = _vsprintf(format, argptr);
+    if (ret.error_code != PrintfErrorCodes::Ok) { return -1; }
     ARLib::strncpy(str, ret.result.data(), ret.result.size());
     va_end(argptr);
     return static_cast<int>(ret.result.size());
@@ -161,6 +162,7 @@ int snprintf(char* str, size_t n, const char* format, ...) {
     va_list argptr{};
     va_start(argptr, format);
     auto ret = _vsprintf(format, argptr);
+    if (ret.error_code != PrintfErrorCodes::Ok) { return -1; }
     ARLib::strncpy(str, ret.result.data(), n);
     va_end(argptr);
     return static_cast<int>(ret.result.size());
