@@ -27,7 +27,7 @@ class StringView {
     requires IsSameV<T, char*>
     constexpr StringView(T buf, size_t size) : m_start_mut(buf), m_start(buf), m_size(size) {}
     template <size_t N>
-    constexpr StringView(const char (&buf)[N]) : m_start(buf), m_size(N - 1) {}
+    constexpr StringView(const char (&buf)[N]) : m_start(buf), m_size(strlen(buf)) {}
     template <typename T>
     requires IsSameV<T, const char*>
     constexpr StringView(T buf) : m_start(buf) {

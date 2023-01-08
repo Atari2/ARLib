@@ -77,6 +77,14 @@ struct PrintInfo<T[N]> {
         return str;
     }
 };
+
+template <size_t N>
+struct PrintInfo<char[N]> {
+    const char (&m_str)[N];
+    explicit PrintInfo(const char (&str)[N]) : m_str(str) {}
+    String repr() const { return String{ m_str }; }
+};
+
 template <Printable T, size_t N, size_t M>
 requires(!IsArrayV<T>)
 struct PrintInfo<T[N][M]> {

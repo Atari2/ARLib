@@ -62,9 +62,10 @@ class String {
     // constructors, destructor equality operators
     constexpr String() = default;
     template <size_t N>
-    explicit constexpr String(const char (&src)[N]) : m_size(N - 1) {
-        grow_if_needed(N);
-        strncpy(m_data_buf, src, N);
+    explicit constexpr String(const char (&src)[N]) : m_size(strlen(src)) {
+        grow_if_needed(m_size);
+        strncpy(m_data_buf, src, m_size);
+        m_data_buf[m_size] = '\0';
     }
     explicit String(size_t size, char c) {
         if (size > SMALL_STRING_CAP) grow_if_needed(size);

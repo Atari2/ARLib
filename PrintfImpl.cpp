@@ -25,7 +25,8 @@ static DoubleRepr double_to_bits(FloatingPoint auto num_orig) {
     // %A specifies `double` precision only
     double num = static_cast<double>(num_orig);
     static_assert(sizeof(double) == sizeof(uint64_t));
-    const uint64_t val                 = *reinterpret_cast<uint64_t*>(&num);
+    uint64_t val                 = 0;
+    ARLib::memcpy(&val, &num, sizeof(double));
     constexpr uint64_t highest_bitmask = 1_u64 << 63_u64;
     constexpr uint64_t exp_bitmask     = 0b0111111111110000000000000000000000000000000000000000000000000000;
     constexpr uint64_t signif_bitmask  = 0b0000000000001111111111111111111111111111111111111111111111111111;

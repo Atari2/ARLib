@@ -90,7 +90,7 @@ namespace detail {
 }    // namespace detail
 template <class T>
 struct IsTriviallyCopiable : BoolConstant<__is_trivially_copyable(T)> {};
-#if defined(COMPILER_MSVC) || (defined(COMPILER_CLANG) && defined(WINDOWS))
+#if defined(COMPILER_MSVC) || defined(COMPILER_CLANG)
 template <class T>
 struct IsTriviallyDestructible : BoolConstant<__is_trivially_destructible(T)> {};
 

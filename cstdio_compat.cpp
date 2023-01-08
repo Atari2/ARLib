@@ -77,7 +77,7 @@ size_t filesize(FILE* fp) {
     auto cur = ARLib::ftell(fp);
     ARLib::fseek(fp, SEEK_END, 0);
     auto size = ARLib::ftell(fp);
-    ARLib::fseek(fp, SEEK_SET, cur);
+    ARLib::fseek(fp, SEEK_SET, static_cast<int>(cur));
     return size;
 #endif
 }
@@ -155,7 +155,7 @@ int sprintf(char* str, const char* format, ...) {
     auto ret = _vsprintf(format, argptr);
     ARLib::strncpy(str, ret.result.data(), ret.result.size());
     va_end(argptr);
-    return ret.result.size();
+    return static_cast<int>(ret.result.size());
 }
 int snprintf(char* str, size_t n, const char* format, ...) {
     va_list argptr{};
@@ -163,7 +163,7 @@ int snprintf(char* str, size_t n, const char* format, ...) {
     auto ret = _vsprintf(format, argptr);
     ARLib::strncpy(str, ret.result.data(), n);
     va_end(argptr);
-    return ret.result.size();
+    return static_cast<int>(ret.result.size());
 }
 int scprintf(const char* format, ...) {
     va_list argptr{};

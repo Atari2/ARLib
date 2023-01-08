@@ -802,3 +802,30 @@ TEST(ARLibTests, ArgParserTests) {
     EXPECT_TRUE(result2.is_error());
     EXPECT_FALSE(result2.is_ok());
 }
+
+#include <inttypes.h>
+
+TEST(ARLibTests, PrintfTest) {
+    char buffer1[1024];
+    char buffer2[1024];
+    double val    = 1234.1234;
+    const char* s = "my name is alessio";
+    int hex       = 0x50;
+    double v = 25.65;
+    int b1sz = ::sprintf(buffer1, "%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
+    int b2sz = ARLib::sprintf(buffer2, "%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
+    EXPECT_EQ(b1sz, b2sz);
+    buffer1[b1sz] = '\0';
+    buffer2[b2sz] = '\0';
+    EXPECT_EQ(StringView{buffer1}, StringView{buffer2});
+    int arlib_pn = 0;
+    int std_pn = 0;
+    ARLib::int64_t int64val = NumberTraits<ARLib::int64_t>::max;
+    b1sz = ::sprintf(buffer1, "Hello World %+.5A %+10.4f %n %% %s %#02o %#02" PRIX64 " %%\n", 50.0, val, &std_pn, s, hex, int64val);
+    b2sz = ARLib::sprintf(buffer2, "Hello World %+.5A %+10.4f %n %% %s %#02o %#02" PRIX64 " %%\n", 50.0, val, &arlib_pn, s, hex, int64val);
+    EXPECT_EQ(b1sz, b2sz);
+    buffer1[b1sz] = '\0';
+    buffer2[b2sz] = '\0';
+    EXPECT_EQ(StringView{buffer1}, StringView{buffer2});
+    EXPECT_EQ(arlib_pn, std_pn);
+}

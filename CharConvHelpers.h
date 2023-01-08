@@ -58,6 +58,9 @@ constexpr RetType StrViewTo64Decimal(const StringView str) {
     size_t start_idx = 0;
     size_t end_idx   = str.size();
 
+    if (str.empty())
+        return 0;
+
     bool neg = false;
     if constexpr (Signed) {
         char maybe_sign = str[0];
