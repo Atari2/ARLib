@@ -802,31 +802,35 @@ TEST(ARLibTests, ArgParserTests) {
     EXPECT_TRUE(result2.is_error());
     EXPECT_FALSE(result2.is_ok());
 }
-TEST(ARLibTests, PrintfTest) {
+TEST(ARLibTests, PrintfTestGeneric) {
     // the expected values come from std printf implementation
-    constexpr StringView expected_from_double{ "25.650000000000 25.650000 25.65 25.65 2.565e+01 2.565000E+01\n" };
     constexpr StringView expected_from_misc{
         "Hello World +0X1.90000P+5 +1234.1234  % my name is alessio 0120 0X7FFFFFFFFFFFFFFF %\n"
     };
-    constexpr int expected_pn         = 37;
-    constexpr int expected_bsz_double = 61;
-    constexpr int expected_bsz_misc   = 85;
+    constexpr int expected_pn       = 37;
+    constexpr int expected_bsz_misc = 85;
     char buffer[1024]{};
-    double val    = 1234.1234;
-    const char* s = "my name is alessio";
-    int hex       = 0x50;
-    double v      = 25.65;
-    int bsz       = ARLib::sprintf(buffer, "%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
-    EXPECT_EQ(expected_bsz_double, bsz);
-    buffer[bsz] = '\0';
-    EXPECT_EQ(StringView{ buffer }, expected_from_double);
+    double val              = 1234.1234;
+    const char* s           = "my name is alessio";
+    int hex                 = 0x50;
     int arlib_pn            = 0;
     ARLib::int64_t int64val = NumberTraits<ARLib::int64_t>::max;
-    bsz                     = ARLib::sprintf(
+    int bsz                 = ARLib::sprintf(
     buffer, "Hello World %+.5A %+10.4f %n %% %s %#02o %#02llX %%\n", 50.0, val, &arlib_pn, s, hex, int64val
     );
     EXPECT_EQ(expected_bsz_misc, bsz);
     buffer[bsz] = '\0';
     EXPECT_EQ(StringView{ buffer }, expected_from_misc);
     EXPECT_EQ(arlib_pn, expected_pn);
+}
+TEST(ARLibTests, PrintfTestDoubleOnly) {
+    // the expected values come from std printf implementation
+    constexpr StringView expected_from_double{ "25.650000000000 25.650000 25.65 25.65 2.565e+01 2.565000E+01\n" };
+    constexpr int expected_bsz_double = 61;
+    char buffer[1024]{};
+    double v = 25.65;
+    int bsz  = ARLib::sprintf(buffer, "%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
+    EXPECT_EQ(expected_bsz_double, bsz);
+    buffer[bsz] = '\0';
+    EXPECT_EQ(StringView{ buffer }, expected_from_double);
 }
