@@ -811,8 +811,7 @@ TEST(ARLibTests, PrintfTest) {
     constexpr int expected_pn         = 37;
     constexpr int expected_bsz_double = 61;
     constexpr int expected_bsz_misc   = 85;
-
-    char buffer[1024];
+    char buffer[1024]{};
     double val    = 1234.1234;
     const char* s = "my name is alessio";
     int hex       = 0x50;
