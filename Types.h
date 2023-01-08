@@ -45,10 +45,10 @@ struct __SizePickerImpl<A, B, 4> {
     using Type = B;
 };
 struct __I64BitPicker {
-    using Type = __SizePickerImpl<long, long long, 8>::Type;
+    using Type = __SizePickerImpl<long, long long, sizeof(long)>::Type;
 };
 struct __U64BitPicker {
-    using Type = __SizePickerImpl<unsigned long, unsigned long long, 8>::Type;
+    using Type = __SizePickerImpl<unsigned long, unsigned long long, sizeof(unsigned long)>::Type;
 };
 using __I64BitPickerT = __I64BitPicker::Type;
 using __U64BitPickerT = __U64BitPicker::Type;
