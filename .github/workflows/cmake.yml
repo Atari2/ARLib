@@ -56,12 +56,6 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      with:
-        limit-access-to-actor: true
-      if: matrix.os == 'windows-latest'
 
     - name: Test
       working-directory: ${{github.workspace}}/build/Tests
