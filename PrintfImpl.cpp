@@ -118,6 +118,29 @@ String RealToStr(FloatingPoint auto val, int precision) {
         COMPTIME_ASSERT("Invalid type passed to RealToStr");
     }
 }
+String wchar_to_char(const wchar_t* wstr) {
+    size_t i = 0;
+    String output{};
+    while (wstr[i] != L'\0') { 
+        wchar_t v = wstr[i];
+        if (v >= 0x00 && v <= 0x7F) { 
+            output.append(static_cast<char>(v));
+        } else {
+            output.append('?');
+        }
+        ++i;
+    }
+    return output;
+}
+String wchar_to_char(const wchar_t wc) {
+    String output{};
+    if (wc >= 0x00 && wc <= 0x7F) {
+        output.append(static_cast<char>(wc));
+    } else {
+        output.append('?');
+    }
+    return output;
+}
 template <AllowedFormatArgs T>
 Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo& info, T val) {
 #define HAS_FLAG(flag, yes, no) (((info.flags & Flags::flag) != Flags::None) ? (yes) : (no))
@@ -141,7 +164,7 @@ Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo
             case Type::CharSingle:
                 return String{ 1, static_cast<char>(val) };
             case Type::CharWide:
-                return PrintfErrorCodes::NotImplemented;
+                return wchar_to_char(val);
             default:
                 return PrintfErrorCodes::InvalidType;
         }
@@ -225,7 +248,7 @@ Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo
     } else if constexpr (SameAs<const wchar_t*, T>) {
         HARD_ASSERT(info.type == Type::WideString || info.type == Type::AnsiString, "Invalid type");
         if (info.type != Type::WideString && info.type != Type::AnsiString) { return PrintfErrorCodes::InvalidType; }
-        return PrintfErrorCodes::NotImplemented;
+        return wchar_to_char(val);
     } else {
         COMPTIME_ASSERT("Invalid type passed to format_single_args");
     }
