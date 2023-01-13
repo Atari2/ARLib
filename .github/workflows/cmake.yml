@@ -61,6 +61,7 @@ jobs:
       uses: mxschmitt/action-tmate@v3
       with:
         limit-access-to-actor: true
+      if: matrix.os == 'windows-latest'
 
     - name: Test
       working-directory: ${{github.workspace}}/build/Tests
