@@ -6,6 +6,7 @@
 #include "Result.h"
 #include "SSOVector.h"
 #include "StringView.h"
+#include "TypeTraits.h"
 #include "Utility.h"
 #include "cmath_compat.h"
 #include "cstdio_compat.h"
@@ -167,12 +168,14 @@ Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo
             case Type::CharSingle:
                 return String{ 1, static_cast<char>(val) };
             case Type::CharWide:
-                return wchar_to_char(val);
+                return wchar_to_char(static_cast<wchar_t>(val));
             default:
                 return PrintfErrorCodes::InvalidType;
         }
     } else if constexpr (FloatingPoint<T>) {
         int precision = static_cast<int>(info.precision);
+        using Vt = RemoveCvRefT<decltype(val)>;
+        constexpr const Vt zero = static_cast<Vt>(0.0);
         switch (info.type) {
             case Type::FloatExpUpper:
                 {
@@ -215,9 +218,9 @@ Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo
             case Type::FloatHex:
                 {
                     if (detail::is_nan(val)) {
-                        return HAS_FLAG(UseSign, (val < 0.0) ? "-"_s : "+"_s, (val < 0.0) ? "-"_s : ""_s) + "nan"_s;
+                        return HAS_FLAG(UseSign, (val < zero) ? "-"_s : "+"_s, (val < zero) ? "-"_s : ""_s) + "nan"_s;
                     } else if (detail::is_infinity(val)) {
-                        return HAS_FLAG(UseSign, (val < 0.0) ? "-"_s : "+"_s, (val < 0.0) ? "-"_s : ""_s) + "inf"_s;
+                        return HAS_FLAG(UseSign, (val < zero) ? "-"_s : "+"_s, (val < zero) ? "-"_s : ""_s) + "inf"_s;
                     }
                     auto [sign, exp, signif] = double_to_bits(val);
                     auto builder = HAS_FLAG(UseSign, sign ? "-0x1."_s : "+0x1."_s, sign ? "-0x1."_s : "0x1."_s);
@@ -230,9 +233,9 @@ Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo
             case Type::FloatHexUpper:
                 {
                     if (detail::is_nan(val)) {
-                        return HAS_FLAG(UseSign, (val < 0.0) ? "-"_s : "+"_s, (val < 0.0) ? "-"_s : ""_s) + "NAN"_s;
+                        return HAS_FLAG(UseSign, (val < zero) ? "-"_s : "+"_s, (val < zero) ? "-"_s : ""_s) + "NAN"_s;
                     } else if (detail::is_infinity(val)) {
-                        return HAS_FLAG(UseSign, (val < 0.0) ? "-"_s : "+"_s, (val < 0.0) ? "-"_s : ""_s) + "INF"_s;
+                        return HAS_FLAG(UseSign, (val < zero) ? "-"_s : "+"_s, (val < zero) ? "-"_s : ""_s) + "INF"_s;
                     }
                     auto [sign, exp, signif] = double_to_bits(val);
                     auto builder = HAS_FLAG(UseSign, sign ? "-0x1."_s : "+0x1."_s, sign ? "-0x1."_s : "0x1."_s);
@@ -393,7 +396,7 @@ PrintfResult printf_impl(const char* fmt, va_list args) {
         if (format[i] == '%') {
             if (format[i + 1] == '%') {
                 // escaped, increase i and continue
-                PrintfInfo escapeinfo{ .begin_idx = i, .end_idx = i + 2, .is_escape = true };
+                PrintfInfo escapeinfo{ .is_escape = true, .begin_idx = i, .end_idx = i + 2 };
                 fmtargs.append(escapeinfo);
                 ++i;
                 continue;
