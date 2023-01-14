@@ -2,6 +2,7 @@
 #include "Algorithm.h"
 #include "Allocator.h"
 #include "Assertion.h"
+#include "BaseTraits.h"
 #include "Iterator.h"
 #include "Types.h"
 #include "cstring_compat.h"
@@ -85,7 +86,8 @@ class String {
         strncpy(m_data_buf, other, size);
         m_data_buf[m_size] = '\0';
     }
-    template <typename T, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
+    template <typename T>
+    requires (SameAs<const char*, T> || SameAs<char*, T>)
     explicit constexpr String(T other) : m_size(strlen(other)) {
         grow_if_needed(m_size);
         strncpy(m_data_buf, other, m_size);
