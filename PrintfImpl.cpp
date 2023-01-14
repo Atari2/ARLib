@@ -60,9 +60,9 @@ namespace PrintfTypes {
         WideString        = 'S',
         AnsiString        = 'Z'
     };
-    enum class Flags : char { None = 0x00, LeftAlign = 0x01, UseSign = 0x02, LeadingZeros = 0x04, AddPrefix = 0x08 };
+    enum class Flags : uint8_t { None = 0x00, LeftAlign = 0x01, UseSign = 0x02, LeadingZeros = 0x04, AddPrefix = 0x08 };
     // field: %[flags][width][.precision][size]type
-    enum class AllowedToParse : uint32_t {
+    enum class AllowedToParse : uint8_t {
         None        = 0x00,
         Flags       = 0x01,
         Width       = 0x02,
@@ -76,7 +76,7 @@ namespace PrintfTypes {
     };
     MAKE_BITFIELD_ENUM(AllowedToParse);
     MAKE_BITFIELD_ENUM(Flags);
-    enum class Size {
+    enum class Size : uint8_t {
         Char,
         Short,
         Int32,
@@ -91,15 +91,18 @@ namespace PrintfTypes {
         Missing,
         Invalid
     };
+    static_assert(sizeof(Type) == 1, "Type must be 1 byte");
+    static_assert(sizeof(Flags) == 1, "Flags must be 1 byte");
+    static_assert(sizeof(Size) == 1, "Size must be 1 byte");
     struct PrintfInfo {
         Type type        = Type::None;
         Flags flags      = Flags::None;
         Size size        = Size::Missing;
+        bool is_escape   = false;
         size_t width     = NumberTraits<int>::max;
         size_t precision = 6;
         size_t begin_idx = 0;
         size_t end_idx   = 0;
-        bool is_escape   = false;
     };
 }    // namespace PrintfTypes
 template <typename T>
