@@ -11,6 +11,7 @@
 #include "TypeTraits.h"
 #include "cstring_compat.h"
 #include "std_includes.h"
+#include "GenericView.h"
 namespace ARLib {
 // this in origin was `template <MoveAssignable T>`
 // however that failed to compile when used as a return type, didn't when using auto
@@ -333,6 +334,8 @@ class Vector {
         reserve(size);
         m_size = size;
     }
+    auto view() const { return IteratorView{ *this }; }
+    auto view() { return IteratorView{ *this }; }
     bool empty() const { return m_size == 0; }
     const T* data() { return m_storage; }
     Iter begin() { return Iter{ m_storage }; }
@@ -352,10 +355,8 @@ class Vector {
     void clear() { clear_(); }
     ~Vector() { clear(); }
 };
-
 template <typename T>
 using RefVector = Vector<RefBox<T>>;
-
 template <Printable T>
 struct PrintInfo<Vector<T>> {
     const Vector<T>& m_vec;

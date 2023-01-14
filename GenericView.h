@@ -4,6 +4,7 @@
 #include "Enumerate.h"
 #include "Iterator.h"
 #include "PrintInfo.h"
+#include "TypeTraits.h"
 namespace ARLib {
 template <typename T>
 class GenericView {
@@ -129,9 +130,9 @@ class IteratorView {
             return IteratorView<NewCont>{ new_storage, size() };
         }
     }
-    template <typename Functor, typename = EnableIfT<IsSameV<ResultOfT<Functor(ItemType)>, ItemType>>>
+    template <typename Functor>
     Cont map(Functor func)
-    requires Pushable<Cont, ItemType>
+    requires Pushable<Cont, ItemType> && SameAs<ResultOfT<Functor(ItemType)>, ItemType>
     {
         Cont copy{};
         if constexpr (Reservable<Cont>) { copy.reserve(size()); }
