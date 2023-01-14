@@ -53,6 +53,6 @@ String LongDoubleToStrImpl(long double value, const char* fmt, int precision) {
     return upper ? str.upper() : str;
 }
 String FloatToStrImpl(float value, const char* fmt, int precision) {
-    return DoubleToStrImpl(value, fmt, precision);
+    return DoubleToStrImpl(static_cast<double>(value), fmt, precision);
 }
 }    // namespace ARLib

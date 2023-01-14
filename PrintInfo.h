@@ -19,7 +19,7 @@ String print_conditional(const T& m_value) {
     if constexpr (Printable<T>) {
         return PrintInfo<T>{ m_value }.repr();
     } else {
-        DemangledInfo info{ MANGLED_TYPENAME_TO_STRING(T) };
+        DemangledInfo info{ MANGLED_TYPENAME_TO_STRING(T), false };
         return String{ info.name() };
     }
 };
@@ -53,10 +53,17 @@ struct PrintInfo<T*> {
     explicit PrintInfo(const T* ptr) : m_ptr(ptr) {}
     String repr() {
         if constexpr (Printable<T>) {
-            return String::formatted("0x%p -> ", m_ptr) + PrintInfo<T>{ *m_ptr }.repr();
+            if (m_ptr)
+                return String::formatted("0x%p -> ", m_ptr) + PrintInfo<T>{ *m_ptr }.repr();
+            else
+                return "nullptr"_s;
         } else {
             DemangledInfo info{ MANGLED_TYPENAME_TO_STRING(T), false };
-            return String::formatted("0x%p (pointer to %s)", m_ptr, info.name());
+            if (m_ptr)
+                return String::formatted("0x%p (pointer to %s)", m_ptr, info.name());
+            else
+                return "nullptr"_s + " (pointer to "_s + info.name() + ')';
+            
         }
     }
 };

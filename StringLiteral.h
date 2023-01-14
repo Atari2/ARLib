@@ -8,7 +8,7 @@ namespace ARLib {
 // gcc 11+ and msvc 19.3+ support everything in here
 // clang 13 however (latest clang) doesn't, clang 14 (not available yet) does
 #ifdef COMPILER_CLANG
-    #if __clang_major__ == 14
+    #if __clang_major__ >= 14
         #define STRINGLITERAL_AVAILABLE
     #endif
 #else

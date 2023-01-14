@@ -1,5 +1,6 @@
 #include "PrintfImpl.h"
 #include "Array.h"
+#include "Assertion.h"
 #include "CharConv.h"
 #include "EnumHelpers.h"
 #include "Printer.h"
@@ -57,6 +58,7 @@ namespace PrintfTypes {
         FloatHex          = 'a',
         FloatHexUpper     = 'A',
         NumOfChars        = 'n',
+        Pointer           = 'p',
         String            = 's',
         WideString        = 'S',
         AnsiString        = 'Z'
@@ -108,7 +110,7 @@ namespace PrintfTypes {
 }    // namespace PrintfTypes
 template <typename T>
 concept AllowedFormatArgs =
-Integral<T> || FloatingPoint<T> || SameAs<T, const char*> || SameAs<T, const wchar_t*> || SameAs<T, uint64_t*>;
+Integral<T> || FloatingPoint<T> || SameAs<T, const char*> || SameAs<T, const wchar_t*> || SameAs<T, uint64_t*> || SameAs<T, const void*>;
 template <FloatFmtOpt Opt>
 String RealToStr(FloatingPoint auto val, int precision) {
     using T = RemoveCvRefT<decltype(val)>;
@@ -255,7 +257,14 @@ Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo
         HARD_ASSERT(info.type == Type::WideString || info.type == Type::AnsiString, "Invalid type");
         if (info.type != Type::WideString && info.type != Type::AnsiString) { return PrintfErrorCodes::InvalidType; }
         return wchar_to_char(val);
-    } else {
+    } else if constexpr (SameAs<const void*, T>) {
+        constexpr auto ptrlen = sizeof(void*) * 2;
+        auto ptrstr = IntToStr<SupportedBase::Hexadecimal>(BitCast<uintptr_t>(val));
+        if (ptrstr.length() < ptrlen) {
+            ptrstr = String{ ptrlen - ptrstr.length(),  '0' } + ptrstr;
+        }
+        return ptrstr;
+    }else {
         COMPTIME_ASSERT("Invalid type passed to format_single_args");
     }
 }
@@ -277,7 +286,7 @@ PrintfResult printf_impl(const char* fmt, va_list args) {
     };
 
     constexpr const Array valid_types{ 'c', 'C', 'd', 'i', 'o', 'u', 'x', 'X', 'e', 'E', 'f',
-                                       'F', 'g', 'G', 'a', 'A', 'n', 'P', 's', 'S', 'Z' };
+                                       'F', 'g', 'G', 'a', 'A', 'n', 'p', 's', 'S', 'Z' };
     constexpr const Array valid_flags{ '-', '+', '0', '#' };
     constexpr const Array valid_sizes{ "hh"_sv, "h"_sv,  "I32"_sv, "I64"_sv, "j"_sv, "l"_sv,
                                        "L"_sv,  "ll"_sv, "t"_sv,   "I"_sv,   "z"_sv, "w"_sv };
@@ -594,7 +603,11 @@ PrintfResult printf_impl(const char* fmt, va_list args) {
             case AnsiString:
                 APPEND_AND_RET_IF_FAIL(const wchar_t*, const wchar_t*);
                 break;
+            case Pointer:
+                APPEND_AND_RET_IF_FAIL(const void*, const void*);
+                break;
             default:
+                ASSERT_NOT_REACHED("Invalid format specifier!");
                 break;
         }
         output += formatted_arg;

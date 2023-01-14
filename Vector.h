@@ -2,10 +2,13 @@
 #include "Algorithm.h"
 #include "Allocator.h"
 #include "Assertion.h"
+#include "BaseTraits.h"
 #include "Concepts.h"
 #include "Iterator.h"
 #include "Memory.h"
 #include "PrintInfo.h"
+#include "RefBox.h"
+#include "TypeTraits.h"
 #include "cstring_compat.h"
 #include "std_includes.h"
 namespace ARLib {
@@ -349,6 +352,10 @@ class Vector {
     void clear() { clear_(); }
     ~Vector() { clear(); }
 };
+
+template <typename T>
+using RefVector = Vector<RefBox<T>>;
+
 template <Printable T>
 struct PrintInfo<Vector<T>> {
     const Vector<T>& m_vec;
