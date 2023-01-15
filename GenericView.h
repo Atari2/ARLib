@@ -60,6 +60,8 @@ class IteratorView {
     }
 
     public:
+    IteratorView(const IteratorView& other) = delete;
+    IteratorView(IteratorView&& other) : m_begin(other.m_begin), m_end(other.m_end), m_stolen_storage(other.release_storage()) {}
     IteratorView(ItemType* storage, Iter begin, Iter end) : m_begin(begin), m_end(end), m_stolen_storage(storage) {}
     IteratorView(ItemType* storage, size_t size) : m_begin(storage), m_end(storage + size), m_stolen_storage(storage) {}
     explicit IteratorView(Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
@@ -75,7 +77,7 @@ class IteratorView {
     requires(IsSameV<decltype(declval<Functor>()(declval<ItemType>())), ItemType>)
     IteratorView transform(Functor&& func) {
         for (auto it = m_begin; it != m_end; ++it) { *it = func(*it); }
-        return *this;
+        return move(*this);
     }
     template <typename NewCont = Cont>
     NewCont collect()

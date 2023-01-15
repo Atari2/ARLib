@@ -334,8 +334,13 @@ class Vector {
         reserve(size);
         m_size = size;
     }
-    auto view() const { return IteratorView{ *this }; }
-    auto view() { return IteratorView{ *this }; }
+    auto view() const& { return IteratorView{ *this }; }
+    auto view() & { return IteratorView{ *this }; }
+    auto view() && { 
+        auto view = IteratorView<Vector<T>>{ m_storage, m_size };
+        m_capacity = 0;
+        return view;
+    }
     bool empty() const { return m_size == 0; }
     const T* data() { return m_storage; }
     Iter begin() { return Iter{ m_storage }; }
