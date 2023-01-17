@@ -39,19 +39,20 @@ class GenericView {
     }
 };
 template <Iterable Cont>
-GenericView(Cont&) -> GenericView<typename IterableTraits<Cont>::ItemType>;
+GenericView(Cont&) -> GenericView<ContainerValueTypeT<Cont>>;
 
 template <Iterable Cont>
-GenericView(const Cont&) -> GenericView<AddConstT<typename IterableTraits<Cont>::ItemType>>;
+GenericView(const Cont&) -> GenericView<AddConstT<ContainerValueTypeT<Cont>>>;
 
 template <typename T>
 using ReadOnlyView = GenericView<AddConstT<T>>;
+
 template <Iterable Cont>
 class IteratorView {
     using Iter = decltype(declval<Cont>().begin());
     Iter m_begin;
     Iter m_end;
-    using ItemType             = RemoveReferenceT<decltype(*declval<Iter>())>;
+    using ItemType             = IteratorInputType<Iter>;
     ItemType* m_stolen_storage = nullptr;
     ItemType* release_storage() {
         ItemType* storage = m_stolen_storage;
@@ -67,21 +68,16 @@ class IteratorView {
     explicit IteratorView(Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
     Iter begin() { return m_begin; }
     Iter end() { return m_end; }
+    Iter begin() const { return m_begin; }
+    Iter end() const { return m_end; }
     size_t size()
     requires IterCanSubtractForSize<Iter>
     {
         return m_end - m_begin;
     }
-    // in-place transform
-    template <typename Functor>
-    requires(IsSameV<decltype(declval<Functor>()(declval<ItemType>())), ItemType>)
-    IteratorView transform(Functor&& func) {
-        for (auto it = m_begin; it != m_end; ++it) { *it = func(*it); }
-        return move(*this);
-    }
     template <typename NewCont = Cont>
     NewCont collect()
-    requires Pushable<NewCont, ItemType>
+    requires Pushable<NewCont, IteratorOutputType<Iter>>
     {
         if (m_stolen_storage != nullptr) {
             if constexpr (SameAs<NewCont, Cont> && IterCanSubtractForSize<Iter>) {
@@ -106,49 +102,16 @@ class IteratorView {
         auto filter_iter = FilterIterate{ *this, func };
         return IteratorView<decltype(filter_iter)>{ release_storage(), filter_iter.begin(), filter_iter.end() };
     }
-    template <typename Functor, typename NewCont = Cont, typename Type = ResultOfT<Functor(ItemType)>>
-    auto map_view(Functor func) {
-        if constexpr (IsSameV<Type, ItemType>) {
-            static_assert(IsSameV<Cont, NewCont>);
-            Type* new_storage = m_stolen_storage != nullptr ? m_stolen_storage : new Type[size()];
-            size_t index      = 0;
-            for (auto it = m_begin; it != m_end; ++it) {
-                new_storage[index] = move(func(*it));
-                index++;
-            }
-            if (m_stolen_storage != nullptr) m_stolen_storage = nullptr;
-            return IteratorView<NewCont>{ new_storage, size() };
-        } else {
-            Type* new_storage = new Type[size()];
-            size_t index      = 0;
-            for (auto it = m_begin; it != m_end; ++it) {
-                new_storage[index] = move(func(*it));
-                index++;
-            }
-            if (m_stolen_storage != nullptr) {
-                delete[] m_stolen_storage;
-                m_stolen_storage = nullptr;
-            }
-            return IteratorView<NewCont>{ new_storage, size() };
-        }
+    template <typename Functor>
+    auto map(Functor func) {
+        auto map_iter = MapIterate{ *this, func };
+        return IteratorView<decltype(map_iter)>{ release_storage(), map_iter.begin(), map_iter.end() };
     }
     template <typename Functor>
-    Cont map(Functor func)
-    requires Pushable<Cont, ItemType> && SameAs<ResultOfT<Functor(ItemType)>, ItemType>
-    {
-        Cont copy{};
-        if constexpr (Reservable<Cont>) { copy.reserve(size()); }
-        for (auto it = m_begin; it != m_end; ++it) { copy.push_back(func(*it)); }
-        return copy;
-    }
-    template <Iterable OtherCont, typename Functor>
-    OtherCont transform_map(Functor func)
-    requires Pushable<OtherCont, ResultOfT<Functor(ItemType)>>
-    {
-        OtherCont cont{};
-        if constexpr (Reservable<OtherCont>) { cont.reserve(size()); }
-        for (auto it = m_begin; it != m_end; ++it) { cont.push_back(func(*it)); }
-        return cont;
+    requires(CallableWithRes<Functor, ItemType, ItemType>)
+    IteratorView inplace_transform(Functor&& func) {
+        for (auto it = m_begin; it != m_end; ++it) { *it = func(*it); }
+        return move(*this);
     }
     ~IteratorView() { delete[] m_stolen_storage; }
 };

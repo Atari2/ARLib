@@ -12,13 +12,14 @@ enum class DeletionResult { Success, Failure };
 template <typename T>
 using HashTableStorage = Vector<Vector<T>>;
 template <typename T>
-class HashTableIterator : public IteratorType<T> {
+class HashTableIterator {
     HashTableStorage<T>& m_backing_store;
     size_t m_current_bucket       = 0;
     size_t m_current_vector_index = 0;
     size_t m_bkt_size             = 0;
 
     public:
+    using ValueType = T;
     constexpr static size_t npos = static_cast<size_t>(-1);
     explicit HashTableIterator(HashTableStorage<T>& backing_store) :
         m_backing_store(backing_store), m_bkt_size(backing_store.size()) {

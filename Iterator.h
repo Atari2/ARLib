@@ -1,21 +1,14 @@
 #pragma once
+#include "BaseTraits.h"
 #include "Comparator.h"
 #include "Concepts.h"
 #include "TypeTraits.h"
 #include "Types.h"
+#include "IteratorInspection.h"
 namespace ARLib {
 
 constexpr static size_t it_npos = static_cast<size_t>(-1);
-template <typename T>
-struct IteratorType {
-    using Type = T;
-};
-template <Iterable T>
-struct IterableTraits {
-    using IterType = decltype(declval<T>().begin());
-    using Tp       = decltype(*declval<IterType>());
-    using ItemType = RemoveReferenceT<ConditionalT<IsConstV<T>, AddConstT<Tp>, Tp>>;
-};
+
 template <typename T>
 class IteratorBase {
     protected:
@@ -25,7 +18,7 @@ class IteratorBase {
     constexpr IteratorBase(IteratorBase<T>&& other) noexcept : m_current(other.m_current) { other.m_current = nullptr; }
 
     public:
-    using Type = T;
+    using ValueType = T;
     constexpr bool operator==(const IteratorBase<T>& other) const { return m_current == other.m_current; }
     constexpr bool operator!=(const IteratorBase<T>& other) const { return m_current != other.m_current; }
     constexpr bool operator<(const IteratorBase<T>& other) { return m_current < other.m_current; }
@@ -81,9 +74,9 @@ class Iterator final : public IteratorBase<T> {
 };
 template <typename Ct>
 class ConstIterator final : public IteratorBase<typename AddConst<Ct>::type> {
-    using T = typename AddConst<Ct>::type;
 
     public:
+    using T = AddConstT<Ct>;
     constexpr explicit ConstIterator(T* start) : IteratorBase<T>(start) {}
     constexpr ConstIterator(const ConstIterator<Ct>& other) : IteratorBase<T>(other) {}
     constexpr ConstIterator(ConstIterator<Ct>&& other) noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
@@ -246,10 +239,9 @@ class LoopIterator {
         return static_cast<size_t>(m_current) - static_cast<size_t>(other.m_current);
     }
 };
-template <class T, class Functor>
-requires CallableWithRes<Functor, bool, const T&>
+
+template <class IterUnit, class Functor>
 class IfIterator {
-    using IterUnit = Iterator<T>;
     IterUnit m_current_iter;
     IterUnit m_end;
     Functor m_func;
@@ -262,11 +254,14 @@ class IfIterator {
     }
 
     public:
+    using InputValueType = IteratorInputType<IterUnit>;
+    using OutputValueType = IteratorOutputType<IterUnit>;
     IfIterator(IterUnit unit, IterUnit end, Functor func, bool is_end = false) :
         m_current_iter(unit), m_end(end), m_func(func) {
         if (!is_end) { advance(); }
     }
-    T& operator*() { return *m_current_iter; }
+    OutputValueType operator*() { return *m_current_iter; }
+    const OutputValueType operator*() const { return *m_current_iter; }
     IfIterator& operator++() {
         if (m_current_iter == m_end) return *this;
         ++m_current_iter;
@@ -283,6 +278,54 @@ class IfIterator {
     bool operator<(const IfIterator& other) { return m_current_iter < other.m_current_iter; }
     bool operator>(const IfIterator& other) { return m_current_iter > other.m_current_iter; }
     size_t operator-(const IfIterator& other) const {
+        if (other.m_end != m_end) return it_npos;
+        return m_current_iter - other.m_current_iter;
+    }
+};
+
+template <class ItemType, class Functor>
+using MapType = ConditionalT<IsConstV<ItemType>, AddConstT<InvokeResultT<Functor, ItemType>>, InvokeResultT<Functor, ItemType>>;
+
+template <class IterUnit, class Functor>
+requires CallableWith<Functor, IteratorOutputType<IterUnit>>
+class MapIterator {
+    IterUnit m_current_iter;
+    IterUnit m_end;
+    Functor m_func;
+
+    public:
+    using InputValueType = IteratorInputType<IterUnit>;
+    using OutputValueType = MapType<IteratorOutputType<IterUnit>, Functor>;
+    MapIterator(IterUnit unit, IterUnit end, Functor func) :
+        m_current_iter(unit), m_end(end), m_func(func) {
+    }
+    OutputValueType operator*() { return m_func(*m_current_iter); }
+    const OutputValueType operator*() const { return m_func(*m_current_iter); }
+    MapIterator& operator++() {
+        if (m_current_iter == m_end) return *this;
+        ++m_current_iter;
+        return *this;
+    }
+    MapIterator operator++(int) {
+        MapIterator iter{ *this };
+        this->operator++();
+        return iter;
+    }
+    MapIterator& operator--() {
+        if (m_current_iter == m_end) return *this;
+        --m_current_iter;
+        return *this;
+    }
+    MapIterator operator--(int) {
+        MapIterator iter{ *this };
+        this->operator--();
+        return iter;
+    }
+    bool operator==(const MapIterator& other) const { return m_current_iter == other.m_current_iter; }
+    bool operator!=(const MapIterator& other) const { return m_current_iter != other.m_current_iter; }
+    bool operator<(const MapIterator& other) { return m_current_iter < other.m_current_iter; }
+    bool operator>(const MapIterator& other) { return m_current_iter > other.m_current_iter; }
+    size_t operator-(const MapIterator& other) const {
         if (other.m_end != m_end) return it_npos;
         return m_current_iter - other.m_current_iter;
     }

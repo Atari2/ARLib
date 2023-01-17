@@ -66,13 +66,23 @@ class FilterIterate {
     Iter m_start;
     Iter m_end;
     Functor m_func;
-
-    using Type = RemoveReferenceT<decltype(*m_start)>;
-
     public:
     FilterIterate(Container& cont, Functor func) : m_start(cont.begin()), m_end(cont.end()), m_func(func) {}
     FilterIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
-    auto begin() const { return IfIterator<Type, Functor>{ m_start, m_end, m_func }; }
-    auto end() const { return IfIterator<Type, Functor>{ m_end, m_end, m_func, true }; }
+    auto begin() const { return IfIterator<Iter, Functor>{ m_start, m_end, m_func }; }
+    auto end() const { return IfIterator<Iter, Functor>{ m_end, m_end, m_func, true }; }
+};
+template <Iterable Container, typename Functor>
+class MapIterate {
+    using Iter = decltype(declval<Container>().begin());
+    Iter m_start;
+    Iter m_end;
+    Functor m_func;
+
+    public:
+    MapIterate(Container& cont, Functor func) : m_start(cont.begin()), m_end(cont.end()), m_func(func) {}
+    MapIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
+    auto begin() const { return MapIterator<Iter, Functor>{ m_start, m_end, m_func }; }
+    auto end() const { return MapIterator<Iter, Functor>{ m_end, m_end, m_func }; }
 };
 }    // namespace ARLib

@@ -170,7 +170,7 @@ String ArgParser::construct_help_string() const {
         }
     }
     size_t needed_width =
-    *max(IteratorView{ name_value_list }.transform_map<Vector<size_t>>([](const String& s) -> size_t {
+    *max(IteratorView{ name_value_list }.map([](const String& s) {
         return s.size();
     })) +
     2;

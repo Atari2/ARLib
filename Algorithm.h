@@ -1,6 +1,7 @@
 #pragma once
 #include "Concepts.h"
 #include "Iterator.h"
+#include "IteratorInspection.h"
 #include "Utility.h"
 #include "cmath_compat.h"
 namespace ARLib {
@@ -12,8 +13,8 @@ constexpr inline auto sum_default = [](const T& elem) {
 
 constexpr inline size_t npos_ = static_cast<size_t>(-1);
 template <IteratorConcept Iter>
-requires EqualityComparable<typename Iter::Type>
-constexpr size_t find(Iter begin, Iter end, const typename Iter::Type& elem) {
+requires EqualityComparable<IteratorOutputType<Iter>>
+constexpr size_t find(Iter begin, Iter end, const IteratorOutputType<Iter>& elem) {
     if (begin == end) return npos_;
     size_t index = 0;
     for (; begin != end; ++begin, index++)
@@ -37,7 +38,7 @@ constexpr auto find_if(const C& cont, Func condition) {
     return npos_;
 }
 template <IteratorConcept Iter>
-requires MoreComparable<typename Iter::Type>
+requires MoreComparable<IteratorOutputType<Iter>>
 constexpr Iter max(Iter begin, Iter end) {
     if (begin == end) return begin;
     Iter value{ begin };
@@ -46,7 +47,7 @@ constexpr Iter max(Iter begin, Iter end) {
     return value;
 }
 template <IteratorConcept Iter>
-requires LessComparable<typename Iter::Type>
+requires LessComparable<IteratorOutputType<Iter>>
 constexpr Iter min(Iter begin, Iter end) {
     if (begin == end) return begin;
     Iter value{ begin };
@@ -54,8 +55,8 @@ constexpr Iter min(Iter begin, Iter end) {
         if (*begin < *value) value = begin;
     return value;
 }
-template <IteratorConcept Iter, typename Functor = decltype(sum_default<typename Iter::Type>)>
-constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<typename Iter::Type>) {
+template <IteratorConcept Iter, typename Functor = decltype(sum_default<IteratorOutputType<Iter>>)>
+constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<IteratorOutputType<Iter>>) {
     if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
     auto total = func(*begin);
     begin++;
@@ -185,7 +186,7 @@ auto transform(const C& cont, Functor func) {
 }
 // follows very naive quicksort implementation
 template <IteratorConcept Iter>
-requires MoreComparable<typename Iter::Type> && LessComparable<typename Iter::Type>
+requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutputType<Iter>>
 Iter partition(Iter lo, Iter hi) {
     auto pivot = lo + static_cast<int>(((hi - lo) / 2));
     auto i     = lo - 1;
@@ -200,7 +201,7 @@ Iter partition(Iter lo, Iter hi) {
     }
 }
 template <IteratorConcept Iter>
-requires MoreComparable<typename Iter::Type> && LessComparable<typename Iter::Type>
+requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutputType<Iter>>
 void quicksort_internal(Iter lo, Iter hi) {
     if (lo < hi) {
         auto p = partition(lo, hi);

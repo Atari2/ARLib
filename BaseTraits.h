@@ -295,11 +295,11 @@ template <class T>
 using AddCvT = typename AddCv<T>::type;
 template <class T>
 struct AddConst {
-    typedef const T type;
+    using type = const T;
 };
 template <class T>
 struct AddConst<T&> {
-    typedef const T& type;
+    using type = const T&;
 };
 
 template <class T>

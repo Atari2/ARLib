@@ -340,7 +340,9 @@ class Vector {
         auto view = IteratorView<Vector<T>>{ m_storage, m_size };
         m_capacity = 0;
         return view;
-    }
+    }    
+    constexpr auto enumerate() const { ConstEnumerate en{*this}; return IteratorView{ en }; }
+    constexpr auto enumerate() { Enumerate en{*this}; return IteratorView{ en }; }
     bool empty() const { return m_size == 0; }
     const T* data() { return m_storage; }
     Iter begin() { return Iter{ m_storage }; }

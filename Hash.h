@@ -68,7 +68,7 @@ class HashAlgorithm<HashType::CRC32> {
         return ~crc32;
     }
     template <Iterable C>
-    requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
+    requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
     constexpr static uint32_t calculate(const C& cont) {
         return calculate(GenericView{ cont });
     }
@@ -90,7 +90,7 @@ class HashAlgorithm<HashType::MD5> {
     static MD5Result calculate(ReadOnlyByteView);
     static MD5Result calculate(ReadOnlyCharView);
     template <Iterable C>
-    requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
+    requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
     static MD5Result calculate(const C& cont) {
         return calculate(GenericView{ cont });
     }
@@ -104,7 +104,7 @@ class HashAlgorithm<HashType::SHA1> {
     static SHA1Result calculate(ReadOnlyByteView);
     static SHA1Result calculate(ReadOnlyCharView);
     template <Iterable C>
-    requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
+    requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
     static SHA1Result calculate(const C& cont) {
         return calculate(GenericView{ cont });
     }
@@ -118,7 +118,7 @@ class HashAlgorithm<HashType::SHA256> {
     static SHA256Result calculate(ReadOnlyByteView);
     static SHA256Result calculate(ReadOnlyCharView);
     template <Iterable C>
-    requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
+    requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
     static SHA256Result calculate(const C& cont) {
         return calculate(GenericView{ cont });
     }

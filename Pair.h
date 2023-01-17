@@ -156,9 +156,9 @@ class Enumerator {
     }
     bool operator==(const Enumerator& other) const { return m_index == other.m_index; }
     bool operator!=(const Enumerator& other) const { return m_index != other.m_index; }
-    bool operator<(const Enumerator& other) { return m_index < other.m_index; }
-    bool operator>(const Enumerator& other) { return m_index > other.m_index; }
-    size_t operator-(const Enumerator& other) { return m_iter - other.m_iter; }
+    bool operator<(const Enumerator& other) const { return m_index < other.m_index; }
+    bool operator>(const Enumerator& other) const { return m_index > other.m_index; }
+    size_t operator-(const Enumerator& other) const { return m_iter - other.m_iter; }
 };
 template <typename T>
 class ConstEnumerator {
@@ -184,8 +184,8 @@ class ConstEnumerator {
     }
     bool operator==(const ConstEnumerator& other) const { return m_index == other.m_index; }
     bool operator!=(const ConstEnumerator& other) const { return m_index != other.m_index; }
-    bool operator<(const ConstEnumerator& other) { return m_index < other.m_index; }
-    bool operator>(const ConstEnumerator& other) { return m_index > other.m_index; }
-    size_t operator-(const ConstEnumerator& other) { return m_iter - other.m_iter; }
+    bool operator<(const ConstEnumerator& other) const { return m_index < other.m_index; }
+    bool operator>(const ConstEnumerator& other) const { return m_index > other.m_index; }
+    size_t operator-(const ConstEnumerator& other) const { return m_iter - other.m_iter; }
 };
 }    // namespace ARLib
