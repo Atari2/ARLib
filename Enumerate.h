@@ -31,14 +31,17 @@ class Iterate {
 };
 template <EnumerableC T>
 class Enumerate {
-    using TRef = typename RemoveReference<T>::type&;
-    TRef m_container;
+    T m_container;
 
     public:
-    explicit Enumerate(T& container) : m_container(container) {}
+    explicit Enumerate(T container) : m_container(Forward<T>(container)) {}
     auto begin() const { return Enumerator{ ARLib::begin(m_container), 0ull }; }
     auto end() const { return Enumerator{ ARLib::end(m_container), m_container.size() }; }
 };
+template <EnumerableC T>
+Enumerate(T&) -> Enumerate<T&>;
+template <EnumerableC T>
+Enumerate(T&&) -> Enumerate<T>;
 template <EnumerableC T>
 class ConstEnumerate {
     using TRef = AddConstT<typename RemoveReference<T>::type>&;
@@ -79,11 +82,17 @@ class ZipIterate {
     public:
     using ZipContainer = decltype(types_into_refbox_tuple<Conts...>());
     ZipContainer m_tuple;
-    ZipIterate(Conts&... consts) : m_tuple{ consts... } {}
+    ZipIterate(Conts&... conts) : m_tuple{ conts... } {}
     auto begin() const { return ibegin(IndexSequenceFor<Conts...>{}); }
     auto end() const { return iend(IndexSequenceFor<Conts...>{}); }
     auto size() const { return isize(IndexSequenceFor<Conts...>{}); }
 };
+
+template <Iterable... Conts>
+auto zip(Conts&... conts) {
+    return ZipIterate{ conts... };
+}
+
 template <Iterable Container, typename Functor>
 class FilterIterate {
     using Iter = decltype(declval<Container>().begin());
