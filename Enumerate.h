@@ -42,6 +42,11 @@ template <EnumerableC T>
 Enumerate(T&) -> Enumerate<T&>;
 template <EnumerableC T>
 Enumerate(T&&) -> Enumerate<T>;
+
+auto enumerate(EnumerableC auto&& cont) {
+    return Enumerate{ cont };
+}
+
 template <EnumerableC T>
 class ConstEnumerate {
     using TRef = AddConstT<typename RemoveReference<T>::type>&;
