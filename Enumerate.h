@@ -1,7 +1,7 @@
 #pragma once
 #include "Algorithm.h"
 #include "Iterator.h"
-#include "Pair.h"
+#include "AdvancedIterators.h"
 namespace ARLib {
 template <typename T, ComparatorType CMP = ComparatorType::NotEqual, typename = EnableIfT<IsNonboolIntegral<T>>>
 class Iterate {
@@ -59,6 +59,30 @@ class PairIterate {
     PairIterate(F& f, S& s) : m_first(f), m_second(s) {}
     auto begin() const { return PairIterator{ m_first.begin(), m_second.begin() }; }
     auto end() const { return PairIterator{ m_first.end(), m_second.end() }; }
+};
+template <Iterable... Conts>
+class ZipIterate {
+    template <size_t... Vals>
+    auto ibegin(IndexSequence<Vals...>) const {
+        return ZipIterator{ m_tuple.template get<Vals>().get().begin()... };
+    }
+    template <size_t... Vals>
+    auto iend(IndexSequence<Vals...>) const {
+        return ZipIterator{ m_tuple.template get<Vals>().get().end()... };
+    }
+    template <size_t... Vals>
+    auto isize(IndexSequence<Vals...>) const {
+        size_t sizes[sizeof...(Conts)]{ m_tuple.template get<Vals>().get().size()... };
+        return *min(ARLib::begin(sizes), ARLib::end(sizes));
+    }
+
+    public:
+    using ZipContainer = decltype(types_into_refbox_tuple<Conts...>());
+    ZipContainer m_tuple;
+    ZipIterate(Conts&... consts) : m_tuple{ consts... } {}
+    auto begin() const { return ibegin(IndexSequenceFor<Conts...>{}); }
+    auto end() const { return iend(IndexSequenceFor<Conts...>{}); }
+    auto size() const { return isize(IndexSequenceFor<Conts...>{}); }
 };
 template <Iterable Container, typename Functor>
 class FilterIterate {

@@ -247,7 +247,6 @@ template <typename T>
 concept SignedIntegral = Integral<T> && IsSigned<T>;
 
 template <typename T>
-concept UnsignedIntegral = Integral<T> && !
-IsSigned<T>;
+concept UnsignedIntegral = Integral<T> && (!IsSigned<T>);
 
 }    // namespace ARLib

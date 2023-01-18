@@ -15,13 +15,6 @@ constexpr size_t CountOneBits(Integral auto value) {
     }
     return one_bits;
 }
-template <typename... Types>
-struct TypeArray {
-    using TupleType = Tuple<Types...>;
-    template <size_t I>
-    requires(I < sizeof...(Types))
-    using At = RemoveCvRefT<decltype(declval<TupleType>().template get<I>())>;
-};
 
 template <size_t Width>
 class BitInteger;

@@ -3,6 +3,18 @@
 #include "Invoke.h"
 #include "PrintInfo.h"
 #include "Utility.h"
+
+// we love UB
+// forward declaring things in std:: is UB
+// but this avoids having to #include <utility>
+// so I'll do it
+namespace std {
+template <class T>
+struct tuple_size;
+template <size_t I, class T>
+struct tuple_element;
+}
+
 namespace ARLib {
 template <typename T, typename... Args>
 class Tuple : Tuple<Args...> {
@@ -44,7 +56,7 @@ class Tuple : Tuple<Args...> {
         return *this;
     }
     template <typename Tp>
-    constexpr const Tp& get() const {
+    constexpr const auto& get() const {
         static_assert(IsAnyOfCvRefV<Tp, T, Args...>);
         if constexpr (SameAsCvRef<Tp, RemoveReferenceT<T>>) {
             static_assert(
@@ -57,7 +69,7 @@ class Tuple : Tuple<Args...> {
         }
     }
     template <typename Tp>
-    constexpr Tp& get() {
+    constexpr auto& get() {
         static_assert(IsAnyOfCvRefV<Tp, T, Args...>);
         if constexpr (SameAsCvRef<Tp, T>) {
             static_assert(
@@ -120,12 +132,12 @@ class Tuple<T> {
         return *this;
     }
     template <typename Tp>
-    T& get() {
+    auto& get() {
         static_assert(SameAsCvRef<Tp, T>);
         return m_member;
     }
     template <typename Tp>
-    const T& get() const {
+    const auto& get() const {
         static_assert(SameAsCvRef<Tp, T>);
         return m_member;
     }
@@ -218,3 +230,22 @@ struct PrintInfo<Tuple<Args...>> {
     }
 };
 }    // namespace ARLib
+
+// tuple_size and tuple_element specializations for ARLib::Tuple
+template <typename... Types>
+struct std::tuple_size<ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
+template <typename... Types>
+struct std::tuple_size<const ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
+
+template <std::size_t I, class Head, class... Tail>
+struct std::tuple_element<I, ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, ARLib::Tuple<Tail...>> {};
+template <class Head, class... Tail>
+struct std::tuple_element<0, ARLib::Tuple<Head, Tail...>> {
+    using type = const Head;
+};
+template <std::size_t I, class Head, class... Tail>
+struct std::tuple_element<I, const ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, ARLib::Tuple<Tail...>> {};
+template <class Head, class... Tail>
+struct std::tuple_element<0, const ARLib::Tuple<Head, Tail...>> {
+    using type = const Head;
+};

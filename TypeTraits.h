@@ -609,4 +609,45 @@ constexpr inline bool SupportsV = Supports<B>::value;
 // Helper to SFINAE away emplace variadic template parameters constructors
 template <class T>
 struct EmplaceT {};
+template <class T>
+AddLvalueReferenceT<T> priv_declval() noexcept {
+    static_assert(AlwaysFalse<T>, "Declval cannot be called");
+}
+template <typename T, typename... Types>
+struct TypeTuple : TypeTuple<Types...> {
+    using RealT = ConditionalT<IsLvalueReferenceV<T>, T, AddPointerT<T>>;
+    RealT dummy;
+    template <size_t N>
+    constexpr decltype(auto) get() const {
+        if constexpr (N == 0 && IsPointerV<RealT>) {
+            return *dummy;
+        } else if constexpr (N == 0) {
+            return dummy;
+        } else {
+            static_assert(N < (sizeof...(Types) + 1) && N > 0);
+            return static_cast<const TypeTuple<Types...>*>(this)->template get<N - 1>();
+        }
+    }
+};
+template <typename T>
+struct TypeTuple<T> {
+    using RealT = ConditionalT<IsLvalueReferenceV<T>, T, AddPointerT<T>>;
+    RealT dummy;
+    template <size_t N>
+    requires(N == 0)
+    constexpr decltype(auto) get() const {
+        if constexpr (IsPointerV<RealT>) {
+            return *dummy;
+        } else {
+            return dummy;
+        }
+    }
+};
+template <typename... Types>
+struct TypeArray {
+    using TT = TypeTuple<Types...>;
+    template <size_t I>
+    requires(I < sizeof...(Types))
+    using At = RemoveCvRefT<decltype(priv_declval<TT>().template get<I>())>;
+};
 }    // namespace ARLib

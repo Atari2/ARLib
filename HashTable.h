@@ -337,6 +337,14 @@ class HashTable {
         return tend();
     }
     auto end(size_t hash) { return m_storage[hash % m_bucket_count].end(); }
+    HashTableIterator<T> begin() { return HashTableIterator<T>{ m_storage }; }
+    HashTableIterator<T> end() {
+        return HashTableIterator<T>{ m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos };
+    }
+    ConstHashTableIterator<T> begin() const { return ConstHashTableIterator<T>{ m_storage }; }
+    ConstHashTableIterator<T> end() const {
+        return ConstHashTableIterator<T>{ m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos };
+    }
     HashTableIterator<T> tbegin() { return HashTableIterator<T>{ m_storage }; }
     HashTableIterator<T> tend() {
         return HashTableIterator<T>{ m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos };

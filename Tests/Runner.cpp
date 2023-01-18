@@ -763,7 +763,7 @@ TEST(ARLibTests, MatrixTests) {
     EXPECT_EQ(mat_inv.det(), fmat_inv.det());
     mat -= 1.0;
     fmat *= 2.0;
-    double val = mat[{ 5, 5 }];
+    double val = mat[{ 5_sz, 5_sz }];
     EXPECT_EQ(val, 5.0 + 5.0 * 10.0 - 1.0);
 }
 TEST(ARLibTests, ArgParserTests) {
