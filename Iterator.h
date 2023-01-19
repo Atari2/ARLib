@@ -5,10 +5,10 @@
 #include "TypeTraits.h"
 #include "Types.h"
 #include "IteratorInspection.h"
+#include "Invoke.h"
 namespace ARLib {
 
 constexpr static size_t it_npos = static_cast<size_t>(-1);
-
 template <typename T>
 class IteratorBase {
     protected:
@@ -239,22 +239,24 @@ class LoopIterator {
         return static_cast<size_t>(m_current) - static_cast<size_t>(other.m_current);
     }
 };
-
 template <class IterUnit, class Functor>
+requires requires(IterUnit iter, Functor func) {
+             { invoke(func, *iter) } -> SameAs<bool>;
+         }
 class IfIterator {
     IterUnit m_current_iter;
     IterUnit m_end;
     Functor m_func;
     void advance() {
         if (m_current_iter == m_end) return;
-        while (!m_func(*m_current_iter)) {
+        while (!invoke(m_func, *m_current_iter)) {
             ++m_current_iter;
             if (m_current_iter == m_end) return;
         }
     }
 
     public:
-    using InputValueType = IteratorInputType<IterUnit>;
+    using InputValueType  = IteratorInputType<IterUnit>;
     using OutputValueType = IteratorOutputType<IterUnit>;
     IfIterator(IterUnit unit, IterUnit end, Functor func, bool is_end = false) :
         m_current_iter(unit), m_end(end), m_func(func) {
@@ -284,23 +286,21 @@ class IfIterator {
 };
 
 template <class ItemType, class Functor>
-using MapType = ConditionalT<IsConstV<ItemType>, AddConstT<InvokeResultT<Functor, ItemType>>, InvokeResultT<Functor, ItemType>>;
-
+using MapType =
+ConditionalT<IsConstV<ItemType>, AddConstT<InvokeResultT<Functor, ItemType>>, InvokeResultT<Functor, ItemType>>;
 template <class IterUnit, class Functor>
-requires CallableWith<Functor, IteratorOutputType<IterUnit>>
+requires requires(IterUnit iter, Functor func) { invoke(func, *iter); }
 class MapIterator {
     IterUnit m_current_iter;
     IterUnit m_end;
     Functor m_func;
 
     public:
-    using InputValueType = IteratorInputType<IterUnit>;
+    using InputValueType  = IteratorInputType<IterUnit>;
     using OutputValueType = MapType<IteratorOutputType<IterUnit>, Functor>;
-    MapIterator(IterUnit unit, IterUnit end, Functor func) :
-        m_current_iter(unit), m_end(end), m_func(func) {
-    }
-    OutputValueType operator*() { return m_func(*m_current_iter); }
-    const OutputValueType operator*() const { return m_func(*m_current_iter); }
+    MapIterator(IterUnit unit, IterUnit end, Functor func) : m_current_iter(unit), m_end(end), m_func(func) {}
+    OutputValueType operator*() { return invoke(m_func, *m_current_iter); }
+    const OutputValueType operator*() const { return invoke(m_func, *m_current_iter); }
     MapIterator& operator++() {
         if (m_current_iter == m_end) return *this;
         ++m_current_iter;

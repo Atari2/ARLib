@@ -10,7 +10,7 @@ namespace Detail {
 
     template <typename... Args>
     void compiletime_assertion_fail(Args...);
-    template <size_t N, size_t ArgsSize>
+    template <size_t ArgsSize, size_t N>
     consteval bool check_format_string(const char (&str)[N]) {
         size_t count = 0;
         enum class FormatState { EscapeNextOpen, EscapeNextClosed, Continue } state{ FormatState::Continue };
@@ -50,7 +50,7 @@ namespace Detail {
         template <size_t N>
         consteval CheckedFormatString(const char (&fmt_)[N]) : fmt{ fmt_, N - 1 } {
 #ifndef COMPILER_CLANG
-            bool result = check_format_string<N, ArgsSize>(fmt_);
+            bool result = check_format_string<ArgsSize>(fmt_);
             if (!result) compiletime_assertion_fail("Format arguments are not the same number as formats to fill");
 #endif
         }
