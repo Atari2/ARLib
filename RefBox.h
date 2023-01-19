@@ -5,25 +5,22 @@ namespace ARLib {
 // simple box for a reference type, should not be used
 template <typename T>
 class RefBox {
-    using TRef  = AddLvalueReferenceT<RemoveReferenceT<T>>;
-    using CTRef = AddConstT<AddLvalueReferenceT<RemoveReferenceT<T>>>;
     using TPtr  = AddPointerT<RemoveReferenceT<T>>;
-    using CTPtr = AddConstT<AddPointerT<RemoveReferenceT<T>>>;
     TPtr m_boxed{};
 
     public:
     constexpr RefBox() : m_boxed(nullptr) {}
-    constexpr RefBox(TRef obj) : m_boxed(&obj) {}
-    constexpr CTPtr ptr() const { return m_boxed; }
+    constexpr RefBox(T& obj) : m_boxed(&obj) {}
+    constexpr const TPtr ptr() const { return m_boxed; }
     constexpr TPtr ptr() { return m_boxed; }
-    constexpr operator TRef() { return *m_boxed; }
-    constexpr operator CTRef() const { return *m_boxed; }
-    constexpr TRef operator*() { return *m_boxed; }
-    constexpr CTRef operator*() const { return *m_boxed; }
+    constexpr T& operator*() { return *m_boxed; }
+    constexpr const T& operator*() const { return *m_boxed; }
     constexpr auto operator->() { return m_boxed; }
     constexpr auto operator->() const { return m_boxed; }
-    constexpr CTRef get() const { return *m_boxed; }
-    constexpr TRef get() { return *m_boxed; }
+    constexpr const auto& get() const { return *m_boxed; }
+    constexpr auto& get() { return *m_boxed; }
+    constexpr bool operator==(const RefBox& other) const { if (m_boxed && other.m_boxed) { return *m_boxed == *other.m_boxed; } return m_boxed == other.m_boxed; }
+    constexpr bool operator!=(const RefBox& other) const { if (m_boxed && other.m_boxed) { return *m_boxed != *other.m_boxed; } return m_boxed != other.m_boxed; }
 };
 
 template <typename T>

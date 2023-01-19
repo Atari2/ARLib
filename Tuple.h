@@ -31,6 +31,18 @@ class Tuple : Tuple<Args...> {
             }
         }
     }
+    template <size_t N>
+    bool inequality_impl(const Tuple& other) const {
+        if constexpr (N == 0)
+            return m_member != other.m_member;
+        else {
+            if (this->template get<N>() == other.template get<N>()) {
+                return inequality_impl<N - 1>(other);
+            } else {
+                return true;
+            }
+        }
+    }
 
     public:
     constexpr static inline size_t size = 1 + sizeof...(Args);
@@ -41,6 +53,7 @@ class Tuple : Tuple<Args...> {
     Tuple& operator=(const Tuple&)     = default;
     Tuple& operator=(Tuple&&) noexcept = default;
     bool operator==(const Tuple& other) const { return equality_impl<sizeof...(Args) - 1>(other); }
+    bool operator!=(const Tuple& other) const { return inequality_impl<sizeof...(Args) - 1>(other); }
     Tuple& operator=(T&& value) {
         static_assert(
         !IsAnyOfCvRefV<T, Args...>,
@@ -223,7 +236,7 @@ struct PrintInfo<Tuple<Args...>> {
     explicit PrintInfo(const Tuple<Args...>& tuple) : m_tuple(tuple) {}
     String repr() const {
         String str{ "{ " };
-        (str.append(PrintInfo<RemoveReferenceT<Args>>{ get<Args>(m_tuple) }.repr() + ", "_s), ...);
+        (str.append(print_conditional(get<Args>(m_tuple)) + ", "_s), ...);
         str = str.substring(0, str.size() - 2);
         str.append(" }");
         return str;

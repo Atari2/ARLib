@@ -1,22 +1,18 @@
 #include "../Printer.h"
 #include "../CharConv.h"
-#include "../Array.h"
-#include "../GenericView.h"
+#include "../HashMap.h"
+#include "../String.h"
+#include "../Vector.h"
+#include "../Enumerate.h"
 using namespace ARLib;
 int main() {
-    auto r = 
-    Array{ 1, 2, 3, 4, 5 }
-    .enumerate()
-    .filter([](auto e) { auto [i, v] = e; return i % 2 == 0; })
-    .map([](auto e) { auto [i, v] = e; return IntToStr(v); })
-    .collect<Vector<String>>();
-
-    const Vector<int> v{ 1, 20, 3, 40, 5 };
-    auto r2 = v
-    .view()
-    .map([](int i) { return IntToStr(i); })
-    .filter([](const String& s) { return s.size() % 2 == 0;})
-    .collect<Vector<String>>();
-
-    Printer::print("{} {}", r, r2);
+    String str{ "ABCDEFG" };
+    Vector<int> vec{ 1, 2, 3 };
+    Vector<String> vec2{"FOO"_s, "BAR"_s, "BAZ"_s};
+    HashMap<String, String> map{};
+    map.add("Hello"_s, "World"_s);
+    map.add("World"_s, "Hello"_s);
+    map.add("Foo"_s, "Bar"_s);
+    for (const auto& [a, b, c, v] : zip(str, vec, vec2, map)) { Printer::print("{} {} {} {}", a, b, c, v); }
+    for (const auto& [i, t]: enumerate(zip(str, vec, vec2, map))) { Printer::print("{} -> {}", i, t); }
 }

@@ -1,8 +1,41 @@
 #pragma once
 #include "Algorithm.h"
+#include "Concepts.h"
 #include "Iterator.h"
 #include "AdvancedIterators.h"
+#include "TypeTraits.h"
 namespace ARLib {
+
+template <typename Cont>
+size_t container_size(const Cont& cont) {
+    if constexpr (EnumerableC<Cont>) {
+        if constexpr (IterCanSubtractForSize<decltype(declval<Cont>().begin())>) {
+            return cont.end() - cont.begin();
+        } else {
+            return cont.size();
+        }
+    } else if constexpr (CanKnowSize<Cont>) {
+        return cont.size();
+    } else {
+        static_assert(AlwaysFalse<Cont>, "Cannot get size of this container");
+    }
+}
+
+template <typename It>
+concept IterCanAdvanceWithOffset = requires(It it, size_t dist) {
+    { it + dist } -> SameAs<It>;
+};
+
+template <IteratorConcept It>
+auto advance_iterator(It iter, It end, size_t dist) {
+    if constexpr (IterCanAdvanceWithOffset<It>) {
+        return iter + static_cast<int>(dist);
+    } else {
+        for (size_t i = 0; i < dist && iter != end; i++) ++iter;
+        return iter;
+    }
+}
+
 template <typename T, ComparatorType CMP = ComparatorType::NotEqual, typename = EnableIfT<IsNonboolIntegral<T>>>
 class Iterate {
     T m_begin;
@@ -43,7 +76,12 @@ Enumerate(T&) -> Enumerate<T&>;
 template <EnumerableC T>
 Enumerate(T&&) -> Enumerate<T>;
 
-auto enumerate(EnumerableC auto&& cont) {
+template <EnumerableC T>
+auto enumerate(T&& cont) {
+    return Enumerate{ Forward<T>(cont) };
+}
+template <EnumerableC T>
+auto enumerate(T& cont) {
     return Enumerate{ cont };
 }
 
@@ -58,39 +96,44 @@ class ConstEnumerate {
     auto end() const { return ConstEnumerator{ ARLib::end(m_container), m_container.size() }; }
 };
 // simple iterator pair wrapper, will only iterate until the shorter of the 2 iterators has elements.
-template <Iterable F, Iterable S>
+template <EnumerableC F, EnumerableC S>
 class PairIterate {
     F& m_first;
     S& m_second;
+    size_t m_size;
 
     public:
-    PairIterate(F& f, S& s) : m_first(f), m_second(s) {}
+    PairIterate(F& f, S& s) : m_first(f), m_second(s) {
+        m_size = min_bt(container_size(f), container_size(s));
+    }
     auto begin() const { return PairIterator{ m_first.begin(), m_second.begin() }; }
     auto end() const { return PairIterator{ m_first.end(), m_second.end() }; }
 };
 template <Iterable... Conts>
 class ZipIterate {
+    using ZipContainer = decltype(types_into_ref_tuple<Conts...>());
+    ZipContainer m_tuple;
+    size_t m_size;
     template <size_t... Vals>
     auto ibegin(IndexSequence<Vals...>) const {
-        return ZipIterator{ m_tuple.template get<Vals>().get().begin()... };
+        return ZipIterator{ m_tuple.template get<Vals>().begin()... };
     }
     template <size_t... Vals>
     auto iend(IndexSequence<Vals...>) const {
-        return ZipIterator{ m_tuple.template get<Vals>().get().end()... };
+        return ZipIterator{ advance_iterator(m_tuple.template get<Vals>().begin(), m_tuple.template get<Vals>().end(), m_size)... };
     }
     template <size_t... Vals>
-    auto isize(IndexSequence<Vals...>) const {
-        size_t sizes[sizeof...(Conts)]{ m_tuple.template get<Vals>().get().size()... };
+    size_t isize(IndexSequence<Vals...>) const {
+        size_t sizes[sizeof...(Conts)]{ container_size(m_tuple.template get<Vals>())... };
         return *min(ARLib::begin(sizes), ARLib::end(sizes));
     }
-
     public:
-    using ZipContainer = decltype(types_into_refbox_tuple<Conts...>());
-    ZipContainer m_tuple;
-    ZipIterate(Conts&... conts) : m_tuple{ conts... } {}
+    ZipIterate(Conts&... conts) : m_tuple{ conts... }, m_size{} {
+        m_size = isize(IndexSequenceFor<Conts...>{});
+    }
     auto begin() const { return ibegin(IndexSequenceFor<Conts...>{}); }
     auto end() const { return iend(IndexSequenceFor<Conts...>{}); }
-    auto size() const { return isize(IndexSequenceFor<Conts...>{}); }
+    size_t size() const { return m_size; }
 };
 
 template <Iterable... Conts>

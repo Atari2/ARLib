@@ -1,9 +1,9 @@
 #pragma once
+#include "BaseTraits.h"
 #include "Tuple.h"
 #include "TypeTraits.h"
 #include "Pair.h"
 #include "Concepts.h"
-#include "RefBox.h"
 
 namespace ARLib {
 template <typename F, typename S>
@@ -12,7 +12,7 @@ class PairIterator {
     IterUnit m_current_pair;
     using FT = decltype(*m_current_pair.template get<0>());
     using ST = decltype(*m_current_pair.template get<1>());
-
+    
     public:
     PairIterator(F first, S second) : m_current_pair(first, second) {}
     explicit PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
@@ -50,39 +50,43 @@ class PairIterator {
 };
 template <typename... Tps>
 requires(sizeof...(Tps) > 0)
-auto types_into_refbox_tuple() {
+auto types_into_ref_tuple() {
     if constexpr (sizeof...(Tps) == 1) {
-        return Tuple<RefBox<Tps...>>{};
+        Tuple<Tps&...>* ptr{};
+        return *ptr;
     } else {
         using A1  = TypeArray<Tps...>;
         using Cur = typename A1::template At<0>;
-        using A2  = TypeArray<RefBox<Cur>>;
-        return types_into_refbox_tuple<1>(A1{}, A2{});
+        using A2  = TypeArray<AddLvalueReferenceT<Cur>>;
+        return types_into_ref_tuple<1>(A1{}, A2{});
     }
 }
 template <size_t Idx, typename... P1, typename... P2>
 requires(Idx < sizeof...(P1))
-auto types_into_refbox_tuple(TypeArray<P1...>, TypeArray<P2...>) {
+auto types_into_ref_tuple(TypeArray<P1...>, TypeArray<P2...>) {
     using A1  = TypeArray<P1...>;
     using Cur = typename A1::template At<Idx>;
-    using A2  = TypeArray<P2..., RefBox<Cur>>;
+    using A2  = TypeArray<P2..., AddLvalueReferenceT<Cur>>;
     if constexpr ((Idx + 1) == sizeof...(P1)) {
-        return Tuple<P2..., RefBox<Cur>>{};
+        Tuple<P2..., AddLvalueReferenceT<Cur>>* ptr{};
+        return *ptr;
     } else {
-        return types_into_refbox_tuple<Idx + 1>(A1{}, A2{});
+        return types_into_ref_tuple<Idx + 1>(A1{}, A2{});
     }
 }
 template <typename... Tps>
 requires(sizeof...(Tps) > 0)
 auto types_into_iter_tuple() {
     if constexpr (sizeof...(Tps) == 1) {
-        using TupleT = Tuple<decltype(*declval<Tps...>())>;
+        using VT = AddLvalueReferenceT<decltype(*declval<Tps...>())>;
+        using TupleT = Tuple<VT>;
         TupleT* ptr{};
         return *ptr;
     } else {
         using A1  = TypeArray<Tps...>;
         using Cur = typename A1::template At<0>;
-        using A2  = TypeArray<decltype(*declval<Cur>())>;
+        using VT = AddLvalueReferenceT<decltype(*declval<Cur>())>;
+        using A2  = TypeArray<VT>;
         return types_into_iter_tuple<1>(A1{}, A2{});
     }
 }
@@ -91,10 +95,11 @@ requires(Idx < sizeof...(P1))
 auto types_into_iter_tuple(TypeArray<P1...>, TypeArray<P2...>) {
     using A1  = TypeArray<P1...>;
     using Cur = typename A1::template At<Idx>;
-    using A2  = TypeArray<P2..., decltype(*declval<Cur>())>;
-    using TupleT = Tuple<P2..., decltype(*declval<Cur>())>;
-    TupleT* ptr{};
+    using VT = AddLvalueReferenceT<decltype(*declval<Cur>())>;
+    using A2  = TypeArray<P2..., VT>;
     if constexpr ((Idx + 1) == sizeof...(P1)) {
+        using TupleT = Tuple<P2..., VT>;
+        TupleT* ptr{};
         return *ptr;
     } else {
         return types_into_iter_tuple<Idx + 1>(A1{}, A2{});
@@ -107,7 +112,7 @@ class ZipIterator {
     IterUnit m_current_pair;
     public:
     ZipIterator(Tps... iterators) : m_current_pair(iterators...) {}
-    explicit ZipIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
+    explicit ZipIterator(IterUnit curr_pair) : m_current_pair(curr_pair) {};
     RetVal operator*() { return RetVal{ *m_current_pair.template get<Tps>()... }; }
     ZipIterator& operator++() {
         (..., m_current_pair.template get<Tps>()++);
