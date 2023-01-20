@@ -1,5 +1,7 @@
 #include "JSONParser.h"
 
+#include "Algorithm.h"
+#include "JSONObject.h"
 #include "Optional.h"
 #include "Pair.h"
 namespace ARLib {
@@ -53,17 +55,18 @@ namespace JSON {
         auto check_c = [](char c) {
             constexpr char escaped[] = { 'n', 'r', 'v', 't', 'f' };
             constexpr char equiv[]   = { '\n', '\r', '\v', '\t', '\f' };
-            constexpr size_t sz      = 5;
-            for (size_t i = 0; i < sz; i++) {
-                if (c == escaped[i]) return equiv[i];
+            auto found = find(begin(escaped), end(escaped), c);
+            if (found != npos_) {
+                return equiv[found];
             }
             return c;
         };
         current_index++;
         JString container{};
         bool at_end = false;
-        while (!at_end && current_index < view.size()) {
-            char c = view[current_index];
+        const auto view_size = view.size();
+        while (!at_end && current_index < view_size) {
+            const char c = view[current_index];
             if (c == '\\') {
                 if (view[current_index + 1] == '\\') {
                     container.append(check_c(view[current_index + 2]));
@@ -91,6 +94,7 @@ namespace JSON {
         return Pair{ current_index, string };
     }
     Number parse_number(const String& raw_value) {
+        // parse number doesn't handle scientific notation for integer values
         if (raw_value.contains('.') || raw_value.contains(',')) {
             return Number{ number_tag, StrToDouble(raw_value) };
         } else {
@@ -176,6 +180,16 @@ namespace JSON {
                     }
                 default:
                     {
+                        const ARLib::Array valid_values_for_number{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '+', 'E', 'e'};
+                        auto check_if_valid_number = [&](const String& str){
+                            // this is not real validation, it lets invalid values slip throught, but it's good enough for now
+                            for (const char c : str) {
+                                if (find(valid_values_for_number, c) == npos_) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        };
                         auto [new_index_val, raw_value] = parse_non_delimited(view, current_index);
                         current_index                   = new_index_val;
                         if (raw_value == "null"_s) {
@@ -184,8 +198,10 @@ namespace JSON {
                             obj.add(move(key), ValueObj::construct(Bool{ bool_tag, true }));
                         } else if (raw_value == "false"_s) {
                             obj.add(move(key), ValueObj::construct(Bool{ bool_tag, false }));
-                        } else {
+                        } else if (check_if_valid_number(raw_value)) {
                             obj.add(move(key), ValueObj::construct(parse_number(raw_value)));
+                        } else {
+                            return ParseError{ "Expected a valid json type but got "_s + raw_value, current_index };
                         }
                         break;
                     }

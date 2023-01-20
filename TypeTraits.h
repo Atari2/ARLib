@@ -648,6 +648,6 @@ struct TypeArray {
     using TT = TypeTuple<Types...>;
     template <size_t I>
     requires(I < sizeof...(Types))
-    using At = RemoveCvRefT<decltype(priv_declval<TT>().template get<I>())>;
+    using At = RemoveReferenceT<decltype(priv_declval<TT>().template get<I>())>;
 };
 }    // namespace ARLib

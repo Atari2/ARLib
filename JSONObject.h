@@ -259,6 +259,21 @@ namespace JSON {
         ValueObj& operator[](const String& key) { return m_object[key]; }
         const ValueObj& operator[](const String& key) const { return m_object[key]; }
     };
+    struct ErrorInfo {
+        String error_string{};
+        size_t error_offset{};
+    };
+    class ParseError {
+        ErrorInfo m_info;
+
+        public:
+        ParseError() = default;
+        ParseError(String error, size_t offset) : m_info{ move(error), offset } {};
+        ParseError(ErrorInfo info) : m_info(move(info)){};
+        const ErrorInfo& info() const { return m_info; }
+        const String& message() const { return m_info.error_string; }
+        size_t offset() const { return m_info.error_offset; }
+    };
 }    // namespace JSON
 template <>
 struct PrintInfo<JSON::Null> {
@@ -318,6 +333,15 @@ struct PrintInfo<JSON::ValueObj> {
                 ASSERT_NOT_REACHED("Invalid JSON type.");
         }
         return "Invalid JSON Value"_s;
+    }
+};
+template <>
+struct PrintInfo<JSON::ParseError> {
+    const JSON::ParseError& m_error;
+    PrintInfo(const JSON::ParseError& error) : m_error(error) {}
+    String repr() const {
+        return "Error encountered while parsing json: "_s + m_error.message() + " at offset "_s +
+               IntToStr(m_error.offset());
     }
 };
 }    // namespace ARLib

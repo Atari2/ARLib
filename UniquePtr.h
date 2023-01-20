@@ -15,16 +15,16 @@ class UniquePtr {
     explicit UniquePtr(T* ptr) : m_storage(ptr) {}
     explicit UniquePtr(T&& storage) : m_storage(new T{ move(storage) }) {}
     UniquePtr(UniquePtr&& ptr) noexcept {
-        m_storage     = ptr.m_storage;
-        ptr.m_storage = nullptr;
+        reset();
+        m_storage     = ptr.release();
     }
     template <typename... Args>
     explicit UniquePtr(EmplaceT<T>, Args&&... args) {
         m_storage = new T{ Forward<Args>(args)... };
     }
     UniquePtr& operator=(UniquePtr&& other) noexcept {
-        m_storage       = other.m_storage;
-        other.m_storage = nullptr;
+        reset();
+        m_storage     = other.release();
         return *this;
     }
     UniquePtr& operator=(const UniquePtr&) = delete;
@@ -70,12 +70,16 @@ class UniquePtr<T[]> {
         ConditionalBitCopy(m_storage, ptr, m_size);
     }
     UniquePtr(UniquePtr&& ptr) noexcept {
-        m_storage     = ptr.m_storage;
-        ptr.m_storage = nullptr;
+        reset();
+        m_storage     = ptr.release();
+        m_size        = ptr.m_size;
+        ptr.m_size    = 0;
     }
     UniquePtr& operator=(UniquePtr&& other) noexcept {
-        m_storage       = other.m_storage;
-        other.m_storage = nullptr;
+        reset();
+        m_storage     = other.release();
+        m_size        = other.m_size;
+        other.m_size    = 0;
         return *this;
     }
     T* release() {

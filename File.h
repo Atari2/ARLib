@@ -7,6 +7,7 @@
 #include "Result.h"
 #include "String.h"
 #include "StringView.h"
+#include "Variant.h"
 #include "Types.h"
 #include "arlib_osapi.h"
 #include "cstdio_compat.h"
@@ -55,6 +56,7 @@ class File {
 
     using WriteResult = Result<size_t, WriteFileError>;
     using ReadResult  = Result<String, ReadFileError>;
+    using MixResult = Result<String, Variant<ReadFileError, WriteFileError>>;
     friend Hash<File>;
 
     public:
@@ -136,6 +138,14 @@ class File {
         if (line.size() != len) { return ReadResult::from_error(); }
 #endif
         return ReadResult{ Forward<String>(line) };
+    }
+    static MixResult read_all(const String& filename) {
+        File f{filename};
+        auto err = f.open(OpenFileMode::Read);
+        if (err.has_value()) return MixResult::from_error(WriteFileError{}); 
+        auto readres = f.read_all();
+        if (readres.is_error()) return MixResult::from_error(readres.to_error());
+        return MixResult::from_ok(readres.to_ok());
     }
     size_t size() const {
         HARD_ASSERT(m_ptr != nullptr, "File has to be open to ask for the size");
