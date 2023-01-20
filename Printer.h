@@ -39,7 +39,7 @@ namespace Detail {
                         break;
                 }
             } else {
-                state = FormatState::Continue;
+                if (state != FormatState::EscapeNextOpen) { state = FormatState::Continue; }
             }
         }
         return count == ArgsSize;
@@ -107,8 +107,10 @@ class Printer {
                         break;
                 }
             } else {
-                escaped_format_string.append(c);
-                state = FormatState::Continue;
+                if (state != FormatState::EscapeNextOpen) {
+                    escaped_format_string.append(c);
+                    state = FormatState::Continue;
+                }
             }
         }
         format_string = move(escaped_format_string);

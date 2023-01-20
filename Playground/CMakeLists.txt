@@ -6,6 +6,14 @@ set(PLAYGROUND_SOURCE_FILES "")
 
 CheckAvx()
 
+if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(DEBUG_BUILD true)
+	set(RELEASE_BUILD false)
+else()
+	set(DEBUG_BUILD false)
+	set(RELEASE_BUILD true)
+endif()
+
 list(
 	APPEND PLAYGROUND_SOURCE_FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
@@ -15,7 +23,11 @@ message(STATUS "Building playground")
 add_executable(ARLibPlayground ${PLAYGROUND_SOURCE_FILES})
 
 if (MSVC)
-	target_compile_options(ARLibPlayground PRIVATE /std:c++latest /utf-8 ${AVX_FLAGS} /fsanitize=address)
+	if (DEBUG_BUILD)
+		target_compile_options(ARLibPlayground PRIVATE /std:c++latest /utf-8 ${AVX_FLAGS} /fsanitize=address)
+	else()
+		target_compile_options(ARLibPlayground PRIVATE /std:c++latest /utf-8 ${AVX_FLAGS})
+	endif()
 	add_custom_command(
         TARGET ARLibPlayground
         POST_BUILD
