@@ -1,5 +1,8 @@
 #include "win_native_io.h"
 #ifdef ON_WINDOWS
+    #include "../WString.h"
+    #include "../StringView.h"
+    #include "../arlib_osapi.h"
     #include "../Pair.h"
     #include <Windows.h>
     #include <cstdio>
@@ -97,7 +100,8 @@ static int ModeToFlags(const char* mode) {
 }
 FILE* Win32OpenFile(const char* filename, const char* mode) {
     const auto [access, creat] = ModeToAccessFlags(mode);
-    HANDLE hdl                 = CreateFile(filename, access, 0, NULL, creat, FILE_ATTRIBUTE_NORMAL, NULL);
+    WString wfilename          = string_to_wstring(filename);
+    HANDLE hdl                 = CreateFile(wfilename.data(), access, 0, NULL, creat, FILE_ATTRIBUTE_NORMAL, NULL);
     int fd                     = _open_osfhandle(reinterpret_cast<intptr_t>(hdl), ModeToFlags(mode));
     return _fdopen(fd, mode);
 }
@@ -107,10 +111,13 @@ bool Win32CloseFile(FILE* fp) {
     return std::fclose(fp);
 }
 bool Win32DeleteFile(const char* filename) {
-    return DeleteFile(filename);
+    WString wfilename = string_to_wstring(filename);
+    return DeleteFile(wfilename.data());
 }
 bool Win32RenameFile(const char* filename_old, const char* filename_new) {
-    return MoveFile(filename_old, filename_new);
+    WString wfilename_old = string_to_wstring(filename_old);
+    WString wfilename_new = string_to_wstring(filename_new);
+    return MoveFile(wfilename_old.data(), wfilename_new.data());
 }
 int Win32SeekFile(FILE* fp, int off, int whence) {
     auto mapWhence = [](int w) -> DWORD {

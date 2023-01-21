@@ -8,6 +8,9 @@ consteval char operator""_c(const unsigned long long num) {
     CONSTEVAL_STATIC_ASSERT(num < 255, "Can't convert numbers over 255 to char");
     return static_cast<char>(num);
 }
+consteval wchar_t operator""_wc(const unsigned long long num) {
+    return static_cast<wchar_t>(num);
+}
 constexpr bool haszerobyte(Integral auto v) {
     if constexpr (sizeof(v) == 1)
         return !v;
@@ -36,6 +39,12 @@ constexpr size_t strlen(const char* ptr) {
     return len;
 #endif
 }
+constexpr size_t wstrlen(const wchar_t* ptr) {
+    if (!ptr) return 0;
+    size_t len = 0;
+    while (*(ptr++)) len++;
+    return len;
+}
 constexpr char* strcpy(char* dest, const char* src) {
     while ((*dest++ = *src++))
         ;
@@ -57,13 +66,29 @@ constexpr int strcmp(const char* first, const char* second) {
         ;
     return *first - *second;
 }
+constexpr int wstrcmp(const wchar_t* first, const wchar_t* second) {
+    for (; *first == *second && *first; first++, second++)
+        ;
+    return *first - *second;
+}
 constexpr int strncmp(const char* first, const char* second, size_t num) {
     if (num == 0) return 0;
     for (; *first == *second && --num; first++, second++)
         if (*first == '\0') return 0;
     return *first - *second;
 }
+constexpr int wstrncmp(const wchar_t* first, const wchar_t* second, size_t num) {
+    if (num == 0) return 0;
+    for (; *first == *second && --num; first++, second++)
+        if (*first == L'\0') return 0;
+    return *first - *second;
+}
 constexpr char* strcat_eff(char* end_of_dst, const char* src) {
+    while (*src) { *end_of_dst++ = *src++; }
+    *end_of_dst = *src;
+    return end_of_dst;
+}
+constexpr wchar_t* wstrcat_eff(wchar_t* end_of_dst, const wchar_t* src) {
     while (*src) { *end_of_dst++ = *src++; }
     *end_of_dst = *src;
     return end_of_dst;
@@ -78,6 +103,9 @@ constexpr char* strcat(char* dst, const char* src) {
 }
 constexpr bool isspace(const char c) {
     return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
+}
+constexpr bool wisspace(const wchar_t c) {
+    return c == L' ' || c == L'\t' || c == L'\n' || c == L'\v' || c == L'\f' || c == L'\r';
 }
 constexpr const char* strstr(const char* str, const char* needle) {
     if (str == nullptr || needle == nullptr) return nullptr;
@@ -148,6 +176,14 @@ constexpr char toupper(char c) {
 }
 constexpr char tolower(char c) {
     if (c >= 65_c && c <= 90_c) return c + 32_c;
+    return c;
+}
+constexpr wchar_t wtoupper(wchar_t c) {
+    if (c >= 96_wc && c <= 122_wc) return c - 32_wc;
+    return c;
+}
+constexpr wchar_t wtolower(wchar_t c) {
+    if (c >= 65_wc && c <= 90_wc) return c + 32_wc;
     return c;
 }
 }    // namespace ARLib

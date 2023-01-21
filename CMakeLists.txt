@@ -133,6 +133,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${CMAKE_CURRENT_SOURCE_DIR}/DebugNewDelete.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/EventLoop.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/File.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/FileSystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Hash.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/JSONObject.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/JSONParser.cpp
@@ -153,6 +154,8 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PrintfImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cstdio_compat.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/WString.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/WStringView.cpp
 )
 list(APPEND LIB_SOURCE_FILES_H
     ${CMAKE_CURRENT_SOURCE_DIR}/std_includes.h
@@ -182,6 +185,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${CMAKE_CURRENT_SOURCE_DIR}/Enumerate.h
     ${CMAKE_CURRENT_SOURCE_DIR}/EventLoop.h
     ${CMAKE_CURRENT_SOURCE_DIR}/File.h
+	${CMAKE_CURRENT_SOURCE_DIR}/FileSystem.h
     ${CMAKE_CURRENT_SOURCE_DIR}/FixedMatrix.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Functional.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Hash.h
@@ -241,6 +245,8 @@ list(APPEND LIB_SOURCE_FILES_H
     ${CMAKE_CURRENT_SOURCE_DIR}/GenericView.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Utility.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Vector.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/WString.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/WStringView.h
 )
 list(APPEND LIB_SOURCE_FILES_XNATIVE
     ${CMAKE_CURRENT_SOURCE_DIR}/XNative/chrono/xnative_chrono_merge.cpp
@@ -256,6 +262,13 @@ list(APPEND LIB_SOURCE_FILES_XNATIVE
     ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_merge.h
     ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_unix.h
     ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_windows.h
+
+	${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_merge.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_unix.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_windows.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_merge.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_unix.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_windows.h
 )
 if (ON_WINDOWS)
     list(APPEND ARLIB_SOURCE_FILES 
@@ -289,6 +302,14 @@ endif()
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
 	list(APPEND ARLIB_COMPILE_OPTIONS /utf-8 /std:c++20 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc /Zc:inline-)
+	list(APPEND ARLIB_COMPILE_DEFINITIONS 
+		_CRT_SECURE_NO_WARNINGS 
+        UNICODE 
+        _UNICODE
+        WIN32_LEAN_AND_MEAN
+        VC_EXTRALEAN
+        NOMINMAX
+	)
 	if (DEBUG_BUILD)
 		list(APPEND ARLIB_COMPILE_OPTIONS /Oy- /fsanitize=address)
 	else()
