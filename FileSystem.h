@@ -7,6 +7,7 @@ class FileInfo {
     public:
     FileInfo(const NativeFileInfo& info) : m_info(info) {}
     const Path& path() const;
+    const FsStringView& filename() const;
 };
 class DirectoryIterator {
     friend class DirectoryIterate;

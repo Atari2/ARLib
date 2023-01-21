@@ -7,4 +7,11 @@ const Path& FileInfo::path() const {
     return m_info.path();
 #endif
 }
+const FsStringView& FileInfo::filename() const {
+#ifdef ON_WINDOWS
+    return m_info.filename();
+#else
+    return m_info.filename();
+#endif
+}
 }    // namespace ARLib

@@ -8,12 +8,10 @@
 #include "../Array.h"
 #include "../FileSystem.h"
 
-
 using namespace ARLib;
 int main() {
     Vector<Path> filepaths{};
     for (const auto& filedata : DirectoryIterate{ "jsons/*.json"_p }) { filepaths.append(filedata.path()); }
-    
     const Vector<String> filedata = filepaths.view()
                                     .map([](const auto& name) {
                                         auto text = MUST(File::read_all(name));
