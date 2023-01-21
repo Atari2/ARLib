@@ -6,9 +6,6 @@
     #include "../../TypeTraits.h"
     #include "../../cstring_compat.h"
     #include <process.h>
-
-    #define WIN32_LEAN_AND_MEAN
-    #define VC_EXTRALEAN
     #include <windows.h>
     #include <xthreads.h>
 namespace ARLib {

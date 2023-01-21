@@ -503,8 +503,8 @@ struct Hash<WString> {
 };
 template <>
 struct PrintInfo<WString> {
-    const WString& m_view;
-    PrintInfo(const WString& view) : m_view(view) {}
-    String repr() const { return "TODO: convert wstring in string"_s; }
+    const WString& m_wstr;
+    PrintInfo(const WString& wstr) : m_wstr(wstr) {}
+    String repr() const;
 };
 }    // namespace ARLib

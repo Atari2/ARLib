@@ -8,16 +8,16 @@
     #include "Windows/win_native_io.h"
 #endif
 namespace ARLib {
-int remove(const char* filename) {
+int remove(const FsChar* filename) {
 #ifdef WINDOWS
-    return Win32DeleteFile(filename);
+    return Win32DeleteFileW(filename);
 #else
     return ::remove(filename);
 #endif
 }
-int rename(const char* old_filename, const char* new_filename) {
+int rename(const FsChar* old_filename, const FsChar* new_filename) {
 #ifdef WINDOWS
-    return Win32RenameFile(old_filename, new_filename);
+    return Win32RenameFileW(old_filename, new_filename);
 #else
     return ::rename(old_filename, new_filename);
 #endif
@@ -81,9 +81,9 @@ size_t filesize(FILE* fp) {
     return size;
 #endif
 }
-FILE* fopen(const char* filename, const char* mode) {
+FILE* fopen(const FsChar* filename, const char* mode) {
 #ifdef WINDOWS
-    return Win32OpenFile(filename, mode);
+    return Win32OpenFileW(filename, mode);
 #else
     return ::fopen(filename, mode);
 #endif

@@ -1,6 +1,7 @@
 #pragma once
 #include "Compat.h"
 #include "Types.h"
+#include "TypeTraits.h"
 
 extern "C"
 {
@@ -42,8 +43,11 @@ extern "C"
 #define EOF      (-1)
 }
 namespace ARLib {
-int remove(const char* filename);
-int rename(const char* old_filename, const char* new_filename);
+
+using FsChar = ConditionalT<windows_build, wchar_t, char>;
+
+int remove(const FsChar* filename);
+int rename(const FsChar* old_filename, const FsChar* new_filename);
 
 int fscanf(FILE* fp, const char* format, ...);
 int scanf(const char* format, ...);
@@ -55,8 +59,7 @@ int getc(FILE* fp);
 int getchar();
 
 size_t filesize(FILE* fp);
-
-FILE* fopen(const char* filename, const char* mode);
+FILE* fopen(const FsChar* filename, const char* mode);
 int fclose(FILE* fp);
 int fseek(FILE* fp, long off, int whence);
 size_t ftell(FILE* fp);

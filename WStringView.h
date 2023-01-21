@@ -174,6 +174,6 @@ template <>
 struct PrintInfo<WStringView> {
     const WStringView& m_view;
     PrintInfo(const WStringView& view) : m_view(view) {}
-    String repr() const { return "TODO: convert wstringview in string"_s; }
+    String repr() const;
 };
 }    // namespace ARLib

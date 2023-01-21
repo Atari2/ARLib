@@ -2,9 +2,6 @@
 #include "xnative_chrono_windows.h"
 #include "../../Conversion.h"
 #ifdef WINDOWS
-
-    #define WIN32_LEAN_AND_MEAN
-    #define VC_EXTRALEAN
     #include <windows.h>
     #include <intrin.h>
 namespace ARLib {

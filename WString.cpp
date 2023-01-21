@@ -59,15 +59,15 @@ WString::WString(StringView other) {
     auto o_len = other.size();
     if (o_len > m_size) return false;
     if (m_size == o_len) return wstrcmp(other.data(), get_buf_internal()) == 0;
-    auto ptrdiff       = m_size - o_len;
+    auto ptrdiff          = m_size - o_len;
     const wchar_t* my_buf = get_buf_internal();
-    auto res           = wstrncmp(my_buf + ptrdiff, other.data(), o_len);
+    auto res              = wstrncmp(my_buf + ptrdiff, other.data(), o_len);
     return res == 0;
 }
 [[nodiscard]] size_t WString::index_of(WStringView c, size_t start) const {
     if (m_size == 0 || start >= m_size) return npos;
     const wchar_t* buf = get_buf_internal();
-    auto o_len      = c.size();
+    auto o_len         = c.size();
     if (o_len > m_size) return npos;
     if (start + o_len > m_size) return npos;
     if (o_len == m_size && start == 0 && wstrcmp(buf, c.data()) == 0) return 0;
@@ -79,7 +79,7 @@ WString::WString(StringView other) {
 [[nodiscard]] size_t WString::last_index_of(WStringView c, size_t end) const {
     if (m_size == 0) return npos;
     const wchar_t* buf = get_buf_internal();
-    auto o_len      = c.size();
+    auto o_len         = c.size();
     if (end < o_len || o_len > m_size) return npos;
     if (end > m_size) end = m_size;
     if (o_len == end && wstrncmp(buf, c.data(), end) == 0) return 0;
@@ -92,7 +92,7 @@ WString::WString(StringView other) {
 [[nodiscard]] size_t WString::index_not_of(WStringView c, size_t start) const {
     if (m_size == 0 || start >= m_size) return npos;
     const wchar_t* buf = get_buf_internal();
-    auto o_len      = c.size();
+    auto o_len         = c.size();
     if (start + o_len > m_size) return npos;
     if (o_len > m_size) return npos;
     if (o_len == m_size && start == 0 && wstrcmp(buf, c.data()) != 0) return 0;
@@ -104,7 +104,7 @@ WString::WString(StringView other) {
 [[nodiscard]] size_t WString::last_index_not_of(WStringView c, size_t end) const {
     if (m_size == 0) return npos;
     const wchar_t* buf = get_buf_internal();
-    auto o_len      = c.size();
+    auto o_len         = c.size();
     if (end < o_len || o_len > m_size) return npos;
     if (end > m_size) end = m_size;
     if (o_len == end && wstrncmp(buf, c.data(), end) != 0) return 0;
@@ -330,5 +330,8 @@ WString WString::concat(const wchar_t* other) const {
     WStringView sother{ other };
     copy.append(sother);
     return copy;
+}
+String PrintInfo<WString>::repr() const {
+    return wstring_to_string(m_wstr.view());
 }
 }    // namespace ARLib

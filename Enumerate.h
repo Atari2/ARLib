@@ -26,11 +26,11 @@ concept IterCanAdvanceWithOffset = requires(It it, size_t dist) {
     { it + dist } -> SameAs<It>;
 };
 
-template <IteratorConcept It>
+template <typename It>
 auto advance_iterator(It iter, It end, size_t dist) {
     if constexpr (IterCanAdvanceWithOffset<It>) {
         return iter + static_cast<int>(dist);
-    } else {
+    } else if constexpr (Incrementable<It>) {
         for (size_t i = 0; i < dist && iter != end; i++) ++iter;
         return iter;
     }

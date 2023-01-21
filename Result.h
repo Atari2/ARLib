@@ -165,4 +165,43 @@ struct PrintInfo<Result<T, U>> {
                " }"_s;
     }
 };
+#define TRY_SET_IMPL(val, temp_name, expression)                                                                       \
+    auto temp_name = (expression);                                                                                     \
+    static_assert(!SameAsCvRef<decltype(temp_name.to_ok()), DefaultOk>, "Don't use TRY_SET with DiscardResult");       \
+    if (temp_name.is_error()) { return { temp_name.to_error() }; }                                                     \
+    auto val = temp_name.to_ok();
+
+#define TRY_RET_IMPL(temp_name, expression)                                                                            \
+    auto temp_name = (expression);                                                                                     \
+    static_assert(!SameAsCvRef<decltype(temp_name.to_ok()), DefaultOk>, "Don't use TRY_RET with DiscardResult");       \
+    if (temp_name.is_error()) { return { temp_name.to_error() }; }                                                     \
+    return temp_name.to_ok();
+
+#define TRY_IMPL(temp_name, expression)                                                                                \
+    auto temp_name = (expression);                                                                                     \
+    static_assert(SameAsCvRef<decltype(temp_name.to_ok()), DefaultOk>, "Only use TRY with DiscardResult");             \
+    if (temp_name.is_error()) { return { temp_name.to_error() }; }
+
+#define CONCAT_TOKENS_IMPL(x, y) x##y
+#define CONCAT_TOKENS(x, y)      CONCAT_TOKENS_IMPL(x, y)
+
+#define TRY_SET(val, expression) TRY_SET_IMPL(val, CONCAT_TOKENS(__tr_, __COUNTER__), expression)
+
+#define TRY_RET(expression) TRY_RET_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression)
+
+#define TRY(expression) TRY_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression)
+
+#define MUST(expression)                                                                                               \
+    [](auto&& tr) {                                                                                                    \
+        static_assert(                                                                                                 \
+        !IsLvalueReferenceV<decltype(tr.to_ok())>, "Do not return a reference from a fallible expression"              \
+        );                                                                                                             \
+        if (tr.is_error()) {                                                                                           \
+            ASSERT_NOT_REACHED_FMT(                                                                                    \
+            "MUST(" STRINGIFY(expression) ") failed \"%s\"", print_conditional(tr.to_error()).data()                   \
+            );                                                                                                         \
+        }                                                                                                              \
+        if constexpr (!SameAsCvRef<decltype(tr.to_ok()), DefaultOk>) { return tr.to_ok(); }                            \
+    }((expression));
+
 }    // namespace ARLib

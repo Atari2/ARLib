@@ -55,7 +55,7 @@ namespace JSON {
         static FileParseResultT<T> deserialize_from_file(StringView filename) {
             File f{ filename.extract_string() };
             auto maybe_error = f.open(OpenFileMode::Read);
-            if (maybe_error) { return FileParseResultT<T>::from_error(maybe_error.extract()); }
+            if (maybe_error) { return FileParseResultT<T>::from_error(maybe_error.to_error()); }
             auto read_res = f.read_all();
             if (read_res.is_error()) { return FileParseResultT<T>::from_error(read_res.to_error()); }
             auto val             = read_res.to_ok();
@@ -67,7 +67,7 @@ namespace JSON {
             auto result = object.serialize();
             File f{ filename.extract_string() };
             auto maybe_error = f.open(OpenFileMode::Write);
-            if (maybe_error) { return FileWriteResultT<size_t>::from_error(maybe_error.extract()); }
+            if (maybe_error) { return FileWriteResultT<size_t>::from_error(maybe_error.to_error()); }
             auto write_res = f.write(result);
             if (write_res.is_error()) { return FileWriteResultT<size_t>::from_error(write_res.to_error()); }
             auto val = write_res.to_ok();

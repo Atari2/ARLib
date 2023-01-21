@@ -325,7 +325,9 @@ class MapIterator {
     bool operator!=(const MapIterator& other) const { return m_current_iter != other.m_current_iter; }
     bool operator<(const MapIterator& other) { return m_current_iter < other.m_current_iter; }
     bool operator>(const MapIterator& other) { return m_current_iter > other.m_current_iter; }
-    size_t operator-(const MapIterator& other) const {
+    size_t operator-(const MapIterator& other) const
+    requires IterCanSubtractForSize<IterUnit>
+    {
         if (other.m_end != m_end) return it_npos;
         return m_current_iter - other.m_current_iter;
     }

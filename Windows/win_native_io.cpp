@@ -20,6 +20,7 @@ static bool GenericWrite(HANDLE hFile, LPCVOID buffer, DWORD nBytes, LPDWORD byt
     return WriteFile(hFile, buffer, nBytes, bytesWritten, nullptr);
 }
 static HANDLE FileToHandle(FILE* fp) {
+    if (fp == NULL) { return INVALID_HANDLE_VALUE; }
     return reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(fp)));
 }
 bool WriteChar(char c, FILE* fp) {
@@ -99,10 +100,14 @@ static int ModeToFlags(const char* mode) {
     return flags;
 }
 FILE* Win32OpenFile(const char* filename, const char* mode) {
+    WString wfilename = string_to_wstring(filename);
+    return Win32OpenFileW(wfilename.data(), mode);
+}
+FILE* Win32OpenFileW(const wchar_t* filename, const char* mode) {
     const auto [access, creat] = ModeToAccessFlags(mode);
-    WString wfilename          = string_to_wstring(filename);
-    HANDLE hdl                 = CreateFile(wfilename.data(), access, 0, NULL, creat, FILE_ATTRIBUTE_NORMAL, NULL);
-    int fd                     = _open_osfhandle(reinterpret_cast<intptr_t>(hdl), ModeToFlags(mode));
+    HANDLE hdl                 = CreateFile(filename, access, 0, NULL, creat, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hdl == INVALID_HANDLE_VALUE) { return NULL; }
+    int fd = _open_osfhandle(reinterpret_cast<intptr_t>(hdl), ModeToFlags(mode));
     return _fdopen(fd, mode);
 }
 bool Win32CloseFile(FILE* fp) {
@@ -112,12 +117,18 @@ bool Win32CloseFile(FILE* fp) {
 }
 bool Win32DeleteFile(const char* filename) {
     WString wfilename = string_to_wstring(filename);
-    return DeleteFile(wfilename.data());
+    return Win32DeleteFileW(wfilename.data());
 }
 bool Win32RenameFile(const char* filename_old, const char* filename_new) {
     WString wfilename_old = string_to_wstring(filename_old);
     WString wfilename_new = string_to_wstring(filename_new);
-    return MoveFile(wfilename_old.data(), wfilename_new.data());
+    return Win32RenameFileW(wfilename_old.data(), wfilename_new.data());
+}
+bool Win32DeleteFileW(const wchar_t* filename) {
+    return DeleteFile(filename);
+}
+bool Win32RenameFileW(const wchar_t* filename_old, const wchar_t* filename_new) {
+    return MoveFile(filename_old, filename_old);
 }
 int Win32SeekFile(FILE* fp, int off, int whence) {
     auto mapWhence = [](int w) -> DWORD {

@@ -1,7 +1,5 @@
 #include "../arlib_osapi.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define VC_EXTRALEAN
 #include "../StringView.h"
 #include "../WStringView.h"
 #include "../String.h"
@@ -59,9 +57,9 @@ WString UTF8ToWide(const char* from, const int from_size) {
     }
 }
 WString string_to_wstring(StringView str) {
-    return UTF8ToWide(str.data(), str.size());
+    return UTF8ToWide(str.data(), static_cast<int>(str.size()));
 }
 String wstring_to_string(WStringView wstr) {
-    return WideToUTF8(wstr.data(), wstr.size());
+    return WideToUTF8(wstr.data(), static_cast<int>(wstr.size()));
 }
 }    // namespace ARLib

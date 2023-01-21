@@ -1,8 +1,6 @@
 #include "win_native_structs.h"
 #include "../Assertion.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define VC_EXTRALEAN
 #include <windows.h>
 namespace ARLib {
 #define VERIFY_WIN32_STRUCT(win32_struct, arlib_struct)                                                                \

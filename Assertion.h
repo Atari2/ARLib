@@ -63,9 +63,28 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
         unreachable                                                                                                    \
     }
 
-#define ASSERT_NOT_REACHED(msg) HARD_ASSERT(false, msg)
-
-#define ASSERT_NOT_REACHED_FMT(fmt, ...) HARD_ASSERT_FMT(false, fmt, __VA_ARGS__)
+#define ASSERT_NOT_REACHED(msg)                                                                                        \
+    {                                                                                                                  \
+        if (is_constant_evaluated()) {                                                                                 \
+            CONSTEVAL_STATIC_ASSERT(false, msg);                                                                       \
+        } else {                                                                                                       \
+            ARLib::puts(msg);                                                                                          \
+            PRINT_SOURCE_LOCATION                                                                                      \
+            assertion_failed__();                                                                                      \
+        }                                                                                                              \
+        unreachable                                                                                                    \
+    }
+#define ASSERT_NOT_REACHED_FMT(fmt, ...)                                                                               \
+    {                                                                                                                  \
+        if (is_constant_evaluated()) {                                                                                 \
+            CONSTEVAL_STATIC_ASSERT(false, fmt);                                                                       \
+        } else {                                                                                                       \
+            ARLib::printf(fmt "\n", __VA_ARGS__);                                                                      \
+            PRINT_SOURCE_LOCATION                                                                                      \
+            assertion_failed__();                                                                                      \
+        }                                                                                                              \
+        unreachable                                                                                                    \
+    }
 
 #define SOFT_ASSERT(val, msg)                                                                                          \
     if (!(val)) {                                                                                                      \

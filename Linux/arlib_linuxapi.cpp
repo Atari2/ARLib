@@ -24,7 +24,7 @@ String last_error() {
 }
 WString string_to_wstring(StringView str) {
     size_t required_size = mbstowcs(NULL, str.data(), 0);
-    if (required_size < 0) { return {}; }
+    if (required_size == static_cast<size_t>(-1)) { return {}; }
     WString wstr{};
     wstr.reserve(required_size);
     size_t conv = mbstowcs(wstr.rawptr(), str.data(), wstr.capacity());
@@ -33,7 +33,7 @@ WString string_to_wstring(StringView str) {
 }
 String wstring_to_string(WStringView wstr) {
     size_t required_size = wcstombs(NULL, wstr.data(), 0);
-    if (required_size < 0) { return {}; }
+    if (required_size == static_cast<size_t>(-1)) { return {}; }
     String str{};
     str.reserve(required_size);
     size_t conv = wcstombs(str.rawptr(), wstr.data(), str.capacity());
