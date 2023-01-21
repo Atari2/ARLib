@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Concepts.h"
 #include "Utility.h"
 namespace ARLib {
