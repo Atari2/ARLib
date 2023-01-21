@@ -8,6 +8,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 namespace ARLib {
 void print_last_error() {
     auto error = *__errno_location();
@@ -22,9 +23,21 @@ String last_error() {
     }
 }
 WString string_to_wstring(StringView str) {
-    return {};
+    size_t required_size = mbstowcs(NULL, str.data(), 0);
+    if (required_size < 0) { return {}; }
+    WString wstr{};
+    wstr.reserve(required_size);
+    size_t conv = mbstowcs(wstr.rawptr(), str.data(), wstr.capacity());
+    wstr.set_size(conv);
+    return wstr;
 }
 String wstring_to_string(WStringView wstr) {
-    return {};
+    size_t required_size = wcstombs(NULL, wstr.data(), 0);
+    if (required_size < 0) { return {}; }
+    String str{};
+    str.reserve(required_size);
+    size_t conv = wcstombs(str.rawptr(), wstr.data(), str.capacity());
+    str.set_size(conv);
+    return str;
 }
 }    // namespace ARLib

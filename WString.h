@@ -375,10 +375,10 @@ class WString {
     // trim
     void irtrim() {
         if (m_size == 0) return;
-        if (!isspace(m_data_buf[0])) return;
+        if (!wisspace(m_data_buf[0])) return;
         if (is_local()) {
             size_t count = 0;
-            while (isspace(m_local_buf[count++]))
+            while (wisspace(m_local_buf[count++]))
                 ;
             count--;
             if (count != 0) {
@@ -387,7 +387,7 @@ class WString {
             }
         } else {
             size_t count = 0;
-            while (isspace(m_data_buf[count++]))
+            while (wisspace(m_data_buf[count++]))
                 ;
             count--;
             if (count != 0) {
@@ -405,12 +405,12 @@ class WString {
     }
     void iltrim() {
         if (m_size == 0) return;
-        if (!isspace(m_data_buf[m_size - 1])) return;
+        if (!wisspace(m_data_buf[m_size - 1])) return;
         if (is_local()) {
-            while (isspace(m_local_buf[m_size - 1]) && m_size > 0) m_size--;
+            while (wisspace(m_local_buf[m_size - 1]) && m_size > 0) m_size--;
             m_local_buf[m_size] = L'\0';
         } else {
-            while (isspace(m_data_buf[m_size - 1]) && m_size > 0) m_size--;
+            while (wisspace(m_data_buf[m_size - 1]) && m_size > 0) m_size--;
             m_data_buf[m_size] = L'\0';
             // if the m_size is now small enough, let's swap to small WString
             if (m_size <= SMALL_STRING_CAP) {
