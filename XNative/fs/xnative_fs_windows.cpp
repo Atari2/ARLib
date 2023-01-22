@@ -22,6 +22,16 @@ Win32DirectoryIterator::Win32DirectoryIterator(const Path& path, Win32DirIterHan
     FIND_FIRST_EX_CASE_SENSITIVE | FIND_FIRST_EX_LARGE_FETCH
     );
     if (m_hdl == INVALID_HANDLE_VALUE) { return; }
+    while (true) {
+        if (BOOL res = FindNextFile(m_hdl, &data); res == FALSE) {
+            if (GetLastError() == ERROR_NO_MORE_FILES) { m_hdl = INVALID_HANDLE_VALUE; }
+            FindClose(m_hdl);
+            return;
+        } else if (data.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY) {
+            // we found a file
+            break;
+        }
+    }
     m_info.fileAttributes = data.dwFileAttributes;
     m_info.creationTime   = merge_dwords(data.ftCreationTime.dwLowDateTime, data.ftCreationTime.dwHighDateTime);
     m_info.lastAccess     = merge_dwords(data.ftLastAccessTime.dwLowDateTime, data.ftLastAccessTime.dwHighDateTime);
@@ -56,10 +66,15 @@ Win32DirectoryIterator& Win32DirectoryIterator::operator++() {
     constexpr size_t bufSz = sizeof_array(fullPathBuf);
     if (m_hdl == INVALID_HANDLE_VALUE) { return *this; }
     WIN32_FIND_DATA data{};
-    if (BOOL res = FindNextFile(m_hdl, &data); res == FALSE) {
-        if (GetLastError() == ERROR_NO_MORE_FILES) { m_hdl = INVALID_HANDLE_VALUE; }
-        FindClose(m_hdl);
-        return *this;
+    while (true) {
+        if (BOOL res = FindNextFile(m_hdl, &data); res == FALSE) {
+            if (GetLastError() == ERROR_NO_MORE_FILES) { m_hdl = INVALID_HANDLE_VALUE; }
+            FindClose(m_hdl);
+            return *this;
+        } else if (data.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY) {
+            // we found a file
+            break;
+        }
     }
     m_info.fileAttributes = data.dwFileAttributes;
     m_info.creationTime   = merge_dwords(data.ftCreationTime.dwLowDateTime, data.ftCreationTime.dwHighDateTime);
