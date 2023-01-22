@@ -15,23 +15,23 @@
 #define ERRINFO CONCAT_NL(LINEINFO, FILEINFO)
 
 #ifdef DEBUG
-#define DEBUGMSG(msg)         ARLib::puts(msg);
-#define DEBUGFMTMSG(msg, ...) ARLib::printf(msg, __VA_ARGS__);
+    #define DEBUGMSG(msg)         ARLib::puts(msg);
+    #define DEBUGFMTMSG(msg, ...) ARLib::printf(msg, __VA_ARGS__);
 #else
-#define DEBUGMSG(msg)         noop;
-#define DEBUGFMTMSG(msg, ...) noop;
+    #define DEBUGMSG(msg)         noop;
+    #define DEBUGFMTMSG(msg, ...) noop;
 #endif
 
 #define COMPTIME_ASSERT(msg)                                                                                           \
-    []<bool flag = false>() {                                                                                          \
-        static_assert(flag, msg);                                                                                      \
-    }                                                                                                                  \
+    []<bool flag = false>() { static_assert(flag, msg); }                                                              \
     ();                                                                                                                \
     unreachable
 
 #define CONSTEVAL_STATIC_ASSERT(c, msg)                                                                                \
-    static_assert(is_constant_evaluated(),                                                                             \
-                  "Only use consteval static assert in constant evaluted contexts, it will leak memory otherwise");    \
+    static_assert(                                                                                                     \
+    is_constant_evaluated(),                                                                                           \
+    "Only use consteval static assert in constant evaluted contexts, it will leak memory otherwise"                    \
+    );                                                                                                                 \
     do {                                                                                                               \
         if (!(c)) new char[0];                                                                                         \
     } while (false)

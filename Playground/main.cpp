@@ -1,18 +1,26 @@
-#include "../Assertion.h"
-#include "../PrintfImpl.h"
-#include "../NumberTraits.h"
-#include <inttypes.h>
+#include "../Printer.h"
+#include "../CharConv.h"
+#include "../HashMap.h"
+#include "../String.h"
+#include "../Vector.h"
+#include "../Enumerate.h"
+#include "../JSONParser.h"
+#include "../Array.h"
+#include "../FileSystem.h"
 
 using namespace ARLib;
 int main() {
-    float val = 1234.1234;
-    const char* s = "my name is alessio";
-    int hex = 0x50;
-    ARLib::int64_t int64val = NumberTraits<ARLib::int64_t>::max;
-    ::printf("Hello World %+10.4f %% %s %#02o %#02" PRIX64 " %%\n", val, s, hex, int64val);
-    HARD_ASSERT(printf_impl("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val) == PrintfErrorCodes::Ok,
-                "Wrong printf impl");
-    HARD_ASSERT(printf_impl("Hello World %10+.4f %s %02X %02I64X %%\n", val, s, hex, int64val) ==
-                PrintfErrorCodes::InvalidFormat,
-                "Wrong printf impl");
+    Vector<Path> filepaths{};
+    for (const auto& filedata : DirectoryIterate{ "jsons/*.json"_p }) { filepaths.append(filedata.path()); }
+    const Vector<String> filedata = filepaths.view()
+                                    .map([](const auto& name) {
+                                        auto text = MUST(File::read_all(name));
+                                        return text;
+                                    })
+                                    .collect<Vector<String>>();
+    for (const auto& [data, file] : zip(filedata, filepaths)) {
+        Printer::print("Parsing {}", file);
+        auto res = JSON::Parser::parse(data.view());
+        if (res.is_error()) { Printer::print("Error during parsing {}", res.to_error()); }
+    }
 }

@@ -125,20 +125,170 @@ execute_process(
 				 )
 include(CheckAvx.cmake)
 CheckAvx()
+list(APPEND LIB_SOURCE_FILES_CPP 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Assertion.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/BigInt.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CharConv.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/DebugNewDelete.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/EventLoop.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/File.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/FileSystem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Hash.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/JSONObject.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/JSONParser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Matrix.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Ordering.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Path.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PrintInfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Random.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/StackTrace.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/String.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/StringView.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThreadBase.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Threading.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TypeInfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/UniqueString.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ArgParser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PrintfImpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cstdio_compat.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/WString.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/WStringView.cpp
+)
+list(APPEND LIB_SOURCE_FILES_H
+    ${CMAKE_CURRENT_SOURCE_DIR}/std_includes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/AdvancedIterators.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Allocator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ArgParser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Array.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Assertion.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Badge.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BigInt.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BitInteger.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CharConv.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CharConvHelpers.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Chrono.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CircularList.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Comparator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Compat.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Concepts.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Console.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ContextManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Conversion.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CpuInfo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CxprHashMap.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DebugNewDelete.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/EnumHelpers.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Enumerate.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/EventLoop.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/File.h
+	${CMAKE_CURRENT_SOURCE_DIR}/FileSystem.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/FixedMatrix.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Functional.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Hash.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/HashBase.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/HashMap.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/HashTable.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/IntrusiveMap.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Invoke.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Iterator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/IteratorInspection.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/JSONObject.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/JSONParser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/LinkedSet.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/List.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Macros.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Map.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Matrix.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Memory.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/NumberTraits.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Optional.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Ordering.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Pair.h
+	${CMAKE_CURRENT_SOURCE_DIR}/Path.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/PrintInfo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Printer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/PrintfImpl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/PriorityQueue.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Random.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/RefBox.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Result.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SSOVector.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Set.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SharedPtr.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SortedVector.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SourceLocation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Stack.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/StackTrace.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/String.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/StringLiteral.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/StringView.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Test.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThreadBase.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Threading.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Tree.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Tuple.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TypeInfo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TypeTraits.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Types.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/UniquePtr.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/UniqueString.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Variant.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/WeakPtr.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/arlib_osapi.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/cstdio_compat.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/BaseTraits.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/GenericView.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Utility.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Vector.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/WString.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/WStringView.h
+)
+list(APPEND LIB_SOURCE_FILES_XNATIVE
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/chrono/xnative_chrono_merge.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/chrono/xnative_chrono_unix.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/chrono/xnative_chrono_windows.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/chrono/xnative_chrono_merge.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/chrono/xnative_chrono_unix.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/chrono/xnative_chrono_windows.h
 
-file(GLOB LIB_SOURCE_FILES_CPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-file(GLOB LIB_SOURCE_FILES_H CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
-file(GLOB_RECURSE LIB_SOURCE_FILES_XNATIVE_CPP CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/XNative/*.cpp")
-file(GLOB_RECURSE LIB_SOURCE_FILES_XNATIVE_H CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/XNative/*.h")
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_merge.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_unix.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_windows.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_merge.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_unix.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/thread/xnative_thread_windows.h
+
+	${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_merge.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_unix.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_windows.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_merge.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_unix.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_windows.h
+)
 if (ON_WINDOWS)
-	file(GLOB LIB_SOURCE_FILES_WIN_ONLY CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Windows/*.cpp")
-	list(APPEND ARLIB_SOURCE_FILES ${LIB_SOURCE_FILES_WIN_ONLY})
+    list(APPEND ARLIB_SOURCE_FILES 
+        ${CMAKE_CURRENT_SOURCE_DIR}/Windows/arlib_winapi.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_io.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_io.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_structs.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_structs.h
+    )
 else()
-	file(GLOB LIB_SOURCE_FILES_LINUX_ONLY CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Linux/*.cpp")
-	list(APPEND ARLIB_SOURCE_FILES ${LIB_SOURCE_FILES_LINUX_ONLY})
+    list(APPEND ARLIB_SOURCE_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/Linux/arlib_linuxapi.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Linux/linux_native_io.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Linux/linux_native_io.h
+    )
 endif()
 list(APPEND ARLIB_SOURCE_FILES ${LIB_SOURCE_FILES_H} ${LIB_SOURCE_FILES_CPP})
-list(APPEND ARLIB_SOURCE_FILES ${LIB_SOURCE_FILES_XNATIVE_CPP} ${LIB_SOURCE_FILES_XNATIVE_H})
+list(APPEND ARLIB_SOURCE_FILES ${LIB_SOURCE_FILES_XNATIVE})
 
 file(GLOB_RECURSE GeneratedEnums "GeneratedEnums/*.h")
 list(APPEND ARLIB_SOURCE_FILES GeneratedEnums)
@@ -153,9 +303,17 @@ endif()
 
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
-	list(APPEND ARLIB_COMPILE_OPTIONS /std:c++20 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
+	list(APPEND ARLIB_COMPILE_OPTIONS /utf-8 /std:c++20 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc /Zc:inline-)
+	list(APPEND ARLIB_COMPILE_DEFINITIONS 
+		_CRT_SECURE_NO_WARNINGS 
+        UNICODE 
+        _UNICODE
+        WIN32_LEAN_AND_MEAN
+        VC_EXTRALEAN
+        NOMINMAX
+	)
 	if (DEBUG_BUILD)
-		list(APPEND ARLIB_COMPILE_OPTIONS /Oy-)
+		list(APPEND ARLIB_COMPILE_OPTIONS /Oy- /fsanitize=address)
 	else()
 		list(APPEND ARLIB_COMPILE_OPTIONS /O2 /GR-)
 	endif()

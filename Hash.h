@@ -5,22 +5,19 @@
 #include "PrintInfo.h"
 #include "TypeTraits.h"
 #include "Types.h"
-
 namespace ARLib {
-    enum class HashType { CRC32, MD5, SHA1, SHA256 };
+enum class HashType { CRC32, MD5, SHA1, SHA256 };
 
-    using ReadOnlyByteView = ReadOnlyView<uint8_t>;
-    using ReadOnlyCharView = ReadOnlyView<int8_t>;
-
-    template <HashType HS>
-    class HashAlgorithm {
-        public:
-        static void calculate(...) { static_assert(AlwaysFalse<HashAlgorithm<HS>>, "Not a valid HashType"); }
-    };
-
-    template <>
-    class HashAlgorithm<HashType::CRC32> {
-        static constexpr inline uint32_t s_CRCTable[] = {
+using ReadOnlyByteView = ReadOnlyView<uint8_t>;
+using ReadOnlyCharView = ReadOnlyView<int8_t>;
+template <HashType HS>
+class HashAlgorithm {
+    public:
+    static void calculate(...) { static_assert(AlwaysFalse<HashAlgorithm<HS>>, "Not a valid HashType"); }
+};
+template <>
+class HashAlgorithm<HashType::CRC32> {
+    constexpr static inline uint32_t s_CRCTable[] = {
         0x000000,   0x77073096, 0xEE0E612C, 0x990951BA, 0x76DC419,  0x706AF48F, 0xE963A535, 0x9E6495A3, 0xEDB8832,
         0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x9B64C2B,  0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2,
         0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A,
@@ -49,132 +46,131 @@ namespace ARLib {
         0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB, 0xAED16A4A, 0xD9D65ADC,
         0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9, 0xBDBDF21C, 0xCABAC28A, 0x53B39330,
         0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94,
-        0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D};
-        static_assert(sizeof_array(s_CRCTable) == 256, "Incorrect length of CRC table");
+        0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
+    };
+    static_assert(sizeof_array(s_CRCTable) == 256, "Incorrect length of CRC table");
 
-        public:
-        constexpr static uint32_t calculate(ReadOnlyByteView data) {
-            uint32_t crc32 = 0xFFFFFFFFu;
-            for (size_t i = 0; i < data.size(); i++) {
-                const uint32_t idx = data[i] ^ (crc32 & 0xFF);
-                crc32 = (crc32 >> 8) ^ s_CRCTable[idx];
-            }
-            return ~crc32;
+    public:
+    constexpr static uint32_t calculate(ReadOnlyByteView data) {
+        uint32_t crc32 = 0xFFFFFFFFu;
+        for (size_t i = 0; i < data.size(); i++) {
+            const uint32_t idx = data[i] ^ (crc32 & 0xFF);
+            crc32              = (crc32 >> 8) ^ s_CRCTable[idx];
         }
-
-        constexpr static uint32_t calculate(ReadOnlyCharView data) {
-            uint32_t crc32 = 0xFFFFFFFFu;
-            for (size_t i = 0; i < data.size(); i++) {
-                const uint32_t idx = static_cast<uint8_t>(data[i]) ^ (crc32 & 0xFF);
-                crc32 = (crc32 >> 8) ^ s_CRCTable[idx];
-            }
-            return ~crc32;
+        return ~crc32;
+    }
+    constexpr static uint32_t calculate(ReadOnlyCharView data) {
+        uint32_t crc32 = 0xFFFFFFFFu;
+        for (size_t i = 0; i < data.size(); i++) {
+            const uint32_t idx = static_cast<uint8_t>(data[i]) ^ (crc32 & 0xFF);
+            crc32              = (crc32 >> 8) ^ s_CRCTable[idx];
         }
-        template <Iterable C>
-        requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
-        static constexpr uint32_t calculate(const C& cont) { return calculate(GenericView{cont}); }
-    };
+        return ~crc32;
+    }
+    template <Iterable C>
+    requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
+    constexpr static uint32_t calculate(const C& cont) {
+        return calculate(GenericView{ cont });
+    }
+};
+template <>
+class HashAlgorithm<HashType::MD5> {
 
-    template <>
-    class HashAlgorithm<HashType::MD5> {
-
-        public:
-        struct MD5Result {
-            uint8_t digest[16];
-            bool operator==(const MD5Result& other) const {
-                for (size_t i = 0; i < 16; i++) {
-                    if (digest[i] != other.digest[i]) return false;
-                }
-                return true;
+    public:
+    struct MD5Result {
+        uint8_t digest[16];
+        bool operator==(const MD5Result& other) const {
+            for (size_t i = 0; i < 16; i++) {
+                if (digest[i] != other.digest[i]) return false;
             }
-            bool operator!=(const MD5Result& other) const { return !(*this == other); }
-        };
-        static MD5Result calculate(ReadOnlyByteView);
-        static MD5Result calculate(ReadOnlyCharView);
-        template <Iterable C>
-        requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
-        static MD5Result calculate(const C& cont) { return calculate(GenericView{cont}); }
-    };
-
-    template <>
-    class HashAlgorithm<HashType::SHA1> {
-        public:
-        struct SHA1Result {
-            uint8_t digest[20];
-        };
-        static SHA1Result calculate(ReadOnlyByteView);
-        static SHA1Result calculate(ReadOnlyCharView);
-
-        template <Iterable C>
-        requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
-        static SHA1Result calculate(const C& cont) { return calculate(GenericView{cont}); }
-    };
-
-    template <>
-    class HashAlgorithm<HashType::SHA256> {
-        public:
-        struct SHA256Result {
-            uint8_t digest[32];
-        };
-        static SHA256Result calculate(ReadOnlyByteView);
-        static SHA256Result calculate(ReadOnlyCharView);
-
-        template <Iterable C>
-        requires IsAnyOfV<RemoveCvRefT<typename IterableTraits<C>::ItemType>, uint8_t, int8_t>
-        static SHA256Result calculate(const C& cont) { return calculate(GenericView{cont}); }
-    };
-
-    template <>
-    struct PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result> {
-        const HashAlgorithm<HashType::MD5>::MD5Result& m_result{};
-        PrintInfo(const HashAlgorithm<HashType::MD5>::MD5Result& result) : m_result(result) {}
-        String repr() const {
-            String repr_result{};
-            for (auto val : m_result.digest) {
-                if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
-                else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
-            }
-            return repr_result;
+            return true;
         }
+        bool operator!=(const MD5Result& other) const { return !(*this == other); }
     };
-
-    template <>
-    struct PrintInfo<HashAlgorithm<HashType::SHA1>::SHA1Result> {
-        const HashAlgorithm<HashType::SHA1>::SHA1Result& m_result{};
-        PrintInfo(const HashAlgorithm<HashType::SHA1>::SHA1Result& result) : m_result(result) {}
-        String repr() const {
-            String repr_result{};
-            for (auto val : m_result.digest) {
-                if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
-                else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
-            }
-            return repr_result;
+    static MD5Result calculate(ReadOnlyByteView);
+    static MD5Result calculate(ReadOnlyCharView);
+    template <Iterable C>
+    requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
+    static MD5Result calculate(const C& cont) {
+        return calculate(GenericView{ cont });
+    }
+};
+template <>
+class HashAlgorithm<HashType::SHA1> {
+    public:
+    struct SHA1Result {
+        uint8_t digest[20];
+    };
+    static SHA1Result calculate(ReadOnlyByteView);
+    static SHA1Result calculate(ReadOnlyCharView);
+    template <Iterable C>
+    requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
+    static SHA1Result calculate(const C& cont) {
+        return calculate(GenericView{ cont });
+    }
+};
+template <>
+class HashAlgorithm<HashType::SHA256> {
+    public:
+    struct SHA256Result {
+        uint8_t digest[32];
+    };
+    static SHA256Result calculate(ReadOnlyByteView);
+    static SHA256Result calculate(ReadOnlyCharView);
+    template <Iterable C>
+    requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
+    static SHA256Result calculate(const C& cont) {
+        return calculate(GenericView{ cont });
+    }
+};
+template <>
+struct PrintInfo<HashAlgorithm<HashType::MD5>::MD5Result> {
+    const HashAlgorithm<HashType::MD5>::MD5Result& m_result{};
+    PrintInfo(const HashAlgorithm<HashType::MD5>::MD5Result& result) : m_result(result) {}
+    String repr() const {
+        String repr_result{};
+        for (auto val : m_result.digest) {
+            if (val > 0x0F)
+                repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
+            else
+                repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
         }
-    };
-
-    template <>
-    struct PrintInfo<HashAlgorithm<HashType::SHA256>::SHA256Result> {
-        const HashAlgorithm<HashType::SHA256>::SHA256Result& m_result{};
-        PrintInfo(const HashAlgorithm<HashType::SHA256>::SHA256Result& result) : m_result(result) {}
-        String repr() const {
-            String repr_result{};
-            for (auto val : m_result.digest) {
-                if (val > 0x0F)
-                    repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
-                else
-                    repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
-            }
-            return repr_result;
+        return repr_result;
+    }
+};
+template <>
+struct PrintInfo<HashAlgorithm<HashType::SHA1>::SHA1Result> {
+    const HashAlgorithm<HashType::SHA1>::SHA1Result& m_result{};
+    PrintInfo(const HashAlgorithm<HashType::SHA1>::SHA1Result& result) : m_result(result) {}
+    String repr() const {
+        String repr_result{};
+        for (auto val : m_result.digest) {
+            if (val > 0x0F)
+                repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
+            else
+                repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
         }
-    };
+        return repr_result;
+    }
+};
+template <>
+struct PrintInfo<HashAlgorithm<HashType::SHA256>::SHA256Result> {
+    const HashAlgorithm<HashType::SHA256>::SHA256Result& m_result{};
+    PrintInfo(const HashAlgorithm<HashType::SHA256>::SHA256Result& result) : m_result(result) {}
+    String repr() const {
+        String repr_result{};
+        for (auto val : m_result.digest) {
+            if (val > 0x0F)
+                repr_result += IntToStr<SupportedBase::Hexadecimal>(val);
+            else
+                repr_result += "0"_s + IntToStr<SupportedBase::Hexadecimal>(val);
+        }
+        return repr_result;
+    }
+};
+using CRC32  = HashAlgorithm<HashType::CRC32>;
+using MD5    = HashAlgorithm<HashType::MD5>;
+using SHA1   = HashAlgorithm<HashType::SHA1>;
+using SHA256 = HashAlgorithm<HashType::SHA256>;
 
-    using CRC32 = HashAlgorithm<HashType::CRC32>;
-    using MD5 = HashAlgorithm<HashType::MD5>;
-    using SHA1 = HashAlgorithm<HashType::SHA1>;
-    using SHA256 = HashAlgorithm<HashType::SHA256>;
-
-} // namespace ARLib
+}    // namespace ARLib

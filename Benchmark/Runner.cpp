@@ -1,34 +1,39 @@
+#include "../Printer.h"
 #include "../CharConv.h"
 #include "../HashMap.h"
-#include <benchmark/benchmark.h>
+#include "../String.h"
+#include "../Vector.h"
+#include "../Enumerate.h"
+#include "../JSONParser.h"
+#include "../Array.h"
+#include "../Chrono.h"
 #include "../Assertion.h"
-#include "../PrintfImpl.h"
+#include <benchmark/benchmark.h>
 #include <inttypes.h>
 
 using namespace ARLib;
-
-static void BM_SomeFunction(benchmark::State& state) {
+static void BM_PrintfARLib(benchmark::State& state) {
+    char buf[1024]{};
     for (auto _ : state) {
-        float val = 1234.1234;
-        const char* s = "my name is alessio";
-        int hex = 0x50;
-        ARLib::uint64_t int64val = UINT64_MAX;
-        printf_impl("Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val);
+        double val              = 1234.1234;
+        const char* s           = "my name is alessio";
+        int hex                 = 0x50;
+        ARLib::int64_t int64val = INT64_MAX;
+        ARLib::sprintf(buf, "Hello World %+10.4f %% %s %#02o %#02I64X %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }
 }
-
-static void BM_SomeFunctionStd(benchmark::State& state) {
+static void BM_PrintfStd(benchmark::State& state) {
+    char buf[1024]{};
     for (auto _ : state) {
-        float val = 1234.1234;
-        const char* s = "my name is alessio";
-        int hex = 0x50;
-        ARLib::uint64_t int64val = UINT64_MAX;
-        ::printf("Hello World %+10.4f %% %s %#02o %#02" PRIX64 " %%\n", val, s, hex, int64val);
+        double val              = 1234.1234;
+        const char* s           = "my name is alessio";
+        int hex                 = 0x50;
+        ARLib::int64_t int64val = INT64_MAX;
+        ::sprintf(buf, "Hello World %+10.4f %% %s %#02o %#02" PRIX64 " %%\n", val, s, hex, int64val);
         benchmark::ClobberMemory();
     }
 }
-
-// BENCHMARK(BM_SomeFunctionStd);
-BENCHMARK(BM_SomeFunction);
+BENCHMARK(BM_PrintfStd);
+BENCHMARK(BM_PrintfARLib);
 BENCHMARK_MAIN();

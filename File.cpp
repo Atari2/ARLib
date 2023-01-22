@@ -1,5 +1,2 @@
 #include "File.h"
-
-namespace ARLib {
-
-}
+namespace ARLib {}

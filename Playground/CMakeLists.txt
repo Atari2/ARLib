@@ -6,6 +6,14 @@ set(PLAYGROUND_SOURCE_FILES "")
 
 CheckAvx()
 
+if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(DEBUG_BUILD true)
+	set(RELEASE_BUILD false)
+else()
+	set(DEBUG_BUILD false)
+	set(RELEASE_BUILD true)
+endif()
+
 list(
 	APPEND PLAYGROUND_SOURCE_FILES
 	"${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
@@ -15,9 +23,20 @@ message(STATUS "Building playground")
 add_executable(ARLibPlayground ${PLAYGROUND_SOURCE_FILES})
 
 if (MSVC)
-	target_compile_options(ARLibPlayground PRIVATE /std:c++latest ${AVX_FLAGS})
+	if (DEBUG_BUILD)
+		target_compile_options(ARLibPlayground PRIVATE /std:c++latest /utf-8 ${AVX_FLAGS} /fsanitize=address)
+	else()
+		target_compile_options(ARLibPlayground PRIVATE /std:c++latest /utf-8 ${AVX_FLAGS})
+	endif()
+	add_custom_command(
+        TARGET ARLibPlayground
+        POST_BUILD
+        COMMAND mt.exe -manifest ${CMAKE_CURRENT_SOURCE_DIR}/../ARLib.manifest -outputresource:$<TARGET_FILE:ARLibPlayground>
+        COMMENT "Applying manifest file"
+    )
 else()
 	if (WIN32)
+		target_compile_definitions(ARLibPlayground PRIVATE UNICODE _UNICODE)
 		target_compile_options(ARLibPlayground PRIVATE -std=c++20 -msse4.1 ${AVX_FLAGS} -fno-exceptions -Wall -Wextra)
 	else()
 		if (DEBUG_BUILD)

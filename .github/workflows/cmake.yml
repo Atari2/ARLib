@@ -2,7 +2,7 @@ name: CMake
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, matrix ]
   pull_request:
     branches: [ master ]
 
@@ -60,7 +60,7 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build/Tests
       shell: bash
-      run: ctest -C $BUILD_TYPE
+      run: ctest --rerun-failed --output-on-failure -C $BUILD_TYPE
     
     - name: Upload
       uses: actions/upload-artifact@v2

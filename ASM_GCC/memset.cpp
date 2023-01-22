@@ -1,7 +1,8 @@
-extern "C" {
-using size_t = decltype(sizeof(void*));
-void* arlib_memset(void* dst, int value, size_t size) {
-    __asm__ volatile(R"(        
+extern "C"
+{
+    using size_t = decltype(sizeof(void*));
+    void* arlib_memset(void* dst, int value, size_t size) {
+        __asm__ volatile(R"(        
         movq    %%rdi, %%rax
         testq   %%rdx, %%rdx
         je      .LBB0_18
@@ -95,7 +96,7 @@ void* arlib_memset(void* dst, int value, size_t size) {
         jne     .LBB0_17
 .LBB0_18:
 )" ::
-                     : "memory");
-    return dst;
-}
+                         : "memory");
+        return dst;
+    }
 }
