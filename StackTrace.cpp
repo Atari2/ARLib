@@ -8,8 +8,6 @@
     #include "String.h"
 
     #ifdef ON_WINDOWS
-        #define WIN32_LEAN_AND_MEAN
-        #define VC_EXTRALEAN
         #include <windows.h>
         // clang-format no reorder these 2 headers
         #include "Threading.h"

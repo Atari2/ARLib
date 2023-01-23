@@ -5,25 +5,25 @@
     #include <unistd.h>
     #include <sys/stat.h>
 namespace ARLib {
-UnixDirectoryIterator::UnixDirectoryIterator(const Path& path, UnixFileInfo& info) :
-    m_hdl(nullptr), m_path(path), m_info(info), m_index(0) {
+UnixDirectoryIterator::UnixDirectoryIterator(const Path& path, bool recurse) :
+    m_hdl(nullptr), m_path(path), m_index(0), m_recurse(recurse) {
     // end-iterator constructor
 }
-UnixDirectoryIterator::UnixDirectoryIterator(const Path& path, UnixDirIterHandle hdl, UnixFileInfo& info) :
-    m_hdl(hdl), m_path(path), m_info(info), m_index(0) {
+UnixDirectoryIterator::UnixDirectoryIterator(const Path& path, UnixDirIterHandle hdl, bool recurse) :
+    m_hdl(hdl), m_path(path), m_index(0), m_recurse(recurse) {
     int res = glob(m_path.string().data(), GLOB_ERR, NULL, m_hdl);
     if (res != 0 || res == GLOB_NOMATCH || m_hdl->gl_pathc == 0) {
         globfree(m_hdl);
         m_hdl = nullptr;
         return;
-    }   
+    }
     static char pathBuf[PATH_MAX];
     getcwd(pathBuf, PATH_MAX);
     size_t size       = strlen(pathBuf);
     pathBuf[size]     = '/';
     pathBuf[size + 1] = '\0';
-    while (m_index < m_hdl->gl_pathc) { 
-        strcat(pathBuf, m_hdl->gl_pathv[m_index]);        
+    while (m_index < m_hdl->gl_pathc) {
+        strcat(pathBuf, m_hdl->gl_pathv[m_index]);
         struct stat pathStat;
         stat(pathBuf, &pathStat);
         if (S_ISREG(pathStat.st_mode)) {
@@ -47,7 +47,7 @@ UnixDirectoryIterator::~UnixDirectoryIterator() {
     if (m_hdl != nullptr) globfree(m_hdl);
     m_hdl = nullptr;
 }
-const UnixFileInfo& UnixDirectoryIterator::operator*() const {
+UnixFileInfo UnixDirectoryIterator::operator*() const {
     return m_info;
 }
 UnixDirectoryIterator& UnixDirectoryIterator::operator++() {
@@ -64,8 +64,8 @@ UnixDirectoryIterator& UnixDirectoryIterator::operator++() {
         size_t size       = strlen(pathBuf);
         pathBuf[size]     = '/';
         pathBuf[size + 1] = '\0';
-        while (m_index < m_hdl->gl_pathc) { 
-            strcat(pathBuf, m_hdl->gl_pathv[m_index]);        
+        while (m_index < m_hdl->gl_pathc) {
+            strcat(pathBuf, m_hdl->gl_pathv[m_index]);
             struct stat pathStat;
             stat(pathBuf, &pathStat);
             if (S_ISREG(pathStat.st_mode)) {
@@ -84,8 +84,7 @@ UnixDirectoryIterator& UnixDirectoryIterator::operator++() {
     return *this;
 }
 bool UnixDirectoryIterator::operator==(const UnixDirectoryIterator& other) const {
-    return &this->m_path == &other.m_path && &this->m_info == &other.m_info && other.m_hdl == this->m_hdl &&
-           other.m_index == this->m_index;
+    return other.m_hdl == this->m_hdl && other.m_index == this->m_index;
 }
 bool UnixDirectoryIterator::operator!=(const UnixDirectoryIterator& other) const {
     return !(this->operator==(other));

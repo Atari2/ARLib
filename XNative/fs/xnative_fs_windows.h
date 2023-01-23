@@ -6,6 +6,7 @@
     #endif
     #include "../../Types.h"
     #include "../../Path.h"
+    #include "../../UniquePtr.h"
 namespace ARLib {
 enum class Win32FileAttribute {
     ARCHIVE               = 0x20,
@@ -41,38 +42,88 @@ class Win32FileInfo {
     WStringView fileName{};
     Path fullPath{};
     public:
+    Win32FileInfo(Win32FileInfo&& other) noexcept :
+        fileAttributes(other.fileAttributes), creationTime(other.creationTime), lastWrite(other.lastWrite),
+        lastAccess(other.lastAccess), fileSize(other.fileSize), fileName(), fullPath(move(other.fullPath)) {
+        auto idx_last_slash = fullPath.string().last_index_of(L'\\');
+        fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+    }
+    Win32FileInfo(const Win32FileInfo& other) noexcept :
+        fileAttributes(other.fileAttributes), creationTime(other.creationTime), lastWrite(other.lastWrite),
+        lastAccess(other.lastAccess), fileSize(other.fileSize), fileName(), fullPath(other.fullPath) {
+        auto idx_last_slash = fullPath.string().last_index_of(L'\\');
+        fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+    }
+    Win32FileInfo& operator=(Win32FileInfo&& other) noexcept {
+        fileAttributes      = other.fileAttributes;
+        creationTime        = other.creationTime;
+        lastWrite           = other.lastWrite;
+        lastAccess          = other.lastAccess;
+        fileSize            = other.fileSize;
+        fullPath            = move(other.fullPath);
+        auto idx_last_slash = fullPath.string().last_index_of(L'\\');
+        fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+        return *this;
+    }
     constexpr Win32FileInfo() = default;
     const auto& path() const { return fullPath; }
     const auto& filename() const { return fileName; }
+    ~Win32FileInfo() = default;
 };
 using Win32DirIterHandle = void*;
 bool remove_filespec(WString& p);
+class Win32DirectoryIterate {
+    friend class Win32DirectoryIterator;
+    Path m_path;
+    bool m_recurse;
+    protected:
+    Win32DirectoryIterate() : m_path(), m_recurse(){};
+    Win32DirectoryIterate(Win32DirectoryIterate&& other) noexcept :
+        m_path(move(other.m_path)), m_recurse(other.m_recurse) {}
+    Win32DirectoryIterate& operator=(Win32DirectoryIterate&& other) noexcept {
+        m_path    = move(other.m_path);
+        m_recurse = other.m_recurse;
+        return *this;
+    }
+    void set_values_from_iterator(Path path, bool recurse);
+    public:
+    Win32DirectoryIterate(Path path, bool recurse = false);
+    Win32DirectoryIterator begin() const;
+    Win32DirectoryIterator end() const;
+};
 class Win32DirectoryIterator {
-    friend class Win32DirectoryIterate;
+    friend Win32DirectoryIterate;
+    friend struct PrintInfo<Win32DirectoryIterator>;
     Win32DirIterHandle m_hdl;
     const Path& m_path;
-    Win32FileInfo& m_info;
+    Win32FileInfo m_info;
+    const bool m_recurse;
+    Win32DirectoryIterate m_recursive_iterate{};
+    UniquePtr<Win32DirectoryIterator> m_inner_curr;
+    UniquePtr<Win32DirectoryIterator> m_inner_end;
+    void load_next_file();
     protected:
-    Win32DirectoryIterator(const Path& path, Win32FileInfo& info);
-    Win32DirectoryIterator(const Path& path, Win32DirIterHandle hdl, Win32FileInfo& info);
+    Win32DirectoryIterator(const Path& path, bool recurse);
+    Win32DirectoryIterator(const Path& path, Win32DirIterHandle hdl, bool recurse);
     public:
-    Win32DirectoryIterator(const Win32DirectoryIterator&)  = delete;
+    Win32DirectoryIterator(const Win32DirectoryIterator&)            = delete;
     Win32DirectoryIterator& operator=(const Win32DirectoryIterator&) = delete;
     Win32DirectoryIterator(Win32DirectoryIterator&&) noexcept;
     Win32DirectoryIterator& operator=(Win32DirectoryIterator&&) noexcept = delete;
     bool operator==(const Win32DirectoryIterator& other) const;
     bool operator!=(const Win32DirectoryIterator& other) const;
-    const Win32FileInfo& operator*() const;
+    Win32FileInfo operator*() const;
     Win32DirectoryIterator& operator++();
     ~Win32DirectoryIterator();
 };
-class Win32DirectoryIterate {
-    mutable Win32FileInfo m_info{};
-    Path m_path;
-    public:
-    Win32DirectoryIterate(Path path) : m_path(move(path)){};
-    auto begin() const { return Win32DirectoryIterator{ m_path, NULL, m_info }; }
-    auto end() const { return Win32DirectoryIterator{ m_path, m_info }; }
+template <>
+struct PrintInfo<Win32DirectoryIterator> {
+    const Win32DirectoryIterator& m_iter;
+    String repr() const {
+        auto end = Win32DirectoryIterator {m_iter.m_path, m_iter.m_recurse};
+        if (m_iter == end) { return "Win32DirectoryIterator { end }"_s; }
+        return (*m_iter).path().narrow();
+    }
 };
 }    // namespace ARLib
 #endif

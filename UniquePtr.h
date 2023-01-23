@@ -16,7 +16,7 @@ class UniquePtr {
     explicit UniquePtr(T&& storage) : m_storage(new T{ move(storage) }) {}
     UniquePtr(UniquePtr&& ptr) noexcept {
         reset();
-        m_storage     = ptr.release();
+        m_storage = ptr.release();
     }
     template <typename... Args>
     explicit UniquePtr(EmplaceT<T>, Args&&... args) {
@@ -24,7 +24,7 @@ class UniquePtr {
     }
     UniquePtr& operator=(UniquePtr&& other) noexcept {
         reset();
-        m_storage     = other.release();
+        m_storage = other.release();
         return *this;
     }
     UniquePtr& operator=(const UniquePtr&) = delete;
@@ -45,7 +45,7 @@ class UniquePtr {
     const T* operator->() const { return m_storage; }
     T& operator*() { return *m_storage; }
     const T& operator*() const { return *m_storage; }
-    ~UniquePtr() { delete m_storage; }
+    ~UniquePtr() { reset(); }
 };
 template <class T>
 class UniquePtr<T[]> {
@@ -71,15 +71,15 @@ class UniquePtr<T[]> {
     }
     UniquePtr(UniquePtr&& ptr) noexcept {
         reset();
-        m_storage     = ptr.release();
-        m_size        = ptr.m_size;
-        ptr.m_size    = 0;
+        m_storage  = ptr.release();
+        m_size     = ptr.m_size;
+        ptr.m_size = 0;
     }
     UniquePtr& operator=(UniquePtr&& other) noexcept {
         reset();
-        m_storage     = other.release();
-        m_size        = other.m_size;
-        other.m_size    = 0;
+        m_storage    = other.release();
+        m_size       = other.m_size;
+        other.m_size = 0;
         return *this;
     }
     T* release() {

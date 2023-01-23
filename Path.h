@@ -7,7 +7,6 @@
 #include "WStringView.h"
 #include "arlib_osapi.h"
 #include "PrintInfo.h"
-
 namespace ARLib {
 using FsString        = ConditionalT<windows_build, WString, String>;
 using NonFsString     = ConditionalT<windows_build, String, WString>;

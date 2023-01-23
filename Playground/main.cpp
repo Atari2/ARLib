@@ -11,7 +11,9 @@
 using namespace ARLib;
 int main() {
     Vector<Path> filepaths{};
-    for (const auto& filedata : DirectoryIterate{ "jsons/*.json"_p }) { filepaths.append(filedata.path()); }
+    for (const auto& filedata : DirectoryIterate{ "jsons"_p, true }) {
+        filepaths.append(filedata.path());
+    }
     const Vector<String> filedata = filepaths.view()
                                     .map([](const auto& name) {
                                         auto text = MUST(File::read_all(name));
@@ -23,4 +25,5 @@ int main() {
         auto res = JSON::Parser::parse(data.view());
         if (res.is_error()) { Printer::print("Error during parsing {}", res.to_error()); }
     }
+    Printer::print("Globbed {} files", filepaths.size());
 }

@@ -308,7 +308,7 @@ void WString::append(WStringView other) {
     if (other_size == 0) return;
     auto new_size = m_size + other_size;
     grow_if_needed(new_size);
-    memcpy(get_buf_internal() + m_size, other.data(), other_size);
+    ConditionalBitCopy(get_buf_internal() + m_size, other.data(), other_size);
     set_size(new_size);
 }
 void WString::append(const wchar_t* other) {
@@ -321,7 +321,7 @@ WString WString::concat(WStringView other) const {
     if (other_size == 0) return copy;
     auto new_size = m_size + other_size;
     copy.grow_if_needed(new_size);
-    memcpy(copy.get_buf_internal() + m_size, other.data(), other_size);
+    ConditionalBitCopy(copy.get_buf_internal() + m_size, other.data(), other_size);
     copy.set_size(new_size);
     return copy;
 }

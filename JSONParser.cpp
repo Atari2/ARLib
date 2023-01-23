@@ -7,9 +7,16 @@
 namespace ARLib {
 namespace JSON {
 
+#define CHK_SIZE(c)                                                                                                    \
+    if (current_index >= view.size()) {                                                                                \
+        return ParseError{ "Expected " #c " but end of file was reached"_s, current_index };                           \
+    }
+
 #define CHK_CURR(c)                                                                                                    \
+    CHK_SIZE(c)                                                                                                        \
     if (view[current_index] != c) {                                                                                    \
-        return ParseError{ "Invalid character, expected " #c ", but got "_s + view[current_index], current_index };    \
+        return ParseError{ String::formatted("Invalid character, expected '%c' but got '%c'", c, view[current_index]), \
+                           current_index };                                                                            \
     }
 
 #define VERIFY_COMMA(c)                                                                                                \
@@ -55,15 +62,13 @@ namespace JSON {
         auto check_c = [](char c) {
             constexpr char escaped[] = { 'n', 'r', 'v', 't', 'f' };
             constexpr char equiv[]   = { '\n', '\r', '\v', '\t', '\f' };
-            auto found = find(begin(escaped), end(escaped), c);
-            if (found != npos_) {
-                return equiv[found];
-            }
+            auto found               = find(begin(escaped), end(escaped), c);
+            if (found != npos_) { return equiv[found]; }
             return c;
         };
         current_index++;
         JString container{};
-        bool at_end = false;
+        bool at_end          = false;
         const auto view_size = view.size();
         while (!at_end && current_index < view_size) {
             const char c = view[current_index];
@@ -180,13 +185,12 @@ namespace JSON {
                     }
                 default:
                     {
-                        const ARLib::Array valid_values_for_number{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '+', 'E', 'e'};
-                        auto check_if_valid_number = [&](const String& str){
+                        const ARLib::Array valid_values_for_number{ '0', '1', '2', '3', '4', '5', '6',
+                                                                    '7', '8', '9', '-', '+', 'E', 'e' };
+                        auto check_if_valid_number = [&](const String& str) {
                             // this is not real validation, it lets invalid values slip throught, but it's good enough for now
                             for (const char c : str) {
-                                if (find(valid_values_for_number, c) == npos_) {
-                                    return false;
-                                }
+                                if (find(valid_values_for_number, c) == npos_) { return false; }
                             }
                             return true;
                         };

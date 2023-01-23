@@ -28,11 +28,12 @@ class UnixDirectoryIterator {
     friend class UnixDirectoryIterate;
     UnixDirIterHandle m_hdl;
     const Path& m_path;
-    UnixFileInfo& m_info;
+    UnixFileInfo m_info;
     size_t m_index;
+    bool m_recurse;
     protected:
-    UnixDirectoryIterator(const Path& path, UnixFileInfo& info);
-    UnixDirectoryIterator(const Path& path, UnixDirIterHandle hdl, UnixFileInfo& info);
+    UnixDirectoryIterator(const Path& path, bool recurse);
+    UnixDirectoryIterator(const Path& path, UnixDirIterHandle hdl, bool recurse);
     public:
     UnixDirectoryIterator(const UnixDirectoryIterator&)             = delete;
     UnixDirectoryIterator& operator=(const UnixDirectoryIterator&) = delete;
@@ -40,18 +41,18 @@ class UnixDirectoryIterator {
     UnixDirectoryIterator& operator=(UnixDirectoryIterator&&) noexcept = delete;
     bool operator==(const UnixDirectoryIterator& other) const;
     bool operator!=(const UnixDirectoryIterator& other) const;
-    const UnixFileInfo& operator*() const;
+    UnixFileInfo operator*() const;
     UnixDirectoryIterator& operator++();
     ~UnixDirectoryIterator();
 };
 class UnixDirectoryIterate {
-    mutable UnixFileInfo m_info{};
     Path m_path;
     mutable glob_t m_glob_result{};
+    bool m_recurse;
     public:
-    UnixDirectoryIterate(Path path) : m_path(move(path)){};
-    auto begin() const { return UnixDirectoryIterator{ m_path, &m_glob_result, m_info }; }
-    auto end() const { return UnixDirectoryIterator{ m_path, m_info }; }
+    UnixDirectoryIterate(Path path, bool recurse = false) : m_path(move(path)), m_recurse(recurse) {};
+    auto begin() const { return UnixDirectoryIterator{ m_path, &m_glob_result, m_recurse }; }
+    auto end() const { return UnixDirectoryIterator{ m_path, m_recurse }; }
 };
 }    // namespace ARLib
 #endif
