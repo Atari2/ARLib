@@ -141,6 +141,7 @@ WString::WString(WStringView other) : m_size(other.length()) {
     } else {
         m_data_buf = new wchar_t[m_size + 1];
         ConditionalBitCopy(m_data_buf, other.data(), m_size);
+        m_data_buf[m_size] = '\0';
     }
 }
 Vector<WString> WString::split_at_any(const wchar_t* sep) const {

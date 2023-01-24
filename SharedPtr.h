@@ -79,6 +79,7 @@ class SharedPtr {
     SharedPtr(const SharedPtr& other) {
         m_storage = other.m_storage;
         m_count   = other.m_count;
+        if (m_storage == nullptr && m_count == nullptr) return;
         m_count->incref();
     }
     template <typename... Args>

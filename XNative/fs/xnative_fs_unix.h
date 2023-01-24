@@ -7,6 +7,7 @@
     #endif
     #include "../../Types.h"
     #include "../../Path.h"
+    #include "../../UniquePtr.h"
     #include <dirent.h>
     #include <glob.h>
 namespace ARLib {
@@ -14,16 +15,56 @@ enum class UnixFileAttribute {
 };
 class UnixFileInfo {
     friend class UnixDirectoryIterator;
-    protected:
     StringView fileName{};
     Path fullPath{};
-    public:
+    public:    
+    UnixFileInfo(UnixFileInfo&& other) noexcept : fileName(), fullPath(move(other.fullPath)) {
+        auto idx_last_slash = fullPath.string().last_index_of('/');
+        fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+    }
+    UnixFileInfo(const UnixFileInfo& other) noexcept : fileName(), fullPath(other.fullPath) {
+        auto idx_last_slash = fullPath.string().last_index_of('/');
+        fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+    }
+    UnixFileInfo& operator=(UnixFileInfo&& other) noexcept {
+        fullPath            = move(other.fullPath);
+        auto idx_last_slash = fullPath.string().last_index_of('/');
+        fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+        return *this;
+    }
     constexpr UnixFileInfo() = default;
     const auto& path() const { return fullPath; }
     const auto& filename() const { return fileName; }
 };
-using UnixDirIterHandle = glob_t*;
+using GlobResult = glob_t;
+using UnixDirIterHandle = GlobResult*;
 bool remove_filespec(String& p);
+class UnixDirectoryIterator;
+class UnixDirectoryIterate {
+    friend class UnixDirectoryIterator;
+    Path m_path;
+    UnixDirIterHandle m_glob_result;
+    bool m_recurse;
+    UnixDirectoryIterate() = default;
+    UnixDirectoryIterate(UnixDirectoryIterate&& other) noexcept : m_path(move(other.m_path)), m_glob_result(other.m_glob_result), m_recurse(other.m_recurse) {
+        other.m_glob_result = nullptr;
+    }
+    UnixDirectoryIterate& operator=(UnixDirectoryIterate&& other) noexcept {
+        if (m_glob_result) delete m_glob_result;
+        m_path = move(other.m_path);
+        m_recurse = other.m_recurse;
+        m_glob_result = other.m_glob_result;
+        other.m_glob_result = nullptr;
+        return *this;
+    }
+    public:
+    UnixDirectoryIterate(Path path, bool recurse);
+    UnixDirectoryIterator begin() const;
+    UnixDirectoryIterator end() const;
+    ~UnixDirectoryIterate() {
+        if (m_glob_result) delete m_glob_result;
+    }
+};
 class UnixDirectoryIterator {
     friend class UnixDirectoryIterate;
     UnixDirIterHandle m_hdl;
@@ -31,7 +72,10 @@ class UnixDirectoryIterator {
     UnixFileInfo m_info;
     size_t m_index;
     bool m_recurse;
-    protected:
+    UnixDirectoryIterate m_recursive_iterate{};
+    UniquePtr<UnixDirectoryIterator> m_inner_curr;
+    UniquePtr<UnixDirectoryIterator> m_inner_end;
+    void load_next_file(bool first_time = false);
     UnixDirectoryIterator(const Path& path, bool recurse);
     UnixDirectoryIterator(const Path& path, UnixDirIterHandle hdl, bool recurse);
     public:
@@ -44,15 +88,6 @@ class UnixDirectoryIterator {
     UnixFileInfo operator*() const;
     UnixDirectoryIterator& operator++();
     ~UnixDirectoryIterator();
-};
-class UnixDirectoryIterate {
-    Path m_path;
-    mutable glob_t m_glob_result{};
-    bool m_recurse;
-    public:
-    UnixDirectoryIterate(Path path, bool recurse = false) : m_path(move(path)), m_recurse(recurse) {};
-    auto begin() const { return UnixDirectoryIterator{ m_path, &m_glob_result, m_recurse }; }
-    auto end() const { return UnixDirectoryIterator{ m_path, m_recurse }; }
 };
 }    // namespace ARLib
 #endif

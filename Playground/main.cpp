@@ -12,6 +12,7 @@ using namespace ARLib;
 int main() {
     Vector<Path> filepaths{};
     for (const auto& filedata : DirectoryIterate{ "jsons"_p, true }) {
+        Printer::print("Found {}", filedata.path());
         filepaths.append(filedata.path());
     }
     const Vector<String> filedata = filepaths.view()

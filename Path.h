@@ -27,6 +27,8 @@ class Path {
     Path() = default;
     Path(FsString path) : m_path(convert_backslashes_to_native(move(path))) {}
     Path(const NonFsString& path) : m_path(convert_backslashes_to_native(convert_from_non_fs_to_fs(path))) {}
+    Path(FsStringView path) : m_path(convert_backslashes_to_native(move(FsString{path}))) {}
+    Path(const NonFsStringView& path) : m_path(convert_backslashes_to_native(convert_from_non_fs_to_fs(NonFsString{path}))) {}
     const auto& string() const { return m_path; }
     auto& string() { return m_path; }
     decltype(auto) narrow() const {

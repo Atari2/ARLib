@@ -132,6 +132,7 @@ String::String(StringView other) : m_size(other.length()) {
     } else {
         m_data_buf = new char[m_size + 1];
         strncpy(m_data_buf, other.data(), m_size);
+        m_data_buf[m_size] = '\0';
     }
 }
 Vector<String> String::split_at_any(const char* sep) const {

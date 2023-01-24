@@ -33,7 +33,6 @@ enum class Win32FileAttribute {
 };
 class Win32FileInfo {
     friend class Win32DirectoryIterator;
-    protected:
     uint32_t fileAttributes{};
     uint64_t creationTime{};
     uint64_t lastWrite{};
@@ -76,7 +75,6 @@ class Win32DirectoryIterate {
     friend class Win32DirectoryIterator;
     Path m_path;
     bool m_recurse;
-    protected:
     Win32DirectoryIterate() : m_path(), m_recurse(){};
     Win32DirectoryIterate(Win32DirectoryIterate&& other) noexcept :
         m_path(move(other.m_path)), m_recurse(other.m_recurse) {}

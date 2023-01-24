@@ -1,4 +1,6 @@
+#ifndef INCLUDED_FROM_OWN_CPP___
 #define INCLUDED_FROM_OWN_CPP___
+#endif
 #include "xnative_chrono_unix.h"
 #ifdef UNIX_OR_MINGW
     #ifndef ON_MINGW

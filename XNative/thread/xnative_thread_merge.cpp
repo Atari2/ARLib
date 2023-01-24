@@ -1,4 +1,6 @@
+#ifndef INCLUDED_FROM_OWN_CPP___
 #define INCLUDED_FROM_OWN_CPP___
+#endif
 #include "xnative_thread_merge.h"
 namespace ARLib {
 #ifdef UNIX_OR_MINGW
