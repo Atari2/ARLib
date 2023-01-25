@@ -12,10 +12,10 @@ using namespace ARLib;
 int main() {
     Vector<Path> filepaths{};
     for (const auto& filedata : DirectoryIterate{ "jsons"_p, true }) {
-        Printer::print("Found {}", filedata.path());
         filepaths.append(filedata.path());
     }
     const Vector<String> filedata = filepaths.view()
+                                    .filter([](const Path& name) { return name.string().ends_with(FsString{ ".json" }); })
                                     .map([](const auto& name) {
                                         auto text = MUST(File::read_all(name));
                                         return text;

@@ -78,6 +78,16 @@ void Win32DirectoryIterator::load_next_file() {
         isDir = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
     }
     if (m_hdl == INVALID_HANDLE_VALUE) { return; }
+    if (m_inner_curr.exists() && m_inner_end.exists()) {
+        auto& b = *m_inner_curr;
+        auto& e = *m_inner_end;
+        if (++b != e) {
+            return;
+        } else {
+            m_inner_curr.reset();
+            m_inner_end.reset();
+        }
+    }
     while (isDir) {
         if (BOOL res = FindNextFile(m_hdl, &data); res == FALSE) {
             if (GetLastError() == ERROR_NO_MORE_FILES) { m_hdl = INVALID_HANDLE_VALUE; }
@@ -97,16 +107,6 @@ void Win32DirectoryIterator::load_next_file() {
             m_inner_curr        = UniquePtr{ m_recursive_iterate.begin() };
             m_inner_end         = UniquePtr{ m_recursive_iterate.end() };
             return;
-        }
-    }
-    if (m_inner_curr.exists() && m_inner_end.exists()) {
-        auto& b = *m_inner_curr;
-        auto& e = *m_inner_end;
-        if (++b != e) {
-            return;
-        } else {
-            m_inner_curr.reset();
-            m_inner_end.reset();
         }
     }
     m_info.fileAttributes = data.dwFileAttributes;
