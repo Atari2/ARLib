@@ -5,7 +5,8 @@
 #include "HashTable.h"
 #include "PrintInfo.h"
 namespace ARLib {
-template <Hashable Key, typename Val>
+template <typename Key, typename Val, typename HashCls = Hash<Key>>
+requires Hashable<Key, HashCls>
 struct HashMapEntry {
     Key m_key;
     Val m_value;
@@ -13,14 +14,11 @@ struct HashMapEntry {
 
     public:
     HashMapEntry() : m_key(), m_value(), m_hashval(static_cast<size_t>(-1)) {}
-    HashMapEntry(const Key& key, const Val& value) : m_key(key), m_value(value) { m_hashval = Hash<Key>{}(m_key); }
-    HashMapEntry(Key&& key, Val&& value) : m_key(move(key)), m_value(move(value)) { m_hashval = Hash<Key>{}(m_key); }
-    HashMapEntry(HashMapEntry&& other) noexcept : m_key(move(other.m_key)), m_value(move(other.m_value)) {
-        m_hashval = other.m_hashval;
-    }
-    HashMapEntry(const HashMapEntry& other) : m_key(other.m_key), m_value(other.m_value) {
-        m_hashval = other.m_hashval;
-    }
+    HashMapEntry(const Key& key, const Val& value) : m_key(key), m_value(value) { m_hashval = HashCls{}(m_key); }
+    HashMapEntry(Key&& key, Val&& value) : m_key(move(key)), m_value(move(value)) { m_hashval = HashCls{}(m_key); }
+    HashMapEntry(HashMapEntry&& other) noexcept :
+        m_key(move(other.m_key)), m_value(move(other.m_value)), m_hashval(other.m_hashval) {}
+    HashMapEntry(const HashMapEntry& other) : m_key(other.m_key), m_value(other.m_value), m_hashval(other.m_hashval) {}
     HashMapEntry& operator=(const HashMapEntry& other) {
         m_key     = other.m_key;
         m_value   = other.m_value;
@@ -28,8 +26,8 @@ struct HashMapEntry {
         return *this;
     }
     HashMapEntry& operator=(HashMapEntry&& other) noexcept {
-        m_key     = move(other.m_key);
-        m_value   = move(other.m_value);
+        m_key     = ARLib::move(other.m_key);
+        m_value   = ARLib::move(other.m_value);
         m_hashval = other.m_hashval;
         return *this;
     }
@@ -46,15 +44,17 @@ struct Hash<HashMapEntry<Key, Value>> {
         return key.hashval();
     }
 };
-template <Hashable Key, typename Val>
+template <typename Key, typename Val, template <class> class HashCls = Hash>
+requires Hashable<HashMapEntry<Key, Val, HashCls<Key>>, HashCls<HashMapEntry<Key, Val, HashCls<Key>>>>
 class HashMap {
-    using MapEntry  = HashMapEntry<Key, Val>;
+    using MapEntry  = HashMapEntry<Key, Val, HashCls<Key>>;
     using Iter      = HashTableIterator<MapEntry>;
     using ConstIter = ConstHashTableIterator<MapEntry>;
-    HashTable<MapEntry> m_table{};
+    HashTable<MapEntry, HashCls<MapEntry>> m_table{};
 
     public:
-    HashMap() = default;
+    using ValueType = MapEntry;
+    HashMap()       = default;
     HashMap(std::initializer_list<MapEntry> entries) {
         for (auto val : entries) { add(move(val)); }
     }
@@ -69,17 +69,16 @@ class HashMap {
         return *this;
     }
     double load() { return m_table.load(); };
+    void clear() { m_table.clear(); }
     InsertionResult add(const Key& key, const Val& value)
     requires(CopyAssignable<Key> && CopyAssignable<Val>)
     {
-        MapEntry entry{ key, value };
         return m_table.insert(MapEntry{ key, value });
     }
     InsertionResult add(Key&& key, Val&& value)
     requires(MoveAssignable<Key> && MoveAssignable<Val>)
     {
-        MapEntry entry{ Forward<Key>(key), Forward<Val>(value) };
-        return m_table.insert(Forward<MapEntry>(entry));
+        return m_table.insert({ Forward<Key>(key), Forward<Val>(value) });
     }
     InsertionResult add(MapEntry entry) { return m_table.insert(Forward<MapEntry>(entry)); }
     DeletionResult remove(Key key) {
@@ -111,8 +110,7 @@ struct PrintInfo<HashMapEntry<A, B>> {
     const HashMapEntry<A, B>& m_entry;
     explicit PrintInfo(const HashMapEntry<A, B>& entry) : m_entry(entry) {}
     String repr() const {
-        return "{ "_s + print_conditional<A>(m_entry.key()) + ": "_s +
-               print_conditional<B>(m_entry.value()) + " }"_s;
+        return "{ "_s + print_conditional<A>(m_entry.key()) + ": "_s + print_conditional<B>(m_entry.value()) + " }"_s;
     }
 };
 template <Printable A, Printable B>

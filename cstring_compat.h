@@ -50,17 +50,6 @@ constexpr char* strcpy(char* dest, const char* src) {
         ;
     return dest;
 }
-constexpr char* strncpy(char* dest, const char* src, size_t num) {
-    if (num == 0) { return dest; }
-    while (num--) {
-        *dest++ = *src++;
-        if (*src == '\0') break;
-        if (num == 0) break;
-    }
-    if (num == 0) return dest;
-    while (num--) { *dest++ = '\0'; }
-    return dest;
-}
 constexpr int strcmp(const char* first, const char* second) {
     for (; *first == *second && *first; first++, second++)
         ;
@@ -162,6 +151,10 @@ constexpr void* memcpy(void* dst0, const void* src0, size_t num) {
         return dst;
     }
 #endif
+}
+constexpr char* strncpy(char* dest, const char* src, size_t num) {
+    memcpy(dest, src, num);
+    return dest;
 }
 extern "C"
 {

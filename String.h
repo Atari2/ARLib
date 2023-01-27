@@ -495,7 +495,8 @@ inline String operator""_s(const char* source, size_t len) {
 template <>
 struct Hash<String> {
     [[nodiscard]] size_t operator()(const String& key) const noexcept {
-        return hash_array_representation(key.data(), key.size());
+        constexpr size_t seed = static_cast<size_t>(0xc70f6907UL);
+        return murmur_hash_bytes(key.data(), key.size(), seed);
     }
 };
 }    // namespace ARLib

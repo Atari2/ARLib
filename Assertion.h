@@ -40,6 +40,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
     return assert_test<T1, T2, AssertWhat::PtrNonEq>(first, second);
 }
 }    // namespace ARLib
+#ifdef ARLIB_DEBUG
 #define HARD_ASSERT(val, msg)                                                                                          \
     if (!(val)) {                                                                                                      \
         if (is_constant_evaluated()) {                                                                                 \
@@ -63,6 +64,33 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
         unreachable                                                                                                    \
     }
 
+#define SOFT_ASSERT(val, msg)                                                                                          \
+    if (!(val)) {                                                                                                      \
+        if (is_constant_evaluated()) {                                                                                 \
+            CONSTEVAL_STATIC_ASSERT(val, msg);                                                                         \
+        } else {                                                                                                       \
+            ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                              \
+            PRINT_SOURCE_LOCATION                                                                                      \
+        }                                                                                                              \
+        unreachable                                                                                                    \
+    }
+#define SOFT_ASSERT_FMT(val, fmt, ...)                                                                                 \
+    if (!(val)) {                                                                                                      \
+        if (is_constant_evaluated()) {                                                                                 \
+            CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                         \
+        } else {                                                                                                       \
+            ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                          \
+            PRINT_SOURCE_LOCATION                                                                                      \
+        }                                                                                                              \
+        unreachable                                                                                                    \
+    }
+#else
+#define HARD_ASSERT(val, msg)
+#define HARD_ASSERT_FMT(val, fmt, ...)
+#define SOFT_ASSERT(val, msg)
+#define SOFT_ASSERT_FMT(val, fmt, ...)
+#endif
+
 #define ASSERT_NOT_REACHED(msg)                                                                                        \
     {                                                                                                                  \
         if (is_constant_evaluated()) {                                                                                 \
@@ -82,27 +110,6 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             ARLib::printf(fmt "\n", __VA_ARGS__);                                                                      \
             PRINT_SOURCE_LOCATION                                                                                      \
             assertion_failed__();                                                                                      \
-        }                                                                                                              \
-        unreachable                                                                                                    \
-    }
-
-#define SOFT_ASSERT(val, msg)                                                                                          \
-    if (!(val)) {                                                                                                      \
-        if (is_constant_evaluated()) {                                                                                 \
-            CONSTEVAL_STATIC_ASSERT(val, msg);                                                                         \
-        } else {                                                                                                       \
-            ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                              \
-            PRINT_SOURCE_LOCATION                                                                                      \
-        }                                                                                                              \
-        unreachable                                                                                                    \
-    }
-#define SOFT_ASSERT_FMT(val, fmt, ...)                                                                                 \
-    if (!(val)) {                                                                                                      \
-        if (is_constant_evaluated()) {                                                                                 \
-            CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                         \
-        } else {                                                                                                       \
-            ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                          \
-            PRINT_SOURCE_LOCATION                                                                                      \
         }                                                                                                              \
         unreachable                                                                                                    \
     }

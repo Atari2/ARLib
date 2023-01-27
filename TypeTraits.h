@@ -143,7 +143,7 @@ struct PointerTraits<T*> {
 
     template <typename U>
     using rebind = U*;
-    constexpr static pointer pointer_to(MakeNotVoid<element_type>& r) noexcept { return addressof(r); }
+    constexpr static pointer pointer_to(MakeNotVoid<element_type>& r) noexcept { return ARLib::addressof(r); }
 };
 // isclass
 template <class T>

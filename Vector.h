@@ -31,7 +31,7 @@ class Vector {
     void append_internal_single_(T&& value)
     requires MoveAssignable<T>
     {
-        m_storage[m_size++] = move(value);
+        m_storage[m_size++] = ARLib::move(value);
     }
     void append_internal_single_(const T& value)
     requires CopyAssignable<T>
@@ -72,7 +72,7 @@ class Vector {
         m_storage        = new_storage;
         m_end_of_storage = m_storage + m_capacity;
     }
-    constexpr bool assert_size_(size_t index) const { return index < m_size; }
+    forceinline constexpr bool assert_size_(size_t index) const { return index < m_size; }
 
     public:
     Vector() = default;

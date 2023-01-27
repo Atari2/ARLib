@@ -135,6 +135,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${CMAKE_CURRENT_SOURCE_DIR}/File.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/FileSystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Hash.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/HashBase.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/JSONObject.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/JSONParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Matrix.cpp
@@ -299,6 +300,10 @@ if (ARLIB_TOP_LEVEL)
 	add_subdirectory(Tests)
 	add_subdirectory(Playground)
 	add_subdirectory(Benchmark)
+endif()
+
+if (DEBUG_BUILD)
+    list(APPEND ARLIB_COMPILE_DEFINITIONS ARLIB_DEBUG)
 endif()
 
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))

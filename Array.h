@@ -12,7 +12,7 @@ class Array {
     T _m_storage_[S];
 
     private:
-    constexpr void assert_size_(size_t index) const {
+    constexpr void assert_size_([[maybe_unused]] size_t index) const {
         SOFT_ASSERT_FMT((index < S), "Index %lu out of bounds in array of size %lu", index, S)
     }
 

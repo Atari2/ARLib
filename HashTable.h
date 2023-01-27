@@ -185,8 +185,10 @@ class ConstHashTableIterator {
         }
     }
 };
-template <typename T>
-requires Hashable<T> && EqualityComparable<T>
+template <typename T, typename HashCls = Hash<T>>
+requires Hashable<T, HashCls> && EqualityComparable<T> && requires(const HashCls& h, const T& t) {
+    { h(t) } -> ConvertibleTo<size_t>;
+}
 class HashTable {
     constexpr static inline size_t s_primes_bkt_sizes[]       = { 61, 97, 149, 223, 257, 281, 317, 379, 433, 503 };
     constexpr static inline size_t max_bucket_acceptable_size = 10;
@@ -195,6 +197,7 @@ class HashTable {
     size_t m_size         = 0;
     size_t m_max_bkt_size = 0;
     uint8_t m_curr_bkts   = 0;
+    HashCls m_hasher{};
 
     using Iter      = HashTableIterator<T>;
     using ConstIter = ConstHashTableIterator<T>;
@@ -211,7 +214,7 @@ class HashTable {
         new_storage.resize(m_bucket_count);
         for (auto& vec : m_storage) {
             for (auto&& item : vec) {
-                auto hs        = hasher(item);
+                auto hs        = m_hasher(item);
                 auto bkt_index = hs % m_bucket_count;
                 new_storage[bkt_index].append(Forward<T>(item));
                 auto bkt_size = new_storage[bkt_index].size();
@@ -219,17 +222,15 @@ class HashTable {
             }
         }
         m_storage.clear();
-        m_storage = move(new_storage);
+        m_storage = ARLib::move(new_storage);
     }
-
     public:
-    Hash<T> hasher{};
     HashTable() { m_storage.resize(m_bucket_count); }
     HashTable(const HashTable& other) :
-        m_storage(other.m_storage), m_bucket_count(other.m_bucket_count), m_size(other.m_size), hasher(other.hasher) {}
+        m_storage(other.m_storage), m_bucket_count(other.m_bucket_count), m_size(other.m_size), m_hasher(other.hasher) {}
     HashTable(HashTable&& other) noexcept :
         m_storage(move(other.m_storage)), m_bucket_count(other.m_bucket_count), m_size(other.m_size),
-        hasher(move(other.hasher)) {}
+        m_hasher(move(other.m_hasher)) {}
     explicit HashTable(size_t initial_bucket_count) : m_size(initial_bucket_count) {
         m_storage.resize(initial_bucket_count);
     }
@@ -237,14 +238,14 @@ class HashTable {
         m_storage      = other.m_storage;
         m_bucket_count = other.m_bucket_count;
         m_size         = other.m_size;
-        hasher         = other.hasher;
+        m_hasher         = other.m_hasher;
         return *this;
     }
     HashTable& operator=(HashTable&& other) noexcept {
         m_storage      = move(other.m_storage);
         m_bucket_count = other.m_bucket_count;
         m_size         = other.m_size;
-        hasher         = other.hasher;
+        m_hasher         = other.m_hasher;
         return *this;
     }
     template <typename... Args>
@@ -266,6 +267,14 @@ class HashTable {
         double res      = sqrt(sr / static_cast<double>(m_size));
         return res;
     }
+    void clear() {
+        m_storage.clear_retain();
+        m_bucket_count = s_primes_bkt_sizes[0];
+        m_storage.resize(m_bucket_count);
+        m_size         = 0;
+        m_max_bkt_size = 0;
+        m_curr_bkts    = 0;
+    }
     template <typename Functor>
     void for_each(Functor func) {
         m_storage.for_each([&func](auto& bkt) { bkt.for_each(func); });
@@ -279,7 +288,7 @@ class HashTable {
     }
     InsertionResult insert(T&& entry) {
         if (max_bucket_size() >= max_bucket_acceptable_size) { rehash_internal_(); }
-        auto hs   = hasher(entry);
+        auto hs   = m_hasher(entry);
         auto iter = find(entry);
         if (iter == tend()) {
             auto bkt_index = hs % m_bucket_count;
@@ -289,27 +298,27 @@ class HashTable {
             m_size++;
             return InsertionResult::New;
         } else {
-            (*iter) = move(entry);
+            (*iter) = ARLib::move(entry);
             return InsertionResult::Replace;
         }
     }
     HashTableIterator<T> find(const T& val) {
-        auto hash           = hasher(val);
+        auto hash           = m_hasher(val);
         size_t bucket_index = hash % m_bucket_count;
         const auto& bucket  = m_storage[bucket_index];
         for (size_t i = 0; i < bucket.size(); i++) {
             auto& item = bucket[i];
-            if (hash == hasher(item) && item == val) return { m_storage, bucket_index, i };
+            if (hash == m_hasher(item) && item == val) return { m_storage, bucket_index, i };
         }
         return tend();
     }
     ConstHashTableIterator<T> find(const T& val) const {
-        auto hash           = hasher(val);
+        auto hash           = m_hasher(val);
         size_t bucket_index = hash % m_bucket_count;
         const auto& bucket  = m_storage[bucket_index];
         for (size_t i = 0; i < bucket.size(); i++) {
             auto& item = bucket[i];
-            if (hash == hasher(item))
+            if (hash == m_hasher(item))
                 if (item.key() == val.key()) return { m_storage, bucket_index, i };
         }
         return tend();
@@ -320,7 +329,7 @@ class HashTable {
         const auto& bucket  = m_storage[bucket_index];
         for (size_t i = 0; i < bucket.size(); i++) {
             auto& item = bucket[i];
-            if (hash == hasher(item))
+            if (hash == m_hasher(item))
                 if (func(item)) return { m_storage, bucket_index, i };
         }
         return tend();
@@ -331,7 +340,7 @@ class HashTable {
         const auto& bucket  = m_storage[bucket_index];
         for (size_t i = 0; i < bucket.size(); i++) {
             auto& item = bucket[i];
-            if (hash == hasher(item))
+            if (hash == m_hasher(item))
                 if (func(item)) return { m_storage, bucket_index, i };
         }
         return tend();
@@ -354,7 +363,7 @@ class HashTable {
         return ConstHashTableIterator<T>{ m_storage, HashTableIterator<T>::npos, HashTableIterator<T>::npos };
     }
     DeletionResult remove(const T& val) {
-        auto hs   = hasher(val);
+        auto hs   = m_hasher(val);
         auto iter = find(val);
         if (iter == tend()) { return DeletionResult::Failure; }
         m_storage[hs % m_bucket_count].remove(val);

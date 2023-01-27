@@ -37,7 +37,7 @@ class Set {
     void check_capacity_() {
         if (m_size == m_capacity) grow_internal_(m_capacity == 0 ? 1 : m_capacity * 2);
     }
-    void assert_index_(size_t index) {
+    void assert_index_([[maybe_unused]] size_t index) {
         SOFT_ASSERT_FMT((index < m_size), "Index %lu was higher than size %lu", index, m_size);
     }
     T& append_internal_(T&& elem) {

@@ -125,9 +125,9 @@ concept EqualityComparableWith = requires(T a, C b) {
                                      { a != b } -> ConvertibleTo<bool>;
                                  };
 
-template <typename T>
+template <typename T, typename HashCls = Hash<T>>
 concept Hashable = requires(const T& a) {
-                       { Hash<T>{}(a) } -> SameAs<size_t>;
+                       { HashCls{}(a) } -> SameAs<size_t>;
                    } && EqualityComparable<T>;
 
 template <typename T>

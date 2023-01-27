@@ -11,6 +11,7 @@ constexpr inline size_t fn_prime     = 1099511628211ULL;
 constexpr inline size_t offset_basis = 2166136261U;
 constexpr inline size_t fn_prime     = 16777619U;
 #endif
+[[nodiscard]] size_t murmur_hash_bytes(const char* const ptr, size_t count, size_t seed);
 [[nodiscard]] inline size_t fn_append_bytes(size_t val, const unsigned char* const first, const size_t count) noexcept {
     for (size_t i = 0; i < count; ++i) {
         val ^= static_cast<size_t>(first[i]);

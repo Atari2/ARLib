@@ -166,7 +166,8 @@ constexpr StringView operator""_sv(const char* source, size_t len) {
 template <>
 struct Hash<StringView> {
     [[nodiscard]] size_t operator()(const StringView& key) const noexcept {
-        return hash_array_representation(key.data(), key.size());
+        constexpr size_t seed = static_cast<size_t>(0xc70f6907UL);
+        return murmur_hash_bytes(key.data(), key.size(), seed);
     }
 };
 template <>

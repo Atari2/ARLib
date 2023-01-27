@@ -298,7 +298,7 @@ class Thread {
     void join() {
         if (!joinable()) { arlib_terminate(); }
         RetVal val = ThreadNative::retval_none();
-        auto state = ThreadNative::join(m_thread, &val);
+        [[maybe_unused]] auto state = ThreadNative::join(m_thread, &val);
         HARD_ASSERT_FMT(
         static_cast<int>(state) == 0, "Thread %lu didn't join successfully, error number was %d\n",
         ThreadNative::get_id(m_thread), static_cast<int>(state)
@@ -307,7 +307,7 @@ class Thread {
     }
     void detach() {
         if (!joinable()) { arlib_terminate(); }
-        auto state = ThreadNative::detach(m_thread);
+        [[maybe_unused]] auto state = ThreadNative::detach(m_thread);
         HARD_ASSERT_FMT(
         static_cast<int>(state) == 0, "Thread %lu didn't detach successfully, error number was %d\n",
         ThreadNative::get_id(m_thread), static_cast<int>(state)

@@ -28,7 +28,7 @@ constexpr void ConditionalBitMove(T* dst, T*& src, size_t count) {
     if constexpr (IsTriviallyCopiableV<T>) {
         memcpy(dst, src, count * sizeof(T));
     } else {
-        for (size_t i = 0; i < count; i++) { dst[i] = move(src[i]); }
+        for (size_t i = 0; i < count; i++) { dst[i] = ARLib::move(src[i]); }
     }
     deallocate<T, DeallocType::Multiple>(src);
     src = nullptr;
