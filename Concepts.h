@@ -157,8 +157,8 @@ concept IterCanSubtractForSize = requires(T a, T b) {
                                  };
 template <typename T>
 concept EnumerableC = Iterable<T> && (requires(T a) {
-                                         { a.size() };
-                                     } || IterCanSubtractForSize<T>);
+                                          { a.size() };
+                                      } || IterCanSubtractForSize<T>);
 
 template <typename T>
 concept Stringable = requires(T a) {
@@ -222,7 +222,9 @@ concept CanKnowSize = requires(Cont container) {
 template <typename Cont, typename T>
 concept Pushable = requires(Cont container, T elem) {
                        { container.push_back(elem) } -> SameAs<void>;
-                   };
+                   } || requires(Cont container, T elem) {
+                            { container.append(elem) } -> SameAs<void>;
+                        };
 
 template <typename T>
 concept Integral = IsIntegralV<T>;

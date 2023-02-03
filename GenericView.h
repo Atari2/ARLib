@@ -75,6 +75,29 @@ class IteratorView {
     {
         return m_end - m_begin;
     }
+    template <typename NewCont>
+    requires Pushable<NewCont, IteratorOutputType<Iter>>
+    NewCont join() {
+        NewCont collector{};
+        for (auto it = m_begin; it != m_end; ++it) { collector.append(*it); }
+        return collector;
+    }
+    template <typename NewCont, Constructible<IteratorOutputType<Iter>> JoinObj>
+    requires Pushable<NewCont, IteratorOutputType<Iter>>
+    NewCont join_with(JoinObj obj) {
+        using Ot = IteratorOutputType<Iter>;
+        --m_end;    // move end one before
+        auto joiner = Ot{ Forward<JoinObj>(obj) };
+        NewCont collector{};
+        for (auto it = m_begin; it != m_end; ++it) {
+            collector.append(*it);
+            collector.append(joiner);
+        }
+        collector.append(*m_end);
+        ++m_end;
+        return collector;
+
+    }
     template <typename NewCont = Cont>
     NewCont collect()
     requires Pushable<NewCont, IteratorOutputType<Iter>>
@@ -85,7 +108,7 @@ class IteratorView {
             } else {
                 NewCont copy{};
                 if constexpr (Reservable<NewCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
-                for (auto it = m_begin; it != m_end; ++it) { copy.push_back(move(*it)); }
+                for (auto it = m_begin; it != m_end; ++it) { copy.append(move(*it)); }
                 delete[] m_stolen_storage;
                 m_stolen_storage = nullptr;
                 return copy;
@@ -93,7 +116,7 @@ class IteratorView {
         } else {
             NewCont copy{};
             if constexpr (Reservable<NewCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
-            for (auto it = m_begin; it != m_end; ++it) { copy.push_back(*it); }
+            for (auto it = m_begin; it != m_end; ++it) { copy.append(move(*it)); }
             return copy;
         }
     }

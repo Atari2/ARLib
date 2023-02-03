@@ -7,6 +7,7 @@
 #include "Pair.h"
 #include "PrintInfo.h"
 #include "StringView.h"
+#include "GenericView.h"
 namespace ARLib {
 template <typename T>
 struct TagType {};
@@ -25,8 +26,8 @@ namespace EnumHelpers {
         constexpr static size_t ACTUAL_SIZE = BitCeil(N);
         constexpr static size_t FOR_MOD_OPS = ACTUAL_SIZE - 1;
         struct KeyBkt {
-            V key;
-            bool used;
+            V key{};
+            bool used{};
         };
         Array<Pair<KeyBkt, StringView>, ACTUAL_SIZE> m_internal_map;
         size_t m_size = 0;
@@ -205,6 +206,7 @@ struct ForEachEnum {
     constexpr auto end() const {
         return EnumHelpers::EnumIterator<T>{ EnumHelpers::EnumMapProvider<T>::enum_array.size() };
     }
+    constexpr auto view() const { return IteratorView{ *this }; }
 };
 template <EnumHelpers::EnumSupportsMap T>
 constexpr auto for_each_enum() {
@@ -223,12 +225,17 @@ constexpr auto for_each_enum(Functor func) {
         return result_array;
     }
 }
+template <EnumHelpers::EnumSupportsMap E>
+struct PrintInfo<E> {
+    E m_val;
+    PrintInfo(E val) : m_val(val) {}
+    String repr() const { return enum_to_str(m_val); }
+};
+}    // namespace ARLib
 #define ENUM_TO_STR(en, ...)                                                                                           \
-    namespace EnumHelpers {                                                                                            \
-        template <>                                                                                                    \
-        constexpr StringView get_enum_full_string(TagType<en>) {                                                       \
-            return #__VA_ARGS__;                                                                                       \
-        }                                                                                                              \
+    template <>                                                                                                        \
+    constexpr StringView ARLib::EnumHelpers::get_enum_full_string(TagType<en>) {                                       \
+        return #__VA_ARGS__;                                                                                           \
     }
 
 #define MAKE_FANCY_ENUM(en, ...)                                                                                       \
@@ -259,10 +266,3 @@ constexpr auto for_each_enum(Functor func) {
     BITFIELD_ENUM_OP_LOG_OR(E)                                                                                         \
     BITFIELD_ENUM_OP_XOR(E)                                                                                            \
     BITFIELD_ENUM_OP_NOT(E)
-template <EnumHelpers::EnumSupportsMap E>
-struct PrintInfo<E> {
-    E m_val;
-    PrintInfo(E val) : m_val(val) {}
-    String repr() const { return enum_to_str(m_val); }
-};
-}    // namespace ARLib

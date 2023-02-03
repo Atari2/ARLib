@@ -312,7 +312,6 @@ class MapIterator {
         return iter;
     }
     MapIterator& operator--() {
-        if (m_current_iter == m_end) return *this;
         --m_current_iter;
         return *this;
     }
