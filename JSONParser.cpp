@@ -99,8 +99,7 @@ namespace JSON {
         return Pair{ current_index, string };
     }
     Number parse_number(const String& raw_value) {
-        // parse number doesn't handle scientific notation for integer values
-        if (raw_value.contains('.') || raw_value.contains(',')) {
+        if (raw_value.contains('.') || raw_value.contains('E') || raw_value.contains('e')) {
             return Number{ number_tag, StrToDouble(raw_value) };
         } else {
             return Number{ number_tag, StrToI64(raw_value) };
@@ -185,8 +184,8 @@ namespace JSON {
                     }
                 default:
                     {
-                        const ARLib::Array valid_values_for_number{ '0', '1', '2', '3', '4', '5', '6',
-                                                                    '7', '8', '9', '-', '+', 'E', 'e' };
+                        const ARLib::Array valid_values_for_number{ '0', '1', '2', '3', '4', '5', '6', '7',
+                                                                    '8', '9', '-', '+', 'E', 'e', '.' };
                         auto check_if_valid_number = [&](const String& str) {
                             // this is not real validation, it lets invalid values slip throught, but it's good enough for now
                             for (const char c : str) {

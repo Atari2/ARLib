@@ -77,9 +77,8 @@ namespace JSON {
 }    // namespace JSON
 inline JSON::Document operator""_json(const char* str, size_t len) {
     StringView view{ str, len };
-    auto result = JSON::Parser::parse(view);
-    HARD_ASSERT(result.is_ok(), "Parsing failed");
-    return result.to_ok();
+    auto val = MUST(JSON::Parser::parse(view));
+    return val;
 }
 template <>
 struct PrintInfo<JSON::Document> {

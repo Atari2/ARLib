@@ -20,8 +20,8 @@ else()
 endif()
 
 if (MSVC AND DEBUG_BUILD)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /fsanitize=address")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fsanitize=address")
+	# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /fsanitize=address")
+	# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fsanitize=address")
 endif()
 
 include(FetchContent)
@@ -38,15 +38,17 @@ include (GoogleTest)
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
-
+set_property(TARGET gtest PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
+set_property(TARGET gtest_main PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
 
 CheckAvx()
 
 message(STATUS "Building test runner")
 add_executable(ARLibTestSuite ${TEST_SOURCE_FILES})
 if (MSVC)
+	set_property(TARGET ARLibTestSuite PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
 	if (DEBUG_BUILD)
-		target_compile_options(ARLibTestSuite PRIVATE /std:c++latest ${AVX_FLAGS} /EHsc /fsanitize=address)
+		target_compile_options(ARLibTestSuite PRIVATE /std:c++latest ${AVX_FLAGS} /EHsc)
 	else()
 		target_compile_options(ARLibTestSuite PRIVATE /std:c++latest ${AVX_FLAGS} /EHsc)
 	endif()

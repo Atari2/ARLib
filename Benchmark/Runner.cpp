@@ -117,8 +117,8 @@ static void BM_ARLibHashMap(benchmark::State& state) {
         if (map.size() != 0) { ASSERT_NOT_REACHED("Map size is wrong") }
     }
 }
-// BENCHMARK(BM_PrintfStd);
-// BENCHMARK(BM_PrintfARLib);
+BENCHMARK(BM_PrintfStd);
+BENCHMARK(BM_PrintfARLib);
 BENCHMARK(BM_StdUnorderedMap);
 BENCHMARK(BM_ARLibHashMap);
 BENCHMARK_MAIN();

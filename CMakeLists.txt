@@ -1,3 +1,4 @@
+cmake_policy(SET CMP0091 NEW)
 cmake_minimum_required(VERSION 3.15)
 project(ARLib VERSION 0.1)
 set(CMAKE_CXX_STANDARD 20)
@@ -8,6 +9,17 @@ set(ARLIB_COMPILE_OPTIONS "")
 set(ARLIB_COMPILE_WARNINGS "")
 set(ARLIB_LINK_LIBRARIES ARLib_asm_ext)
 set(ARLIB_LINK_OPTIONS "")
+
+if (MSVC)
+    option(MSVC_STATIC_STL "Use the static version of the MSVC STL to link" OFF)
+    if (NOT MSVC_STATIC_STL)
+        set(ARLIB_MSVC_LIB_TYPE "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+        message(STATUS "Using DLL flavor of MSVC's STL")
+    else()
+        set(ARLIB_MSVC_LIB_TYPE "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        message(STATUS "Using LIB flavor of MSVC's STL")
+    endif()
+endif()
 
 # detecting compilers
 set(ON_CLANG false)
@@ -92,6 +104,15 @@ else()
 	set(DEBUG_BUILD false)
 	set(RELEASE_BUILD true)
 	message(STATUS "In release mode")
+endif()
+
+if (DEBUG_BUILD)
+    if (ON_WINDOWS AND ON_CLANG)
+        message(STATUS "Clang doesn't like debug libraries + asan")
+        set(ARLIB_ASAN_FLAGS "")
+    else()
+        set(ARLIB_ASAN_FLAGS "/fsanitize=address")
+    endif()
 endif()
 
 if (
@@ -295,6 +316,7 @@ file(GLOB_RECURSE GeneratedEnums "GeneratedEnums/*.h")
 list(APPEND ARLIB_SOURCE_FILES GeneratedEnums)
 
 add_library(ARLib ${ARLIB_SOURCE_FILES})
+set_property(TARGET ARLib PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
 
 if (ARLIB_TOP_LEVEL)
 	add_subdirectory(Tests)
@@ -308,7 +330,10 @@ endif()
 
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
-	list(APPEND ARLIB_COMPILE_OPTIONS /utf-8 /std:c++20 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc /Zc:inline-)
+	list(APPEND ARLIB_COMPILE_OPTIONS /utf-8 /std:c++20 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
+    if (MSVC AND NOT ON_CLANG)
+        list(APPEND ARLIB_COMPILE_OPTIONS /Zc:inline-)
+    endif()
 	list(APPEND ARLIB_COMPILE_DEFINITIONS 
 		_CRT_SECURE_NO_WARNINGS 
         UNICODE 
@@ -318,7 +343,7 @@ if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
         NOMINMAX
 	)
 	if (DEBUG_BUILD)
-		list(APPEND ARLIB_COMPILE_OPTIONS /Oy- /fsanitize=address)
+		list(APPEND ARLIB_COMPILE_OPTIONS /Oy- ${ARLIB_ASAN_FLAGS})
 	else()
 		list(APPEND ARLIB_COMPILE_OPTIONS /O2 /GR-)
 	endif()
@@ -395,7 +420,7 @@ endif()
 
 if (INCLUDE_DEBUG_INFO)
 	message(STATUS "Including debug info")
-	if (ON_MSVC)
+	if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 		list(APPEND ARLIB_LINK_OPTIONS /PROFILE /DEBUG:FULL)
 	else()
 		list(APPEND ARLIB_COMPILE_OPTIONS -g)

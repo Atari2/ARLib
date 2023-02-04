@@ -20,8 +20,8 @@ else()
 endif()
 
 if (MSVC AND DEBUG_BUILD)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /fsanitize=address")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fsanitize=address")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARLIB_ASAN_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARLIB_ASAN_FLAGS}")
 endif()
 	
 include(FetchContent)
@@ -33,12 +33,15 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(googlebenchmark)
+set_property(TARGET benchmark PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
+set_property(TARGET benchmark_main PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
 
 message(STATUS "Building benchmark runner")
 add_executable(ARLibBenchmarkSuite ${TEST_SOURCE_FILES})
-if (WIN32 AND NOT CMAKE_COMPILER_IS_GNUCXX)
+if (MSVC)
+	set_property(TARGET ARLibBenchmarkSuite PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
 	if (DEBUG_BUILD)
-		target_compile_options(ARLibTestSuite PRIVATE /std:c++latest ${AVX_FLAGS} /EHsc /fsanitize=address)
+		target_compile_options(ARLibTestSuite PRIVATE /std:c++latest ${AVX_FLAGS} /EHsc ${ARLIB_ASAN_FLAGS})
 	else()
 		target_compile_options(ARLibTestSuite PRIVATE /std:c++latest ${AVX_FLAGS} /EHsc)
 	endif()
