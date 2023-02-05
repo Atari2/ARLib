@@ -27,7 +27,7 @@ static DoubleRepr double_to_bits(FloatingPoint auto num_orig) {
     // %A specifies `double` precision only
     double num = static_cast<double>(num_orig);
     static_assert(sizeof(double) == sizeof(uint64_t));
-    uint64_t val                 = 0;
+    uint64_t val = 0;
     ARLib::memcpy(&val, &num, sizeof(double));
     constexpr uint64_t highest_bitmask = 1_u64 << 63_u64;
     constexpr uint64_t exp_bitmask     = 0b0111111111110000000000000000000000000000000000000000000000000000;
@@ -109,8 +109,8 @@ namespace PrintfTypes {
     };
 }    // namespace PrintfTypes
 template <typename T>
-concept AllowedFormatArgs =
-Integral<T> || FloatingPoint<T> || SameAs<T, const char*> || SameAs<T, const wchar_t*> || SameAs<T, uint64_t*> || SameAs<T, const void*>;
+concept AllowedFormatArgs = Integral<T> || FloatingPoint<T> || SameAs<T, const char*> || SameAs<T, const wchar_t*> ||
+                            SameAs<T, uint64_t*> || SameAs<T, const void*>;
 template <FloatFmtOpt Opt>
 String RealToStr(FloatingPoint auto val, int precision) {
     using T = RemoveCvRefT<decltype(val)>;
@@ -127,9 +127,9 @@ String RealToStr(FloatingPoint auto val, int precision) {
 String wchar_to_char(const wchar_t* wstr) {
     size_t i = 0;
     String output{};
-    while (wstr[i] != L'\0') { 
+    while (wstr[i] != L'\0') {
         wchar_t v = wstr[i];
-        if (v >= 0x00 && v <= 0x7F) { 
+        if (v >= 0x00 && v <= 0x7F) {
             output.append(static_cast<char>(v));
         } else {
             output.append('?');
@@ -175,8 +175,8 @@ Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo
                 return PrintfErrorCodes::InvalidType;
         }
     } else if constexpr (FloatingPoint<T>) {
-        int precision = static_cast<int>(info.precision);
-        using Vt = RemoveCvRefT<decltype(val)>;
+        int precision           = static_cast<int>(info.precision);
+        using Vt                = RemoveCvRefT<decltype(val)>;
         constexpr const Vt zero = static_cast<Vt>(0.0);
         switch (info.type) {
             case Type::FloatExpUpper:
@@ -259,16 +259,14 @@ Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo
         return wchar_to_char(val);
     } else if constexpr (SameAs<const void*, T>) {
         constexpr auto ptrlen = sizeof(void*) * 2;
-        auto ptrstr = IntToStr<SupportedBase::Hexadecimal>(BitCast<uintptr_t>(val));
-        if (ptrstr.length() < ptrlen) {
-            ptrstr = String{ ptrlen - ptrstr.length(),  '0' } + ptrstr;
-        }
+        auto ptrstr           = IntToStr<SupportedBase::Hexadecimal>(BitCast<uintptr_t>(val));
+        if (ptrstr.length() < ptrlen) { ptrstr = String{ ptrlen - ptrstr.length(), '0' } + ptrstr; }
         return ptrstr;
-    }else {
+    } else {
         COMPTIME_ASSERT("Invalid type passed to format_single_args");
     }
 }
-PrintfResult printf_impl(const char* fmt, va_list args) {
+PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
     using namespace PrintfTypes;
     auto map_c_to_flags = [](char c) {
         switch (c) {
@@ -310,11 +308,9 @@ PrintfResult printf_impl(const char* fmt, va_list args) {
 
     SSOVector<PrintfInfo> fmtargs{};
 
-    PrintfResult result{};
-
 #define SET_ERROR(error)                                                                                               \
-    result.error_code = error;                                                                                         \
-    return result
+    output.error_code = error;                                                                                         \
+    return output
 
 #define INVALID_FORMAT SET_ERROR(PrintfErrorCodes::InvalidFormat)
 
@@ -426,7 +422,6 @@ PrintfResult printf_impl(const char* fmt, va_list args) {
         fmtargs.append(cur_info);
     }
 
-    String& output = result.result;
     output.reserve(format.size());
     size_t prev_idx = 0;
     String formatted_arg;
@@ -448,7 +443,7 @@ PrintfResult printf_impl(const char* fmt, va_list args) {
         if (ec != PrintfErrorCodes::Ok) {                                                                              \
             SET_ERROR(ec);                                                                                             \
         } else {                                                                                                       \
-            result.written_arguments++;                                                                                \
+            output.written_arguments++;                                                                                \
         }                                                                                                              \
     }
 
@@ -613,9 +608,63 @@ PrintfResult printf_impl(const char* fmt, va_list args) {
         output += formatted_arg;
     }
     output += format.substringview(prev_idx).extract_string();
-    return result;
+    return output;
 }
 PrintfResult _vsprintf(_In_z_ _Printf_format_string_ const char* fmt, va_list args) {
-    return printf_impl(fmt, args);
+    PrintfResult result{ PrintfResultType::FromString, String{} };
+    return printf_impl(result, fmt, args);
+}
+PrintfResult _vsprintf_frombuf(_In_z_ _Printf_format_string_ const char* fmt, va_list args, PrintfBuffer buffer) {
+    PrintfResult result{ PrintfResultType::FromBuffer, move(buffer) };
+    return printf_impl(result, fmt, args);
+}
+void PrintfResult::reserve(size_t size) {
+    if (type == PrintfResultType::FromString) { result.get<String>().reserve(size); }
+}
+PrintfResult& PrintfResult::operator+=(const String& other) {
+    if (type == PrintfResultType::FromString) {
+        result.get<String>() += other;
+    } else {
+        auto& buffer = result.get<PrintfBuffer>();
+        auto rem     = buffer.buffer_size - buffer.written_size;
+        if (rem > 0) {
+            ARLib::strncpy(buffer.buffer + buffer.written_size, other.data(), min_bt(rem, other.size()));
+            buffer.written_size += other.size();
+        }
+    }
+    return *this;
+}
+PrintfResult& PrintfResult::operator+=(char other) {
+    if (type == PrintfResultType::FromString) {
+        result.get<String>() += other;
+    } else {
+        auto& buffer = result.get<PrintfBuffer>();
+        auto rem     = buffer.buffer_size - buffer.written_size;
+        if (rem > 0) {
+            buffer.buffer[buffer.written_size] = other;
+            buffer.written_size += 1;
+        }
+    }
+    return *this;
+}
+size_t PrintfResult::size() const {
+    if (type == PrintfResultType::FromString) {
+        return result.get<String>().size();
+    } else {
+        return result.get<PrintfBuffer>().written_size;
+    }
+}
+const char* PrintfResult::data() const {
+    if (type == PrintfResultType::FromString) {
+        return result.get<String>().data();
+    } else {
+        return result.get<PrintfBuffer>().buffer;
+    }
+}
+void PrintfResult::finalize() {
+    if (type == PrintfResultType::FromBuffer) {
+        auto& buffer                       = result.get<PrintfBuffer>();
+        buffer.buffer[buffer.written_size] = '\0';
+    }
 }
 }    // namespace ARLib

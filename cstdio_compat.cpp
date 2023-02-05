@@ -137,7 +137,7 @@ int printf(const char* fmt, ...) {
     va_list argptr{};
     va_start(argptr, fmt);
     auto ret = _vsprintf(fmt, argptr);
-    ARLib::fwrite(ret.result.data(), sizeof(char), ret.result.size(), stdout);
+    ARLib::fwrite(ret.data(), sizeof(char), ret.size(), stdout);
     va_end(argptr);
     return ret.written_arguments;
 }
@@ -145,27 +145,27 @@ int fprintf(FILE* fp, const char* fmt, ...) {
     va_list argptr{};
     va_start(argptr, fmt);
     auto ret = _vsprintf(fmt, argptr);
-    ARLib::fwrite(ret.result.data(), sizeof(char), ret.result.size(), fp);
+    ARLib::fwrite(ret.data(), sizeof(char), ret.size(), fp);
     va_end(argptr);
     return ret.written_arguments;
 }
 int sprintf(char* str, const char* format, ...) {
     va_list argptr{};
     va_start(argptr, format);
-    auto ret = _vsprintf(format, argptr);
+    auto ret = _vsprintf_frombuf(format, argptr, { str, NumberTraits<size_t>::max });
     if (ret.error_code != PrintfErrorCodes::Ok) { return -1; }
-    ARLib::strncpy(str, ret.result.data(), ret.result.size());
+    ret.finalize();
     va_end(argptr);
-    return static_cast<int>(ret.result.size());
+    return static_cast<int>(ret.size());
 }
 int snprintf(char* str, size_t n, const char* format, ...) {
     va_list argptr{};
     va_start(argptr, format);
-    auto ret = _vsprintf(format, argptr);
+    auto ret = _vsprintf_frombuf(format, argptr, { str, n });
     if (ret.error_code != PrintfErrorCodes::Ok) { return -1; }
-    ARLib::strncpy(str, ret.result.data(), n);
+    ret.finalize();
     va_end(argptr);
-    return static_cast<int>(ret.result.size());
+    return static_cast<int>(ret.size());
 }
 int scprintf(const char* format, ...) {
     va_list argptr{};
