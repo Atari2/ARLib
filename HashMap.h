@@ -31,6 +31,15 @@ struct HashMapEntry {
         m_hashval = other.m_hashval;
         return *this;
     }
+    template <size_t I>
+    requires(I == 0 || I == 1)
+    const auto& get() const {
+        if constexpr (I == 0) {
+            return m_key;
+        } else {
+            return m_value;
+        }
+    }
     constexpr size_t hashval() const { return m_hashval; }
     const Key& key() const { return m_key; }
     const Val& value() const { return m_value; }
@@ -131,3 +140,24 @@ struct PrintInfo<HashMap<A, B>> {
     }
 };
 }    // namespace ARLib
+// tuple_size and tuple_element specializations for ARLib::Tuple
+template <typename K, typename V, typename HashCls>
+struct std::tuple_size<ARLib::HashMapEntry<K, V, HashCls>> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
+template <typename K, typename V, typename HashCls>
+struct std::tuple_size<const ARLib::HashMapEntry<K, V, HashCls>> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
+template <typename K, typename V, typename HashCls>
+struct std::tuple_element<0, ARLib::HashMapEntry<K, V, HashCls>>  {
+    using type = K;
+};
+template <typename K, typename V, typename HashCls>
+struct std::tuple_element<1, ARLib::HashMapEntry<K, V, HashCls>> {
+    using type = V;
+};
+template <typename K, typename V, typename HashCls>
+struct std::tuple_element<0, const ARLib::HashMapEntry<K, V, HashCls>> {
+    using type = const K;
+};
+template <typename K, typename V, typename HashCls>
+struct std::tuple_element<1, const ARLib::HashMapEntry<K, V, HashCls>> {
+    using type = const V;
+};

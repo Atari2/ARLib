@@ -110,12 +110,25 @@ class ZipIterator {
     using RetVal = decltype(types_into_iter_tuple<Tps...>());
     using IterUnit = Tuple<Tps...>;
     IterUnit m_current_pair;
+    template <size_t... Vals>
+    void iincrement(IndexSequence<Vals...>) {
+        (..., m_current_pair.template get<Vals>()++);
+    }
+    template <size_t... Vals>
+    void idecrement(IndexSequence<Vals...>) {
+        (..., m_current_pair.template get<Vals>()--);
+    }
+    template <size_t... Vals>
+    RetVal iget(IndexSequence<Vals...>) {
+        return RetVal{ *m_current_pair.template get<Vals>()... };
+    }
+
     public:
     ZipIterator(Tps... iterators) : m_current_pair(iterators...) {}
     explicit ZipIterator(IterUnit curr_pair) : m_current_pair(curr_pair) {};
-    RetVal operator*() { return RetVal{ *m_current_pair.template get<Tps>()... }; }
+    RetVal operator*() { return iget(IndexSequenceFor<Tps...>{}); }
     ZipIterator& operator++() {
-        (..., m_current_pair.template get<Tps>()++);
+        iincrement(IndexSequenceFor<Tps...>{});
         return *this;
     }
     ZipIterator operator++(int) {
@@ -124,7 +137,7 @@ class ZipIterator {
         return copy;
     }
     ZipIterator& operator--() {
-        (..., m_current_pair.template get<Tps>()--);
+        idecrement(IndexSequenceFor<Tps...>{});
         return *this;
     }
     ZipIterator operator--(int) {

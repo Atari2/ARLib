@@ -15,11 +15,11 @@ class LinkedList {
         ListEntry(const T& entry, ListEntry* next)
         requires CopyConstructible<T>
             : m_entry(entry), m_next(next) {}
-        T& entry_mut() { return m_entry; }
-        ListEntry* next_mut() const { return m_next; }
-        void swap_next(ListEntry* new_next) { m_next = new_next; }
+        T& entry() { return m_entry; }
         const T& entry() const { return m_entry; }
+        ListEntry* next() { return m_next; }
         const ListEntry* next() const { return m_next; }
+        void swap_next(ListEntry* new_next) { m_next = new_next; }
         ListEntry& operator=(const ListEntry& other)
         requires CopyAssignable<T>
         {
@@ -38,17 +38,19 @@ class LinkedList {
             return *this;
         }
     };
+    template <typename ListEntryT>
     class LinkedListIterator {
         friend LinkedList<T>;
 
-        ListEntry* m_current;
+        ListEntryT* m_current;
         void internal_advance_() {
             HARD_ASSERT(m_current, "m_current must not be nullptr")
-            m_current = m_current->next_mut();
+            m_current = m_current->next();
         }
 
         public:
-        explicit LinkedListIterator(ListEntry* current) : m_current(current) {}
+        explicit LinkedListIterator(ListEntryT* current) : m_current(current) {}
+        LinkedListIterator(const LinkedListIterator& other) { m_current = other.m_current; }
         LinkedListIterator& operator=(const LinkedListIterator& other) {
             if (this == &other) return *this;
             m_current = other.m_current;
@@ -59,11 +61,13 @@ class LinkedList {
             other.m_current = nullptr;
             return *this;
         }
-        const ListEntry* current() const { return m_current; }
+        const ListEntryT* current() const { return m_current; }
+        ListEntryT* current() { return m_current; }
         bool is_done() const { return m_current->next() == nullptr; }
         bool operator==(const LinkedListIterator& other) const { return m_current == other.m_current; }
         bool operator!=(const LinkedListIterator& other) const { return m_current != other.m_current; }
-        T& operator*() const { return m_current->entry_mut(); }
+        const auto& operator*() const { return m_current->entry(); }
+        auto& operator*() { return m_current->entry(); }
         LinkedListIterator& operator++() {
             internal_advance_();
             return *this;
@@ -74,6 +78,9 @@ class LinkedList {
             return prev;
         }
     };
+    using Iter      = LinkedListIterator<ListEntry>;
+    using ConstIter = LinkedListIterator<AddConstT<ListEntry>>;
+
     ListEntry* m_head = nullptr;
     size_t m_size     = 0;
     void internal_single_prepend_(T&& value) {
@@ -106,29 +113,29 @@ class LinkedList {
     void prepend(const T& value) { internal_single_prepend_(Forward<T>(T{ value })); }
     void append(const T& value) {
         auto* curr = m_head;
-        while (curr->next() != nullptr) { curr = curr->next_mut(); }
+        while (curr->next() != nullptr) { curr = curr->next(); }
         curr->swap_next(new ListEntry(value, nullptr));
         m_size++;
     }
     void prepend(T&& value) { internal_single_prepend_(Forward<T>(value)); }
     void append(T&& value) {
         auto* curr = m_head;
-        while (curr->next() != nullptr) { curr = curr->next_mut(); }
+        while (curr->next() != nullptr) { curr = curr->next(); }
         curr->swap_next(new ListEntry(value, nullptr));
         m_size++;
     }
     ListEntry* head() { return m_head; }
     ListEntry* last() {
         auto* curr = m_head;
-        while (curr->next() != nullptr) { curr = curr->next_mut(); }
+        while (curr->next() != nullptr) { curr = curr->next(); }
         return curr;
     }
     T pop_head() {
         HARD_ASSERT(m_head, "Calling pop_head() on empty list")
         auto* rem = m_head;
-        m_head    = m_head->next_mut();
+        m_head    = m_head->next();
         m_size--;
-        T ret{ move(rem->entry_mut()) };
+        T ret{ move(rem->entry()) };
         delete rem;
         return ret;
     }
@@ -138,12 +145,12 @@ class LinkedList {
         if (curr->next() == nullptr) {
             m_size--;
             m_head = nullptr;
-            T ret{ move(curr->entry_mut()) };
+            T ret{ move(curr->entry()) };
             delete curr;
             return ret;
         }
-        while (curr->next()->next() != nullptr) { curr = curr->next_mut(); }
-        T ret_next{ move(curr->next_mut()->entry_mut()) };
+        while (curr->next()->next() != nullptr) { curr = curr->next(); }
+        T ret_next{ move(curr->next()->entry()) };
         delete curr->next();
         curr->swap_next(nullptr);
         m_size--;
@@ -153,27 +160,27 @@ class LinkedList {
         if (!m_head) return;
         if (entry == m_head) {
             auto* del = m_head;
-            m_head    = m_head->next_mut();
+            m_head    = m_head->next();
             m_size--;
             delete del;
         } else {
             auto* prev = m_head;
-            auto* del  = prev->next_mut();
+            auto* del  = prev->next();
             while (del) {
                 if (del == entry) {
-                    prev->swap_next(del->next_mut());
+                    prev->swap_next(del->next());
                     delete del;
                     m_size--;
                     break;
                 }
                 prev = del;
-                del  = prev->next_mut();
+                del  = prev->next();
             }
         }
     }
     void remove(const T& item) {
         if (!m_head) return;
-        LinkedListIterator iter = find(item);
+        Iter iter = find(item);
         if (iter == end()) return;
         const ListEntry* entry = iter.current();
         remove(entry);
@@ -185,8 +192,10 @@ class LinkedList {
     void clear() {
         while (m_size > 0) pop_head();
     }
-    LinkedListIterator begin() const { return LinkedListIterator{ m_head }; }
-    LinkedListIterator end() const { return LinkedListIterator{ nullptr }; }
+    auto begin() { return Iter{ m_head }; }
+    auto end() { return Iter{ nullptr }; }
+    auto begin() const { return ConstIter{ m_head }; }
+    auto end() const { return ConstIter{ nullptr }; }
     size_t size() const { return m_size; }
     template <typename Functor>
     void for_each(Functor&& func) {
@@ -194,7 +203,7 @@ class LinkedList {
         ListEntry* curr = m_head;
         while (curr) {
             func(curr->entry());
-            curr = curr->next__();
+            curr = curr->next();
         }
     }
     bool exists(const T& value) const
@@ -205,14 +214,23 @@ class LinkedList {
             if (val == value) return true;
         return false;
     }
-    LinkedListIterator find(const T& value) const
+    auto find(const T& value)
     requires EqualityComparable<T>
     {
-        if (m_size == 0) return LinkedListIterator{ nullptr };
-        for (LinkedListIterator beg = begin(); beg != end(); ++beg) {
-            if (*beg == value) return LinkedListIterator{ beg.m_current };
+        if (m_size == 0) return Iter{ nullptr };
+        for (Iter beg = begin(); beg != end(); ++beg) {
+            if (*beg == value) return Iter{ beg.m_current };
         }
-        return LinkedListIterator{ nullptr };
+        return Iter{ nullptr };
+    }
+    auto find(const T& value) const
+    requires EqualityComparable<T>
+    {
+        if (m_size == 0) return ConstIter{ nullptr };
+        for (ConstIter beg = begin(); beg != end(); ++beg) {
+            if (*beg == value) return ConstIter{ beg.m_current };
+        }
+        return ConstIter{ nullptr };
     }
     ~LinkedList() { clear(); }
 };

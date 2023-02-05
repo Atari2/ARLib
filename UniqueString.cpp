@@ -18,7 +18,7 @@ SharedPtr<String> UniqueString::construct(String s) {
 UniqueString::~UniqueString() {
     auto& tbl = detail::get_interned_strings();
     auto it   = tbl.find(m_ref);
-    HARD_ASSERT(it != tbl.end(), "UniqueString is not in table, this shouldn't happen");
+    HARD_ASSERT(it != tbl.cend(), "UniqueString is not in table, this shouldn't happen");
     m_ref.reset();
     if ((*it).refcount() == 1) tbl.remove(*it);
 }

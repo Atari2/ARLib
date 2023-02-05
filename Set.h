@@ -16,8 +16,8 @@ template <typename T, typename CustomComparer = SetComparer<T>>
 class Set {
     using Iter             = Iterator<T>;
     using ReverseIter      = ReverseIterator<T>;
-    using ConstIter        = Iterator<T>;
-    using ConstReverseIter = ReverseIterator<T>;
+    using ConstIter        = ConstIterator<T>;
+    using ConstReverseIter = ConstReverseIterator<T>;
     using Cmp              = CustomComparer;
 
     size_t m_capacity = 0;
@@ -68,28 +68,30 @@ class Set {
         append_internal_(Forward<T>(val));
         (append_internal_(Forward<Args>(args)), ...);
     }
-    T& insert(const T& elem)
+    const T& insert(const T& elem)
     requires CopyAssignable<T>
     {
-        Iter it = find(elem);
-        if (it != end()) {
+        ConstIter it = find(elem);
+        if (it != cend()) {
             return *it;
         } else {
             return append_internal_(elem);
         }
     }
-    T& insert(T&& elem)
+    const T& insert(T&& elem)
     requires MoveAssignable<T>
     {
-        Iter it = find(elem);
-        if (it != end()) {
+        ConstIter it = find(elem);
+        if (it != cend()) {
             return *it;
         } else {
             return append_internal_(Forward<T>(elem));
         }
     }
-    Iter begin() const { return Iter{ m_storage }; }
-    Iter end() const { return Iter{ m_storage + m_size }; }
+    Iter begin() { return Iter{ m_storage }; }
+    Iter end() { return Iter{ m_storage + m_size }; }
+    ConstIter begin() const { return ConstIter{ m_storage }; }
+    ConstIter end() const { return ConstIter{ m_storage + m_size }; }
     ConstIter cbegin() const { return ConstIter{ m_storage }; }
     ConstIter cend() const { return ConstIter{ m_storage + m_size }; }
     ReverseIter rbegin() const { return ReverseIter{ m_storage + m_size - 1 }; }
@@ -115,9 +117,9 @@ class Set {
         }
         return false;
     }
-    Iter find(const T& elem) const {
+    ConstIter find(const T& elem) const {
         for (size_t i = 0; i < m_size; i++) {
-            if (Cmp::equal(m_storage[i], elem)) return Iter{ m_storage + i };
+            if (Cmp::equal(m_storage[i], elem)) return ConstIter{ m_storage + i };
         }
         return end();
     }
