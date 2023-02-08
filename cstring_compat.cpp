@@ -7,7 +7,7 @@
 namespace ARLib {
 typedef intptr_t word;
 constexpr auto wsize = sizeof(word);
-constexpr auto wmask = (wsize - 1);
+[[maybe_unused]] constexpr auto wmask = (wsize - 1);
 
 #ifdef COMPILER_MSVC
 forceinline uint32_t ctz_msvc(uint32_t value) {

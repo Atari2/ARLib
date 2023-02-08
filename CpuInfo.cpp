@@ -62,7 +62,7 @@ static uint32_t get_cpuid_max(uint32_t ext, uint32_t* sig) {
 #define XSTATE_HI_ZMM 0x80
 CPUInfo::CPUInfo() noexcept {
 #ifdef COMPILER_CLANG
-    uint32_t cpuid_max = static_cast<uint32_t>(get_cpuid_max(0u, nullptr));
+    [[maybe_unused]] uint32_t cpuid_max = static_cast<uint32_t>(get_cpuid_max(0u, nullptr));
 #else
     uint32_t cpuid_max = get_cpuid_max(0u, nullptr);
 #endif
