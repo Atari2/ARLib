@@ -46,7 +46,7 @@ constexpr static const Array strings{
     "nHTVA6jzsS"_sv, "2phWwNfCHp"_sv, "HQ6oNmPko5"_sv, "LgUFsTN0eC"_sv, "hlDB7lRGJ0"_sv, "8kGMMJV7PR"_sv,
     "M798JiFBuA"_sv, "Sq51RKKFUZ"_sv, "6Lg6W9hZ9X"_sv, "HA741LK6Ai"_sv,
 };
-constexpr static const Array stdstrings{
+[[maybe_unused]] constexpr static const Array stdstrings{
     "XZk6g68IJe"sv, "xLX1I3D9Ju"sv, "c8iChK6P5U"sv, "ke1fjfqM4h"sv, "C14RwSqFaK"sv, "ZYApUXmw8i"sv,
     "NSsOfFyYQw"sv, "2embvf20ZJ"sv, "QXreMhn9Rk"sv, "OyTfRkPoWP"sv, "kHXnimdjGb"sv, "mtylTdDHs8"sv,
     "HjDNsHZJ0O"sv, "o0MmzO0OQ7"sv, "C81lYiEoPK"sv, "fxpSWLS0in"sv, "QWLODBo9lj"sv, "8N0MIpeP8j"sv,

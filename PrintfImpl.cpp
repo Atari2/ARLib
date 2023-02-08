@@ -611,11 +611,11 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
     return output;
 }
 PrintfResult _vsprintf(_In_z_ _Printf_format_string_ const char* fmt, va_list args) {
-    PrintfResult result{ PrintfResultType::FromString, String{} };
+    PrintfResult result{ PrintfResultType::FromString, String{}, {}, {} };
     return printf_impl(result, fmt, args);
 }
 PrintfResult _vsprintf_frombuf(_In_z_ _Printf_format_string_ const char* fmt, va_list args, PrintfBuffer buffer) {
-    PrintfResult result{ PrintfResultType::FromBuffer, move(buffer) };
+    PrintfResult result{ PrintfResultType::FromBuffer, move(buffer), {}, {} };
     return printf_impl(result, fmt, args);
 }
 void PrintfResult::reserve(size_t size) {
