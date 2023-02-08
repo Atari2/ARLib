@@ -104,6 +104,13 @@ class WStringView {
             return WStringView{ m_start, size };
         }
     }
+    [[nodiscard]] bool starts_with(WStringView other) const {
+        auto o_len = other.size();
+        if (o_len > m_size) return false;
+        if (m_size == o_len) return wstrcmp(other.data(), m_start) == 0;
+        auto res = wstrncmp(other.data(), m_start, o_len);
+        return res == 0;
+    }
     [[nodiscard]] constexpr size_t index_of(const wchar_t* c, size_t start = 0) const {
         if (m_size == 0 || start >= m_size) return npos;
         const wchar_t* buf = m_start;

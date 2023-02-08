@@ -142,6 +142,13 @@ class StringView {
         const size_t rcount = min_bt(len, size() - first);
         return StringView{ data() + first, rcount };
     }
+    [[nodiscard]] bool starts_with(StringView other) const {
+        auto o_len = other.size();
+        if (o_len > m_size) return false;
+        if (m_size == o_len) return strcmp(other.data(), m_start) == 0;
+        auto res = strncmp(other.data(), m_start, o_len);
+        return res == 0;
+    }
     [[nodiscard]] constexpr size_t index_of(char c, size_t off = 0) const {
         const char* ptr = data();
         if (off > m_size) return npos;
@@ -166,8 +173,13 @@ constexpr StringView operator""_sv(const char* source, size_t len) {
 template <>
 struct Hash<StringView> {
     [[nodiscard]] size_t operator()(const StringView& key) const noexcept {
-        constexpr size_t seed = static_cast<size_t>(0xc70f6907UL);
-        return murmur_hash_bytes(key.data(), key.size(), seed);
+        if constexpr (windows_build) {
+            // this hash yields way better code on windows
+            return hash_array_representation(key.data(), key.size());
+        } else {
+            constexpr size_t seed = static_cast<size_t>(0xc70f6907UL);
+            return murmur_hash_bytes(key.data(), key.size(), seed);
+        }
     }
 };
 template <>

@@ -495,8 +495,13 @@ inline String operator""_s(const char* source, size_t len) {
 template <>
 struct Hash<String> {
     [[nodiscard]] size_t operator()(const String& key) const noexcept {
-        constexpr size_t seed = static_cast<size_t>(0xc70f6907UL);
-        return murmur_hash_bytes(key.data(), key.size(), seed);
+        if constexpr (windows_build) {
+            // this hash yields way better code on windows
+            return hash_array_representation(key.data(), key.size());
+        } else {
+            constexpr size_t seed = static_cast<size_t>(0xc70f6907UL);
+            return murmur_hash_bytes(key.data(), key.size(), seed);
+        }
     }
 };
 }    // namespace ARLib
