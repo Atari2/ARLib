@@ -71,6 +71,10 @@ class Win32FileInfo {
 };
 using Win32DirIterHandle = void*;
 bool remove_filespec(WString& p);
+bool is_directory(const WString& p);
+void parent_path(WString& p);
+bool is_absolute(const WString& p);
+FsString combine_paths(const FsString& p1, const FsString& p2);
 class Win32DirectoryIterate {
     friend class Win32DirectoryIterator;
     Path m_path;

@@ -39,6 +39,10 @@ class UnixFileInfo {
 using GlobResult = glob_t;
 using UnixDirIterHandle = GlobResult*;
 bool remove_filespec(String& p);
+bool is_directory(const String& p);
+void parent_path(String& p);
+bool is_absolute(const String& p);
+FsString combine_paths(const FsString& p1, const FsString& p2);
 class UnixDirectoryIterator;
 class UnixDirectoryIterate {
     friend class UnixDirectoryIterator;

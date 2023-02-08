@@ -3,24 +3,22 @@
 #endif
 #include "xnative_fs_windows.h"
 #ifdef WINDOWS
-    #include "../../Printer.h"
-    #include <Windows.h>
-    #include <PathCch.h>
-    #include <Shlwapi.h>
-    #pragma comment(lib, "Pathcch.lib")
-    #pragma comment(lib, "Shlwapi.lib")
+#include "../../Printer.h"
+#include <Windows.h>
+#include <PathCch.h>
+#pragma comment(lib, "Pathcch.lib")
 namespace ARLib {
-Win32DirectoryIterate::Win32DirectoryIterate(Path path, bool recurse) : m_path(move(path)), m_recurse(recurse) {
+Win32DirectoryIterate::Win32DirectoryIterate(Path path, bool recurse) : m_path(), m_recurse(recurse) {
     // make path a valid globbing path
-    auto& str        = m_path.string();
-    const bool isDir = PathIsDirectory(str.data());
-    if (isDir) {
-        if (str.back() == '\\') {
+    FsString str = path.string();
+    if (path.is_directory()) {
+        if (str.back() == L'\\') {
             str.append(L'*');
         } else {
             str.append(L"\\*");
         }
     }
+    m_path = move(str);
 }
 Win32DirectoryIterator Win32DirectoryIterate::begin() const {
     return Win32DirectoryIterator{ m_path, NULL, m_recurse };
@@ -54,13 +52,12 @@ Win32FileInfo Win32DirectoryIterator::operator*() const {
 }
 static void construct_full_path(wchar_t* fullPathBuf, size_t bufSz, const Path& p) {
     GetCurrentDirectory(bufSz, fullPathBuf);
-    Path fp{ p };
-    fp.remove_filespec();
+    Path fp = p.remove_filespec();
     PathCchCombineEx(fullPathBuf, bufSz, fullPathBuf, fp.string().data(), PATHCCH_ALLOW_LONG_PATHS);
 }
-static Path combine_paths(Path p1, FsStringView p2) {
+static Path combine_paths(const Path& p, FsStringView p2) {
     static wchar_t resultBuf[4096];
-    p1.remove_filespec();
+    Path p1 = p.remove_filespec();
     PathCchCombineEx(resultBuf, sizeof_array(resultBuf), p1.string().data(), p2.data(), PATHCCH_ALLOW_LONG_PATHS);
     return Path{ WString{ resultBuf } };
 }
@@ -142,6 +139,48 @@ bool remove_filespec(WString& p) {
     auto newsize = wstrlen(p.data());
     p.set_size(newsize);
     return true;
+}
+bool is_directory(const WString& p) {
+    HANDLE hdl = CreateFile(p.data(), 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (hdl == INVALID_HANDLE_VALUE) { return false; }
+    FILE_BASIC_INFO info{};
+    BOOL res = GetFileInformationByHandleEx(hdl, FileBasicInfo, &info, sizeof(FILE_BASIC_INFO));
+    if (res) { return (info.FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0; }
+    return false;
+}
+// https://learn.microsoft.com/en-gb/windows/win32/fileio/naming-a-file#fully-qualified-vs-relative-paths
+bool is_absolute(const WString& p) {
+    // A file name is relative to the current directory (aka not absolute) if it does not begin with one of the following:
+    if (p.starts_with(LR"(\\)")) {
+        // - A UNC name of any format, which always start with two backslash characters ("\\"). For more information, see the next section.
+        return true;
+    } else if (p.substringview(1).starts_with(LR"(:\)")) {
+        // - A disk designator with a backslash, for example "C:\" or "d:\".
+        return true;
+    } else if (p.starts_with(LR"(\)")) {
+        // - A single backslash, for example, "\directory" or "\file.txt". This is also referred to as an absolute path.
+        return true;
+    }
+    return false;
+}
+void parent_path(WString& p) {
+    if (is_absolute(p)) {
+        const size_t index_of_slash = p.last_index_of(L'\\');
+        if (index_of_slash > 2 && index_of_slash != WString::npos) {
+            // see: is_absolute
+            p.resize(index_of_slash);
+        }
+    } else {
+        const size_t index_of_slash = p.last_index_of(L'\\');
+        p.resize(index_of_slash == WString::npos ? 0 : index_of_slash);
+    }
+}
+FsString combine_paths(const FsString& p1, const FsString& p2) {
+    FsString str{};
+    str.reserve(p1.size() + p2.size());
+    PathCchCombineEx(str.rawptr(), str.capacity(), p1.data(), p2.data(), PATHCCH_ALLOW_LONG_PATHS);
+    str.set_size(wstrlen(str.data()));
+    return str;
 }
 }    // namespace ARLib
 #endif
