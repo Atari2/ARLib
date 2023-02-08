@@ -51,7 +51,7 @@ Win32FileInfo Win32DirectoryIterator::operator*() const {
     return m_info;
 }
 static void construct_full_path(wchar_t* fullPathBuf, size_t bufSz, const Path& p) {
-    GetCurrentDirectory(bufSz, fullPathBuf);
+    GetCurrentDirectory(static_cast<DWORD>(bufSz), fullPathBuf);
     Path fp = p.remove_filespec();
     PathCchCombineEx(fullPathBuf, bufSz, fullPathBuf, fp.string().data(), PATHCCH_ALLOW_LONG_PATHS);
 }

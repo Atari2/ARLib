@@ -40,7 +40,7 @@ String WideToUTF8(const wchar_t* from, const int from_size) {
     if (required_size < 0) { return {}; }
     String str{};
     str.reserve(required_size);
-    int size = WideCharToMultiByte(CP_UTF8, 0, from, from_size, str.rawptr(), str.capacity(), NULL, NULL);
+    int size = WideCharToMultiByte(CP_UTF8, 0, from, from_size, str.rawptr(), static_cast<int>(str.capacity()), NULL, NULL);
     str.set_size(size);
     return str;
 }

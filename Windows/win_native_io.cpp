@@ -9,6 +9,9 @@
     #include <fcntl.h>
     #include <io.h>
 namespace ARLib {
+constexpr static DWORD todw(Integral auto v) {
+    return static_cast<DWORD>(v);
+} 
 struct SetupUTF8Output {
     SetupUTF8Output() {
         UINT cp = GetConsoleCP();
@@ -180,7 +183,7 @@ char* ReadLine(char* buf, int n, FILE* fp) {
 
     for (size_t i = 0; i < bursts; i++) {
         DWORD bytesRead{};
-        BOOL res = ReadFile(hdl, buf + offset, buf_space > chunk_size ? chunk_size : buf_space, &bytesRead, NULL);
+        BOOL res = ReadFile(hdl, buf + offset, todw(buf_space > chunk_size ? chunk_size : buf_space), &bytesRead, NULL);
         buf_space -= bytesRead;
         offset += bytesRead;
         // !res aka failure to read should probably be a harder error
@@ -192,11 +195,11 @@ char* ReadLine(char* buf, int n, FILE* fp) {
             buf[n] = '\0';
             return buf;
         }
-        for (size_t j = offset; j < offset + bytesRead; j++) {
+        for (ptrdiff_t j = offset; j < offset + bytesRead; j++) {
             if (buf[j] == '\n') {
                 // if newline is encountered, chop off the buf and seek back
                 buf[j + 1] = '\0';
-                ARLib::fseek(fp, file_offset + j + 1, SEEK_SET);
+                ARLib::fseek(fp, static_cast<long>(file_offset + j + 1), SEEK_SET);
                 return buf;
             }
         }
@@ -209,7 +212,7 @@ char ReadInChar() {
 }
 size_t ReadFileGeneric(void* buffer, size_t size, size_t count, FILE* fp) {
     DWORD bytesRead{};
-    if (!ReadFile(FileToHandle(fp), buffer, size * count, &bytesRead, NULL)) { return EOF; }
+    if (!ReadFile(FileToHandle(fp), buffer, todw(size * count), &bytesRead, NULL)) { return EOF; }
     return bytesRead;
 }
 size_t WriteFileGeneric(const void* buffer, size_t size, size_t count, FILE* fp) {
