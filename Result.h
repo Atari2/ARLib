@@ -193,9 +193,7 @@ struct PrintInfo<Result<T, U>> {
 
 #define MUST(expression)                                                                                               \
     [](auto&& tr) {                                                                                                    \
-        static_assert(                                                                                                 \
-        !IsLvalueReferenceV<decltype(tr.to_ok())>, "Do not return a reference from a fallible expression"              \
-        );                                                                                                             \
+        static_assert(!IsLvalueReferenceV<decltype(tr.to_ok())>, "to_ok() must not return an lvalue reference");       \
         if (tr.is_error()) {                                                                                           \
             ASSERT_NOT_REACHED_FMT(                                                                                    \
             "MUST(" STRINGIFY(expression) ") failed \"%s\"", print_conditional(tr.to_error()).data()                   \
