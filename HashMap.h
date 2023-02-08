@@ -44,8 +44,14 @@ struct HashMapEntry {
     const Key& key() const { return m_key; }
     const Val& value() const { return m_value; }
     Val& value() { return m_value; }
-    bool operator==(const HashMapEntry& other) const { return m_hashval == other.m_hashval; }
-    bool operator!=(const HashMapEntry& other) { return m_hashval != other.m_hashval; }
+    bool operator==(const HashMapEntry& other) const {
+        if (m_hashval == other.m_hashval) {
+            return m_key == other.m_key;
+        } else {
+            return false;
+        }
+    }
+    bool operator!=(const HashMapEntry& other) { return !(*this == other); }
 };
 template <typename Key, typename Value>
 struct Hash<HashMapEntry<Key, Value>> {

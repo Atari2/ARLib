@@ -319,7 +319,7 @@ class HashTable {
         for (size_t i = 0; i < bucket.size(); i++) {
             auto& item = bucket[i];
             if (hash == m_hasher(item))
-                if (item.key() == val.key()) return { m_storage, bucket_index, i };
+                if (item == val) return { m_storage, bucket_index, i };
         }
         return tend();
     }
