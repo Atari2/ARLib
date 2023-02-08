@@ -58,8 +58,7 @@ constexpr RetType StrViewTo64Decimal(const StringView str) {
     size_t start_idx = 0;
     size_t end_idx   = str.size();
 
-    if (str.empty())
-        return 0;
+    if (str.empty()) return 0;
 
     bool neg = false;
     if constexpr (Signed) {
@@ -279,15 +278,16 @@ forceinline constexpr auto StrViewToU64Hexadecimal(const StringView str) {
     return StrViewTo64Hexadecimal<false>(str);
 }
 template <size_t Base>
-constexpr size_t StrLenFromIntegral(Integral auto value) noexcept {
-    static_assert(!IsSigned<decltype(value)>, "Value must be unsigned");
+constexpr size_t StrLenFromIntegral(Integral auto v) noexcept {
+    static_assert(!IsSigned<decltype(v)>, "Value must be unsigned");
+    size_t value = static_cast<size_t>(v);
     size_t n              = 1;
     constexpr size_t base = Base;
     constexpr size_t b2   = base * base;
     constexpr size_t b3   = b2 * base;
     constexpr size_t b4   = b3 * base;
     for (;;) {
-        if (value < static_cast<decltype(value)>(base)) return n;
+        if (value < base) return n;
         if (value < b2) return n + 1;
         if (value < b3) return n + 2;
         if (value < b4) return n + 3;

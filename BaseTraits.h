@@ -129,11 +129,17 @@ template <class T>
 struct IsArray<T[]> : TrueType {};
 template <class T, size_t N>
 struct IsArray<T[N]> : TrueType {};
-
+#ifdef COMPILER_MSVC
+    #pragma warning(push)
+    #pragma warning(disable: 4180)
+#endif
 template <class T>
 constexpr inline bool IsArrayV = IsArray<T>::value;
 template <class T>
 struct IsFunction : IntegralConstant<bool, !IsConst<const T>::value && !IsReference<T>::value> {};
+#ifdef COMPILER_MSVC
+    #pragma warning(pop)
+#endif
 template <class T>
 struct RemoveReference {
     typedef T type;
