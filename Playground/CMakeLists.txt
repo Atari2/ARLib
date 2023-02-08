@@ -25,9 +25,9 @@ add_executable(ARLibPlayground ${PLAYGROUND_SOURCE_FILES})
 if (MSVC)
 	set_property(TARGET ARLibPlayground PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
 	if (DEBUG_BUILD)
-		target_compile_options(ARLibPlayground PRIVATE /std:c++latest /utf-8 ${AVX_FLAGS} ${ARLIB_ASAN_FLAGS})
+		target_compile_options(ARLibPlayground PRIVATE /std:c++20 /utf-8 ${AVX_FLAGS} ${ARLIB_ASAN_FLAGS})
 	else()
-		target_compile_options(ARLibPlayground PRIVATE /std:c++latest /utf-8 ${AVX_FLAGS})
+		target_compile_options(ARLibPlayground PRIVATE /std:c++20 /utf-8 ${AVX_FLAGS})
 	endif()
 	add_custom_command(
         TARGET ARLibPlayground
