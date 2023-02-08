@@ -152,7 +152,7 @@ int fprintf(FILE* fp, const char* fmt, ...) {
 int sprintf(char* str, const char* format, ...) {
     va_list argptr{};
     va_start(argptr, format);
-    auto ret = _vsprintf_frombuf(format, argptr, { str, NumberTraits<size_t>::max });
+    auto ret = _vsprintf_frombuf(format, argptr, { str, NumberTraits<size_t>::max, {} });
     if (ret.error_code != PrintfErrorCodes::Ok) { return -1; }
     ret.finalize();
     va_end(argptr);
@@ -161,7 +161,7 @@ int sprintf(char* str, const char* format, ...) {
 int snprintf(char* str, size_t n, const char* format, ...) {
     va_list argptr{};
     va_start(argptr, format);
-    auto ret = _vsprintf_frombuf(format, argptr, { str, n });
+    auto ret = _vsprintf_frombuf(format, argptr, { str, n, {} });
     if (ret.error_code != PrintfErrorCodes::Ok) { return -1; }
     ret.finalize();
     va_end(argptr);
