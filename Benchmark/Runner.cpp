@@ -16,7 +16,7 @@
 using namespace std::string_view_literals;
 
 using namespace ARLib;
-static void BM_PrintfARLib(benchmark::State& state) {
+static void BM_ARLibSprintf(benchmark::State& state) {
     char buf[1024]{};
     for (auto _ : state) {
         double val              = 1234.1234;
@@ -65,7 +65,7 @@ constexpr static const Array strings{
     "nHTVA6jzsS"sv, "2phWwNfCHp"sv, "HQ6oNmPko5"sv, "LgUFsTN0eC"sv, "hlDB7lRGJ0"sv, "8kGMMJV7PR"sv,
     "M798JiFBuA"sv, "Sq51RKKFUZ"sv, "6Lg6W9hZ9X"sv, "HA741LK6Ai"sv,
 };
-static void BM_PrintfStd(benchmark::State& state) {
+static void BM_StdSprintf(benchmark::State& state) {
     char buf[1024]{};
     for (auto _ : state) {
         double val              = 1234.1234;
@@ -117,8 +117,8 @@ static void BM_ARLibHashMap(benchmark::State& state) {
         if (map.size() != 0) { ASSERT_NOT_REACHED("Map size is wrong") }
     }
 }
-BENCHMARK(BM_PrintfStd);
-BENCHMARK(BM_PrintfARLib);
+BENCHMARK(BM_StdSprintf);
+BENCHMARK(BM_ARLibSprintf);
 BENCHMARK(BM_StdUnorderedMap);
 BENCHMARK(BM_ARLibHashMap);
 BENCHMARK_MAIN();

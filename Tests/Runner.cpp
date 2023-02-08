@@ -937,18 +937,16 @@ TEST(ARLibTests, PathTests) {
 
             Path p3{ R"(C:\Users\user\folder\child\file.txt)" };
             Path p4{ R"(child2\file.txt)" };
-            
+
             Path p5{ R"(C:\Users\user\folder\child)" };
             Path p6{ R"(folder\child2\file.txt)" };
 
             EXPECT_EQ(p1 / p2, R"(C:\Users\user\folder\child2\file.txt)"_p);
             EXPECT_EQ(p2 / p1, R"(C:\Users\user\folder\child\file.txt)"_p);
 
-            
             EXPECT_EQ(p3 / p4, R"(C:\Users\user\folder\child\file.txt\child2\file.txt)"_p);
             EXPECT_EQ(p4 / p3, R"(C:\Users\user\folder\child\file.txt)"_p);
 
-            
             EXPECT_EQ(p5 / p6, R"(C:\Users\user\folder\child\folder\child2\file.txt)"_p);
             EXPECT_EQ(p6 / p5, R"(C:\Users\user\folder\child)"_p);
         } else {
@@ -971,4 +969,46 @@ TEST(ARLibTests, PathTests) {
             EXPECT_EQ(p6 / p5, R"(/Users/user/folder/child)"_p);
         }
     }
+}
+TEST(ARLibTests, SortingTest) {
+    Array strings{
+        "XZk6g68IJe"_sv, "xLX1I3D9Ju"_sv, "c8iChK6P5U"_sv, "ke1fjfqM4h"_sv, "C14RwSqFaK"_sv, "ZYApUXmw8i"_sv,
+        "NSsOfFyYQw"_sv, "2embvf20ZJ"_sv, "QXreMhn9Rk"_sv, "OyTfRkPoWP"_sv, "kHXnimdjGb"_sv, "mtylTdDHs8"_sv,
+        "HjDNsHZJ0O"_sv, "o0MmzO0OQ7"_sv, "C81lYiEoPK"_sv, "fxpSWLS0in"_sv, "QWLODBo9lj"_sv, "8N0MIpeP8j"_sv,
+        "3xbvOimAaK"_sv, "wj41wl0ifb"_sv, "vjHFCWCKU1"_sv, "wQHSdcKmrn"_sv, "PXTMNP75hq"_sv, "L7TuxocgEG"_sv,
+        "g7bQbXwCwG"_sv, "OTgkPNbdRG"_sv, "GXVpodrMcv"_sv, "uXsiZQv2KK"_sv, "144IRet2MM"_sv, "eQWNvRkaFh"_sv,
+        "PDggPLAcQD"_sv, "WV4gj6eVx3"_sv, "H2az78ED8Q"_sv, "G3BKZOi5AP"_sv, "00eUWw5keT"_sv, "EekC8u3Fgp"_sv,
+        "zBdebgoSjW"_sv, "NpetUuoijR"_sv, "hdNt1J3d35"_sv, "Kyi8aIHEeo"_sv, "dR0WL76qoO"_sv, "ggrxoFagtP"_sv,
+        "qDJN7Clkcd"_sv, "8xPcyvzstU"_sv, "Fp0V3JBAQ1"_sv, "CAAIyvZJ2l"_sv, "jHFIKEqoDP"_sv, "0ePRmgMGJj"_sv,
+        "UlCy28HaHT"_sv, "ULgHyVJVX6"_sv, "cG624ueEoO"_sv, "A1hg0xHLfQ"_sv, "C2kkYZkTtF"_sv, "1yUtwevLgb"_sv,
+        "za9G6Ry7RA"_sv, "Kkfk6ZTfse"_sv, "20y9tEFtv7"_sv, "jbg7UzBTE1"_sv, "qjlGhPxKn0"_sv, "PgNHVLj5GD"_sv,
+        "2I6GpgwhEj"_sv, "4hVs495EX4"_sv, "XdxSo7jBgU"_sv, "inlBP3ELRI"_sv, "h3mUk3Cw33"_sv, "4rHb12uhoa"_sv,
+        "DrycQ6SL94"_sv, "GglNpPbzWw"_sv, "J9gtEsYZ48"_sv, "MpXA02CaUr"_sv, "XwTX7hCsA0"_sv, "p7USMCQ140"_sv,
+        "yk14lFbf6S"_sv, "OxPYxbX4Up"_sv, "RRkhyOXK6j"_sv, "6guDMubTGf"_sv, "xdgN9VZ5xJ"_sv, "sZVJ6V5bzs"_sv,
+        "mlBklidD2m"_sv, "vTPq38FlDd"_sv, "KC7cKE88kp"_sv, "CDtuCg6FoP"_sv, "pJUrm9kB7t"_sv, "l493YSmNkc"_sv,
+        "oTI3T4gRRt"_sv, "qZLEQQYxor"_sv, "sRnv5wXIqn"_sv, "VTZRkswfh7"_sv, "q69Vq4wpIK"_sv, "SWQ6dU4wLs"_sv,
+        "nHTVA6jzsS"_sv, "2phWwNfCHp"_sv, "HQ6oNmPko5"_sv, "LgUFsTN0eC"_sv, "hlDB7lRGJ0"_sv, "8kGMMJV7PR"_sv,
+        "M798JiFBuA"_sv, "Sq51RKKFUZ"_sv, "6Lg6W9hZ9X"_sv, "HA741LK6Ai"_sv,
+    };
+    const Array expected{
+        "00eUWw5keT"_sv, "0ePRmgMGJj"_sv, "144IRet2MM"_sv, "1yUtwevLgb"_sv, "20y9tEFtv7"_sv, "2I6GpgwhEj"_sv,
+        "2embvf20ZJ"_sv, "2phWwNfCHp"_sv, "3xbvOimAaK"_sv, "4hVs495EX4"_sv, "4rHb12uhoa"_sv, "6Lg6W9hZ9X"_sv,
+        "6guDMubTGf"_sv, "8N0MIpeP8j"_sv, "8kGMMJV7PR"_sv, "8xPcyvzstU"_sv, "A1hg0xHLfQ"_sv, "C14RwSqFaK"_sv,
+        "C2kkYZkTtF"_sv, "C81lYiEoPK"_sv, "CAAIyvZJ2l"_sv, "CDtuCg6FoP"_sv, "DrycQ6SL94"_sv, "EekC8u3Fgp"_sv,
+        "Fp0V3JBAQ1"_sv, "G3BKZOi5AP"_sv, "GXVpodrMcv"_sv, "GglNpPbzWw"_sv, "H2az78ED8Q"_sv, "HA741LK6Ai"_sv,
+        "HQ6oNmPko5"_sv, "HjDNsHZJ0O"_sv, "J9gtEsYZ48"_sv, "KC7cKE88kp"_sv, "Kkfk6ZTfse"_sv, "Kyi8aIHEeo"_sv,
+        "L7TuxocgEG"_sv, "LgUFsTN0eC"_sv, "M798JiFBuA"_sv, "MpXA02CaUr"_sv, "NSsOfFyYQw"_sv, "NpetUuoijR"_sv,
+        "OTgkPNbdRG"_sv, "OxPYxbX4Up"_sv, "OyTfRkPoWP"_sv, "PDggPLAcQD"_sv, "PXTMNP75hq"_sv, "PgNHVLj5GD"_sv,
+        "QWLODBo9lj"_sv, "QXreMhn9Rk"_sv, "RRkhyOXK6j"_sv, "SWQ6dU4wLs"_sv, "Sq51RKKFUZ"_sv, "ULgHyVJVX6"_sv,
+        "UlCy28HaHT"_sv, "VTZRkswfh7"_sv, "WV4gj6eVx3"_sv, "XZk6g68IJe"_sv, "XdxSo7jBgU"_sv, "XwTX7hCsA0"_sv,
+        "ZYApUXmw8i"_sv, "c8iChK6P5U"_sv, "cG624ueEoO"_sv, "dR0WL76qoO"_sv, "eQWNvRkaFh"_sv, "fxpSWLS0in"_sv,
+        "g7bQbXwCwG"_sv, "ggrxoFagtP"_sv, "h3mUk3Cw33"_sv, "hdNt1J3d35"_sv, "hlDB7lRGJ0"_sv, "inlBP3ELRI"_sv,
+        "jHFIKEqoDP"_sv, "jbg7UzBTE1"_sv, "kHXnimdjGb"_sv, "ke1fjfqM4h"_sv, "l493YSmNkc"_sv, "mlBklidD2m"_sv,
+        "mtylTdDHs8"_sv, "nHTVA6jzsS"_sv, "o0MmzO0OQ7"_sv, "oTI3T4gRRt"_sv, "p7USMCQ140"_sv, "pJUrm9kB7t"_sv,
+        "q69Vq4wpIK"_sv, "qDJN7Clkcd"_sv, "qZLEQQYxor"_sv, "qjlGhPxKn0"_sv, "sRnv5wXIqn"_sv, "sZVJ6V5bzs"_sv,
+        "uXsiZQv2KK"_sv, "vTPq38FlDd"_sv, "vjHFCWCKU1"_sv, "wQHSdcKmrn"_sv, "wj41wl0ifb"_sv, "xLX1I3D9Ju"_sv,
+        "xdgN9VZ5xJ"_sv, "yk14lFbf6S"_sv, "zBdebgoSjW"_sv, "za9G6Ry7RA"_sv
+    };
+    sort(strings);
+    for (const auto& [g, e] : zip(strings, expected)) { EXPECT_EQ(g, e); }
 }

@@ -186,18 +186,18 @@ auto transform(const C& cont, Functor func) {
 }
 // follows very naive quicksort implementation
 template <IteratorConcept Iter>
-requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutputType<Iter>>
+requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutputType<Iter>> &&
+         CopyConstructible<IteratorOutputType<Iter>>
 Iter partition(Iter lo, Iter hi) {
-    auto pivot = lo + static_cast<int>(((hi - lo) / 2));
-    auto i     = lo - 1;
-    auto j     = hi + 1;
+    // FIXME: find a way to avoid this copy of the pivot
+    IteratorOutputType<Iter> pivot = *(lo + ((hi - lo) / 2));
+    auto i                         = lo - 1;
+    auto j                         = hi + 1;
     for (;;) {
-        do { i++; } while (*i < *pivot);
-        do { j--; } while (*j > *pivot);
-        if (i > j || i == j) { return j; }
-        auto item = *i;
-        *i        = *j;
-        *j        = item;
+        do { ++i; } while (*i < pivot);
+        do { --j; } while (*j > pivot);
+        if (i > j || i == j) return j;
+        swap(*i, *j);
     }
 }
 template <IteratorConcept Iter>

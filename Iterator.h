@@ -55,7 +55,7 @@ class Iterator final : public IteratorBase<T> {
         m_current += offset;
         return *this;
     }
-    Iterator<T> operator+(int offset) { return Iterator<T>{ m_current + offset }; }
+    Iterator<T> operator+(Integral auto offset) { return Iterator<T>{ m_current + offset }; }
     Iterator<T>& operator--() {
         m_current--;
         return *this;
@@ -69,7 +69,7 @@ class Iterator final : public IteratorBase<T> {
         m_current -= offset;
         return *this;
     }
-    Iterator<T> operator-(int offset) { return Iterator<T>{ m_current - offset }; }
+    Iterator<T> operator-(Integral auto offset) { return Iterator<T>{ m_current - offset }; }
     size_t operator-(const Iterator<T>& other) const { return static_cast<size_t>(m_current - other.m_current); }
 };
 template <typename Ct>
@@ -103,7 +103,7 @@ class ConstIterator final : public IteratorBase<typename AddConst<Ct>::type> {
         m_current += offset;
         return *this;
     }
-    constexpr ConstIterator<Ct> operator+(int offset) { return ConstIterator<Ct>{ m_current + offset }; }
+    constexpr ConstIterator<Ct> operator+(Integral auto offset) { return ConstIterator<Ct>{ m_current + offset }; }
     constexpr ConstIterator<Ct>& operator--() {
         m_current--;
         return *this;
@@ -113,11 +113,11 @@ class ConstIterator final : public IteratorBase<typename AddConst<Ct>::type> {
         m_current--;
         return copy;
     }
-    constexpr ConstIterator<Ct>& operator-=(int offset) {
+    constexpr ConstIterator<Ct>& operator-=(Integral auto offset) {
         m_current -= offset;
         return *this;
     }
-    constexpr ConstIterator<Ct> operator-(int offset) { return ConstIterator<Ct>{ m_current - offset }; }
+    constexpr ConstIterator<Ct> operator-(Integral auto offset) { return ConstIterator<Ct>{ m_current - offset }; }
     constexpr size_t operator-(const ConstIterator<Ct>& other) const {
         return static_cast<size_t>(m_current - other.m_current);
     }
@@ -143,11 +143,11 @@ class ReverseIterator final : public IteratorBase<T> {
         m_current--;
         return copy;
     }
-    ReverseIterator<T>& operator+=(int offset) {
+    ReverseIterator<T>& operator+=(Integral auto offset) {
         m_current -= offset;
         return *this;
     }
-    ReverseIterator<T> operator+(int offset) { return ReverseIterator<T>{ m_current - offset }; }
+    ReverseIterator<T> operator+(Integral auto offset) { return ReverseIterator<T>{ m_current - offset }; }
     ReverseIterator<T>& operator--() {
         m_current++;
         return *this;
@@ -157,11 +157,11 @@ class ReverseIterator final : public IteratorBase<T> {
         m_current++;
         return copy;
     }
-    ReverseIterator<T>& operator-=(int offset) {
+    ReverseIterator<T>& operator-=(Integral auto offset) {
         m_current += offset;
         return *this;
     }
-    ReverseIterator<T> operator-(int offset) { return { m_current + offset }; }
+    ReverseIterator<T> operator-(Integral auto offset) { return { m_current + offset }; }
 };
 template <typename Ct>
 class ConstReverseIterator final : public IteratorBase<typename AddConst<Ct>::type> {
@@ -188,11 +188,11 @@ class ConstReverseIterator final : public IteratorBase<typename AddConst<Ct>::ty
         m_current--;
         return copy;
     }
-    ConstReverseIterator<Ct>& operator+=(int offset) {
+    ConstReverseIterator<Ct>& operator+=(Integral auto offset) {
         m_current -= offset;
         return *this;
     }
-    ConstReverseIterator<Ct> operator+(int offset) { return ConstReverseIterator<Ct>{ m_current - offset }; }
+    ConstReverseIterator<Ct> operator+(Integral auto offset) { return ConstReverseIterator<Ct>{ m_current - offset }; }
     ConstReverseIterator<Ct>& operator--() {
         m_current++;
         return *this;
@@ -202,11 +202,11 @@ class ConstReverseIterator final : public IteratorBase<typename AddConst<Ct>::ty
         m_current++;
         return copy;
     }
-    ConstReverseIterator<Ct>& operator-=(int offset) {
+    ConstReverseIterator<Ct>& operator-=(Integral auto offset) {
         m_current += offset;
         return *this;
     }
-    ConstReverseIterator<Ct> operator-(int offset) { return { m_current + offset }; }
+    ConstReverseIterator<Ct> operator-(Integral auto offset) { return { m_current + offset }; }
 };
 #undef m_current
 template <typename T, ComparatorType CMP, typename = EnableIfT<IsNonboolIntegral<T>>>
