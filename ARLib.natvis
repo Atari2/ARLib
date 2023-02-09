@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="ARLib::Pair&lt;*,*&gt;">
+		<Intrinsic ReturnType="$T1" Name="first" Expression="_m_first"/>
+		<Intrinsic ReturnType="$T2" Name="second" Expression="_m_second"/>
+		<DisplayString>{{ {first()}, {second()} }}</DisplayString>
+		<Expand>
+			<Item Name="[first]" ExcludeView="simple">_m_first</Item>
+			<Item Name="[second]" ExcludeView="simple">_m_second</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Array&lt;*&gt;">
+	  <DisplayString>{{ size={$T2} }}</DisplayString>
+      <Expand>
+          <ArrayItems>
+              <Size>$T2</Size>
+              <ValuePointer>_m_storage_</ValuePointer>
+          </ArrayItems>
+      </Expand>
+	</Type>
+	<Type Name="ARLib::String">
+		<Intrinsic Name="size" Expression="m_size"/>
+		<Intrinsic Name="getCapacity" Expression="(size_t)(m_data_buf == m_local_buf ? 15 : m_allocated_capacity)"/>
+		<DisplayString Condition="size() > 0">{m_data_buf,na} (size = {size()})</DisplayString>
+		<DisplayString Condition="size() == 0">{{empty}}</DisplayString>
+		<Expand>
+			<Item Name="[capacity]" ExcludeView="simple">getCapacity()</Item>
+			<Item Name="[size]" ExcludeView="simple">size()</Item>
+			<ArrayItems>
+				<Size>m_size</Size>
+				<ValuePointer>m_data_buf</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+		<Type Name="ARLib::StringView">
+		<Intrinsic Name="size" Expression="m_size"/>
+		<Intrinsic Name="ismut" Expression="m_start_mut != nullptr"/>
+		<DisplayString Condition="size() > 0">{m_start,na} (size = {size()})</DisplayString>
+		<DisplayString Condition="size() == 0">{{empty}}</DisplayString>
+		<Expand>
+			<Item Name="[size]" ExcludeView="simple">size()</Item>
+			<Item Name="[is mutable]" ExcludeView="simple">ismut()</Item>
+			<ArrayItems>
+				<Size>m_size</Size>
+				<ValuePointer>m_start</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Vector&lt;*&gt;">
+		<Intrinsic Name="data" Expression="m_storage"/>
+		<Intrinsic Name="size" Expression="(size_t)(m_size)" />
+		<Intrinsic Name="capacity" Expression="(size_t)(m_capacity)" />
+		<SmartPointer Usage="Indexable" DefaultExpansion="false">data()</SmartPointer>
+		<DisplayString Condition="size() > 0">{data(),na} (size = {size()})</DisplayString>
+		<DisplayString Condition="size() == 0">{{empty}}</DisplayString>
+		<Expand>
+			<Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
+			<ArrayItems>
+				<Size>size()</Size>
+				<ValuePointer>data()</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+</AutoVisualizer>

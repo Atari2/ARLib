@@ -148,6 +148,8 @@ execute_process(
 include(CheckAvx.cmake)
 CheckAvx()
 list(APPEND LIB_SOURCE_FILES_CPP 
+    ${CMAKE_CURRENT_SOURCE_DIR}/NatvisCompile.cpp
+
     ${CMAKE_CURRENT_SOURCE_DIR}/Algorithm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Assertion.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/BigInt.cpp
@@ -344,10 +346,12 @@ if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
         NOMINMAX
 	)
 	if (DEBUG_BUILD)
-		list(APPEND ARLIB_COMPILE_OPTIONS /Oy- ${ARLIB_ASAN_FLAGS})
+		list(APPEND ARLIB_COMPILE_OPTIONS /DEBUG /Oy- ${ARLIB_ASAN_FLAGS})
 	else()
 		list(APPEND ARLIB_COMPILE_OPTIONS /O2 /GR-)
 	endif()
+    list(APPEND ARLIB_LINK_OPTIONS "/NATVIS:${CMAKE_CURRENT_SOURCE_DIR}/ARLib.natvis")
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/NatvisCompile.cpp PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ARLib.natvis")
 	list(APPEND ARLIB_COMPILE_WARNINGS
 		/W3 
 		/w14242 
