@@ -85,8 +85,50 @@
 		<Intrinsic Name="size" Expression="(size_t)(m_size)" />
 		<Intrinsic Name="capacity" Expression="(size_t)(m_capacity)" />
 		<SmartPointer Usage="Indexable" DefaultExpansion="false">data()</SmartPointer>
-		<DisplayString Condition="size() > 0">{data(),na} (size = {size()})</DisplayString>
-		<DisplayString Condition="size() == 0">{{empty}}</DisplayString>
+		<DisplayString>{{ size = {size()} }}</DisplayString>
+		<Expand>
+			<Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
+			<ArrayItems>
+				<Size>size()</Size>
+				<ValuePointer>data()</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::SortedVector&lt;*&gt;">
+		<Intrinsic Name="data" Expression="m_storage"/>
+		<Intrinsic Name="size" Expression="(size_t)(m_size)" />
+		<Intrinsic Name="capacity" Expression="(size_t)(m_capacity)" />
+		<SmartPointer Usage="Indexable" DefaultExpansion="false">data()</SmartPointer>
+		<DisplayString>size = {size()}</DisplayString>
+		<Expand>
+			<Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
+			<Item Name="[ordering]" ExcludeView="simple">m_ordering</Item>
+			<ArrayItems>
+				<Size>size()</Size>
+				<ValuePointer>data()</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::SSOVector&lt;*&gt;">
+		<Intrinsic Name="data" Expression="m_storage"/>
+		<Intrinsic Name="size" Expression="(size_t)(m_size)" />
+		<Intrinsic Name="capacity" Expression="(size_t)(m_capacity)" />
+		<SmartPointer Usage="Indexable" DefaultExpansion="false">data()</SmartPointer>
+		<DisplayString>size = {size()}</DisplayString>
+		<Expand>
+			<Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
+			<ArrayItems>
+				<Size>size()</Size>
+				<ValuePointer>data()</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Stack&lt;*&gt;">
+		<Intrinsic Name="data" Expression="m_stack.m_storage"/>
+		<Intrinsic Name="size" Expression="(size_t)(m_stack.m_size)" />
+		<Intrinsic Name="capacity" Expression="(size_t)(m_stack.m_capacity)" />
+		<SmartPointer Usage="Indexable" DefaultExpansion="false">data()</SmartPointer>
+		<DisplayString>size = {size()}</DisplayString>
 		<Expand>
 			<Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
 			<ArrayItems>
@@ -137,6 +179,15 @@
 		</Expand>
 	</Type>
 	<Type Name="ARLib::UniquePtr&lt;*&gt;">
+		<Intrinsic Name="getValue" Expression="*m_storage"/>
+		<Intrinsic Name="exists" Expression="m_storage != nullptr"/>
+		<DisplayString Condition="exists()">{{ {getValue()} }}</DisplayString>
+		<DisplayString Condition="!exists()">{{ empty }}</DisplayString>
+		<Expand>
+			<Item Name="[value]" ExcludeView="simple">m_storage</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::WeakPtr&lt;*&gt;">
 		<Intrinsic Name="getValue" Expression="*m_storage"/>
 		<Intrinsic Name="exists" Expression="m_storage != nullptr"/>
 		<DisplayString Condition="exists()">{{ {getValue()} }}</DisplayString>
@@ -202,6 +253,439 @@
 		<Expand>
 			<Item Name="[result]" Condition="IsOk()">m_ok</Item>
 			<Item Name="[error]" Condition="IsError()">m_err</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::LinkedList&lt;*&gt;::ListEntry" Priority="High">
+		<DisplayString Condition="m_next != nullptr">{{ {m_entry}, next = {*m_next} }}</DisplayString>
+		<DisplayString Condition="m_next == nullptr">{{ {m_entry}, NULL }}</DisplayString>
+		<Expand>
+			<Item Name="[value]">m_entry</Item>
+			<Item Name="[next]" Condition="m_next != nullptr">*m_next</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::LinkedList&lt;*&gt;" Priority="Low">
+		<DisplayString>{{ {*m_head}, size = {m_size} }}</DisplayString>
+		<Expand>
+			<Item Name="[size]">m_size</Item>
+			<Item Name="[head]" Condition="m_head != nullptr">*m_head</Item>
+			<LinkedListItems>
+				<Size>m_size</Size>
+				<HeadPointer>m_head</HeadPointer>
+				<NextPointer>m_next</NextPointer>
+				<ValueNode>m_entry</ValueNode>
+			</LinkedListItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::detail::TreeNode&lt;*&gt;">
+		<DisplayString>{{ {m_value}, left = {m_left_child}, right = {m_right_child} }}</DisplayString>
+		<Expand>
+			<Item Name="[value]" ExcludeView="simple">m_value</Item>
+			<Item Name="[left]" ExcludeView="simple">m_left_child</Item>
+			<Item Name="[right]" ExcludeView="simple">m_right_child</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Tree&lt;*&gt;" Priority="Low">
+		<DisplayString Condition="m_head.m_storage != nullptr">{{ {m_head} }}</DisplayString>
+		<DisplayString Condition="m_head.m_storage == nullptr">{{ empty }}</DisplayString>
+		<Expand>
+			<Item Name="[head]" ExcludeView="simple">m_head</Item>
+			<TreeItems>
+				<HeadPointer>m_head.m_storage</HeadPointer>
+				<LeftPointer>m_left_child.m_storage</LeftPointer>
+				<RightPointer>m_right_child.m_storage</RightPointer>
+				<ValueNode>m_value</ValueNode>
+			</TreeItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::SourceLocation">
+		<DisplayString>{{ {file_,na}, {line_}, {column_}, {function_,na} }}</DisplayString>
+		<Expand>
+			<Item Name="[file]" ExcludeView="simple">file_</Item>
+			<Item Name="[line]" ExcludeView="simple">line_</Item>
+			<Item Name="[column]" ExcludeView="simple">column_</Item>
+			<Item Name="[function]" ExcludeView="simple">function_</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::BackTrace::BackTraceGlobalState">
+		<DisplayString>{{ handle = {process_handle}, loaded = {are_symbols_loaded} }}</DisplayString>
+		<Expand>
+			<Item Name="[handle]" ExcludeView="simple">process_handle</Item>
+			<Item Name="[loaded]" ExcludeView="simple">are_symbols_loaded</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::BackTrace">
+		<Intrinsic Name="data" Expression="(char**)m_backtrace_info"/>
+		<Intrinsic Name="size" Expression="(size_t)(m_size)" />
+		<SmartPointer Usage="Indexable" DefaultExpansion="false">data()</SmartPointer>
+		<DisplayString>size = {size()}</DisplayString>
+		<Expand>
+			<Item Name="[global state]" ExcludeView="simple">s_state</Item>
+			<ArrayItems>
+				<Size>size()</Size>
+				<ValuePointer>data()</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::FixedMatrix2D&lt;*,*&gt;">
+		<Intrinsic Name="data" Expression="(double*)m_matrix"/>
+		<Intrinsic Name="ptrdata" Expression="(double**)m_matrix"/>
+		<Intrinsic Name="rows" Expression="$T1"/>
+		<Intrinsic Name="cols" Expression="$T2"/>
+		<DisplayString>{{ rows = {rows()}, cols = {cols()} }}</DisplayString>
+		<Expand>
+			<Item Name="[rows]">rows()</Item>
+			<Item Name="[cols]">cols()</Item>
+			<ArrayItems Condition="ValidToInline">
+				<Direction>Forward</Direction>
+				<Rank>2</Rank>
+				<Size Condition="$i == 0">$T1</Size>
+				<Size Condition="$i == 1">$T2</Size>
+				<ValuePointer>data()</ValuePointer>
+			</ArrayItems>
+			<IndexListItems Condition="!ValidToInline">
+				<Size>$T1</Size>
+				<ValueNode>ptrdata()[$i]</ValueNode>
+			</IndexListItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Matrix2D">
+		<Intrinsic Name="data" Expression="m_matrix"/>
+		<Intrinsic Name="rows" Expression="m_rows"/>
+		<Intrinsic Name="cols" Expression="m_columns"/>
+		<DisplayString>{{ rows = {rows()}, cols = {cols()} }}</DisplayString>
+		<Expand>
+			<Item Name="[rows]">rows()</Item>
+			<Item Name="[cols]">cols()</Item>
+			<IndexListItems>
+				<Size>rows()</Size>
+				<ValueNode>data()[$i]</ValueNode>
+			</IndexListItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::HashTable&lt;*&gt;">
+		<Intrinsic Name="data" Expression="m_storage"/>
+		<DisplayString>{{ buckets = {m_bucket_count}, size = {m_size}, max_bkt_size = {m_max_bkt_size}, current_buckets = {(int)m_curr_bkts}, hash = {m_hasher}}}</DisplayString>
+		<Expand>
+			<Item Name="[buckets]" ExcludeView="simple">m_bucket_count</Item>
+			<Item Name="[size]" ExcludeView="simple">m_size</Item>
+			<Item Name="[max_bkt_size]" ExcludeView="simple">m_max_bkt_size</Item>
+			<Item Name="[current_buckets]" ExcludeView="simple">(int)m_curr_bkts</Item>
+			<Item Name="[hasher]" ExcludeView="simple">m_hasher</Item>
+			<Item Name="[storage]" ExcludeView="simple">m_storage</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::HashMapEntry&lt;*&gt;">
+		<DisplayString>{{ key = {m_key}, value = {m_value}, hash = {m_hashval} }}</DisplayString>
+		<Expand>
+			<Item Name="[key]" ExcludeView="simple">m_key</Item>
+			<Item Name="[value]" ExcludeView="simple">m_value</Item>
+			<Item Name="[hash]" ExcludeView="simple">m_hashval</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::HashMap&lt;*&gt;">
+		<DisplayString>{{ {m_table} }}</DisplayString>
+		<Expand>
+			<Item Name="[table]" ExcludeView="simple">m_table</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::MapEntry&lt;*&gt;">
+		<DisplayString>{{ key = {m_key}, value = {m_value} }}</DisplayString>
+		<Expand>
+			<Item Name="[key]" ExcludeView="simple">m_key</Item>
+			<Item Name="[value]" ExcludeView="simple">m_value</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Map&lt;*&gt;">
+		<DisplayString>{{ {m_storage} }}</DisplayString>
+		<Expand>
+			<Item Name="[storage]" ExcludeView="simple">m_storage</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::GenericView&lt;*&gt;">
+		<Intrinsic Name="size" Expression="m_end_view-m_begin_view"/>
+		<DisplayString>{{ begin = {m_begin_view}, end = {m_end_view}, size = {size()} }}</DisplayString>
+		<Expand>
+			<IndexListItems>
+				<Size>size()</Size>
+				<ValueNode>m_begin_view[$i]</ValueNode>
+			</IndexListItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::IteratorBase&lt;*&gt;">
+		<DisplayString Condition="m_current != nullptr">{{ current = {*m_current} }}</DisplayString>
+		<DisplayString Condition="m_current == nullptr">{{ empty }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Iterator&lt;*&gt;">
+		<DisplayString Condition="this->m_current != nullptr">{{ current = {*this->m_current} }}</DisplayString>
+		<DisplayString Condition="this->m_current == nullptr">{{ empty }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ConstIterator&lt;*&gt;">
+		<DisplayString Condition="this->m_current != nullptr">{{ current = {*this->m_current} }}</DisplayString>
+		<DisplayString Condition="this->m_current == nullptr">{{ empty }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ReverseIterator&lt;*&gt;">
+		<DisplayString Condition="this->m_current != nullptr">{{ current = {*this->m_current} }}</DisplayString>
+		<DisplayString Condition="this->m_current == nullptr">{{ empty }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ConstReverseIterator&lt;*&gt;">
+		<DisplayString Condition="this->m_current != nullptr">{{ current = {*this->m_current} }}</DisplayString>
+		<DisplayString Condition="this->m_current == nullptr">{{ empty }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Iterate&lt;*&gt;">
+		<DisplayString>{{ begin = {m_begin}, end = {m_end}, step = {m_step} }}</DisplayString>
+		<Expand>
+			<Item Name="[begin]" ExcludeView="simple">m_begin</Item>
+			<Item Name="[end]" ExcludeView="simple">m_end</Item>
+			<Item Name="[step]" ExcludeView="simple">m_step</Item>
+			<Item Name="[cmp]" ExcludeView="simple">$T2</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Enumerate&lt;*&gt;">
+		<DisplayString>{{ container = {m_container} }}</DisplayString>
+		<Expand>
+			<Item Name="[container]" ExcludeView="simple">m_container</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ConstEnumerate&lt;*&gt;">
+		<DisplayString>{{ container = {m_container} }}</DisplayString>
+		<Expand>
+			<Item Name="[container]" ExcludeView="simple">m_container</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::PairIterate&lt;*&gt;">
+		<DisplayString>{{ first = {m_first}, second = {m_second}, size = {m_size} }}</DisplayString>
+		<Expand>
+			<Item Name="[first]" ExcludeView="simple">m_first</Item>
+			<Item Name="[second]" ExcludeView="simple">m_second</Item>
+			<Item Name="[size]" ExcludeView="simple">m_size</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ZipIterate&lt;*&gt;">
+		<DisplayString>{{ tuple = {m_tuple}, size = {m_size} }}</DisplayString>
+		<Expand>
+			<Item Name="[tuple]" ExcludeView="simple">m_tuple</Item>
+			<Item Name="[size]" ExcludeView="simple">m_size</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::FilterIterate&lt;*&gt;">
+		<DisplayString>{{ begin = {m_start}, end = {m_end}, filter = {m_func} }}</DisplayString>
+		<Expand>
+			<Item Name="[begin]" ExcludeView="simple">m_start</Item>
+			<Item Name="[end]" ExcludeView="simple">m_end</Item>
+			<Item Name="[filter]" ExcludeView="simple">m_func</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::MapIterate&lt;*&gt;">
+		<DisplayString>{{ begin = {m_start}, end = {m_end}, map = {m_func} }}</DisplayString>
+		<Expand>
+			<Item Name="[begin]" ExcludeView="simple">m_start</Item>
+			<Item Name="[end]" ExcludeView="simple">m_end</Item>
+			<Item Name="[map]" ExcludeView="simple">m_func</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::LoopIterator&lt;*&gt;">
+		<DisplayString>{{ current = {m_current}, step = {m_step}, cmp = {m_cmp} }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current</Item>
+			<Item Name="[step]" ExcludeView="simple">m_step</Item>
+			<Item Name="[cmp]" ExcludeView="simple">m_cmp</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::IfIterator&lt;*&gt;">
+		<DisplayString>{{ current = {m_current_iter}, end = {m_end}, if = {m_func} }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current_iter</Item>
+			<Item Name="[end]" ExcludeView="simple">m_end</Item>
+			<Item Name="[if]" ExcludeView="simple">m_func</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::MapIterator&lt;*&gt;">
+		<DisplayString>{{ current = {m_current_iter}, end = {m_end}, map = {m_func} }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current_iter</Item>
+			<Item Name="[end]" ExcludeView="simple">m_end</Item>
+			<Item Name="[map]" ExcludeView="simple">m_func</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::PairIterator&lt;*&gt;">
+		<DisplayString>{{ current = {m_current_pair} }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current_pair</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ZipIterator&lt;*&gt;">
+		<DisplayString>{{ current = {m_current_tuple} }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_current_tuple</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Enumerator&lt;*&gt;">
+		<DisplayString>{{ current = {m_iter}, index = {m_index} }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_iter</Item>
+			<Item Name="[index]" ExcludeView="simple">m_index</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ConstEnumerator&lt;*&gt;">
+		<DisplayString>{{ current = {m_iter}, index = {m_index} }}</DisplayString>
+		<Expand>
+			<Item Name="[current]" ExcludeView="simple">m_iter</Item>
+			<Item Name="[index]" ExcludeView="simple">m_index</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::IteratorView&lt;*&gt;">
+		<DisplayString Condition="m_stolen_storage != nullptr">{{ begin = {m_begin}, end = {m_end}, stolen_storage = {m_stolen_storage} }}</DisplayString>
+		<DisplayString Condition="m_stolen_storage == nullptr">{{ begin = {m_begin}, end = {m_end} }}</DisplayString>
+		<Expand>
+			<Item Name="[begin]" ExcludeView="simple">m_begin</Item>
+			<Item Name="[end]" ExcludeView="simple">m_end</Item>
+			<Item Name="[stolen_storage]" ExcludeView="simple">m_stolen_storage</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Mutex">
+		<DisplayString>{{ {m_mutex} }}</DisplayString>
+		<Expand>
+			<Item Name="[mutex]" ExcludeView="simple">m_mutex</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::RecursiveMutex">
+		<DisplayString>{{ {m_mutex} }}</DisplayString>
+		<Expand>
+			<Item Name="[mutex]" ExcludeView="simple">m_mutex</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::LockGuard&lt;*&gt;">
+		<DisplayString>{{ {m_device} }}</DisplayString>
+		<Expand>
+			<Item Name="[device]" ExcludeView="simple">m_device</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::UniqueLock&lt;*&gt;">
+		<DisplayString>{{ {m_device}, owns = {m_owns} }}</DisplayString>
+		<Expand>
+			<Item Name="[device]" ExcludeView="simple">m_device</Item>
+			<Item Name="[owns]" ExcludeView="simple">m_owns</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ScopedLock&lt;&gt;" Priority="MediumHigh">
+		<DisplayString>{{ empty lock  }}</DisplayString>
+	</Type>
+	<Type Name="ARLib::ScopedLock&lt;ARLib::Mutex&gt;" Priority="High">
+		<DisplayString>{{ {m_device} }}</DisplayString>
+		<Expand>
+			<Item Name="[device]" ExcludeView="simple">m_device</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ScopedLock&lt;*&gt;" Priority="Low">
+		<DisplayString>{{ {m_devices} }}</DisplayString>
+		<Expand>
+			<Item Name="[devices]" ExcludeView="simple">m_devices</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::ThreadImplType">
+		<DisplayString>{{ handle = {_Hnd}, id = {_Id} }}</DisplayString>
+		<Expand>
+			<Item Name="[handle]" ExcludeView="simple">_Hnd</Item>
+			<Item Name="[id]" ExcludeView="simple">_Id</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Thread">
+		<DisplayString>{{ handle = {m_thread} }}</DisplayString>
+		<Expand>
+			<Item Name="[handle]" ExcludeView="simple">m_thread</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::MutexInternalImplType">
+		<Intrinsic Name="GetType" Expression="(ARLib::MutexType)type"/>
+		<Intrinsic Name="GetCriticalSection" Expression="(ARLib::CriticalSection*)(&amp;cs)"/>
+		<DisplayString>{{ type = {type}, cs = {GetCriticalSection()}, thread_id = {thread_id}, count = {count} }}</DisplayString>
+		<Expand>
+			<Item Name="[type]" ExcludeView="simple">GetType()</Item>
+			<Item Name="[cs]" ExcludeView="simple">GetCriticalSection()</Item>
+			<Item Name="[thread_id]" ExcludeView="simple">thread_id</Item>
+			<Item Name="[count]" ExcludeView="simple">count</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::internal::SRWLock">
+		<DisplayString>{{ ptr = {Ptr} }}</DisplayString>
+		<Expand>
+			<Item Name="[ptr]" ExcludeView="simple">Ptr</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::CriticalSection">
+		<DisplayString>{{ srw_lock = {m_srw_lock} }}</DisplayString>
+		<Expand>
+			<Item Name="[srw_lock]" ExcludeView="simple">m_srw_lock</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::AlignType&lt;*&gt;">
+		<Intrinsic Name="GetType" Expression="(ARLib::MutexType)type"/>
+		<DisplayString>{{ val = {Val}, pad = {sizeof(Pad)} }}</DisplayString>
+		<Expand>
+			<Item Name="[val]" ExcludeView="simple">(void*)(&amp;)Val</Item>
+			<Item Name="[pad]" ExcludeView="simple">sizeof(Pad)</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Tuple&lt;&gt;">
+		<DisplayString IncludeView="noparens;noparensasptr"></DisplayString>
+		<DisplayString>({*this,view(noparens)})</DisplayString>
+	</Type>
+	<Type Name="ARLib::Tuple&lt;*&gt;">
+		<DisplayString IncludeView="noparens" Optional="true" Condition="(void)((BaseTuple *)this)->m_member, true">
+			{m_member}, {*((BaseTuple *) this),view(noparens)}
+		</DisplayString>
+		<DisplayString IncludeView="noparens">{m_member}</DisplayString>
+		<DisplayString>({*this,view(noparens)})</DisplayString>
+		<Expand>
+			<Item Name="[0]">m_member</Item>
+			<Item Name="[1]" Optional="true">((BaseTuple *) this)->m_member</Item>
+			<Item Name="[2]" Optional="true">((BaseTuple::BaseTuple *) this)->m_member</Item>
+			<Item Name="[3]" Optional="true">((BaseTuple::BaseTuple::BaseTuple *) this)->m_member</Item>
+			<Item Name="[4]" Optional="true">((BaseTuple::BaseTuple::BaseTuple::BaseTuple *) this)->m_member</Item>
+			<Synthetic Name="[...]" Optional="true" Condition="(void)((BaseTuple::BaseTuple::BaseTuple::BaseTuple::BaseTuple *) this)->m_member, true">
+				<DisplayString>Next 5 elements:</DisplayString>
+			</Synthetic>
+			<ExpandedItem Optional="true">*((BaseTuple::BaseTuple::BaseTuple::BaseTuple::BaseTuple *) this)</ExpandedItem>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Tuple&lt;*&gt;" IncludeView="asptr;noparensasptr">
+		<DisplayString IncludeView="noparensasptr" Optional="true" Condition="(void)((BaseTuple *)this)->m_member, true">
+			{m_member}, {*((BaseTuple *) this),view(noparensasptr)}
+		</DisplayString>
+		<DisplayString IncludeView="noparensasptr">{&amp;m_member}</DisplayString>
+		<DisplayString>({*this,view(noparensasptr)})</DisplayString>
+		<Expand>
+			<Item Name="[0]">&amp;m_member</Item>
+			<Item Name="[1]">&amp;((BaseTuple *) this)->m_member</Item>
+			<Item Name="[2]" Optional="true">&amp;((BaseTuple::BaseTuple *) this)->m_member</Item>
+			<Item Name="[3]" Optional="true">&amp;((BaseTuple::BaseTuple::BaseTuple *) this)->m_member</Item>
+			<Item Name="[4]" Optional="true">&amp;((BaseTuple::BaseTuple::BaseTuple::BaseTuple *) this)->m_member</Item>
+			<Synthetic Name="[...]" Optional="true" Condition="(void)((BaseTuple::BaseTuple::BaseTuple::BaseTuple::BaseTuple *) this)->m_member, true">
+				<DisplayString>Next five elements:</DisplayString>
+			</Synthetic>
+			<ExpandedItem Optional="true">*((BaseTuple::BaseTuple::BaseTuple::BaseTuple::BaseTuple *) this),view(asptr)</ExpandedItem>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::DemangledInfo">
+		<DisplayString>{{ {m_demangled_name,na}, should_dealloc = {m_should_dealloc} }}</DisplayString>
+		<Expand>
+			<Item Name="[name]" ExcludeView="simple">m_demangled_name</Item>
+			<Item Name="[should_dealloc]" ExcludeView="simple">m_should_dealloc</Item>
 		</Expand>
 	</Type>
 </AutoVisualizer>

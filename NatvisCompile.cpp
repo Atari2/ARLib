@@ -18,27 +18,27 @@ namespace ARLib {
 	// - Monostate
 	// - Variant
 	// - RefBox
-	
-	// currently not supported but on TODO list:
+	// - List
+	// - SortedVector
+	// - Stack
+	// - SourceLocation
+	// - BackTrace
+	// - SSOVector
+	// - WeakPtr
+	// - Tree
+	// - Matrix	
 	// - HashMap
 	// - Map
-	// - List
-	// - Tuple
-	// - {Reverse}{Const}Iterator
 	// - GenericView
+	// - {Reverse}{Const}Iterator
 	// - IteratorView
-	// - Matrix
-	// - Stack
-	// - SortedVector
-	// - SSOVector
-	// - Tree
-	// - WeakPtr
-	// - SourceLocation
-	// - StackTrace
+	// - MapIterate/FilterIterate/ZipIterate/PairIterate/Enumerate
+	// - MapIterator/IfIterator/ZipIterator/PairIterator/LoopIterator
 	// - Mutex
 	// - UniqueLock
 	// - ScopedLock
 	// - LockGuard
 	// - Thread
+	// - Tuple
 }
 #endif
