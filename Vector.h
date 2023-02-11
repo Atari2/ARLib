@@ -84,6 +84,14 @@ class Vector {
         m_storage(storage_ptr), m_end_of_storage(storage_ptr + size), m_capacity(size), m_size(size) {
         storage_ptr = nullptr;
     }
+    template <IteratorConcept Iter>
+    requires Constructible<T, IteratorOutputType<Iter>>
+    Vector(Iter begin, Iter end) {
+        if constexpr (IterCanSubtractForSize<Iter>) {
+            reserve(end - begin);
+        }
+        for (; begin != end; ++begin) { append(T{ *begin }); }
+    }
     Vector(Vector&& other) noexcept {
         m_storage              = other.m_storage;
         m_end_of_storage       = other.m_end_of_storage;
@@ -251,6 +259,12 @@ class Vector {
             m_storage[index] = move(value);
         }
     }
+    template <IteratorConcept Iter>
+    requires Constructible<T, IteratorOutputType<Iter>>
+    void insert(Iter begin, Iter end) {
+        if constexpr (IterCanSubtractForSize<Iter>) { reserve(m_size + (end - begin)); }
+        for (; begin != end; ++begin) { append(T{ *begin }); }
+    }
     void push_back(const T& value)
     requires CopyAssignable<T>
     {
@@ -336,13 +350,19 @@ class Vector {
     }
     auto view() const& { return IteratorView{ *this }; }
     auto view() & { return IteratorView{ *this }; }
-    auto view() && { 
-        auto view = IteratorView<Vector<T>>{ m_storage, m_size };
+    auto view() && {
+        auto view  = IteratorView<Vector<T>>{ m_storage, m_size };
         m_capacity = 0;
         return view;
-    }    
-    constexpr auto enumerate() const { ConstEnumerate en{*this}; return IteratorView{ en }; }
-    constexpr auto enumerate() { Enumerate en{*this}; return IteratorView{ en }; }
+    }
+    constexpr auto enumerate() const {
+        ConstEnumerate en{ *this };
+        return IteratorView{ en };
+    }
+    constexpr auto enumerate() {
+        Enumerate en{ *this };
+        return IteratorView{ en };
+    }
     bool empty() const { return m_size == 0; }
     const T* data() { return m_storage; }
     Iter begin() { return Iter{ m_storage }; }
