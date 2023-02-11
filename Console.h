@@ -5,7 +5,6 @@
 #include "cstdio_compat.h"
 #include "cstring_compat.h"
 #include "CharConv.h"
-
 namespace ARLib {
 struct Console {
     static String getline(const char delim = '\n') {

@@ -6,7 +6,7 @@
 #endif
 namespace ARLib {
 typedef intptr_t word;
-constexpr auto wsize = sizeof(word);
+constexpr auto wsize                  = sizeof(word);
 [[maybe_unused]] constexpr auto wmask = (wsize - 1);
 
 #ifdef COMPILER_MSVC

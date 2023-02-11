@@ -1,5 +1,5 @@
 #ifndef INCLUDED_FROM_OWN_CPP___
-#define INCLUDED_FROM_OWN_CPP___
+    #define INCLUDED_FROM_OWN_CPP___
 #endif
 #include "xnative_chrono_merge.h"
 namespace ARLib {

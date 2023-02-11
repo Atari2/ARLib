@@ -7,8 +7,8 @@ namespace ARLib {
 // using the stdlib for now because this is too hard to get right
 // one day I'll actual write it properly
 double StrViewToDouble(const StringView str) {
-    double val = 0.0;
-    [[maybe_unused]] auto res   = std::from_chars(str.data(), str.data() + str.size(), val);
+    double val                = 0.0;
+    [[maybe_unused]] auto res = std::from_chars(str.data(), str.data() + str.size(), val);
     HARD_ASSERT(
     res.ec != std::errc::invalid_argument && res.ec != std::errc::result_out_of_range,
     "Failed to convert string to double"

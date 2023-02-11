@@ -19,7 +19,7 @@ class HashTableIterator {
     size_t m_bkt_size             = 0;
 
     public:
-    using ValueType = T;
+    using ValueType              = T;
     constexpr static size_t npos = static_cast<size_t>(-1);
     explicit HashTableIterator(HashTableStorage<T>& backing_store) :
         m_backing_store(backing_store), m_bkt_size(backing_store.size()) {
@@ -187,8 +187,8 @@ class ConstHashTableIterator {
 };
 template <typename T, typename HashCls = Hash<T>>
 requires Hashable<T, HashCls> && EqualityComparable<T> && requires(const HashCls& h, const T& t) {
-    { h(t) } -> ConvertibleTo<size_t>;
-}
+                                                              { h(t) } -> ConvertibleTo<size_t>;
+                                                          }
 class HashTable {
     constexpr static inline size_t s_primes_bkt_sizes[]       = { 61, 97, 149, 223, 257, 281, 317, 379, 433, 503 };
     constexpr static inline size_t max_bucket_acceptable_size = 10;
@@ -227,7 +227,8 @@ class HashTable {
     public:
     HashTable() { m_storage.resize(m_bucket_count); }
     HashTable(const HashTable& other) :
-        m_storage(other.m_storage), m_bucket_count(other.m_bucket_count), m_size(other.m_size), m_hasher(other.hasher) {}
+        m_storage(other.m_storage), m_bucket_count(other.m_bucket_count), m_size(other.m_size), m_hasher(other.hasher) {
+    }
     HashTable(HashTable&& other) noexcept :
         m_storage(move(other.m_storage)), m_bucket_count(other.m_bucket_count), m_size(other.m_size),
         m_hasher(move(other.m_hasher)) {}
@@ -238,14 +239,14 @@ class HashTable {
         m_storage      = other.m_storage;
         m_bucket_count = other.m_bucket_count;
         m_size         = other.m_size;
-        m_hasher         = other.m_hasher;
+        m_hasher       = other.m_hasher;
         return *this;
     }
     HashTable& operator=(HashTable&& other) noexcept {
         m_storage      = move(other.m_storage);
         m_bucket_count = other.m_bucket_count;
         m_size         = other.m_size;
-        m_hasher         = other.m_hasher;
+        m_hasher       = other.m_hasher;
         return *this;
     }
     template <typename... Args>

@@ -12,7 +12,6 @@
 #include "arlib_osapi.h"
 #include "cstdio_compat.h"
 #include "FileSystem.h"
-
 namespace ARLib {
 class OpenFileError {
     Path m_filename{};
@@ -58,7 +57,7 @@ class File {
 
     using WriteResult = Result<size_t, WriteFileError>;
     using ReadResult  = Result<String, ReadFileError>;
-    using MixResult = Result<String, Variant<OpenFileError, ReadFileError>>;
+    using MixResult   = Result<String, Variant<OpenFileError, ReadFileError>>;
     friend Hash<File>;
 
     public:
@@ -146,7 +145,7 @@ class File {
     template <typename T>
     requires IsAnyOfV<T, FsString, NonFsString, Path>
     static MixResult read_all(const T& filename) {
-        File f{filename};
+        File f{ filename };
         TRY(f.open(OpenFileMode::Read));
         TRY_RET(f.read_all());
     }

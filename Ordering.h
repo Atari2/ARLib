@@ -47,10 +47,10 @@ class Ordering {
         else
             return Ordering{ OrderingType::Greater };
     }
-    friend forceinline Ordering operator<=>(const Ordering v, ZeroValue) noexcept { 
-        return v;
+    friend forceinline Ordering operator<=>(const Ordering v, ZeroValue) noexcept { return v; }
+    friend forceinline Ordering operator<=>(ZeroValue, const Ordering v) noexcept {
+        return Ordering{ to_enum<OrderingType>(0 - from_enum(v.type())) };
     }
-    friend forceinline Ordering operator<=>(ZeroValue, const Ordering v) noexcept { return Ordering{to_enum<OrderingType>(0 - from_enum(v.type()))}; }
     Ordering(const std::strong_ordering&);
     Ordering(const std::partial_ordering&);
 };

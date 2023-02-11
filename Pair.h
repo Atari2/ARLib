@@ -54,7 +54,6 @@ struct Pair {
     }
     ~Pair() = default;
 };
-
 template <typename T, typename U>
 struct Pair<T&, U&> {
     T& _m_first;
@@ -92,7 +91,6 @@ struct Pair<T&, U&> {
     }
     ~Pair() = default;
 };
-
 template <Printable A, Printable B>
 struct PrintInfo<Pair<A, B>> {
     const Pair<A, B>& m_pair;

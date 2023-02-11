@@ -12,11 +12,11 @@ class Vector;
 class WStringView {
     wchar_t* m_start_mut   = nullptr;
     const wchar_t* m_start = nullptr;
-    size_t m_size       = 0;
+    size_t m_size          = 0;
 
     public:
     constexpr static auto npos = String::npos;
-    constexpr WStringView()     = default;
+    constexpr WStringView()    = default;
     constexpr WStringView(const wchar_t* begin, const wchar_t* end) :
         m_start(begin), m_size(static_cast<size_t>(end - begin)) {}
     constexpr WStringView(wchar_t* begin, const wchar_t* end) :
@@ -114,7 +114,7 @@ class WStringView {
     [[nodiscard]] constexpr size_t index_of(const wchar_t* c, size_t start = 0) const {
         if (m_size == 0 || start >= m_size) return npos;
         const wchar_t* buf = m_start;
-        auto o_len      = wstrlen(c);
+        auto o_len         = wstrlen(c);
         if (o_len > m_size) return npos;
         if (start + o_len > m_size) return npos;
         if (o_len == m_size && start == 0 && wstrcmp(buf, c) == 0) return 0;

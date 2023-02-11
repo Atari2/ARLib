@@ -5,7 +5,7 @@ namespace ARLib {
 // simple box for a reference type, should not be used
 template <typename T>
 class RefBox {
-    using TPtr  = AddPointerT<RemoveReferenceT<T>>;
+    using TPtr = AddPointerT<RemoveReferenceT<T>>;
     TPtr m_boxed{};
 
     public:
@@ -19,10 +19,15 @@ class RefBox {
     constexpr auto operator->() const { return m_boxed; }
     constexpr const auto& get() const { return *m_boxed; }
     constexpr auto& get() { return *m_boxed; }
-    constexpr bool operator==(const RefBox& other) const { if (m_boxed && other.m_boxed) { return *m_boxed == *other.m_boxed; } return m_boxed == other.m_boxed; }
-    constexpr bool operator!=(const RefBox& other) const { if (m_boxed && other.m_boxed) { return *m_boxed != *other.m_boxed; } return m_boxed != other.m_boxed; }
+    constexpr bool operator==(const RefBox& other) const {
+        if (m_boxed && other.m_boxed) { return *m_boxed == *other.m_boxed; }
+        return m_boxed == other.m_boxed;
+    }
+    constexpr bool operator!=(const RefBox& other) const {
+        if (m_boxed && other.m_boxed) { return *m_boxed != *other.m_boxed; }
+        return m_boxed != other.m_boxed;
+    }
 };
-
 template <typename T>
 struct PrintInfo<RefBox<T>> {
     const RefBox<T>& m_loc;
@@ -32,5 +37,4 @@ struct PrintInfo<RefBox<T>> {
         return "RefBox { "_s + print_conditional(m_loc.get()) + " }"_s;
     }
 };
-
 }    // namespace ARLib

@@ -29,8 +29,8 @@ T* allocate(size_t count, SourceLocation LOC = SourceLocation::current()) {
     T* ptr = new T[count];
 #ifdef DEBUG_NEW_DELETE
     ::printf(
-    "Allocated %p with size %zu from `%s` in %s [%u:%u]\n", static_cast<void*>(ptr), count, loc.function_name(), loc.file_name(),
-    loc.line(), loc.column()
+    "Allocated %p with size %zu from `%s` in %s [%u:%u]\n", static_cast<void*>(ptr), count, loc.function_name(),
+    loc.file_name(), loc.line(), loc.column()
     );
 #endif
     return ptr;
@@ -76,13 +76,13 @@ void deallocate(T* allocated_ptr, SourceLocation LOC = SourceLocation::current()
 #ifdef DEBUG_NEW_DELETE
     if constexpr (D == DeallocType::Single)
         ::printf(
-        "Deallocated %p from `%s` in %s [%u:%u]\n", static_cast<void*>(allocated_ptr), loc.function_name(), loc.file_name(), loc.line(),
-        loc.column()
+        "Deallocated %p from `%s` in %s [%u:%u]\n", static_cast<void*>(allocated_ptr), loc.function_name(),
+        loc.file_name(), loc.line(), loc.column()
         );
     else
         ::printf(
-        "Deallocated %p (array) from `%s` in %s [%u:%u]\n", static_cast<void*>(allocated_ptr), loc.function_name(), loc.file_name(),
-        loc.line(), loc.column()
+        "Deallocated %p (array) from `%s` in %s [%u:%u]\n", static_cast<void*>(allocated_ptr), loc.function_name(),
+        loc.file_name(), loc.line(), loc.column()
         );
 #endif
     if constexpr (D == DeallocType::Single)

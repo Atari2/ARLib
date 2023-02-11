@@ -11,7 +11,7 @@
 namespace ARLib {
 constexpr static DWORD todw(Integral auto v) {
     return static_cast<DWORD>(v);
-} 
+}
 struct SetupUTF8Output {
     SetupUTF8Output() {
         UINT cp = GetConsoleCP();

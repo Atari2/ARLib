@@ -28,10 +28,7 @@ struct PrintfBuffer {
     size_t buffer_size;
     size_t written_size;
 };
-enum class PrintfResultType {
-    FromBuffer,
-    FromString
-};
+enum class PrintfResultType { FromBuffer, FromString };
 struct PrintfResult {
     PrintfResultType type;
     Variant<String, PrintfBuffer> result;

@@ -152,7 +152,7 @@ struct std::tuple_size<ARLib::HashMapEntry<K, V, HashCls>> : ARLib::IntegralCons
 template <typename K, typename V, typename HashCls>
 struct std::tuple_size<const ARLib::HashMapEntry<K, V, HashCls>> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
 template <typename K, typename V, typename HashCls>
-struct std::tuple_element<0, ARLib::HashMapEntry<K, V, HashCls>>  {
+struct std::tuple_element<0, ARLib::HashMapEntry<K, V, HashCls>> {
     using type = K;
 };
 template <typename K, typename V, typename HashCls>

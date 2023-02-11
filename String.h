@@ -87,7 +87,7 @@ class String {
         m_data_buf[m_size] = '\0';
     }
     template <typename T>
-    requires (SameAs<const char*, T> || SameAs<char*, T>)
+    requires(SameAs<const char*, T> || SameAs<char*, T>)
     explicit constexpr String(T other) : m_size(strlen(other)) {
         grow_if_needed(m_size);
         strncpy(m_data_buf, other, m_size);

@@ -44,8 +44,14 @@ class Array {
     }
     constexpr auto view() const { return IteratorView{ *this }; }
     constexpr auto view() { return IteratorView{ *this }; }
-    constexpr auto enumerate() const { ConstEnumerate en{*this}; return IteratorView{ en }; }
-    constexpr auto enumerate() { Enumerate en{*this}; return IteratorView{ en }; }
+    constexpr auto enumerate() const {
+        ConstEnumerate en{ *this };
+        return IteratorView{ en };
+    }
+    constexpr auto enumerate() {
+        Enumerate en{ *this };
+        return IteratorView{ en };
+    }
 };
 template <typename First, typename... Rest>
 Array(First, Rest...) -> Array<First, 1 + sizeof...(Rest)>;

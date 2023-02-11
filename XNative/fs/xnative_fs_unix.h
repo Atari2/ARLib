@@ -11,13 +11,12 @@
     #include <dirent.h>
     #include <glob.h>
 namespace ARLib {
-enum class UnixFileAttribute {
-};
+enum class UnixFileAttribute {};
 class UnixFileInfo {
     friend class UnixDirectoryIterator;
     StringView fileName{};
     Path fullPath{};
-    public:    
+    public:
     UnixFileInfo(UnixFileInfo&& other) noexcept : fileName(), fullPath(move(other.fullPath)) {
         auto idx_last_slash = fullPath.string().last_index_of('/');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
@@ -36,7 +35,7 @@ class UnixFileInfo {
     const auto& path() const { return fullPath; }
     const auto& filename() const { return fileName; }
 };
-using GlobResult = glob_t;
+using GlobResult        = glob_t;
 using UnixDirIterHandle = GlobResult*;
 bool remove_filespec(String& p);
 bool is_directory(const String& p);
@@ -50,14 +49,15 @@ class UnixDirectoryIterate {
     UnixDirIterHandle m_glob_result;
     bool m_recurse;
     UnixDirectoryIterate() = default;
-    UnixDirectoryIterate(UnixDirectoryIterate&& other) noexcept : m_path(move(other.m_path)), m_glob_result(other.m_glob_result), m_recurse(other.m_recurse) {
+    UnixDirectoryIterate(UnixDirectoryIterate&& other) noexcept :
+        m_path(move(other.m_path)), m_glob_result(other.m_glob_result), m_recurse(other.m_recurse) {
         other.m_glob_result = nullptr;
     }
     UnixDirectoryIterate& operator=(UnixDirectoryIterate&& other) noexcept {
         if (m_glob_result) delete m_glob_result;
-        m_path = move(other.m_path);
-        m_recurse = other.m_recurse;
-        m_glob_result = other.m_glob_result;
+        m_path              = move(other.m_path);
+        m_recurse           = other.m_recurse;
+        m_glob_result       = other.m_glob_result;
         other.m_glob_result = nullptr;
         return *this;
     }
@@ -83,7 +83,7 @@ class UnixDirectoryIterator {
     UnixDirectoryIterator(const Path& path, bool recurse);
     UnixDirectoryIterator(const Path& path, UnixDirIterHandle hdl, bool recurse);
     public:
-    UnixDirectoryIterator(const UnixDirectoryIterator&)             = delete;
+    UnixDirectoryIterator(const UnixDirectoryIterator&)            = delete;
     UnixDirectoryIterator& operator=(const UnixDirectoryIterator&) = delete;
     UnixDirectoryIterator(UnixDirectoryIterator&&) noexcept;
     UnixDirectoryIterator& operator=(UnixDirectoryIterator&&) noexcept = delete;

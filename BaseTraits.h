@@ -131,7 +131,7 @@ template <class T, size_t N>
 struct IsArray<T[N]> : TrueType {};
 #ifdef COMPILER_MSVC
     #pragma warning(push)
-    #pragma warning(disable: 4180)
+    #pragma warning(disable : 4180)
 #endif
 template <class T>
 constexpr inline bool IsArrayV = IsArray<T>::value;

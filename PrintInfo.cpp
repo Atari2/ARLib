@@ -1,5 +1,4 @@
 #include "PrintInfo.h"
-
 namespace ARLib {
 String PrintInfo<SourceLocation>::repr() const {
     return String::formatted(

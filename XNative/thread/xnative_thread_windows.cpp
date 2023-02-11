@@ -3,13 +3,13 @@
 #endif
 #include "xnative_thread_windows.h"
 #ifdef WINDOWS
-    #include "../../EnumHelpers.h"
-    #include "../../Conversion.h"
-    #include "../../TypeTraits.h"
-    #include "../../cstring_compat.h"
-    #include <process.h>
-    #include <windows.h>
-    #include <xthreads.h>
+#include "../../EnumHelpers.h"
+#include "../../Conversion.h"
+#include "../../TypeTraits.h"
+#include "../../cstring_compat.h"
+#include <process.h>
+#include <windows.h>
+#include <xthreads.h>
 namespace ARLib {
 
 MAKE_BITFIELD_ENUM(MutexType);

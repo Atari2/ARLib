@@ -169,12 +169,8 @@ String ArgParser::construct_help_string() const {
             name_value_list.push_back(String{ name });
         }
     }
-    size_t needed_width =
-    *max(IteratorView{ name_value_list }.map([](const String& s) {
-        return s.size();
-    })) +
-    2;
-    size_t idx = 0;
+    size_t needed_width = *max(IteratorView{ name_value_list }.map([](const String& s) { return s.size(); })) + 2;
+    size_t idx          = 0;
     for (const auto& [name, opt] : m_options) {
         builder += '\t';
         const auto& name_value = name_value_list[idx++];

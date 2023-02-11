@@ -13,18 +13,16 @@ static forceinline size_t xorshift(size_t val) {
 }
 static size_t copy_remainder(const char* p, int n) {
     size_t result = 0;
-    while (n > 0) {
-        result = (result << BITS_PER_BYTE) + static_cast<uint8_t>(p[--n]);
-    }
+    while (n > 0) { result = (result << BITS_PER_BYTE) + static_cast<uint8_t>(p[--n]); }
     return result;
 }
 [[nodiscard]] size_t murmur_hash_bytes(const char* const ptr, size_t count, size_t seed) {
-    constexpr size_t align = alignof(size_t) - 1;
-    constexpr size_t step = sizeof(size_t);
+    constexpr size_t align         = alignof(size_t) - 1;
+    constexpr size_t step          = sizeof(size_t);
     static const size_t mult_magic = (0xC6A4A793_sz << 32_sz) + 0x5BD1E995_sz;
-    const size_t len_aligned = count & ~align;
-    const char* const end    = ptr + len_aligned;
-    size_t hash              = seed ^ (count * mult_magic);
+    const size_t len_aligned       = count & ~align;
+    const char* const end          = ptr + len_aligned;
+    size_t hash                    = seed ^ (count * mult_magic);
     for (const char* p = ptr; p != end; p += step) {
         const size_t data = xorshift(bitcast_copy(p) * mult_magic) * mult_magic;
         hash ^= data;

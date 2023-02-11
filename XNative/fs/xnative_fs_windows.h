@@ -122,7 +122,7 @@ template <>
 struct PrintInfo<Win32DirectoryIterator> {
     const Win32DirectoryIterator& m_iter;
     String repr() const {
-        auto end = Win32DirectoryIterator {m_iter.m_path, m_iter.m_recurse};
+        auto end = Win32DirectoryIterator{ m_iter.m_path, m_iter.m_recurse };
         if (m_iter == end) { return "Win32DirectoryIterator { end }"_s; }
         return (*m_iter).path().narrow();
     }

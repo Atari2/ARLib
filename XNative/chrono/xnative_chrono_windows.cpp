@@ -4,8 +4,8 @@
 #include "xnative_chrono_windows.h"
 #include "../../Conversion.h"
 #ifdef WINDOWS
-    #include <windows.h>
-    #include <intrin.h>
+#include <windows.h>
+#include <intrin.h>
 namespace ARLib {
 
 constexpr long long Epoch      = 0x19DB1DED53E8000LL;

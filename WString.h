@@ -8,7 +8,6 @@
 #include "cstring_compat.h"
 #include "Memory.h"
 #include "PrintInfo.h"
-
 namespace ARLib {
 class WStringView;
 class Ordering;
@@ -16,7 +15,6 @@ template <typename T>
 class Vector;
 class String;
 class StringView;
-
 class WString {
     constexpr static size_t SMALL_STRING_CAP = 15;
     union {
@@ -80,7 +78,7 @@ class WString {
         if (size > SMALL_STRING_CAP) grow_if_needed(size);
         wchar_t* buf = get_buf_internal();
         for (size_t i = 0; i < size; ++i) { buf[i] = c; }
-        m_size                     = size;
+        m_size      = size;
         buf[m_size] = L'\0';
     }
     explicit constexpr WString(const wchar_t* begin, const wchar_t* end) {

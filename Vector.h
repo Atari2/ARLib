@@ -87,9 +87,7 @@ class Vector {
     template <IteratorConcept Iter>
     requires Constructible<T, IteratorOutputType<Iter>>
     Vector(Iter begin, Iter end) {
-        if constexpr (IterCanSubtractForSize<Iter>) {
-            reserve(end - begin);
-        }
+        if constexpr (IterCanSubtractForSize<Iter>) { reserve(end - begin); }
         for (; begin != end; ++begin) { append(T{ *begin }); }
     }
     Vector(Vector&& other) noexcept {

@@ -96,7 +96,6 @@ class IteratorView {
         collector.append(*m_end);
         ++m_end;
         return collector;
-
     }
     template <typename NewCont = Cont>
     NewCont collect()

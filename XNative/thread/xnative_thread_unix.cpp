@@ -5,7 +5,7 @@
 #include "../../Conversion.h"
 
 #ifdef UNIX_OR_MINGW
-    #include <pthread.h>
+#include <pthread.h>
 namespace ARLib {
 int pthread_attr_destroy(PthreadAttr* attr) {
     return ::pthread_attr_destroy(cast<pthread_attr_t*>(attr));
@@ -13,11 +13,11 @@ int pthread_attr_destroy(PthreadAttr* attr) {
 int pthread_attr_getdetachstate(const PthreadAttr* attr, int* state) {
     return ::pthread_attr_getdetachstate(cast<const pthread_attr_t*>(attr), state);
 }
-    #ifndef ON_MINGW
+#ifndef ON_MINGW
 int pthread_attr_getguardsize(const PthreadAttr* attr, size_t* gsize) {
     return ::pthread_attr_getguardsize(cast<const pthread_attr_t*>(attr), gsize);
 }
-    #endif
+#endif
 int pthread_attr_getinheritsched(const PthreadAttr* attr, int* sched) {
     return ::pthread_attr_getinheritsched(cast<const pthread_attr_t*>(attr), sched);
 }
@@ -36,11 +36,11 @@ int pthread_attr_init(PthreadAttr* attr) {
 int pthread_attr_setdetachstate(PthreadAttr* attr, int state) {
     return ::pthread_attr_setdetachstate(cast<pthread_attr_t*>(attr), state);
 }
-    #ifndef ON_MINGW
+#ifndef ON_MINGW
 int pthread_attr_setguardsize(PthreadAttr* attr, size_t size) {
     return ::pthread_attr_setguardsize(cast<pthread_attr_t*>(attr), size);
 }
-    #endif
+#endif
 int pthread_attr_setinheritsched(PthreadAttr* attr, int sched) {
     return ::pthread_attr_setinheritsched(cast<pthread_attr_t*>(attr), sched);
 }
@@ -121,22 +121,22 @@ int pthread_key_delete(PthreadKey key) {
 int pthread_mutex_destroy(PthreadMutex* mutex) {
     return ::pthread_mutex_destroy(cast<pthread_mutex_t*>(mutex));
 }
-    #ifndef ON_MINGW
+#ifndef ON_MINGW
 int pthread_mutex_getprioceiling(const PthreadMutex* mutex, int* prio) {
     return ::pthread_mutex_getprioceiling(cast<const pthread_mutex_t*>(mutex), prio);
 }
-    #endif
+#endif
 int pthread_mutex_init(PthreadMutex* mutex, const PthreadMutexAttr* attr) {
     return ::pthread_mutex_init(cast<pthread_mutex_t*>(mutex), cast<const pthread_mutexattr_t*>(attr));
 }
 int pthread_mutex_lock(PthreadMutex* mutex) {
     return ::pthread_mutex_lock(cast<pthread_mutex_t*>(mutex));
 }
-    #ifndef ON_MINGW
+#ifndef ON_MINGW
 int pthread_mutex_setprioceiling(PthreadMutex* mutex, int prio, int* prop_ptr) {
     return ::pthread_mutex_setprioceiling(cast<pthread_mutex_t*>(mutex), prio, prop_ptr);
 }
-    #endif
+#endif
 int pthread_mutex_trylock(PthreadMutex* mutex) {
     return ::pthread_mutex_trylock(cast<pthread_mutex_t*>(mutex));
 }

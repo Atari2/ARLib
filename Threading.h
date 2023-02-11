@@ -298,7 +298,7 @@ class Thread {
     ThreadT native_handle() const { return m_thread; }
     void join() {
         if (!joinable()) { arlib_terminate(); }
-        RetVal val = ThreadNative::retval_none();
+        RetVal val                  = ThreadNative::retval_none();
         [[maybe_unused]] auto state = ThreadNative::join(m_thread, &val);
         HARD_ASSERT_FMT(
         static_cast<int>(state) == 0, "Thread %lu didn't join successfully, error number was %d\n",

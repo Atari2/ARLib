@@ -4,7 +4,6 @@
 #include "TypeTraits.h"
 #include "Pair.h"
 #include "Concepts.h"
-
 namespace ARLib {
 template <typename F, typename S>
 class PairIterator {
@@ -12,7 +11,7 @@ class PairIterator {
     IterUnit m_current_pair;
     using FT = decltype(*m_current_pair.template get<0>());
     using ST = decltype(*m_current_pair.template get<1>());
-    
+
     public:
     PairIterator(F first, S second) : m_current_pair(first, second) {}
     explicit PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
@@ -78,14 +77,14 @@ template <typename... Tps>
 requires(sizeof...(Tps) > 0)
 auto types_into_iter_tuple() {
     if constexpr (sizeof...(Tps) == 1) {
-        using VT = AddLvalueReferenceT<decltype(*declval<Tps...>())>;
+        using VT     = AddLvalueReferenceT<decltype(*declval<Tps...>())>;
         using TupleT = Tuple<VT>;
         TupleT* ptr{};
         return *ptr;
     } else {
         using A1  = TypeArray<Tps...>;
         using Cur = typename A1::template At<0>;
-        using VT = AddLvalueReferenceT<decltype(*declval<Cur>())>;
+        using VT  = AddLvalueReferenceT<decltype(*declval<Cur>())>;
         using A2  = TypeArray<VT>;
         return types_into_iter_tuple<1>(A1{}, A2{});
     }
@@ -95,7 +94,7 @@ requires(Idx < sizeof...(P1))
 auto types_into_iter_tuple(TypeArray<P1...>, TypeArray<P2...>) {
     using A1  = TypeArray<P1...>;
     using Cur = typename A1::template At<Idx>;
-    using VT = AddLvalueReferenceT<decltype(*declval<Cur>())>;
+    using VT  = AddLvalueReferenceT<decltype(*declval<Cur>())>;
     using A2  = TypeArray<P2..., VT>;
     if constexpr ((Idx + 1) == sizeof...(P1)) {
         using TupleT = Tuple<P2..., VT>;
@@ -107,7 +106,7 @@ auto types_into_iter_tuple(TypeArray<P1...>, TypeArray<P2...>) {
 }
 template <typename... Tps>
 class ZipIterator {
-    using RetVal = decltype(types_into_iter_tuple<Tps...>());
+    using RetVal   = decltype(types_into_iter_tuple<Tps...>());
     using IterUnit = Tuple<Tps...>;
     IterUnit m_current_tuple;
     template <size_t... Vals>
@@ -125,7 +124,7 @@ class ZipIterator {
 
     public:
     ZipIterator(Tps... iterators) : m_current_tuple(iterators...) {}
-    explicit ZipIterator(IterUnit curr_pair) : m_current_tuple(curr_pair) {};
+    explicit ZipIterator(IterUnit curr_pair) : m_current_tuple(curr_pair){};
     RetVal operator*() { return iget(IndexSequenceFor<Tps...>{}); }
     ZipIterator& operator++() {
         iincrement(IndexSequenceFor<Tps...>{});
@@ -212,4 +211,4 @@ class ConstEnumerator {
     bool operator>(const ConstEnumerator& other) const { return m_index > other.m_index; }
     size_t operator-(const ConstEnumerator& other) const { return m_iter - other.m_iter; }
 };
-}
+}    // namespace ARLib

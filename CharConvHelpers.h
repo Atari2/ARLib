@@ -280,7 +280,7 @@ forceinline constexpr auto StrViewToU64Hexadecimal(const StringView str) {
 template <size_t Base>
 constexpr size_t StrLenFromIntegral(Integral auto v) noexcept {
     static_assert(!IsSigned<decltype(v)>, "Value must be unsigned");
-    size_t value = static_cast<size_t>(v);
+    size_t value          = static_cast<size_t>(v);
     size_t n              = 1;
     constexpr size_t base = Base;
     constexpr size_t b2   = base * base;
