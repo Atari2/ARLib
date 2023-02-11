@@ -11,6 +11,8 @@
 #include "Utility.h"
 #include "cmath_compat.h"
 #include "cstdio_compat.h"
+#include "arlib_osapi.h"
+#include "WStringView.h"
 #include <stdarg.h>
 namespace ARLib {
 /*
@@ -125,27 +127,10 @@ String RealToStr(FloatingPoint auto val, int precision) {
     }
 }
 String wchar_to_char(const wchar_t* wstr) {
-    size_t i = 0;
-    String output{};
-    while (wstr[i] != L'\0') {
-        wchar_t v = wstr[i];
-        if (v >= 0x00 && v <= 0x7F) {
-            output.append(static_cast<char>(v));
-        } else {
-            output.append('?');
-        }
-        ++i;
-    }
-    return output;
+    return wstring_to_string(WStringView{ wstr });
 }
 String wchar_to_char(const wchar_t wc) {
-    String output{};
-    if (wc >= 0x00 && wc <= 0x7F) {
-        output.append(static_cast<char>(wc));
-    } else {
-        output.append('?');
-    }
-    return output;
+    return wstring_to_string(WStringView{ &wc, 1 });
 }
 template <AllowedFormatArgs T>
 Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo& info, T val) {
