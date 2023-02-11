@@ -2,6 +2,7 @@
 #include "BaseTraits.h"
 #include "Concepts.h"
 #include "SourceLocation.h"
+#include "TypeInfo.h"
 #include "String.h"
 namespace ARLib {
 template <typename T>
@@ -113,7 +114,13 @@ template <>
 struct PrintInfo<SourceLocation> {
     const SourceLocation& m_loc;
     explicit PrintInfo(const SourceLocation& loc) : m_loc(loc) {}
-    String repr();
+    String repr() const;
+};
+template <>
+struct PrintInfo<DemangledInfo> {
+    const DemangledInfo& m_info;
+    explicit PrintInfo(const DemangledInfo& info) : m_info(info) {}
+    String repr() const;
 };
 template <>
 struct PrintInfo<nullptr_t> {

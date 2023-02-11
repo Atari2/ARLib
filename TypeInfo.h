@@ -7,6 +7,7 @@ class DemangledInfo {
     mutable bool m_should_dealloc = true;
 
     public:
+    DemangledInfo(const TypeInfo& info, bool critical = false);
     DemangledInfo(const char* mangled_name, bool critical = true);
     // leaks the memory associated with the buffer
     // you'll have to manual free this one if used.
@@ -17,6 +18,10 @@ class DemangledInfo {
     const char* name() const { return m_demangled_name; }
     ~DemangledInfo();
 };
+template <typename T>
+auto demangled_info_for() {
+    return DemangledInfo{ typeid(T) };
+}
 }    // namespace ARLib
 #define MANGLED_TYPENAME_TO_STRING(type) typeid(type).name()
 
