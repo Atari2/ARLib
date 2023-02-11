@@ -262,6 +262,7 @@ class ScopedLock<Mutex> {
     ~ScopedLock() { m_device.unlock(); }
     ScopedLock(const ScopedLock&)            = delete;
     ScopedLock& operator=(const ScopedLock&) = delete;
+    const auto& device() const { return m_device; }
 
     private:
     MutexType& m_device;
@@ -372,6 +373,18 @@ struct PrintInfo<ScopedLock<Args...>> {
     const ScopedLock<Args...>& m_lock;
     explicit PrintInfo(const ScopedLock<Args...>& lock) : m_lock(lock) {}
     String repr() const { return "ScopedLock { "_s + PrintInfo<Tuple<Args&...>>{ m_lock.devices() }.repr() + " }"_s; }
+};
+template <>
+struct PrintInfo<ScopedLock<Mutex>> {
+    const ScopedLock<Mutex>& m_lock;
+    explicit PrintInfo(const ScopedLock<Mutex>& lock) : m_lock(lock) {}
+    String repr() const { return "ScopedLock { "_s + PrintInfo<Mutex>{ m_lock.device() }.repr() + " }"_s; }
+};
+template <>
+struct PrintInfo<ScopedLock<>> {
+    const ScopedLock<>& m_lock;
+    explicit PrintInfo(const ScopedLock<>& lock) : m_lock(lock) {}
+    String repr() const { return "ScopedLock { empty scoped lock }"_s; }
 };
 template <>
 struct PrintInfo<Thread> {
