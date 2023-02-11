@@ -3,7 +3,6 @@
 #include "Invoke.h"
 #include "PrintInfo.h"
 #include "Utility.h"
-
 // we love UB
 // forward declaring things in std:: is UB
 // but this avoids having to #include <utility>
@@ -13,11 +12,36 @@ template <class T>
 struct tuple_size;
 template <size_t I, class T>
 struct tuple_element;
-}
-
+}    // namespace std
 namespace ARLib {
 template <typename T, typename... Args>
+class Tuple;
+template <typename Tp, typename... P1, typename... P2>
+auto get_tuple_base_array(TypeArray<Tp, P1...>, TypeArray<P2...>) {
+    if constexpr (sizeof...(P1) == 0) {
+        using A2 = TypeArray<P2..., Tuple<Tp>>;
+        return A2{};
+    } else {
+        using A2 = TypeArray<P2..., Tuple<Tp, P1...>>;
+        using A1 = TypeArray<P1...>;
+        return get_tuple_base_array(A1{}, A2{});
+    }
+}
+template <typename Tp, typename... Tps>
+auto get_tuple_base_array_start() {
+    if constexpr (sizeof...(Tps) == 0) {
+        using A2 = TypeArray<Tuple<Tp>>;
+        return A2{};
+    } else {
+        using A1 = TypeArray<Tps...>;
+        using A2 = TypeArray<Tuple<Tp, Tps...>>;
+        return get_tuple_base_array(A1{}, A2{});
+    }
+}
+template <typename T, typename... Args>
 class Tuple : Tuple<Args...> {
+    using BaseTuple      = Tuple<Args...>;
+    using TupleBaseArray = decltype(get_tuple_base_array_start<T, Args...>());
     T m_member;
     template <size_t N>
     bool equality_impl(const Tuple& other) const {
@@ -134,7 +158,7 @@ class Tuple : Tuple<Args...> {
 template <typename T>
 class Tuple<T> {
     T m_member;
-
+    using TupleBaseArray = decltype(get_tuple_base_array_start<T>());
     public:
     constexpr static inline size_t size = 1;
     Tuple()                             = default;
@@ -243,13 +267,11 @@ struct PrintInfo<Tuple<Args...>> {
     }
 };
 }    // namespace ARLib
-
 // tuple_size and tuple_element specializations for ARLib::Tuple
 template <typename... Types>
 struct std::tuple_size<ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
 template <typename... Types>
 struct std::tuple_size<const ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
-
 template <std::size_t I, class Head, class... Tail>
 struct std::tuple_element<I, ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, ARLib::Tuple<Tail...>> {};
 template <class Head, class... Tail>
@@ -257,7 +279,8 @@ struct std::tuple_element<0, ARLib::Tuple<Head, Tail...>> {
     using type = Head;
 };
 template <std::size_t I, class Head, class... Tail>
-struct std::tuple_element<I, const ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, const ARLib::Tuple<Tail...>> {};
+struct std::tuple_element<I, const ARLib::Tuple<Head, Tail...>> :
+    std::tuple_element<I - 1, const ARLib::Tuple<Tail...>> {};
 template <class Head, class... Tail>
 struct std::tuple_element<0, const ARLib::Tuple<Head, Tail...>> {
     using type = const Head;
