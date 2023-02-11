@@ -13,9 +13,6 @@ namespace ARLib {
     "Alignment of struct " #arlib_struct " is wrong when compared to the original " #win32_struct                      \
     )
 
-VERIFY_WIN32_STRUCT(CRITICAL_SECTION, internal::CriticalSectionT);
-VERIFY_WIN32_STRUCT(LIST_ENTRY, internal::ListEntry);
-VERIFY_WIN32_STRUCT(CRITICAL_SECTION_DEBUG, internal::CriticalSectionDebugT);
 VERIFY_WIN32_STRUCT(SRWLOCK, internal::SRWLock);
 VERIFY_WIN32_STRUCT(CONDITION_VARIABLE, internal::ConditionVariable);
 CriticalSection::CriticalSection() {

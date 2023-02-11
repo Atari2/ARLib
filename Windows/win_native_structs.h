@@ -6,30 +6,6 @@
     #include "../TypeTraits.h"
 namespace ARLib {
 namespace internal {
-    struct ListEntry {
-        struct ListEntry* Flink;
-        struct ListEntry* Blink;
-    };
-    struct CriticalSectionDebugT {
-        unsigned short Type;
-        unsigned short CreatorBackTraceIndex;
-        struct CriticalSectionT* CriticalSection;
-        ListEntry ProcessLocksList;
-        unsigned long EntryCount;
-        unsigned long ContentionCount;
-        unsigned long Flags;
-        unsigned short CreatorBackTraceIndexHigh;
-        unsigned short SpareWORD;
-    };
-    struct CriticalSectionT {
-        CriticalSectionDebugT* DebugInfo;
-        long LockCount;
-        long RecursionCount;
-        void* OwningThread;
-        void* LockSemaphore;
-        unsigned long long SpinCount;
-    };
-    using CriticalSectionPtr = CriticalSectionT*;
     struct SRWLock {
         void* Ptr;
     };
