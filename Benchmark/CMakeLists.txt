@@ -60,3 +60,11 @@ else()
 endif()
 target_include_directories(ARLibBenchmarkSuite PRIVATE ${benchmark_SOURCE_DIR})
 target_link_libraries(ARLibBenchmarkSuite PRIVATE ARLib benchmark::benchmark benchmark::benchmark_main)
+if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
+    add_custom_command(
+		TARGET ARLibBenchmarkSuite POST_BUILD
+		COMMAND ${POWERSHELL_PATH} -ExecutionPolicy Bypass -File ${CMAKE_CURRENT_SOURCE_DIR}/../copy_asan_dll.ps1 -TargetPath $<TARGET_FILE:ARLibBenchmarkSuite> -TargetDir $<TARGET_FILE_DIR:ARLibBenchmarkSuite>
+		USES_TERMINAL
+		VERBATIM
+	)
+endif()

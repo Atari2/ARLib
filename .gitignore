@@ -7,3 +7,5 @@ latex/
 CMakeSettings.json
 .cache
 .vscode
+.idea
+cmake-build-*

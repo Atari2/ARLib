@@ -50,3 +50,11 @@ else()
 	endif()
 endif()
 target_link_libraries(ARLibPlayground PRIVATE ARLib)
+if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
+    add_custom_command(
+		TARGET ARLibPlayground POST_BUILD
+		COMMAND ${POWERSHELL_PATH} -ExecutionPolicy Bypass -File ${CMAKE_CURRENT_SOURCE_DIR}/../copy_asan_dll.ps1 -TargetPath $<TARGET_FILE:ARLibPlayground> -TargetDir $<TARGET_FILE_DIR:ARLibPlayground>
+		USES_TERMINAL
+		VERBATIM
+	)
+endif()

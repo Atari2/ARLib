@@ -72,3 +72,11 @@ endif()
 target_include_directories(ARLibTestSuite PRIVATE ${googletest_SOURCE_DIR})
 target_link_libraries(ARLibTestSuite PRIVATE ARLib gtest_main)
 gtest_discover_tests(ARLibTestSuite)
+if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
+    add_custom_command(
+		TARGET ARLibTestSuite POST_BUILD
+		COMMAND ${POWERSHELL_PATH} -ExecutionPolicy Bypass -File ${CMAKE_CURRENT_SOURCE_DIR}/../copy_asan_dll.ps1 -TargetPath $<TARGET_FILE:ARLibTestSuite> -TargetDir $<TARGET_FILE_DIR:ARLibTestSuite>
+		USES_TERMINAL
+		VERBATIM
+	)
+endif()

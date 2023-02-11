@@ -321,6 +321,10 @@ list(APPEND ARLIB_SOURCE_FILES GeneratedEnums)
 add_library(ARLib ${ARLIB_SOURCE_FILES})
 set_property(TARGET ARLib PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
 
+if (ON_WINDOWS)
+    find_program(POWERSHELL_PATH NAMES powershell)
+endif()
+
 if (ARLIB_TOP_LEVEL)
 	add_subdirectory(Tests)
 	add_subdirectory(Playground)
