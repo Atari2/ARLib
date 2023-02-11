@@ -345,4 +345,28 @@ BASIC_PRINT_IMPL(float, FloatToStr)
 BASIC_PRINT_IMPL(unsigned char, IntToStr<SupportedBase::Hexadecimal>);
 BASIC_PRINT_IMPL(char, CharToStr);
 BASIC_PRINT_IMPL(bool, BoolToStr)
+
+#ifdef COMPILER_CLANG
+    #if __clang_major__ >= 14
+        #define SIZELITERAL_AVAILABLE
+    #endif
+#else
+    #define SIZELITERAL_AVAILABLE
+#endif
+
+#ifdef SIZELITERAL_AVAILABLE
+template <size_t N>
+struct SizeLiteral {};
+template <char... Chars>
+struct StaticStr {
+    constexpr static char str[]{ Chars..., '\0' };
+};
+template <char... Chars>
+constexpr auto operator""_sl() {
+    StaticStr<Chars...> str;
+    constexpr StringView view{ str.str };
+    constexpr size_t size = StrViewToU64(view);
+    return SizeLiteral<size>();
+}
+#endif
 }    // namespace ARLib
