@@ -109,23 +109,23 @@ template <typename... Tps>
 class ZipIterator {
     using RetVal = decltype(types_into_iter_tuple<Tps...>());
     using IterUnit = Tuple<Tps...>;
-    IterUnit m_current_pair;
+    IterUnit m_current_tuple;
     template <size_t... Vals>
     void iincrement(IndexSequence<Vals...>) {
-        (..., m_current_pair.template get<Vals>()++);
+        (..., m_current_tuple.template get<Vals>()++);
     }
     template <size_t... Vals>
     void idecrement(IndexSequence<Vals...>) {
-        (..., m_current_pair.template get<Vals>()--);
+        (..., m_current_tuple.template get<Vals>()--);
     }
     template <size_t... Vals>
     RetVal iget(IndexSequence<Vals...>) {
-        return RetVal{ *m_current_pair.template get<Vals>()... };
+        return RetVal{ *m_current_tuple.template get<Vals>()... };
     }
 
     public:
-    ZipIterator(Tps... iterators) : m_current_pair(iterators...) {}
-    explicit ZipIterator(IterUnit curr_pair) : m_current_pair(curr_pair) {};
+    ZipIterator(Tps... iterators) : m_current_tuple(iterators...) {}
+    explicit ZipIterator(IterUnit curr_pair) : m_current_tuple(curr_pair) {};
     RetVal operator*() { return iget(IndexSequenceFor<Tps...>{}); }
     ZipIterator& operator++() {
         iincrement(IndexSequenceFor<Tps...>{});
@@ -145,13 +145,13 @@ class ZipIterator {
         this->operator--();
         return copy;
     }
-    bool operator==(const ZipIterator& other) const { return m_current_pair == other.m_current_pair; }
-    bool operator!=(const ZipIterator& other) const { return m_current_pair != other.m_current_pair; }
+    bool operator==(const ZipIterator& other) const { return m_current_tuple == other.m_current_tuple; }
+    bool operator!=(const ZipIterator& other) const { return m_current_tuple != other.m_current_tuple; }
     bool operator<(const ZipIterator& other) {
-        return (... && (m_current_pair.template get<Tps>() < other.m_current_pair.template get<Tps>()));
+        return (... && (m_current_tuple.template get<Tps>() < other.m_current_tuple.template get<Tps>()));
     }
     bool operator>(const ZipIterator& other) {
-        return (... && (m_current_pair.template get<Tps>() > other.m_current_pair.template get<Tps>()));
+        return (... && (m_current_tuple.template get<Tps>() > other.m_current_tuple.template get<Tps>()));
     }
 };
 template <IteratorConcept Iter>
