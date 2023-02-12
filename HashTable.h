@@ -255,7 +255,6 @@ class HashTable {
         insert(Forward<T>(a));
         insert(Forward<T>(b));
         if constexpr (sizeof...(args) > 0) internal_append(Forward<Args>(args)...);
-        m_size = sizeof...(args);
     }
     size_t max_bucket_size() { return m_max_bkt_size; }
     double load() {
