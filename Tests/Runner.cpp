@@ -1,5 +1,6 @@
-#include "Suite.h"
+﻿#include "Suite.h"
 #include <gtest/gtest.h>
+#include "GTestPrintHelpers.h"
 
 using namespace ARLib;
 template <typename T>
@@ -802,6 +803,13 @@ TEST(ARLibTests, ArgParserTests) {
     EXPECT_TRUE(result2.is_error());
     EXPECT_FALSE(result2.is_ok());
 }
+TEST(ARLibTests, PrintfWideString) {
+    char buffer[1024]{};
+    auto expected = "hello à è §©┘ world hello à è §©┘ world"_sv;
+    int ret       = ARLib::sprintf(buffer, "%S %s", L"hello à è §©┘ world", "hello à è §©┘ world");
+    buffer[ret]   = '\0';
+    EXPECT_EQ(StringView{ buffer }, expected);
+}
 TEST(ARLibTests, PrintfTestGeneric) {
     // the expected values come from std printf implementation
     constexpr StringView expected_from_misc{
@@ -834,140 +842,133 @@ TEST(ARLibTests, PrintfTestDoubleOnly) {
     buffer[bsz] = '\0';
     EXPECT_EQ(StringView{ buffer }, expected_from_double);
 }
-TEST(ARLibTests, PathTests) {
-    {
-        // remove filespec
+// path tests
+TEST(ARLibTests, PathTestsRemoveFileSpec) {
+    Path p1{ R"(C:\Users\user\folder\file.txt)" };
+    Path p2{ R"(C:\Users\user\folder)" };
+    Path p3{ R"(C:\Users\user\folder\)" };
+    auto p1s = p1.remove_filespec();
+    auto p2s = p2.remove_filespec();
+    auto p3s = p3.remove_filespec();
+    EXPECT_EQ(p1s, R"(C:\Users\user\folder)"_p);
+    EXPECT_EQ(p2s, R"(C:\Users\user)"_p);
+    EXPECT_EQ(p3s, R"(C:\Users\user\folder)"_p);
+}
+TEST(ARLibTests, PathTestsNormalize) {
+    Path p1{ R"(C:/Users\user/folder\file.txt)" };
+    Path p2{ R"(C:\\Users\/\user\\folder\\/\file.txt)" };
+    EXPECT_EQ(p1, p2);
+}
+TEST(ARLibTests, PathTestsParentPath) {
+    if constexpr (windows_build) {
         Path p1{ R"(C:\Users\user\folder\file.txt)" };
         Path p2{ R"(C:\Users\user\folder)" };
-        Path p3{ R"(C:\Users\user\folder\)" };
-        auto p1s = p1.remove_filespec();
-        auto p2s = p2.remove_filespec();
-        auto p3s = p3.remove_filespec();
-        EXPECT_EQ(p1s, R"(C:\Users\user\folder)"_p);
-        EXPECT_EQ(p2s, R"(C:\Users\user)"_p);
-        EXPECT_EQ(p3s, R"(C:\Users\user\folder)"_p);
+        Path p3{ R"(Users\\user\\folder\\file.txt)" };
+        Path p4{ R"(C:\)" };
+        Path p5{ R"(Users)" };
+        EXPECT_EQ(p1.parent_path(), R"(C:\Users\user\folder)"_p);
+        EXPECT_EQ(p2.parent_path(), R"(C:\Users\user)"_p);
+        EXPECT_EQ(p3.parent_path(), R"(Users\user\folder)"_p);
+        EXPECT_EQ(p4.parent_path(), R"(C:\)"_p);
+        EXPECT_EQ(p5.parent_path(), ""_p);
+    } else {
+        Path p1{ R"(/Users/user/folder/file.txt)" };
+        Path p2{ R"(/Users/user/folder)" };
+        Path p3{ R"(Users/user/folder/file.txt)" };
+        Path p4{ R"(/)" };
+        Path p5{ R"(Users)" };
+        EXPECT_EQ(p1.parent_path(), "/Users/user/folder"_p);
+        EXPECT_EQ(p2.parent_path(), "/Users/user"_p);
+        EXPECT_EQ(p3.parent_path(), "Users/user/folder"_p);
+        EXPECT_EQ(p4.parent_path(), "/"_p);
+        EXPECT_EQ(p5.parent_path(), ""_p);
     }
-    {
-        // normalization
-        Path p1{ R"(C:/Users\user/folder\file.txt)" };
-        Path p2{ R"(C:\\Users\/\user\\folder\\/\file.txt)" };
-        EXPECT_EQ(p1, p2);
+}
+TEST(ARLibTests, PathTestsAbsolutePath) {
+    if constexpr (windows_build) {
+        Path p1{ R"(C:\Users\user\folder\file.txt)" };
+        Path p2{ R"(C:\Users\user\folder)" };
+        Path p3{ R"(Users\\user\\folder\\file.txt)" };
+        Path p4{ R"(C:\)" };
+        Path p5{ R"(Users)" };
+        EXPECT_TRUE(p1.is_absolute());
+        EXPECT_TRUE(p2.is_absolute());
+        EXPECT_FALSE(p3.is_absolute());
+        EXPECT_TRUE(p4.is_absolute());
+        EXPECT_FALSE(p5.is_absolute());
+    } else {
+        Path p1{ R"(/Users/user/folder/file.txt)" };
+        Path p2{ R"(/Users/user/folder)" };
+        Path p3{ R"(Users/user/folder/file.txt)" };
+        Path p4{ R"(/)" };
+        Path p5{ R"(Users)" };
+        EXPECT_TRUE(p1.is_absolute());
+        EXPECT_TRUE(p2.is_absolute());
+        EXPECT_FALSE(p3.is_absolute());
+        EXPECT_TRUE(p4.is_absolute());
+        EXPECT_FALSE(p5.is_absolute());
     }
-    {
-        // parent path
-        if constexpr (windows_build) {
-            Path p1{ R"(C:\Users\user\folder\file.txt)" };
-            Path p2{ R"(C:\Users\user\folder)" };
-            Path p3{ R"(Users\\user\\folder\\file.txt)" };
-            Path p4{ R"(C:\)" };
-            Path p5{ R"(Users)" };
-            EXPECT_EQ(p1.parent_path(), R"(C:\Users\user\folder)"_p);
-            EXPECT_EQ(p2.parent_path(), R"(C:\Users\user)"_p);
-            EXPECT_EQ(p3.parent_path(), R"(Users\user\folder)"_p);
-            EXPECT_EQ(p4.parent_path(), R"(C:\)"_p);
-            EXPECT_EQ(p5.parent_path(), ""_p);
-        } else {
-            Path p1{ R"(/Users/user/folder/file.txt)" };
-            Path p2{ R"(/Users/user/folder)" };
-            Path p3{ R"(Users/user/folder/file.txt)" };
-            Path p4{ R"(/)" };
-            Path p5{ R"(Users)" };
-            EXPECT_EQ(p1.parent_path(), "/Users/user/folder"_p);
-            EXPECT_EQ(p2.parent_path(), "/Users/user"_p);
-            EXPECT_EQ(p3.parent_path(), "Users/user/folder"_p);
-            EXPECT_EQ(p4.parent_path(), "/"_p);
-            EXPECT_EQ(p5.parent_path(), ""_p);
-        }
+}
+TEST(ARLibTests, PathTestsFilenameAndExtension) {
+    if constexpr (windows_build) {
+        Path p1{ R"(C:\Users\user\folder\file.txt)" };
+        Path p2{ R"(C:\Users\user\folder)" };
+        Path p3{ R"(Users\\user\\folder\)" };
+        EXPECT_EQ(p1.filename(), "file.txt"_p);
+        EXPECT_EQ(p1.extension(), ".txt"_p);
+        EXPECT_EQ(p2.filename(), "folder"_p);
+        EXPECT_EQ(p2.extension(), ""_p);
+        EXPECT_EQ(p3.filename(), ""_p);
+        EXPECT_EQ(p2.extension(), ""_p);
+    } else {
+        Path p1{ R"(/Users/user/folder/file.txt)" };
+        Path p2{ R"(/Users/user/folder)" };
+        Path p3{ R"(Users/user/folder/)" };
+        EXPECT_EQ(p1.filename(), "file.txt"_p);
+        EXPECT_EQ(p1.extension(), ".txt"_p);
+        EXPECT_EQ(p2.filename(), "folder"_p);
+        EXPECT_EQ(p2.extension(), ""_p);
+        EXPECT_EQ(p3.filename(), ""_p);
+        EXPECT_EQ(p2.extension(), ""_p);
     }
-    {
-        // absolute path
-        if constexpr (windows_build) {
-            Path p1{ R"(C:\Users\user\folder\file.txt)" };
-            Path p2{ R"(C:\Users\user\folder)" };
-            Path p3{ R"(Users\\user\\folder\\file.txt)" };
-            Path p4{ R"(C:\)" };
-            Path p5{ R"(Users)" };
-            EXPECT_TRUE(p1.is_absolute());
-            EXPECT_TRUE(p2.is_absolute());
-            EXPECT_FALSE(p3.is_absolute());
-            EXPECT_TRUE(p4.is_absolute());
-            EXPECT_FALSE(p5.is_absolute());
-        } else {
-            Path p1{ R"(/Users/user/folder/file.txt)" };
-            Path p2{ R"(/Users/user/folder)" };
-            Path p3{ R"(Users/user/folder/file.txt)" };
-            Path p4{ R"(/)" };
-            Path p5{ R"(Users)" };
-            EXPECT_TRUE(p1.is_absolute());
-            EXPECT_TRUE(p2.is_absolute());
-            EXPECT_FALSE(p3.is_absolute());
-            EXPECT_TRUE(p4.is_absolute());
-            EXPECT_FALSE(p5.is_absolute());
-        }
-    }
-    {
-        // filename + extension
-        if constexpr (windows_build) {
-            Path p1{ R"(C:\Users\user\folder\file.txt)" };
-            Path p2{ R"(C:\Users\user\folder)" };
-            Path p3{ R"(Users\\user\\folder\)" };
-            EXPECT_EQ(p1.filename(), "file.txt"_p);
-            EXPECT_EQ(p1.extension(), ".txt"_p);
-            EXPECT_EQ(p2.filename(), "folder"_p);
-            EXPECT_EQ(p2.extension(), ""_p);
-            EXPECT_EQ(p3.filename(), ""_p);
-            EXPECT_EQ(p2.extension(), ""_p);
-        } else {
-            Path p1{ R"(/Users/user/folder/file.txt)" };
-            Path p2{ R"(/Users/user/folder)" };
-            Path p3{ R"(Users/user/folder/)" };
-            EXPECT_EQ(p1.filename(), "file.txt"_p);
-            EXPECT_EQ(p1.extension(), ".txt"_p);
-            EXPECT_EQ(p2.filename(), "folder"_p);
-            EXPECT_EQ(p2.extension(), ""_p);
-            EXPECT_EQ(p3.filename(), ""_p);
-            EXPECT_EQ(p2.extension(), ""_p);
-        }
-    }
-    {
-        // concatenation
-        if constexpr (windows_build) {
-            Path p1{ R"(C:\Users\user\folder\child\file.txt)" };
-            Path p2{ R"(C:\Users\user\folder\child2\file.txt)" };
+}
+TEST(ARLibTests, PathTestsConcatenation) {
+    if constexpr (windows_build) {
+        Path p1{ R"(C:\Users\user\folder\child\file.txt)" };
+        Path p2{ R"(C:\Users\user\folder\child2\file.txt)" };
 
-            Path p3{ R"(C:\Users\user\folder\child\file.txt)" };
-            Path p4{ R"(child2\file.txt)" };
+        Path p3{ R"(C:\Users\user\folder\child\file.txt)" };
+        Path p4{ R"(child2\file.txt)" };
 
-            Path p5{ R"(C:\Users\user\folder\child)" };
-            Path p6{ R"(folder\child2\file.txt)" };
+        Path p5{ R"(C:\Users\user\folder\child)" };
+        Path p6{ R"(folder\child2\file.txt)" };
 
-            EXPECT_EQ(p1 / p2, R"(C:\Users\user\folder\child2\file.txt)"_p);
-            EXPECT_EQ(p2 / p1, R"(C:\Users\user\folder\child\file.txt)"_p);
+        EXPECT_EQ(p1 / p2, R"(C:\Users\user\folder\child2\file.txt)"_p);
+        EXPECT_EQ(p2 / p1, R"(C:\Users\user\folder\child\file.txt)"_p);
 
-            EXPECT_EQ(p3 / p4, R"(C:\Users\user\folder\child\file.txt\child2\file.txt)"_p);
-            EXPECT_EQ(p4 / p3, R"(C:\Users\user\folder\child\file.txt)"_p);
+        EXPECT_EQ(p3 / p4, R"(C:\Users\user\folder\child\file.txt\child2\file.txt)"_p);
+        EXPECT_EQ(p4 / p3, R"(C:\Users\user\folder\child\file.txt)"_p);
 
-            EXPECT_EQ(p5 / p6, R"(C:\Users\user\folder\child\folder\child2\file.txt)"_p);
-            EXPECT_EQ(p6 / p5, R"(C:\Users\user\folder\child)"_p);
-        } else {
-            Path p1{ R"(/Users/user/folder/child/file.txt)" };
-            Path p2{ R"(/Users/user/folder/child2/file.txt)" };
+        EXPECT_EQ(p5 / p6, R"(C:\Users\user\folder\child\folder\child2\file.txt)"_p);
+        EXPECT_EQ(p6 / p5, R"(C:\Users\user\folder\child)"_p);
+    } else {
+        Path p1{ R"(/Users/user/folder/child/file.txt)" };
+        Path p2{ R"(/Users/user/folder/child2/file.txt)" };
 
-            Path p3{ R"(/Users/user/folder/child/file.txt)" };
-            Path p4{ R"(child2/file.txt)" };
+        Path p3{ R"(/Users/user/folder/child/file.txt)" };
+        Path p4{ R"(child2/file.txt)" };
 
-            Path p5{ R"(/Users/user/folder/child)" };
-            Path p6{ R"(folder/child2/file.txt)" };
+        Path p5{ R"(/Users/user/folder/child)" };
+        Path p6{ R"(folder/child2/file.txt)" };
 
-            EXPECT_EQ(p1 / p2, R"(/Users/user/folder/child2/file.txt)"_p);
-            EXPECT_EQ(p2 / p1, R"(/Users/user/folder/child/file.txt)"_p);
+        EXPECT_EQ(p1 / p2, R"(/Users/user/folder/child2/file.txt)"_p);
+        EXPECT_EQ(p2 / p1, R"(/Users/user/folder/child/file.txt)"_p);
 
-            EXPECT_EQ(p3 / p4, R"(/Users/user/folder/child/file.txt/child2/file.txt)"_p);
-            EXPECT_EQ(p4 / p3, R"(/Users/user/folder/child/file.txt)"_p);
+        EXPECT_EQ(p3 / p4, R"(/Users/user/folder/child/file.txt/child2/file.txt)"_p);
+        EXPECT_EQ(p4 / p3, R"(/Users/user/folder/child/file.txt)"_p);
 
-            EXPECT_EQ(p5 / p6, R"(/Users/user/folder/child/folder/child2/file.txt)"_p);
-            EXPECT_EQ(p6 / p5, R"(/Users/user/folder/child)"_p);
-        }
+        EXPECT_EQ(p5 / p6, R"(/Users/user/folder/child/folder/child2/file.txt)"_p);
+        EXPECT_EQ(p6 / p5, R"(/Users/user/folder/child)"_p);
     }
 }
 TEST(ARLibTests, SortingTest) {
