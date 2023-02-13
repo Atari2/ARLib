@@ -1,4 +1,4 @@
-TITLE log.obj
+TITLE log10.obj
 
 public arlib_log10
 _TEXT SEGMENT
