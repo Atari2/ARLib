@@ -10,5 +10,11 @@ std::ostream& operator<<(std::ostream& os, const T& obj) {
     return os << PrintInfo<T>{ obj }.repr();
 }
     #endif
+#else
+std::ostream& operator<<(std::ostream& os, const String& s);
+template <Printable T>
+std::ostream& operator<<(std::ostream& os, const T& obj) {
+    return os << PrintInfo<T>{ obj }.repr();
+}
 #endif
 }    // namespace ARLib

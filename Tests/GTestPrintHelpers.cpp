@@ -8,5 +8,9 @@ std::ostream& operator<<(std::ostream& os, const String& sv) {
     return os << std::string_view{ sv.data(), sv.size() };
 }
     #endif
+#else
+std::ostream& operator<<(std::ostream& os, const String& sv) {
+    return os << std::string_view{ sv.data(), sv.size() };
+}
 #endif
 }    // namespace ARLib
