@@ -448,7 +448,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
             output += '%';
             continue;
         }
-        if (fdesc.width == PrintfInfo::variable_width_marker) { fdesc.width = va_arg(args, int); }
+        if (fdesc.width == PrintfInfo::variable_width_marker) { fdesc.width = static_cast<size_t>(va_arg(args, int)); }
         switch (fdesc.type) {
             case CharSingle:
                 APPEND_AND_RET_IF_FAIL(char, int);
