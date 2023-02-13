@@ -11,6 +11,7 @@ set(ARLIB_COMPILE_WARNINGS "")
 set(ARLIB_LINK_LIBRARIES ARLib_asm_ext)
 set(ARLIB_LINK_OPTIONS "")
 
+option(ARLIB_FORCE_SANITIZERS "Always enable sanitizers, even in release builds" OFF)
 if (MSVC)
     option(MSVC_STATIC_STL "Use the static version of the MSVC STL to link" OFF)
     if (NOT MSVC_STATIC_STL)
@@ -107,14 +108,23 @@ else()
 	message(STATUS "In release mode")
 endif()
 
-if (DEBUG_BUILD)
+# this is a bit confusing so let's explain
+# on release builds we never enable sanitizers, unless explicitely asked for.
+# on debug builds, we add them (asan on windows, asan+ubsan+leaksan on linux, 
+#                               except when using clang-cl because clang-cl doesn't like asan in debug builds)
+if (DEBUG_BUILD OR ARLIB_FORCE_SANITIZERS)
     if (ON_WINDOWS AND ON_CLANG)
         message(STATUS "Clang doesn't like debug libraries + asan")
-        set(ARLIB_ASAN_FLAGS "")
+        set(ARLIB_SANITIZERS_FLAGS "")
+    elseif(ON_LINUX)
+        set(ARLIB_SANITIZERS_FLAGS "-fsanitize=address,undefined,leak")
     else()
-        set(ARLIB_ASAN_FLAGS "/fsanitize=address")
+        set(ARLIB_SANITIZERS_FLAGS "/fsanitize=address")
     endif()
+else()
+    set(ARLIB_SANITIZERS_FLAGS "")
 endif()
+message(STATUS "Setting sanitizers flags to \"${ARLIB_SANITIZERS_FLAGS}\"")
 
 if (
 	CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR 
@@ -350,7 +360,7 @@ if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
         NOMINMAX
 	)
 	if (DEBUG_BUILD)
-		list(APPEND ARLIB_COMPILE_OPTIONS /DEBUG /Oy- ${ARLIB_ASAN_FLAGS})
+		list(APPEND ARLIB_COMPILE_OPTIONS /DEBUG /Oy- ${ARLIB_SANITIZERS_FLAGS})
 	else()
 		list(APPEND ARLIB_COMPILE_OPTIONS /O2 /GR-)
 	endif()
@@ -388,9 +398,9 @@ else()
 	add_subdirectory(ASM_GCC)
 	list(APPEND ARLIB_COMPILE_OPTIONS -std=c++20 -msse4.1 ${AVX_FLAGS} -fno-exceptions)
 	if (DEBUG_BUILD AND NOT ON_WINDOWS)
-		list(APPEND ARLIB_COMPILE_OPTIONS -fsanitize=address,undefined,leak)
-		list(APPEND ARLIB_LINK_OPTIONS -fsanitize=address,undefined,leak)
-		list(APPEND ARLIB_LINK_LIBRARIES -fsanitize=address,undefined,leak)
+		list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
+		list(APPEND ARLIB_LINK_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
+		list(APPEND ARLIB_LINK_LIBRARIES ${ARLIB_SANITIZERS_FLAGS})
 	endif()
 	list(APPEND ARLIB_COMPILE_WARNINGS
 		-Wall 
