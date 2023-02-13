@@ -142,7 +142,7 @@ class String {
         String str{};
         auto len = static_cast<size_t>(scprintf(format, args...));
         str.reserve(len);
-        str.set_size(static_cast<size_t>(sprintf(str.rawptr(), format, args...)));
+        str.set_size(static_cast<size_t>(snprintf(str.rawptr(), str.capacity(), format, args...)));
         return str;
     }
     ~String() {

@@ -108,6 +108,8 @@ namespace PrintfTypes {
         size_t precision = 6;
         size_t begin_idx = 0;
         size_t end_idx   = 0;
+
+        constexpr static inline size_t variable_width_marker = 0xCACABABACACABABA;
     };
 }    // namespace PrintfTypes
 template <typename T>
@@ -316,15 +318,20 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                     ++i;    // skip
                 }
                 can_parse = AllowedToParse::NoFlags;
-            } else if (is_num(cur)) {
+            } else if (is_num(cur) || cur == '*') {
                 // possibly width specifier
                 if ((can_parse & AllowedToParse::Width) == AllowedToParse::None) { INVALID_FORMAT; }
-                size_t end_width = i;
-                while (is_num(format[end_width])) ++end_width;
-                int width      = StrViewToInt(format.substringview(i, end_width));
-                cur_info.width = static_cast<size_t>(width);
-                i              = end_width - 1;
-                can_parse      = AllowedToParse::NoWidth;
+                if (cur == '*') {
+                    cur_info.width = PrintfInfo::variable_width_marker;
+                    ++i;
+                } else {
+                    size_t end_width = i;
+                    while (is_num(format[end_width])) ++end_width;
+                    int width      = StrViewToInt(format.substringview(i, end_width));
+                    cur_info.width = static_cast<size_t>(width);
+                    i = end_width - 1;
+                }
+                can_parse = AllowedToParse::NoWidth;
             } else if (cur == '.' && is_num(format[i + 1])) {
                 // possibly precision specifier
                 if ((can_parse & AllowedToParse::Precision) == AllowedToParse::None) { INVALID_FORMAT; }
@@ -432,7 +439,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
         }                                                                                                              \
     }
 
-    for (const auto& fdesc : fmtargs) {
+    for (auto& fdesc : fmtargs) {
         formatted_arg.clear();
         output += format.substringview(prev_idx, fdesc.begin_idx).extract_string();
         prev_idx = fdesc.end_idx;
@@ -441,6 +448,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
             output += '%';
             continue;
         }
+        if (fdesc.width == PrintfInfo::variable_width_marker) { fdesc.width = va_arg(args, int); }
         switch (fdesc.type) {
             case CharSingle:
                 APPEND_AND_RET_IF_FAIL(char, int);
