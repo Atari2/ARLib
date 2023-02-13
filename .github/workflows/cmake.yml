@@ -22,7 +22,7 @@ jobs:
         os: [ windows-latest, ubuntu-latest ]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: Setup compilers
       run:  |
@@ -63,14 +63,14 @@ jobs:
       run: ctest --rerun-failed --output-on-failure -C $BUILD_TYPE
     
     - name: Upload
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ARLib
         path: ${{github.workspace}}/build/Release/ARLib.lib
       if: matrix.os == 'windows-latest'
     
     - name: Upload
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ARLib
         path: ${{github.workspace}}/build/libARLib.a
