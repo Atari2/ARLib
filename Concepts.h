@@ -35,19 +35,19 @@ concept ConvertibleTo = ConvertibleV<From, To> && requires(AddRvalueReferenceT<F
 
 template <typename Cls, typename... Args>
 concept Constructible = requires(Args... args) {
-                            { Cls{ args... } } -> SameAs<Cls>;
+                            { Cls{ args... } } -> SameAsCvRef<Cls>;
                         };
 template <typename Cls>
 concept DefaultConstructible = requires() {
-                                   { Cls{} } -> SameAs<Cls>;
+                                   { Cls{} } -> SameAsCvRef<Cls>;
                                };
 template <typename Cls>
 concept MoveConstructible = requires(Cls&& a) {
-                                { Cls{ Forward<Cls>(a) } } -> SameAs<Cls>;
+                                { Cls{ Forward<Cls>(a) } } -> SameAsCvRef<Cls>;
                             };
 template <typename Cls>
 concept CopyConstructible = requires(const Cls& a) {
-                                { Cls{ a } } -> SameAs<Cls>;
+                                { Cls{ a } } -> SameAsCvRef<Cls>;
                             };
 
 template <typename Cls>
