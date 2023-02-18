@@ -17,6 +17,8 @@ class Array {
     }
 
     public:
+    constexpr T* data() { return _m_storage_; }
+    constexpr const T* data() const { return _m_storage_; }
     constexpr size_t size() const { return S; }
     constexpr T& index(size_t index) {
         assert_size_(index);
