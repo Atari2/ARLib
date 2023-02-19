@@ -44,7 +44,7 @@ class Tuple : Tuple<Args...> {
     using TupleBaseArray = decltype(get_tuple_base_array_start<T, Args...>());
     T m_member;
     template <size_t N>
-    bool equality_impl(const Tuple& other) const {
+    constexpr bool equality_impl(const Tuple& other) const {
         if constexpr (N == 0)
             return m_member == other.m_member;
         else {
@@ -56,7 +56,7 @@ class Tuple : Tuple<Args...> {
         }
     }
     template <size_t N>
-    bool inequality_impl(const Tuple& other) const {
+    constexpr bool inequality_impl(const Tuple& other) const {
         if constexpr (N == 0)
             return m_member != other.m_member;
         else {
@@ -70,15 +70,15 @@ class Tuple : Tuple<Args...> {
 
     public:
     constexpr static inline size_t size = 1 + sizeof...(Args);
-    Tuple()                             = default;
-    Tuple(const Tuple&)                 = default;
-    Tuple(Tuple&&) noexcept             = default;
-    explicit Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(arg) {}
-    Tuple& operator=(const Tuple&)     = default;
-    Tuple& operator=(Tuple&&) noexcept = default;
-    bool operator==(const Tuple& other) const { return equality_impl<sizeof...(Args) - 1>(other); }
-    bool operator!=(const Tuple& other) const { return inequality_impl<sizeof...(Args) - 1>(other); }
-    Tuple& operator=(T&& value) {
+    constexpr Tuple()                             = default;
+    constexpr Tuple(const Tuple&)                 = default;
+    constexpr Tuple(Tuple&&) noexcept             = default;
+    constexpr explicit Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(arg) {}
+    constexpr Tuple& operator=(const Tuple&)     = default;
+    constexpr Tuple& operator=(Tuple&&) noexcept = default;
+    constexpr bool operator==(const Tuple& other) const { return equality_impl<sizeof...(Args) - 1>(other); }
+    constexpr bool operator!=(const Tuple& other) const { return inequality_impl<sizeof...(Args) - 1>(other); }
+    constexpr Tuple& operator=(T&& value) {
         static_assert(
         !IsAnyOfCvRefV<T, Args...>,
         "Don't use the assignment operator with a type that appears more than once in the tuple"
@@ -88,7 +88,7 @@ class Tuple : Tuple<Args...> {
     }
     template <typename U>
     requires IsAnyOfV<U, Args...>
-    Tuple& operator=(U&& value) {
+    constexpr Tuple& operator=(U&& value) {
         static_cast<Tuple<Args...>*>(this)->template set<U>(Forward<U>(value));
         return *this;
     }
@@ -161,20 +161,20 @@ class Tuple<T> {
     using TupleBaseArray = decltype(get_tuple_base_array_start<T>());
     public:
     constexpr static inline size_t size = 1;
-    Tuple()                             = default;
-    explicit Tuple(T arg) : m_member(arg) {}
-    bool operator==(const Tuple& other) const { return m_member == other.m_member; }
-    Tuple& operator=(T&& value) {
+    constexpr Tuple()                             = default;
+    constexpr explicit Tuple(T arg) : m_member(arg) {}
+    constexpr bool operator==(const Tuple& other) const { return m_member == other.m_member; }
+    constexpr Tuple& operator=(T&& value) {
         m_member = move(value);
         return *this;
     }
     template <typename Tp>
-    auto& get() {
+    constexpr auto& get() {
         static_assert(SameAsCvRef<Tp, T>);
         return m_member;
     }
     template <typename Tp>
-    const auto& get() const {
+    constexpr const auto& get() const {
         static_assert(SameAsCvRef<Tp, T>);
         return m_member;
     }
@@ -189,7 +189,7 @@ class Tuple<T> {
         return m_member;
     }
     template <typename Tp>
-    void set(Tp&& p) {
+    constexpr void set(Tp&& p) {
         static_assert(SameAsCvRef<Tp, T>);
         m_member = move(p);
     }
