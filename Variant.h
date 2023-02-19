@@ -383,6 +383,7 @@ class Variant {
     requires IsAnyOfV<T, Types...>
     Variant(T&& value) : m_storage(Forward<T>(value)) {}
     template <typename... Args>
+    requires(Constructible<Types, Args...> || ...)
     Variant(Args&&... args) : m_storage(Forward<Args>(args)...) {}
     Variant(const Variant& other) : m_storage(other.m_storage) {}
     Variant(Variant&& other) noexcept : m_storage(move(other.m_storage)) {}
@@ -397,11 +398,13 @@ class Variant {
         return *this;
     }
     template <typename... Args>
+    requires(Constructible<Types, Args...> || ...)
     Variant& operator=(Args&&... args) {
         m_storage.operator=(Forward<Args>(args)...);
         return *this;
     }
     template <typename... Args>
+    requires(Constructible<Types, Args...> || ...)
     void set(Args&&... args) {
         m_storage.operator=(Forward<Args>(args)...);
     }
