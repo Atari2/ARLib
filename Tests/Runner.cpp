@@ -815,8 +815,10 @@ TEST(ARLibTests, PrintfTestGeneric) {
     constexpr StringView expected_from_misc{
         "Hello World +0X1.90000P+5 +1234.1234  % my name is alessio 0120 0X7FFFFFFFFFFFFFFF %\n"
     };
+    constexpr StringView expected_from_fill_pre{ "0X0C 000C" };
     constexpr int expected_pn       = 37;
     constexpr int expected_bsz_misc = 85;
+    constexpr int expected_bsz_fill_pre = 9;
     char buffer[1024]{};
     double val              = 1234.1234;
     const char* s           = "my name is alessio";
@@ -830,6 +832,11 @@ TEST(ARLibTests, PrintfTestGeneric) {
     buffer[bsz] = '\0';
     EXPECT_EQ(StringView{ buffer }, expected_from_misc);
     EXPECT_EQ(arlib_pn, expected_pn);
+
+    bsz = ARLib::sprintf(buffer, "%#04X %04X", 12, 12);
+    EXPECT_EQ(expected_bsz_fill_pre, bsz);
+    buffer[bsz] = '\0';
+    EXPECT_EQ(StringView{ buffer }, expected_from_fill_pre);
 }
 TEST(ARLibTests, PrintfTestDoubleOnly) {
     // the expected values come from std printf implementation

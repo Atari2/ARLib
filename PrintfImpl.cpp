@@ -65,7 +65,14 @@ namespace PrintfTypes {
         WideString        = 'S',
         AnsiString        = 'Z'
     };
-    enum class Flags : uint8_t { None = 0x00, LeftAlign = 0x01, UseSign = 0x02, LeadingZeros = 0x04, AddPrefix = 0x08 };
+    enum class Flags : uint8_t {
+        None         = 0x00,
+        LeftAlign    = 0x01,
+        UseSign      = 0x02,
+        LeadingZeros = 0x04,
+        Blank        = 0x08,
+        AddPrefix    = 0x10
+    };
     // field: %[flags][width][.precision][size]type
     enum class AllowedToParse : uint8_t {
         None        = 0x00,
@@ -100,16 +107,17 @@ namespace PrintfTypes {
     static_assert(sizeof(Flags) == 1, "Flags must be 1 byte");
     static_assert(sizeof(Size) == 1, "Size must be 1 byte");
     struct PrintfInfo {
-        Type type        = Type::None;
-        Flags flags      = Flags::None;
-        Size size        = Size::Missing;
-        bool is_escape   = false;
-        size_t width     = NumberTraits<int>::max;
-        size_t precision = 6;
-        size_t begin_idx = 0;
-        size_t end_idx   = 0;
-
-        constexpr static inline size_t variable_width_marker = 0xCACABABACACABABA;
+        constexpr static inline size_t variable_width_marker     = 0xCACABABACACABABA;
+        constexpr static inline size_t variable_precision_marker = 0xDADAEAEADADAEAEA;
+        constexpr static inline size_t missing_precision_marker  = 0xDEDEFEFEDEDEFEFE;
+        Type type                                                = Type::None;
+        Flags flags                                              = Flags::None;
+        Size size                                                = Size::Missing;
+        bool is_escape                                           = false;
+        size_t width                                             = NumberTraits<int>::max;
+        size_t precision                                         = missing_precision_marker;
+        size_t begin_idx                                         = 0;
+        size_t end_idx                                           = 0;
     };
 }    // namespace PrintfTypes
 template <typename T>
@@ -134,109 +142,208 @@ String wchar_to_char(const wchar_t* wstr) {
 String wchar_to_char(const wchar_t wc) {
     return wstring_to_string(WStringView{ &wc, 1 });
 }
+template <PrintfTypes::Type... types>
+constexpr bool type_is_any_of(PrintfTypes::Type type) {
+    constexpr const Array tps{ types... };
+    return any_of(tps, [type](auto t) { return t == type; });
+}
+template <Integral T>
+Result<String, PrintfErrorCodes> format_integer_like_type(const PrintfTypes::PrintfInfo& info, T val) {
+    using namespace PrintfTypes;
+    auto has_flag = [&](Flags flag) {
+        return (info.flags & flag) != Flags::None;
+    };
+    auto sign = [&]() {
+        if constexpr (UnsignedIntegral<T>) {
+            return ""_s;
+        } else {
+            auto yes = ((val < 0) ? ""_s : "+"_s);
+            auto no  = ""_s;
+            return has_flag(Flags::UseSign) ? yes : no;
+        }
+    };
+    String formatted_arg{};
+    switch (info.type) {
+        case Type::SignedDecimal1:
+        case Type::SignedDecimal2:
+        case Type::UnsignedDecimal:
+            formatted_arg = IntToStr(val);
+            break;
+        case Type::UnsignedHexLower:
+            formatted_arg = IntToStr<SupportedBase::Hexadecimal>(val).lower();
+            break;
+        case Type::UnsignedHexUpper:
+            formatted_arg = IntToStr<SupportedBase::Hexadecimal>(val).upper();
+            break;
+        case Type::UnsignedOctal:
+            formatted_arg = IntToStr<SupportedBase::Octal>(val);
+            break;
+        case Type::CharSingle:
+            return String{ 1, static_cast<char>(val) };
+        case Type::CharWide:
+            return wchar_to_char(static_cast<wchar_t>(val));
+        default:
+            return PrintfErrorCodes::InvalidType;
+    }
+    const bool is_unsigned =
+    type_is_any_of<Type::UnsignedHexLower, Type::UnsignedHexUpper, Type::UnsignedOctal>(info.type);
+    const bool is_signed = type_is_any_of<Type::SignedDecimal1, Type::SignedDecimal2>(info.type);
+    StringView prefix{ "" };
+    if (is_unsigned && has_flag(Flags::AddPrefix)) {
+        // '#' => When it's used with the o, x, or X format, the # flag uses 0, 0x, or 0X, respectively, to prefix any nonzero output value.
+        switch (info.type) {
+            case Type::UnsignedHexLower:
+                prefix = "0x"_sv;
+                break;
+            case Type::UnsignedHexUpper:
+                prefix = "0X"_sv;
+                break;
+            case Type::UnsignedOctal:
+                prefix = "0"_sv;
+                break;
+        }
+    }
+    // 	The precision has no effect on %c and %C
+    if (info.precision != PrintfInfo::missing_precision_marker && (formatted_arg.size() + prefix.size()) < info.precision) {
+        // The precision specifies the minimum number of digits to be printed.
+        // If the number of digits in the argument is less than precision, the output value is padded on the left with zeros.
+        // The value isn't truncated when the number of digits exceeds precision.
+        formatted_arg = String{ info.precision - formatted_arg.size() - prefix.size(), '0' } + formatted_arg;
+    }
+    if (has_flag(Flags::Blank) && is_signed && val > 0 && !has_flag(Flags::UseSign)) {
+        // Use a blank to prefix the output value if it's signed and positive. The blank is ignored if both the blank and + flags appear.
+        formatted_arg = " "_s + formatted_arg;
+    } else if (has_flag(Flags::LeadingZeros) && info.precision == PrintfInfo::missing_precision_marker && !has_flag(Flags::LeftAlign) && (formatted_arg.size() + prefix.size()) < info.width) {
+        // If width is prefixed by 0, leading zeros are added until the minimum width is reached.
+        // If both 0 and - appear, the 0 is ignored.
+        // If 0 is specified for an integer format (i, u, x, X, o, d) and a precision specification is also present-for example, %04.d-the 0 is ignored.
+        formatted_arg = String{ info.width - formatted_arg.size() - prefix.size(), '0' } + formatted_arg;
+    } else if (info.width != NumberTraits<int>::max && (formatted_arg.size() + prefix.size()) < info.width) {
+        // The width argument is a non-negative decimal integer that controls the minimum number of characters that are output.
+        // If the number of characters in the output value is less than the specified width, blanks are added to the left or the right of the values-depending
+        // on whether the left-alignment flag (-) is specified-until the minimum width is reached.
+        if (has_flag(Flags::LeftAlign)) {
+            formatted_arg = formatted_arg + String{ info.width - formatted_arg.size() - prefix.size(), ' ' };
+        } else {
+            formatted_arg = String{ info.width - formatted_arg.size() - prefix.size(), ' ' } + formatted_arg;
+        }
+    }
+    if (!prefix.empty()) { formatted_arg = prefix.extract_string() + formatted_arg; }
+    return formatted_arg;
+}
+template <FloatingPoint T>
+Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& info, T val) {
+    // FIXME: adhere to the spec
+     using namespace PrintfTypes;
+    if (info.precision == PrintfInfo::missing_precision_marker) {
+        if (type_is_any_of<Type::FloatHex, Type::FloatHexUpper>(info.type)) {
+            // Default precision is 13. If precision is 0, no decimal point is printed unless the #flag is used.
+            info.precision = 13;
+        } else {
+            // Default precision is 6.
+            info.precision = 6;
+        }
+    }
+    int precision           = static_cast<int>(info.precision);
+    using Vt                = RemoveCvRefT<decltype(val)>;
+    constexpr const Vt zero = static_cast<Vt>(0.0);
+    auto has_flag = [&](Flags flag) {
+        return (info.flags & flag) != Flags::None;
+    };
+    auto sign = [&]() {
+        auto yes = ((val < T{ 0 }) ? ""_s : "+"_s);
+        auto no  = ""_s;
+        return has_flag(Flags::UseSign) ? yes : no;
+    };
+
+    // '#' 	When it's used with the e, E, f, F, a, or A format, the # flag forces the output value to contain a decimal point.
+    // '#' 	When it's used with the g or G format, the # flag forces the output value to contain a decimal point and prevents the truncation of trailing zeros.
+    switch (info.type) {
+        case Type::FloatExpUpper:
+            {
+                auto temp        = RealToStr<FloatFmtOpt::E>(val, precision).upper();
+                auto exp_idx     = temp.index_of('E');
+                auto exp_num     = temp.substring(exp_idx);
+                auto without_exp = temp.substring(0, exp_idx);
+                auto rest        = without_exp.substring(0, temp.index_of('.') + 1 + info.precision);
+                return sign() + rest + exp_num;
+            }
+        case Type::FloatUpper:
+            {
+                auto temp = RealToStr<FloatFmtOpt::F>(val, precision).upper();
+                return sign() + (temp.substring(0, temp.index_of('.') + 1 + info.precision));
+            }
+        case Type::FloatCompactUpper:
+            {
+                auto temp = RealToStr<FloatFmtOpt::G>(val, precision).upper();
+                return sign() + (temp.substring(0, temp.index_of('.') + 1_sz + info.precision));
+            }
+        case Type::FloatExp:
+            {
+                auto temp        = RealToStr<FloatFmtOpt::e>(val, precision);
+                auto exp_idx     = temp.index_of('e');
+                auto exp_num     = temp.substring(exp_idx);
+                auto without_exp = temp.substring(0, exp_idx);
+                auto rest        = without_exp.substring(0, temp.index_of('.') + 1_sz + info.precision);
+                return sign() + rest + exp_num;
+            }
+        case Type::Float:
+            {
+                auto temp = RealToStr<FloatFmtOpt::f>(val, precision);
+                return sign() + (temp.substring(0, temp.index_of('.') + 1_sz + info.precision));
+            }
+        case Type::FloatCompact:
+            {
+                auto temp = RealToStr<FloatFmtOpt::g>(val, precision);
+                return sign() + (temp.substring(0, temp.index_of('.') + 1_sz + info.precision));
+            }
+        case Type::FloatHex:
+            {
+                if (detail::is_nan(val)) {
+                    return (has_flag(Flags::UseSign) ? ((val < zero) ? "-"_s : "+"_s) : ((val < zero) ? "-"_s : ""_s)) +
+                           "nan"_s;
+                } else if (detail::is_infinity(val)) {
+                    return (has_flag(Flags::UseSign) ? ((val < zero) ? "-"_s : "+"_s) : ((val < zero) ? "-"_s : ""_s)) +
+                           "inf"_s;
+                }
+                auto [sign, exp, signif] = double_to_bits(val);
+                auto builder =
+                has_flag(Flags::UseSign) ? (sign ? "-0x1."_s : "+0x1."_s) : (sign ? "-0x1."_s : "0x1."_s);
+                builder += IntToStr<SupportedBase::Hexadecimal>(signif).substring(0, info.precision);
+                builder += 'p';
+                builder += has_flag(Flags::UseSign) ? ((exp < 0_i8) ? ""_s : "+"_s) : ""_s;
+                builder += IntToStr(exp);
+                return builder;
+            }
+        case Type::FloatHexUpper:
+            {
+                if (detail::is_nan(val)) {
+                    return (has_flag(Flags::UseSign) ? ((val < zero) ? "-"_s : "+"_s) : ((val < zero) ? "-"_s : ""_s)) +
+                           "NAN"_s;
+                } else if (detail::is_infinity(val)) {
+                    return (has_flag(Flags::UseSign) ? ((val < zero) ? "-"_s : "+"_s) : ((val < zero) ? "-"_s : ""_s)) +
+                           "INF"_s;
+                }
+                auto [sign, exp, signif] = double_to_bits(val);
+                auto builder =
+                has_flag(Flags::UseSign) ? (sign ? "-0x1."_s : "+0x1."_s) : (sign ? "-0x1."_s : "0x1."_s);
+                builder += IntToStr<SupportedBase::Hexadecimal>(signif).substring(0, info.precision);
+                builder += 'p';
+                builder += has_flag(Flags::UseSign) ? ((exp < 0_i8) ? ""_s : "+"_s) : ""_s;
+                builder += IntToStr(exp);
+                return builder.upper();
+            }
+        default:
+            return PrintfErrorCodes::InvalidType;
+    }
+}
 template <AllowedFormatArgs T>
-Result<String, PrintfErrorCodes> format_single_arg(const PrintfTypes::PrintfInfo& info, T val) {
-#define HAS_FLAG(flag, yes, no) (((info.flags & Flags::flag) != Flags::None) ? (yes) : (no))
-#define SIGN                    HAS_FLAG(UseSign, (val < 0 ? ""_s : "+"_s), ""_s)
-#define WANTS_PREFIX(base)                                                                                             \
-    (HAS_FLAG(AddPrefix, (IntToStr<SupportedBase::base, true>(val)), (IntToStr<SupportedBase::base, false>(val))))
+Result<String, PrintfErrorCodes> format_single_arg(PrintfTypes::PrintfInfo& info, T val) {
     using namespace PrintfTypes;
     if constexpr (Integral<T>) {
-        switch (info.type) {
-            case Type::SignedDecimal1:
-            case Type::SignedDecimal2:
-                return SIGN + IntToStr(val);
-            case Type::UnsignedDecimal:
-                return IntToStr(val);
-            case Type::UnsignedHexLower:
-                return WANTS_PREFIX(Hexadecimal).lower();
-            case Type::UnsignedHexUpper:
-                return WANTS_PREFIX(Hexadecimal).upper();
-            case Type::UnsignedOctal:
-                return WANTS_PREFIX(Octal);
-            case Type::CharSingle:
-                return String{ 1, static_cast<char>(val) };
-            case Type::CharWide:
-                return wchar_to_char(static_cast<wchar_t>(val));
-            default:
-                return PrintfErrorCodes::InvalidType;
-        }
+        return format_integer_like_type(info, val);
     } else if constexpr (FloatingPoint<T>) {
-        int precision           = static_cast<int>(info.precision);
-        using Vt                = RemoveCvRefT<decltype(val)>;
-        constexpr const Vt zero = static_cast<Vt>(0.0);
-        switch (info.type) {
-            case Type::FloatExpUpper:
-                {
-                    auto temp        = RealToStr<FloatFmtOpt::E>(val, precision).upper();
-                    auto exp_idx     = temp.index_of('E');
-                    auto exp_num     = temp.substring(exp_idx);
-                    auto without_exp = temp.substring(0, exp_idx);
-                    auto rest        = without_exp.substring(0, temp.index_of('.') + 1 + info.precision);
-                    return SIGN + rest + exp_num;
-                }
-            case Type::FloatUpper:
-                {
-                    auto temp = RealToStr<FloatFmtOpt::F>(val, precision).upper();
-                    return SIGN + (temp.substring(0, temp.index_of('.') + 1 + info.precision));
-                }
-            case Type::FloatCompactUpper:
-                {
-                    auto temp = RealToStr<FloatFmtOpt::G>(val, precision).upper();
-                    return SIGN + (temp.substring(0, temp.index_of('.') + 1_sz + info.precision));
-                }
-            case Type::FloatExp:
-                {
-                    auto temp        = RealToStr<FloatFmtOpt::e>(val, precision);
-                    auto exp_idx     = temp.index_of('e');
-                    auto exp_num     = temp.substring(exp_idx);
-                    auto without_exp = temp.substring(0, exp_idx);
-                    auto rest        = without_exp.substring(0, temp.index_of('.') + 1_sz + info.precision);
-                    return SIGN + rest + exp_num;
-                }
-            case Type::Float:
-                {
-                    auto temp = RealToStr<FloatFmtOpt::f>(val, precision);
-                    return SIGN + (temp.substring(0, temp.index_of('.') + 1_sz + info.precision));
-                }
-            case Type::FloatCompact:
-                {
-                    auto temp = RealToStr<FloatFmtOpt::g>(val, precision);
-                    return SIGN + (temp.substring(0, temp.index_of('.') + 1_sz + info.precision));
-                }
-            case Type::FloatHex:
-                {
-                    if (detail::is_nan(val)) {
-                        return HAS_FLAG(UseSign, (val < zero) ? "-"_s : "+"_s, (val < zero) ? "-"_s : ""_s) + "nan"_s;
-                    } else if (detail::is_infinity(val)) {
-                        return HAS_FLAG(UseSign, (val < zero) ? "-"_s : "+"_s, (val < zero) ? "-"_s : ""_s) + "inf"_s;
-                    }
-                    auto [sign, exp, signif] = double_to_bits(val);
-                    auto builder = HAS_FLAG(UseSign, sign ? "-0x1."_s : "+0x1."_s, sign ? "-0x1."_s : "0x1."_s);
-                    builder += IntToStr<SupportedBase::Hexadecimal>(signif).substring(0, info.precision);
-                    builder += 'p';
-                    builder += HAS_FLAG(UseSign, (exp < 0_i8) ? ""_s : "+"_s, ""_s);
-                    builder += IntToStr(exp);
-                    return builder;
-                }
-            case Type::FloatHexUpper:
-                {
-                    if (detail::is_nan(val)) {
-                        return HAS_FLAG(UseSign, (val < zero) ? "-"_s : "+"_s, (val < zero) ? "-"_s : ""_s) + "NAN"_s;
-                    } else if (detail::is_infinity(val)) {
-                        return HAS_FLAG(UseSign, (val < zero) ? "-"_s : "+"_s, (val < zero) ? "-"_s : ""_s) + "INF"_s;
-                    }
-                    auto [sign, exp, signif] = double_to_bits(val);
-                    auto builder = HAS_FLAG(UseSign, sign ? "-0x1."_s : "+0x1."_s, sign ? "-0x1."_s : "0x1."_s);
-                    builder += IntToStr<SupportedBase::Hexadecimal>(signif).substring(0, info.precision);
-                    builder += 'p';
-                    builder += HAS_FLAG(UseSign, (exp < 0_i8) ? ""_s : "+"_s, ""_s);
-                    builder += IntToStr(exp);
-                    return builder.upper();
-                }
-            default:
-                return PrintfErrorCodes::InvalidType;
-        }
+        return format_real_like_type(info, val);
     } else if constexpr (SameAs<const char*, T>) {
         if (info.type != Type::String) { return PrintfErrorCodes::InvalidType; }
         return String{ val };
@@ -265,6 +372,8 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                 return Flags::LeadingZeros;
             case '#':
                 return Flags::AddPrefix;
+            case ' ':
+                return Flags::Blank;
             default:
                 return Flags::None;
         }
@@ -272,7 +381,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
 
     constexpr const Array valid_types{ 'c', 'C', 'd', 'i', 'o', 'u', 'x', 'X', 'e', 'E', 'f',
                                        'F', 'g', 'G', 'a', 'A', 'n', 'p', 's', 'S', 'Z' };
-    constexpr const Array valid_flags{ '-', '+', '0', '#' };
+    constexpr const Array valid_flags{ '-', '+', '0', ' ', '#' };
     constexpr const Array valid_sizes{ "hh"_sv, "h"_sv,  "I32"_sv, "I64"_sv, "j"_sv, "l"_sv,
                                        "L"_sv,  "ll"_sv, "t"_sv,   "I"_sv,   "z"_sv, "w"_sv };
     constexpr const Array valid_sizes_map{ Size::Char,    Size::Short, Size::Int32,      Size::Int64,
@@ -309,7 +418,10 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
     for (size_t i = 0; i < format.size() - 1; i++) {
         if (in_format_spec) {
             char cur = format[i];
-            if (find(valid_flags, cur) != npos_) {
+            if (find_if(valid_flags, [cur, can_parse](const char c) {
+                    return c != ' ' ? c == cur :
+                                      (c == cur && (can_parse & AllowedToParse::Flags) != AllowedToParse::None);
+                }) != npos_) {
                 // flags
                 if ((can_parse & AllowedToParse::Flags) == AllowedToParse::None) { INVALID_FORMAT; }
                 cur_info.flags = cur_info.flags | map_c_to_flags(cur);
@@ -329,19 +441,24 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                     while (is_num(format[end_width])) ++end_width;
                     int width      = StrViewToInt(format.substringview(i, end_width));
                     cur_info.width = static_cast<size_t>(width);
-                    i = end_width - 1;
+                    i              = end_width - 1;
                 }
                 can_parse = AllowedToParse::NoWidth;
-            } else if (cur == '.' && is_num(format[i + 1])) {
+            } else if (cur == '.' && (is_num(format[i + 1]) || format[i + 1] == '*')) {
                 // possibly precision specifier
                 if ((can_parse & AllowedToParse::Precision) == AllowedToParse::None) { INVALID_FORMAT; }
                 ++i;
-                size_t end_precision = i;
-                while (is_num(format[end_precision])) ++end_precision;
-                int precision      = StrViewToInt(format.substringview(i, end_precision));
-                cur_info.precision = static_cast<size_t>(precision);
-                i                  = end_precision - 1;
-                can_parse          = AllowedToParse::NoPrecision;
+                if (format[i] == '*') {
+                    cur_info.precision = PrintfInfo::variable_precision_marker;
+                    ++i;
+                } else {
+                    size_t end_precision = i;
+                    while (is_num(format[end_precision])) ++end_precision;
+                    int precision      = StrViewToInt(format.substringview(i, end_precision));
+                    cur_info.precision = static_cast<size_t>(precision);
+                    i                  = end_precision - 1;
+                }
+                can_parse = AllowedToParse::NoPrecision;
             } else if (find(valid_types, cur) != npos_) {
                 if ((can_parse & AllowedToParse::Type) == AllowedToParse::None) { INVALID_FORMAT; }
                 // type
@@ -357,7 +474,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                     fmtargs.append(cur_info);
                     cur_info.flags     = Flags::None;
                     cur_info.type      = Type::None;
-                    cur_info.precision = 6;
+                    cur_info.precision = PrintfInfo::missing_precision_marker;
                     cur_info.width     = max(0);
                     cur_info.is_escape = false;
                     can_parse          = AllowedToParse::All;
@@ -382,7 +499,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                         fmtargs.append(cur_info);
                         cur_info.flags     = Flags::None;
                         cur_info.type      = Type::None;
-                        cur_info.precision = 6;
+                        cur_info.precision = PrintfInfo::missing_precision_marker;
                         cur_info.width     = max(0);
                         cur_info.is_escape = false;
                         can_parse          = AllowedToParse::All;
@@ -418,7 +535,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
     size_t prev_idx = 0;
     String formatted_arg;
 
-    auto append_if_correct = [&](const PrintfInfo& info, AllowedFormatArgs auto val) {
+    auto append_if_correct = [&](PrintfInfo& info, AllowedFormatArgs auto val) {
         auto res = format_single_arg(info, val);
         if (res.is_ok()) {
             formatted_arg = res.to_ok();
@@ -449,6 +566,9 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
             continue;
         }
         if (fdesc.width == PrintfInfo::variable_width_marker) { fdesc.width = static_cast<size_t>(va_arg(args, int)); }
+        if (fdesc.precision == PrintfInfo::variable_precision_marker) {
+            fdesc.precision = static_cast<size_t>(va_arg(args, int));
+        }
         switch (fdesc.type) {
             case CharSingle:
                 APPEND_AND_RET_IF_FAIL(char, int);
