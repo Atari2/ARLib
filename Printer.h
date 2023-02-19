@@ -139,7 +139,7 @@ class Printer {
     template <typename... Args>
     static void print(Detail::CheckedFormatString<sizeof...(Args)>&& format, const Args&... args) {
         if constexpr (sizeof...(args) == 0) {
-            puts(format);
+            puts(format.fmt.data());
         } else {
             Printer printer{ format.fmt, args... };
             printer.print_puts();
