@@ -136,6 +136,22 @@ class Printer {
     void print_puts() { puts(builder.data()); }
 
     public:
+#ifdef __INTELLISENSE__
+    template <typename... Args>
+    static void print(StringView format, const Args&... args) {
+        if constexpr (sizeof...(args) == 0) {
+            puts(format.data());
+        } else {
+            Printer printer{ format, args... };
+            printer.print_puts();
+        }
+    }
+    template <typename... Args>
+    [[nodiscard]] static String format(StringView format, const Args&... args) {
+        Printer printer{ format, args... };
+        return move(printer.builder);
+    }
+#else
     template <typename... Args>
     static void print(Detail::CheckedFormatString<sizeof...(Args)>&& format, const Args&... args) {
         if constexpr (sizeof...(args) == 0) {
@@ -150,5 +166,6 @@ class Printer {
         Printer printer{ format.fmt, args... };
         return move(printer.builder);
     }
+#endif
 };
 }    // namespace ARLib
