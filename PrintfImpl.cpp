@@ -153,15 +153,6 @@ Result<String, PrintfErrorCodes> format_integer_like_type(const PrintfTypes::Pri
     auto has_flag = [&](Flags flag) {
         return (info.flags & flag) != Flags::None;
     };
-    auto sign = [&]() {
-        if constexpr (UnsignedIntegral<T>) {
-            return ""_s;
-        } else {
-            auto yes = ((val < 0) ? ""_s : "+"_s);
-            auto no  = ""_s;
-            return has_flag(Flags::UseSign) ? yes : no;
-        }
-    };
     String formatted_arg{};
     switch (info.type) {
         case Type::SignedDecimal1:
@@ -201,6 +192,9 @@ Result<String, PrintfErrorCodes> format_integer_like_type(const PrintfTypes::Pri
             case Type::UnsignedOctal:
                 prefix = "0"_sv;
                 break;
+            default:
+                ASSERT_NOT_REACHED("Invalid type passed to format_integer_like_type");
+                break;
         }
     }
     // 	The precision has no effect on %c and %C
@@ -234,7 +228,7 @@ Result<String, PrintfErrorCodes> format_integer_like_type(const PrintfTypes::Pri
 template <FloatingPoint T>
 Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& info, T val) {
     // FIXME: adhere to the spec
-     using namespace PrintfTypes;
+    using namespace PrintfTypes;
     if (info.precision == PrintfInfo::missing_precision_marker) {
         if (type_is_any_of<Type::FloatHex, Type::FloatHexUpper>(info.type)) {
             // Default precision is 13. If precision is 0, no decimal point is printed unless the #flag is used.
@@ -247,7 +241,7 @@ Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& 
     int precision           = static_cast<int>(info.precision);
     using Vt                = RemoveCvRefT<decltype(val)>;
     constexpr const Vt zero = static_cast<Vt>(0.0);
-    auto has_flag = [&](Flags flag) {
+    auto has_flag           = [&](Flags flag) {
         return (info.flags & flag) != Flags::None;
     };
     auto sign = [&]() {
@@ -306,9 +300,9 @@ Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& 
                     return (has_flag(Flags::UseSign) ? ((val < zero) ? "-"_s : "+"_s) : ((val < zero) ? "-"_s : ""_s)) +
                            "inf"_s;
                 }
-                auto [sign, exp, signif] = double_to_bits(val);
+                auto [sign_bit, exp, signif] = double_to_bits(val);
                 auto builder =
-                has_flag(Flags::UseSign) ? (sign ? "-0x1."_s : "+0x1."_s) : (sign ? "-0x1."_s : "0x1."_s);
+                has_flag(Flags::UseSign) ? (sign_bit ? "-0x1."_s : "+0x1."_s) : (sign_bit ? "-0x1."_s : "0x1."_s);
                 builder += IntToStr<SupportedBase::Hexadecimal>(signif).substring(0, info.precision);
                 builder += 'p';
                 builder += has_flag(Flags::UseSign) ? ((exp < 0_i8) ? ""_s : "+"_s) : ""_s;
@@ -324,9 +318,9 @@ Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& 
                     return (has_flag(Flags::UseSign) ? ((val < zero) ? "-"_s : "+"_s) : ((val < zero) ? "-"_s : ""_s)) +
                            "INF"_s;
                 }
-                auto [sign, exp, signif] = double_to_bits(val);
+                auto [sign_bit, exp, signif] = double_to_bits(val);
                 auto builder =
-                has_flag(Flags::UseSign) ? (sign ? "-0x1."_s : "+0x1."_s) : (sign ? "-0x1."_s : "0x1."_s);
+                has_flag(Flags::UseSign) ? (sign_bit ? "-0x1."_s : "+0x1."_s) : (sign_bit ? "-0x1."_s : "0x1."_s);
                 builder += IntToStr<SupportedBase::Hexadecimal>(signif).substring(0, info.precision);
                 builder += 'p';
                 builder += has_flag(Flags::UseSign) ? ((exp < 0_i8) ? ""_s : "+"_s) : ""_s;
