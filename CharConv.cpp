@@ -1,4 +1,5 @@
 #include "CharConv.h"
+#include "Assertion.h"
 #include "StringView.h"
 #include "Vector.h"
 #include <charconv>
@@ -9,10 +10,12 @@ namespace ARLib {
 double StrViewToDouble(const StringView str) {
     double val                = 0.0;
     [[maybe_unused]] auto res = std::from_chars(str.data(), str.data() + str.size(), val);
-    HARD_ASSERT(
+    SOFT_ASSERT(
     res.ec != std::errc::invalid_argument && res.ec != std::errc::result_out_of_range,
     "Failed to convert string to double"
     )
+    // FIXME: find a way to make this function comunicate errors to the caller, current we just ignore everything
+    //        that fails and return 0.0
     return val;
 }
 float StrViewToFloat(const StringView str) {
