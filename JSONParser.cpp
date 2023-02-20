@@ -49,13 +49,18 @@ namespace JSON {
         return current_index - 1;
     }
     // delimeters are comma, close square parens and close curly.
-    Pair<size_t, String> eat_until_space_or_delim(StringView view, size_t current_index) {
+    Parsed<String> eat_until_space_or_delim(StringView view, size_t current_index) {
         String container{};
-        while (!isspace(view[current_index]) && view[current_index] != ',' && view[current_index] != ']' &&
-               view[current_index] != '}') {
+        const size_t view_size = view.size();
+        auto check_index       = [&]() {
+            if (current_index < view_size) return true;
+            return false;
+        };
+        while (check_index() && !isspace(view[current_index]) && view[current_index] != ',' &&
+               view[current_index] != ']' && view[current_index] != '}') {
             container.append(view[current_index++]);
         }
-        return Pair{ current_index, container };
+        return Parsed<String>::from_ok(Pair{ current_index, container });
     }
     Parsed<JString> parse_quoted_string(StringView view, size_t current_index) {
         CHK_CURR('"')
@@ -92,9 +97,11 @@ namespace JSON {
         if (!at_end) return ParseError{ "Missing end of quotation on string"_s, current_index };
         return Pair{ current_index, container };
     }
-    Pair<size_t, String> parse_non_delimited(StringView view, size_t current_index) {
-        current_index            = skip_whitespace(view, current_index);
-        auto [new_index, string] = eat_until_space_or_delim(view, current_index);
+    Parsed<String> parse_non_delimited(StringView view, size_t current_index) {
+        current_index = skip_whitespace(view, current_index);
+        auto result   = eat_until_space_or_delim(view, current_index);
+        if (result.is_error()) return result.to_error();
+        auto [new_index, string] = result.to_ok();
         current_index            = skip_whitespace(view, new_index);
         return Pair{ current_index, string };
     }
@@ -129,7 +136,9 @@ namespace JSON {
                     }
                 default:
                     {
-                        auto [new_index_val, raw_value] = parse_non_delimited(view, current_index);
+                        auto result = parse_non_delimited(view, current_index);
+                        if (result.is_error()) return result.to_error();
+                        auto [new_index_val, raw_value] = result.to_ok();
                         current_index                   = new_index_val;
                         if (raw_value == "null"_s) {
                             arr.append(ValueObj::construct(Null{ null_tag }));
@@ -193,7 +202,9 @@ namespace JSON {
                             }
                             return true;
                         };
-                        auto [new_index_val, raw_value] = parse_non_delimited(view, current_index);
+                        auto result = parse_non_delimited(view, current_index);
+                        if (result.is_error()) return result.to_error();
+                        auto [new_index_val, raw_value] = result.to_ok();
                         current_index                   = new_index_val;
                         if (raw_value == "null"_s) {
                             obj.add(move(key), ValueObj::construct(Null{ null_tag }));
