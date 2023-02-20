@@ -9,15 +9,37 @@ namespace ARLib {
 namespace JSON {
 
     template <typename T>
-    using Parsed = Result<Pair<size_t, T>, ParseError>;
-
-    Parsed<Object> parse_object(StringView view, size_t current_index);
-    size_t skip_whitespace(StringView view, size_t current_index);
-    Parsed<String> eat_until_space_or_delim(StringView view, size_t current_index);
-    Parsed<JString> parse_quoted_string(StringView view, size_t current_index);
-    Parsed<String> parse_non_delimited(StringView view, size_t current_index);
+    using Parsed = Result<T, ParseError>;
+    class ParseState {
+        StringView view;
+        size_t current_index;
+        size_t depth;
+        public:
+        constexpr static size_t depth_limit = 1000;
+        constexpr ParseState(StringView v) : view(v), current_index(0), depth(0) {}
+        constexpr bool enter() {
+            if (depth == depth_limit) return false;
+            depth++;
+            return true;
+        }
+        constexpr bool exit() {
+            if (depth == 0) return false;
+            depth--;
+            return true;
+        }
+        constexpr char current() const { return view[current_index]; }
+        constexpr char peek(size_t off) const { return view[current_index + off]; }
+        constexpr bool invalid_index() const { return current_index >= view.size(); }
+        constexpr void advance(size_t off = 1) { current_index += off; }
+        constexpr size_t index() const { return current_index; }
+    };
+    Parsed<Object> parse_object(ParseState& state);
+    void skip_whitespace(ParseState& state);
+    Parsed<String> eat_until_space_or_delim(ParseState& state);
+    Parsed<JString> parse_quoted_string(ParseState& state);
+    Parsed<String> parse_non_delimited(ParseState& state);
     Number parse_number(const String& raw_value);
-    Parsed<Array> parse_array(StringView view, size_t current_index);
+    Parsed<Array> parse_array(ParseState& state);
     String dump_array(const Array& arr, size_t indent = 1);
     String dump_json(const Object& obj, size_t indent = 1);
     String dump_array_compact(const Array& arr);

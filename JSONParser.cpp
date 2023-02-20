@@ -7,62 +7,62 @@
 namespace ARLib {
 namespace JSON {
 
+#define STATE_ENTER()                                                                                                  \
+    if (!state.enter()) return ParseError{ "Reached depth limit of "_s + IntToStr(state.depth_limit), state.index() };
+
+#define STATE_EXIT()                                                                                                   \
+    if (!state.exit()) return ParseError{ "Trying to exit from a depth of 0 "_s, state.index() };
+
 #define CHK_SIZE(c)                                                                                                    \
-    if (current_index >= view.size()) {                                                                                \
-        return ParseError{ "Expected " #c " but end of file was reached"_s, current_index };                           \
-    }
+    if (state.invalid_index()) { return ParseError{ "Expected " #c " but end of file was reached"_s, state.index() }; }
 
 #define CHK_CURR(c)                                                                                                    \
     CHK_SIZE(c)                                                                                                        \
-    if (view[current_index] != c) {                                                                                    \
-        return ParseError{ String::formatted("Invalid character, expected '%c' but got '%c'", c, view[current_index]), \
-                           current_index };                                                                            \
+    if (state.current() != c) {                                                                                        \
+        return ParseError{ String::formatted("Invalid character, expected '%c' but got '%c'", c, state.current()),     \
+                           state.index() };                                                                            \
     }
 
 #define VERIFY_COMMA(c)                                                                                                \
-    current_index = skip_whitespace(view, current_index);                                                              \
-    if (view[current_index] != ',') {                                                                                  \
-        if (view[current_index] != c) {                                                                                \
-            return ParseError{ "Invalid character, expected a comma but got "_s + view[current_index],                 \
-                               current_index };                                                                        \
+    skip_whitespace(state);                                                                                            \
+    if (state.current() != ',') {                                                                                      \
+        if (state.current() != c) {                                                                                    \
+            return ParseError{ "Invalid character, expected a comma but got "_s + state.current(), state.index() };    \
         }                                                                                                              \
     } else {                                                                                                           \
-        current_index++;                                                                                               \
+        state.advance();                                                                                               \
     }
 
 #define ADD_TO_OBJ_WITH(func)                                                                                          \
-    auto value_or_error = func(view, current_index);                                                                   \
+    auto value_or_error = func(state);                                                                                 \
     if (value_or_error.is_error()) { return value_or_error.to_error(); }                                               \
-    auto [new_index_val, value] = value_or_error.to_ok();                                                              \
-    current_index               = skip_whitespace(view, new_index_val);                                                \
+    auto value = value_or_error.to_ok();                                                                               \
+    skip_whitespace(state);                                                                                            \
     obj.add(move(key), ValueObj::construct(move(value)));
 
 #define ADD_TO_ARR_WITH(func)                                                                                          \
-    auto value_or_error = func(view, current_index);                                                                   \
+    auto value_or_error = func(state);                                                                                 \
     if (value_or_error.is_error()) { return value_or_error.to_error(); }                                               \
-    auto [new_index_val, value] = value_or_error.to_ok();                                                              \
-    current_index               = skip_whitespace(view, new_index_val);                                                \
+    auto value = value_or_error.to_ok();                                                                               \
+    skip_whitespace(state);                                                                                            \
     arr.append(ValueObj::construct(move(value)));
-    size_t skip_whitespace(StringView view, size_t current_index) {
-        while (isspace(view[current_index++]))
-            ;
-        return current_index - 1;
+    void skip_whitespace(ParseState& state) {
+        while (isspace(state.current())) { state.advance(); }
     }
     // delimeters are comma, close square parens and close curly.
-    Parsed<String> eat_until_space_or_delim(StringView view, size_t current_index) {
+    Parsed<String> eat_until_space_or_delim(ParseState& state) {
+        STATE_ENTER();
         String container{};
-        const size_t view_size = view.size();
-        auto check_index       = [&]() {
-            if (current_index < view_size) return true;
-            return false;
-        };
-        while (check_index() && !isspace(view[current_index]) && view[current_index] != ',' &&
-               view[current_index] != ']' && view[current_index] != '}') {
-            container.append(view[current_index++]);
+        while (!state.invalid_index() && !isspace(state.current()) && state.current() != ',' &&
+               state.current() != ']' && state.current() != '}') {
+            container.append(state.current());
+            state.advance();
         }
-        return Parsed<String>::from_ok(Pair{ current_index, container });
+        STATE_EXIT();
+        return container;
     }
-    Parsed<JString> parse_quoted_string(StringView view, size_t current_index) {
+    Parsed<JString> parse_quoted_string(ParseState& state) {
+        STATE_ENTER();
         CHK_CURR('"')
         auto check_c = [](char c) {
             constexpr char escaped[] = { 'n', 'r', 'v', 't', 'f' };
@@ -71,39 +71,41 @@ namespace JSON {
             if (found != npos_) { return equiv[found]; }
             return c;
         };
-        current_index++;
+        state.advance();
         JString container{};
-        bool at_end          = false;
-        const auto view_size = view.size();
-        while (!at_end && current_index < view_size) {
-            const char c = view[current_index];
+        bool at_end = false;
+        while (!at_end && !state.invalid_index()) {
+            const char c = state.current();
             if (c == '\\') {
-                if (view[current_index + 1] == '\\') {
-                    container.append(check_c(view[current_index + 2]));
-                    current_index += 3;
+                if (state.peek(1) == '\\') {
+                    container.append(check_c(state.peek(2)));
+                    state.advance(3);
                 } else {
-                    container.append(check_c(view[current_index + 1]));
-                    current_index += 2;
+                    container.append(check_c(state.peek(1)));
+                    state.advance(2);
                 }
 
             } else if (c == '"') {
-                current_index++;
+                state.advance();
                 at_end = true;
             } else {
                 container.append(c);
-                current_index++;
+                state.advance();
             }
         }
-        if (!at_end) return ParseError{ "Missing end of quotation on string"_s, current_index };
-        return Pair{ current_index, container };
+        if (!at_end) return ParseError{ "Missing end of quotation on string"_s, state.index() };
+        STATE_EXIT();
+        return container;
     }
-    Parsed<String> parse_non_delimited(StringView view, size_t current_index) {
-        current_index = skip_whitespace(view, current_index);
-        auto result   = eat_until_space_or_delim(view, current_index);
+    Parsed<String> parse_non_delimited(ParseState& state) {
+        STATE_ENTER();
+        skip_whitespace(state);
+        auto result = eat_until_space_or_delim(state);
         if (result.is_error()) return result.to_error();
-        auto [new_index, string] = result.to_ok();
-        current_index            = skip_whitespace(view, new_index);
-        return Pair{ current_index, string };
+        auto string = result.to_ok();
+        skip_whitespace(state);
+        STATE_EXIT();
+        return string;
     }
     Number parse_number(const String& raw_value) {
         if (raw_value.contains('.') || raw_value.contains('E') || raw_value.contains('e')) {
@@ -112,13 +114,14 @@ namespace JSON {
             return Number{ number_tag, StrToI64(raw_value) };
         }
     }
-    Parsed<Array> parse_array(StringView view, size_t current_index) {
-        CHK_CURR('[')
-        Array arr{};
-        current_index = skip_whitespace(view, current_index + 1);
-        while (view[current_index] != ']') {
-            current_index = skip_whitespace(view, current_index);
-            switch (view[current_index]) {
+    Parsed<Array> parse_array(ParseState& state) {
+        STATE_ENTER();
+        CHK_CURR('[') Array arr{};
+        state.advance();
+        skip_whitespace(state);
+        while (state.current() != ']') {
+            skip_whitespace(state);
+            switch (state.current()) {
                 case '{':
                     {
                         ADD_TO_ARR_WITH(parse_object);
@@ -136,10 +139,9 @@ namespace JSON {
                     }
                 default:
                     {
-                        auto result = parse_non_delimited(view, current_index);
+                        auto result = parse_non_delimited(state);
                         if (result.is_error()) return result.to_error();
-                        auto [new_index_val, raw_value] = result.to_ok();
-                        current_index                   = new_index_val;
+                        auto raw_value = result.to_ok();
                         if (raw_value == "null"_s) {
                             arr.append(ValueObj::construct(Null{ null_tag }));
                         } else if (raw_value == "true"_s) {
@@ -154,28 +156,32 @@ namespace JSON {
             }
             VERIFY_COMMA(']')
         }
-        return Pair{ current_index + 1, move(arr) };
+        state.advance();
+        STATE_EXIT();
+        return arr;
     }
-    Parsed<Object> parse_object(StringView view, size_t current_index) {
+    Parsed<Object> parse_object(ParseState& state) {
+        STATE_ENTER();
         CHK_CURR('{')
         Object obj{};
-        current_index = skip_whitespace(view, current_index + 1);
-        while (view[current_index] != '}') {
+        state.advance();
+        skip_whitespace(state);
+        while (state.current() != '}') {
             // we're in an object
 
             // parse key:
-            current_index     = skip_whitespace(view, current_index);
-            auto key_or_error = parse_quoted_string(view, current_index);
+            skip_whitespace(state);
+            auto key_or_error = parse_quoted_string(state);
             if (key_or_error.is_error()) return key_or_error.to_error();
-            auto [new_index, key] = key_or_error.to_ok();
-
+            auto key = key_or_error.to_ok();
             // parse divisor between key and value
-            current_index = skip_whitespace(view, new_index);
-            if (view[current_index] != ':')
-                return ParseError{ "Invalid character, expected : but got "_s + view[current_index], current_index };
-            current_index = skip_whitespace(view, current_index + 1);
+            skip_whitespace(state);
+            if (state.current() != ':')
+                return ParseError{ "Invalid character, expected : but got "_s + state.current(), state.index() };
+            state.advance();
+            skip_whitespace(state);
 
-            switch (view[current_index]) {
+            switch (state.current()) {
                 case '[':
                     {
                         ADD_TO_OBJ_WITH(parse_array)
@@ -202,10 +208,9 @@ namespace JSON {
                             }
                             return true;
                         };
-                        auto result = parse_non_delimited(view, current_index);
+                        auto result = parse_non_delimited(state);
                         if (result.is_error()) return result.to_error();
-                        auto [new_index_val, raw_value] = result.to_ok();
-                        current_index                   = new_index_val;
+                        auto raw_value = result.to_ok();
                         if (raw_value == "null"_s) {
                             obj.add(move(key), ValueObj::construct(Null{ null_tag }));
                         } else if (raw_value == "true"_s) {
@@ -215,7 +220,7 @@ namespace JSON {
                         } else if (check_if_valid_number(raw_value)) {
                             obj.add(move(key), ValueObj::construct(parse_number(raw_value)));
                         } else {
-                            return ParseError{ "Expected a valid json type but got "_s + raw_value, current_index };
+                            return ParseError{ "Expected a valid json type but got "_s + raw_value, state.index() };
                         }
                         break;
                     }
@@ -223,8 +228,9 @@ namespace JSON {
 
             VERIFY_COMMA('}')
         }
-
-        return Pair{ current_index + 1, move(obj) };
+        state.advance();
+        STATE_EXIT();
+        return obj;
     }
     // FIXME: fix indentation
     String dump_array(const Array& arr, size_t indent) {
@@ -377,10 +383,11 @@ namespace JSON {
     }
     Parser::Parser(StringView view) : m_view(view) {}
     ParseResult Parser::parse_internal() {
-        size_t current_index = skip_whitespace(m_view, 0);
-        auto object_or_error = parse_object(m_view, current_index);
+        ParseState state{ m_view };
+        skip_whitespace(state);
+        auto object_or_error = parse_object(state);
         if (object_or_error.is_error()) return object_or_error.to_error();
-        auto [_, obj] = object_or_error.to_ok();
+        auto obj = object_or_error.to_ok();
         return ParseResult{ Document{ move(obj) } };
     }
     ParseResult Parser::parse(StringView data) {
