@@ -24,7 +24,7 @@ struct Console {
             buf += c;
             c = static_cast<char>(ARLib::getchar());
         }
-        return StrToInt(buf);
+        return StrToInt(buf, base);
     }
     template <size_t N, typename... Args>
     static void print(const char (&fmt)[N], const Args&... args) {
