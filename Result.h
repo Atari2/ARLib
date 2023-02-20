@@ -200,6 +200,6 @@ struct PrintInfo<Result<T, U>> {
             );                                                                                                         \
         }                                                                                                              \
         if constexpr (!SameAsCvRef<decltype(tr.to_ok()), DefaultOk>) { return tr.to_ok(); }                            \
-    }((expression));
+    }((expression))
 
 }    // namespace ARLib
