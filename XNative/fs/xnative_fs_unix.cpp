@@ -65,10 +65,13 @@ void UnixDirectoryIterator::load_next_file(bool first_time) {
             return;
         }
     }
-    getcwd(pathBuf, PATH_MAX);
-    size_t size       = strlen(pathBuf);
-    pathBuf[size]     = '/';
-    pathBuf[size + 1] = '\0';
+    size_t size = 0;
+    if (!m_path.is_absolute()) {
+        getcwd(pathBuf, PATH_MAX);
+        size            = strlen(pathBuf);
+        pathBuf[size]   = '/';
+        pathBuf[++size] = '\0';
+    }
     while (m_index < m_hdl->gl_pathc) {
         strcat(pathBuf, m_hdl->gl_pathv[m_index]);
         struct stat pathStat;
@@ -94,6 +97,7 @@ void UnixDirectoryIterator::load_next_file(bool first_time) {
                 return;
             }
         }
+        pathBuf[++size] = '\0';
         m_index++;
     }
     globfree(m_hdl);
