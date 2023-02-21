@@ -139,7 +139,7 @@ int printf(const char* fmt, ...) {
     auto ret = _vsprintf(fmt, argptr);
     ARLib::fwrite(ret.data(), sizeof(char), ret.size(), stdout);
     va_end(argptr);
-    return ret.written_arguments;
+    return static_cast<int>(ret.size());
 }
 int fprintf(FILE* fp, const char* fmt, ...) {
     va_list argptr{};
@@ -147,7 +147,7 @@ int fprintf(FILE* fp, const char* fmt, ...) {
     auto ret = _vsprintf(fmt, argptr);
     ARLib::fwrite(ret.data(), sizeof(char), ret.size(), fp);
     va_end(argptr);
-    return ret.written_arguments;
+    return static_cast<int>(ret.size());
 }
 int sprintf(char* str, const char* format, ...) {
     va_list argptr{};
