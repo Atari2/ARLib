@@ -810,14 +810,26 @@ TEST(ARLibTests, PrintfWideString) {
     buffer[ret]   = '\0';
     EXPECT_EQ(StringView{ buffer }, expected);
 }
+TEST(ARLibTests, PrintfNonNullString) {
+    char buffer[1024]{};
+    constexpr int expected_len = 23;
+    constexpr StringView expected{ "hello world hello world" };
+    String a{ "hello world my name is alessio" };
+    WString aw{ L"hello world my name is alessio" };
+    StringView b   = a.view().substringview_fromlen(0, ARLib::strlen("hello world"));
+    WStringView bw = aw.view().substringview_fromlen(0, wstrlen(L"hello world"));
+    int ret        = ARLib::snprintf(buffer, sizeof(buffer), "%.*s %.*S", b.size(), b.data(), bw.size(), bw.data());
+    EXPECT_EQ(StringView{ buffer }, expected);
+    EXPECT_EQ(expected_len, ret);
+}
 TEST(ARLibTests, PrintfTestGeneric) {
     // the expected values come from std printf implementation
     constexpr StringView expected_from_misc{
         "Hello World +0X1.90000P+5 +1234.1234  % my name is alessio 0120 0X7FFFFFFFFFFFFFFF %\n"
     };
     constexpr StringView expected_from_fill_pre{ "0X0C 000C" };
-    constexpr int expected_pn       = 37;
-    constexpr int expected_bsz_misc = 85;
+    constexpr int expected_pn           = 37;
+    constexpr int expected_bsz_misc     = 85;
     constexpr int expected_bsz_fill_pre = 9;
     char buffer[1024]{};
     double val              = 1234.1234;

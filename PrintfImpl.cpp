@@ -136,8 +136,8 @@ String RealToStr(FloatingPoint auto val, int precision) {
         COMPTIME_ASSERT("Invalid type passed to RealToStr");
     }
 }
-String wchar_to_char(const wchar_t* wstr) {
-    return wstring_to_string(WStringView{ wstr });
+String wchar_to_char(WStringView wstr) {
+    return wstring_to_string(wstr);
 }
 String wchar_to_char(const wchar_t wc) {
     return wstring_to_string(WStringView{ &wc, 1 });
@@ -340,11 +340,15 @@ Result<String, PrintfErrorCodes> format_single_arg(PrintfTypes::PrintfInfo& info
         return format_real_like_type(info, val);
     } else if constexpr (SameAs<const char*, T>) {
         if (info.type != Type::String) { return PrintfErrorCodes::InvalidType; }
+        if (info.precision != PrintfInfo::missing_precision_marker) { return String{ val, info.precision }; }
         return String{ val };
     } else if constexpr (SameAs<const wchar_t*, T>) {
         HARD_ASSERT(info.type == Type::WideString || info.type == Type::AnsiString, "Invalid type");
         if (info.type != Type::WideString && info.type != Type::AnsiString) { return PrintfErrorCodes::InvalidType; }
-        return wchar_to_char(val);
+        if (info.precision != PrintfInfo::missing_precision_marker) {
+            return wchar_to_char(WStringView{ val, info.precision });
+        }
+        return wchar_to_char(WStringView{ val });
     } else if constexpr (SameAs<const void*, T>) {
         constexpr auto ptrlen = sizeof(void*) * 2;
         auto ptrstr           = IntToStr<SupportedBase::Hexadecimal>(BitCast<uintptr_t>(val));
@@ -444,7 +448,6 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                 ++i;
                 if (format[i] == '*') {
                     cur_info.precision = PrintfInfo::variable_precision_marker;
-                    ++i;
                 } else {
                     size_t end_precision = i;
                     while (is_num(format[end_precision])) ++end_precision;
