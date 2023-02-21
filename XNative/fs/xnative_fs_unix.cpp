@@ -97,7 +97,7 @@ void UnixDirectoryIterator::load_next_file(bool first_time) {
                 return;
             }
         }
-        pathBuf[++size] = '\0';
+        pathBuf[size] = '\0';
         m_index++;
     }
     globfree(m_hdl);
