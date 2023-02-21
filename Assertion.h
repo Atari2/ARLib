@@ -72,7 +72,6 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
                 ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                          \
                 PRINT_SOURCE_LOCATION                                                                                  \
             }                                                                                                          \
-            unreachable                                                                                                \
         }
     #define SOFT_ASSERT_FMT(val, fmt, ...)                                                                             \
         if (!(val)) {                                                                                                  \
@@ -82,7 +81,6 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
                 ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                      \
                 PRINT_SOURCE_LOCATION                                                                                  \
             }                                                                                                          \
-            unreachable                                                                                                \
         }
 #else
     #define HARD_ASSERT(val, msg)
