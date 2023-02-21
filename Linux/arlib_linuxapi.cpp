@@ -53,21 +53,35 @@ String last_error() {
     }
 }
 WString string_to_wstring(StringView str) {
-    size_t required_size = mbstowcs(NULL, str.data(), 0);
-    if (required_size == static_cast<size_t>(-1)) { return {}; }
     WString wstr{};
-    wstr.reserve(required_size);
-    size_t conv = mbstowcs(wstr.rawptr(), str.data(), wstr.capacity());
-    wstr.set_size(conv);
+    wstr.reserve(str.size());
+    size_t i = 0;
+    while (i < str.size()) {
+        wchar_t c;
+        int ret = mbtowc(&c, str.data() + i, str.size() - i);
+        if (ret == -1) {
+            // handle failure
+            wstr.append(L'?');
+            i++;
+        } else {
+            wstr.append(c);
+            i += static_cast<size_t>(ret);
+        }
+    }
     return wstr;
 }
 String wstring_to_string(WStringView wstr) {
-    size_t required_size = wcstombs(NULL, wstr.data(), 0);
-    if (required_size == static_cast<size_t>(-1)) { return {}; }
+    char buf[32];
     String str{};
-    str.reserve(required_size);
-    size_t conv = wcstombs(str.rawptr(), wstr.data(), str.capacity());
-    str.set_size(conv);
+    str.reserve(wstr.size());
+    for (wchar_t c : wstr) {
+        int ret = wctomb(buf, c);
+        if (ret == -1) {
+            // handle failure
+            str.append('?');
+        }
+        str.append(StringView{ buf, static_cast<size_t>(ret) });
+    }
     return str;
 }
 }    // namespace ARLib
