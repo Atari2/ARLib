@@ -5,6 +5,7 @@
     #define unreachable __assume(0);
     #define forceinline __forceinline
     #define noop        __noop
+    #define compiler_intrinsic   [[msvc::intrinsic]]
     #ifdef _WIN64
         #define ENVIRON64 1
     #else
@@ -15,6 +16,7 @@
     #define unreachable __builtin_unreachable();
     #define forceinline __attribute__((always_inline))
     #define noop        ((void)0)
+    #define compiler_intrinsic
     #if __x86_64__ || __ppc64__
         #define ENVIRON64 1
     #else
@@ -25,6 +27,7 @@
     #define unreachable __builtin_unreachable();
     #define forceinline __attribute__((always_inline))
     #define noop        ((void)0)
+    #define compiler_intrinsic
     #if __x86_64__ || __ppc64__
         #define ENVIRON64 1
     #else

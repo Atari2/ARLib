@@ -31,15 +31,15 @@ using MakeIndexSequence = MakeIntegerSequence<size_t, Size>;
 template <class... Types>
 using IndexSequenceFor = MakeIndexSequence<sizeof...(Types)>;
 template <class T>
-constexpr inline T&& Forward(typename RemoveReference<T>::type& t) noexcept {
+compiler_intrinsic constexpr inline T&& Forward(typename RemoveReference<T>::type& t) noexcept {
     return static_cast<T&&>(t);
 }
 template <class T>
-constexpr inline T&& Forward(typename RemoveReference<T>::type&& t) noexcept {
+compiler_intrinsic constexpr inline T&& Forward(typename RemoveReference<T>::type&& t) noexcept {
     return static_cast<T&&>(t);
 }
 template <typename T>
-constexpr RemoveReferenceT<T>&& move(T&& t) noexcept {
+compiler_intrinsic constexpr RemoveReferenceT<T>&& move(T&& t) noexcept {
     return static_cast<RemoveReferenceT<T>&&>(t);
 }
 template <typename T>
