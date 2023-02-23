@@ -198,8 +198,6 @@ class String {
         return strncmp(get_buf_internal(), other, N - 1) != 0;
     }
     [[nodiscard]] bool operator==(const StringView& other) const;
-    [[nodiscard]] bool operator!=(const String& other) const { return !(*this == other); }
-    [[nodiscard]] bool operator!=(const StringView& other) const;
     [[nodiscard]] bool operator<(const String& other) const {
         return strncmp(get_buf_internal(), other.get_buf_internal(), other.m_size) < 0;
     }

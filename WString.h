@@ -199,7 +199,6 @@ class WString {
         return wstrncmp(get_buf_internal(), other, N - 1) != 0;
     }
     [[nodiscard]] bool operator==(const WStringView& other) const;
-    [[nodiscard]] bool operator!=(const WString& other) const { return !(*this == other); }
     [[nodiscard]] bool operator!=(const WStringView& other) const;
     [[nodiscard]] bool operator<(const WString& other) const {
         return wstrncmp(get_buf_internal(), other.get_buf_internal(), other.m_size) < 0;

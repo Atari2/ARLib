@@ -23,9 +23,6 @@ WString::WString(StringView other) {
     }
     return true;
 }
-[[nodiscard]] bool WString::operator!=(const WStringView& other) const {
-    return !(*this == other);
-}
 [[nodiscard]] bool WString::operator<(const WStringView& other) const {
     // we use the size() of the WStringView cause it's not guaranteed to be null terminated
     return wstrncmp(get_buf_internal(), other.data(), other.size());

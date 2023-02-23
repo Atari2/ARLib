@@ -206,10 +206,6 @@ namespace JSON {
             if (val != m_type) return false;
             return get<val>() == value;
         }
-        template <JSONTypeExt T>
-        bool operator!=(const T& value) const {
-            return !(*this == value);
-        }
         template <Type T>
         const auto& get() const {
             // Value, Object, String, Number, Array, Bool, Null

@@ -51,7 +51,6 @@ struct HashMapEntry {
             return false;
         }
     }
-    bool operator!=(const HashMapEntry& other) { return !(*this == other); }
 };
 template <typename Key, typename Value>
 struct Hash<HashMapEntry<Key, Value>> {

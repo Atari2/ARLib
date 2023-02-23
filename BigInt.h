@@ -101,7 +101,6 @@ class BigInt {
         if (m_buffer.size() != other.m_buffer.size()) return false;
         return comparison_same_length(*this, other) == equal;
     }
-    bool operator!=(const BigInt& other) const { return !(*this == other); }
     bool operator!=(Integral auto other) const { return *this != BigInt{ other }; }
     bool operator>(const BigInt& other) const {
         if (this == &other) return false;

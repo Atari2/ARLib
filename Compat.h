@@ -5,7 +5,11 @@
     #define unreachable __assume(0);
     #define forceinline __forceinline
     #define noop        __noop
-    #define compiler_intrinsic   [[msvc::intrinsic]]
+    #if _MSC_FULL_VER > 193431942
+        #define compiler_intrinsic [[msvc::intrinsic]]
+    #else
+        #define compiler_intrinsic
+    #endif
     #ifdef _WIN64
         #define ENVIRON64 1
     #else

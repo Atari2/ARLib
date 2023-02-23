@@ -73,11 +73,6 @@ class Optional {
         if (!m_exists || !other.m_exists) return false;
         return *m_object == *other.m_object;
     }
-    bool operator!=(const Optional& other) const
-    requires EqualityComparable<T>
-    {
-        return !(*this == other);
-    }
     Ordering operator<=>(const Optional& other) const {
         // both are empty => true
         if (!m_exists && !other.m_exists) return equal;

@@ -85,7 +85,6 @@ class HashAlgorithm<HashType::MD5> {
             }
             return true;
         }
-        bool operator!=(const MD5Result& other) const { return !(*this == other); }
     };
     static MD5Result calculate(ReadOnlyByteView);
     static MD5Result calculate(ReadOnlyCharView);

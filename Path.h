@@ -38,7 +38,6 @@ class Path {
     Path(FsStringView path) : m_path(init_path(FsString{ path })) {}
     Path(const NonFsStringView& path) : m_path(init_path(NonFsString{ path })) {}
     bool operator==(const Path& other) const;
-    bool operator!=(const Path& other) const { return !(*this == other); }
     Path& operator/=(const Path& other);
     Path operator/(const Path& other) const;
     [[nodiscard]] Path parent_path() const;

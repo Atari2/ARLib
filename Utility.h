@@ -38,10 +38,12 @@ template <class T>
 compiler_intrinsic constexpr inline T&& Forward(typename RemoveReference<T>::type&& t) noexcept {
     return static_cast<T&&>(t);
 }
+// clang-format off
 template <typename T>
-constexpr compiler_intrinsic RemoveReferenceT<T>&& move(T&& t) noexcept {
+compiler_intrinsic constexpr RemoveReferenceT<T>&& move(T&& t) noexcept {
     return static_cast<RemoveReferenceT<T>&&>(t);
 }
+// clang-format on
 template <typename T>
 constexpr inline void swap(T& a, T& b) noexcept
 requires NothrowMoveAssignable<T> && NothrowMoveConstructible<T>
