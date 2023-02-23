@@ -39,7 +39,7 @@ compiler_intrinsic constexpr inline T&& Forward(typename RemoveReference<T>::typ
     return static_cast<T&&>(t);
 }
 template <typename T>
-compiler_intrinsic constexpr RemoveReferenceT<T>&& move(T&& t) noexcept {
+constexpr compiler_intrinsic RemoveReferenceT<T>&& move(T&& t) noexcept {
     return static_cast<RemoveReferenceT<T>&&>(t);
 }
 template <typename T>
@@ -55,6 +55,12 @@ constexpr inline void swap(T (&a)[N], T (&b)[N]) noexcept
 requires Swappable<T>
 {
     for (size_t n = 0; n < N; ++n) swap(a[n], b[n]);
+}
+template <typename T, class Other = T>
+constexpr T exchange(T& val, Other&& other) noexcept(NothrowMoveConstructible<T>&& NothrowAssignable<T&, Other>) {
+    T old = static_cast<T&&>(val);
+    val   = static_cast<Other&&>(other);
+    return old;
 }
 template <typename C, size_t N>
 consteval size_t sizeof_array(C (&)[N]) {

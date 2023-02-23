@@ -79,8 +79,8 @@ concept MoveAssignable = requires { Supports<MoveAssignableV<Cls>>::value; };
 template <typename Cls>
 concept CopyAssignable = requires { Supports<CopyAssignableV<Cls>>::value; };
 
-template <typename Cls>
-concept NothrowAssignable = requires { Supports<NothrowAssignableV<Cls, Cls>>::value; };
+template <typename Cls, typename Other = Cls>
+concept NothrowAssignable = requires { Supports<NothrowAssignableV<Cls, Other>>::value; };
 template <typename Cls>
 concept NothrowMoveAssignable = requires { Supports<NothrowMoveAssignableV<Cls>>::value; };
 template <typename Cls>
