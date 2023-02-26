@@ -201,6 +201,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${CMAKE_CURRENT_SOURCE_DIR}/ArgParser.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Array.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Assertion.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Atomic.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Badge.h
     ${CMAKE_CURRENT_SOURCE_DIR}/BigInt.h
     ${CMAKE_CURRENT_SOURCE_DIR}/BitInteger.h
@@ -306,6 +307,13 @@ list(APPEND LIB_SOURCE_FILES_XNATIVE
     ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_merge.h
     ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_unix.h
     ${CMAKE_CURRENT_SOURCE_DIR}/XNative/fs/xnative_fs_windows.h
+
+	${CMAKE_CURRENT_SOURCE_DIR}/XNative/atomic/xnative_atomic_merge.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/atomic/xnative_atomic_unix.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/atomic/xnative_atomic_windows.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/atomic/xnative_atomic_merge.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/atomic/xnative_atomic_unix.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/XNative/atomic/xnative_atomic_windows.h
 )
 if (ON_WINDOWS)
     list(APPEND ARLIB_SOURCE_FILES 
@@ -348,6 +356,7 @@ endif()
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
 	list(APPEND ARLIB_COMPILE_OPTIONS /utf-8 /std:c++20 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
+    list(APPEND ARLIB_LINK_LIBRARIES synchronization)
     if (MSVC AND NOT ON_CLANG)
         list(APPEND ARLIB_COMPILE_OPTIONS /Zc:inline-)
     endif()
