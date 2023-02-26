@@ -5,6 +5,7 @@
     #include "Ordering.h"
     #include "PrintInfo.h"
     #include "ThreadBase.h"
+    #include "Atomic.h"
 namespace ARLib {
 namespace detail {
     class MutexBase {
@@ -280,7 +281,7 @@ class Thread {
     template <typename Callable, typename... Args>
     requires NotSame<Callable>
     explicit Thread(Callable&& f, Args&&... args) {
-        m_thread = defer_execution(f, args...);
+        m_thread = defer_execution(Forward<Callable>(f), Forward<Args>(args)...);
     }
     Thread(const Thread&) = delete;
     Thread(Thread&& other) noexcept { swap(other); }
@@ -319,6 +320,309 @@ class Thread {
     ~Thread() {
         if (joinable()) { arlib_terminate(); }
     }
+};
+template <typename T>
+class LockedPointer {
+    Atomic<uintptr_t> m_storage;
+    public:
+    constexpr static uintptr_t lock_mask                = 3;
+    constexpr static uintptr_t not_locked               = 0;
+    constexpr static uintptr_t locked_notify_not_needed = 1;
+    constexpr static uintptr_t locked_notify_needed     = 2;
+    constexpr static uintptr_t ptr_value_mask           = ~lock_mask;
+    constexpr LockedPointer() noexcept : m_storage{} {}
+    explicit LockedPointer(const T* ptr) noexcept : m_storage{ reinterpret_cast<uintptr_t>(ptr) } {}
+    LockedPointer(const LockedPointer&)            = delete;
+    LockedPointer& operator=(const LockedPointer&) = delete;
+    T* lock_and_load() noexcept {
+        uintptr_t rep = m_storage.load();
+        while (true) {
+            switch (rep & lock_mask) {
+                case not_locked:
+                    if (m_storage.compare_exchange_weak(rep, rep | locked_notify_not_needed)) {
+                        return reinterpret_cast<T*>(rep);
+                    }
+                    pause_sync();
+                    break;
+                case locked_notify_not_needed:
+                    if (!m_storage.compare_exchange_weak(rep, (rep & ptr_value_mask) | locked_notify_needed)) {
+                        pause_sync();
+                        break;
+                    }
+                    rep = (rep & ptr_value_mask) | locked_notify_needed;
+                    [[fallthrough]];
+                case locked_notify_needed:
+                    m_storage.wait(rep);
+                    rep = m_storage.load();
+                    break;
+                default:
+                    ASSERT_NOT_REACHED("Invalid bit pattern in LockedPointer");
+                    break;
+            }
+        }
+    }
+    void store_and_unlock(const T* value) noexcept {
+        const auto rep = m_storage.exchange(reinterpret_cast<uintptr_t>(value));
+        if ((rep & lock_mask) == locked_notify_needed) { m_storage.notify_all(); }
+    }
+    T* unsafe_load() const noexcept { return reinterpret_cast<T*>(m_storage.load()); }
+};
+struct StopState;
+class StopToken;
+class StopCallbackBase {
+    #ifdef COMPILER_MSVC
+    #define ARLIB_CDECL __cdecl
+    #else
+    #define ARLIB_CDECL 
+    #endif
+    friend StopState;
+    using Callback = void(ARLIB_CDECL*)(StopCallbackBase*) noexcept;
+    template <bool Transfer>
+    void do_attach(ConditionalT<Transfer, StopState*&, StopState* const> state) noexcept;
+
+    public:
+    explicit StopCallbackBase(const Callback fn) noexcept : m_fn{ fn } {}
+    StopCallbackBase(const StopCallbackBase&)            = delete;
+    StopCallbackBase& operator=(const StopCallbackBase&) = delete;
+
+    protected:
+    inline void attach(const StopToken& token) noexcept;
+    inline void attach(StopToken&& token) noexcept;
+    inline void detach() noexcept;
+
+    StopState* m_parent      = nullptr;
+    StopCallbackBase* m_next = nullptr;
+    StopCallbackBase* m_prev = nullptr;
+    Callback m_fn;
+};
+struct StopState {
+    Atomic<uint32_t> m_stop_tokens  = 1;
+    Atomic<uint32_t> m_stop_sources = 2;
+    LockedPointer<StopCallbackBase> m_callbacks;
+    Atomic<const StopCallbackBase*> m_current_callback = nullptr;
+    ThreadId m_stopping_thread{};
+    bool stop_requested() const noexcept { return (m_stop_sources.load() & uint32_t{ 1 }) != 0; }
+    bool stop_possible() const noexcept { return m_stop_sources.load() != 0; }
+    bool request_stop() noexcept {
+        if ((m_stop_sources.fetch_or(uint32_t{ 1 }) & uint32_t{ 1 }) != 0) { return false; }
+        m_stopping_thread = ThreadNative::id();
+        while (true) {
+            auto head = m_callbacks.lock_and_load();
+            m_current_callback.store(head);
+            m_current_callback.notify_all();
+            if (head == nullptr) {
+                m_callbacks.store_and_unlock(nullptr);
+                return true;
+            }
+            const auto next = exchange(head->m_next, nullptr);
+            if (next != nullptr) { next->m_prev = nullptr; }
+            m_callbacks.store_and_unlock(next);
+            head->m_fn(head);
+        }
+    }
+};
+class StopSource;
+class StopToken {
+    friend StopSource;
+    friend StopCallbackBase;
+    StopState* m_state;
+    explicit StopToken(StopState* const state) : m_state{ state } {}
+    public:
+    StopToken() noexcept : m_state{} {}
+    StopToken(const StopToken& other) noexcept : m_state{ other.m_state } {
+        const auto local = m_state;
+        if (local != nullptr) { local->m_stop_tokens.fetch_add(1); }
+    }
+    StopToken(StopToken&& other) noexcept : m_state{ exchange(other.m_state, nullptr) } {}
+    StopToken& operator=(const StopToken& other) noexcept {
+        StopToken{ other }.swap(*this);
+        return *this;
+    }
+    StopToken& operator=(StopToken&& other) noexcept {
+        StopToken{ move(other) }.swap(*this);
+        return *this;
+    };
+    ~StopToken() {
+        const auto local = m_state;
+        if (local != nullptr) {
+            if (local->m_stop_tokens.fetch_sub(1) == 1) { delete local; }
+        }
+    }
+    void swap(StopToken& other) noexcept { ARLib::swap(m_state, other.m_state); }
+    bool stop_requested() const noexcept {
+        const auto local = m_state;
+        return local != nullptr && local->stop_requested();
+    }
+    bool stop_possible() const noexcept {
+        const auto local = m_state;
+        return local != nullptr && local->stop_possible();
+    }
+    friend bool operator==(const StopToken& lhs, const StopToken& rhs) noexcept = default;
+    friend void swap(StopToken& lhs, StopToken& rhs) noexcept { ARLib::swap(lhs.m_state, rhs.m_state); }
+};
+struct NoStopState {};
+class StopSource {
+    StopState* m_state;
+    public:
+    StopSource() : m_state{ new StopState } {}
+    explicit StopSource(NoStopState) noexcept : m_state{} {}
+    StopSource(const StopSource& other) noexcept : m_state{ other.m_state } {
+        const auto local = m_state;
+        if (local != nullptr) { local->m_stop_sources.fetch_add(2); }
+    }
+    StopSource(StopSource&& other) noexcept : m_state{ exchange(other.m_state, nullptr) } {}
+    StopSource& operator=(const StopSource& other) noexcept {
+        StopSource{ other }.swap(*this);
+        return *this;
+    }
+    StopSource& operator=(StopSource&& other) noexcept {
+        StopSource{ move(other) }.swap(*this);
+        return *this;
+    }
+    ~StopSource() {
+        const auto local = m_state;
+        if (local != nullptr) {
+            if ((local->m_stop_tokens.fetch_sub(2) >> 1) == 1) {
+                if (local->m_stop_tokens.fetch_sub(1) == 1) { delete local; }
+            }
+        }
+    }
+    void swap(StopSource& other) noexcept { ARLib::swap(m_state, other.m_state); }
+    StopToken get_token() const noexcept {
+        const auto local = m_state;
+        if (local != nullptr) { local->m_stop_tokens.fetch_add(1); }
+        return StopToken{ local };
+    }
+    bool stop_requested() const noexcept {
+        const auto local = m_state;
+        return local != nullptr && local->stop_requested();
+    }
+    bool stop_possible() const noexcept { return m_state != nullptr; }
+    bool request_stop() noexcept {
+        const auto local = m_state;
+        return local && local->request_stop();
+    }
+    friend bool operator==(const StopSource& lhs, const StopSource& rhs) noexcept = default;
+    friend void swap(StopSource& lhs, StopSource& rhs) noexcept { ARLib::swap(lhs.m_state, rhs.m_state); }
+};
+template <bool Transfer>
+void StopCallbackBase::do_attach(ConditionalT<Transfer, StopState*&, StopState* const> raw) noexcept {
+    const auto state = raw;
+    if (state == nullptr) { return; }
+
+    auto local_sources = state->m_stop_sources.load();
+    if ((local_sources & uint32_t{ 1 }) != 0) {
+        m_fn(this);
+        return;
+    }
+
+    if (local_sources == 0) { return; }
+
+    auto head     = state->m_callbacks.lock_and_load();
+    local_sources = state->m_stop_sources.load();
+    if ((local_sources & uint32_t{ 1 }) != 0) {
+        state->m_callbacks.store_and_unlock(head);
+        m_fn(this);
+        return;
+    }
+
+    if (state != 0) {
+        m_parent = state;
+        m_next   = head;
+        if constexpr (Transfer) {
+            raw = nullptr;
+        } else {
+            state->m_stop_tokens.fetch_add(1);
+        }
+
+        if (head != nullptr) { head->m_prev = this; }
+
+        head = this;
+    }
+
+    state->m_callbacks.store_and_unlock(head);
+}
+inline void StopCallbackBase::attach(const StopToken& token) noexcept {
+    this->do_attach<false>(token.m_state);
+}
+inline void StopCallbackBase::attach(StopToken&& token) noexcept {
+    this->do_attach<true>(token.m_state);
+}
+inline void StopCallbackBase::detach() noexcept {
+    StopToken token{ m_parent };
+    if (token.m_state == nullptr) { return; }
+
+    auto head = token.m_state->m_callbacks.lock_and_load();
+    if (this == head) {
+        const auto local_next = m_next;
+        if (local_next != nullptr) { local_next->m_prev = nullptr; }
+
+        token.m_state->m_callbacks.store_and_unlock(m_next);
+        return;
+    }
+
+    const auto local_prev = m_prev;
+    if (local_prev != nullptr) {
+        const auto local_next = m_next;
+        if (local_next != nullptr) { m_next->m_prev = local_prev; }
+
+        m_prev->m_next = local_next;
+        token.m_state->m_callbacks.store_and_unlock(head);
+        return;
+    }
+    if (token.m_state->m_current_callback.load() != this || token.m_state->m_stopping_thread == ThreadNative::id()) {
+        token.m_state->m_callbacks.store_and_unlock(head);
+        return;
+    }
+    token.m_state->m_callbacks.store_and_unlock(head);
+    token.m_state->m_current_callback.wait(this);
+}
+class JThread {
+    Thread m_thread;
+    StopSource m_source;
+    void try_cancel_and_join() noexcept {
+        if (m_thread.joinable()) {
+            m_source.request_stop();
+            m_thread.join();
+        }
+    }
+    public:
+    JThread() noexcept : m_thread{}, m_source{ NoStopState{} } {}
+    template <class Fn, class... Args>
+    requires(!SameAs<RemoveCvRefT<Fn>, JThread>)
+    explicit JThread(Fn&& fx, Args&&... args)
+    {
+        if constexpr (CallableWith<DecayT<Fn>, StopToken, DecayT<Args>...>) {
+            m_thread = Thread{ Forward<Fn>(fx), m_source.get_token(), Forward<Args>(args)... };
+        } else {
+            m_thread = Thread {
+                Forward<Fn>(fx), Forward<Args>(args)...
+            };
+        }
+    }
+    ~JThread() { try_cancel_and_join(); }
+    JThread(const JThread&)           = delete;
+    JThread(JThread&&) noexcept       = default;
+    JThread operator=(const JThread&) = delete;
+    JThread& operator=(JThread&& other) noexcept {
+        if (this == addressof(other)) { return *this; }
+        try_cancel_and_join();
+        m_thread = move(other.m_thread);
+        m_source = move(other.m_source);
+    }
+    void swap(JThread& other) noexcept {
+        m_thread.swap(other.m_thread);
+        m_source.swap(other.m_source);
+    }
+    bool joinable() const noexcept { return m_thread.joinable(); }
+    void join() { m_thread.join(); }
+    void detach() { m_thread.detach(); }
+    auto get_id() const noexcept { return m_thread.get_id(); }
+    auto native_handle() noexcept { return m_thread.native_handle(); }
+    StopSource get_stop_source() noexcept { return m_source; }
+    StopToken get_stop_token() noexcept { return m_source.get_token(); }
+    bool request_stop() noexcept { return m_source.request_stop(); }
+    friend void swap(JThread& lhs, JThread& rhs) noexcept { lhs.swap(rhs); }
 };
 template <>
 struct Hash<Mutex> {
