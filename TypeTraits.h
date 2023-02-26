@@ -504,18 +504,18 @@ template <size_t N, size_t Align = alignof(MaxAlignT)>
 using AlignedStorageT = typename AlignedStorage<N, Align>::type;
 
 template <class T, class... Args>
-constexpr inline bool ConstructibleV = ConstructibleImpl<T, Args...>::type;
+constexpr inline bool ConstructibleV = ConstructibleImpl<T, Args...>::value;
 template <class T, class... Args>
-constexpr inline bool TriviallyConstructibleV = TriviallyConstructibleImpl<T, Args...>::type;
+constexpr inline bool TriviallyConstructibleV = TriviallyConstructibleImpl<T, Args...>::value;
 template <class T, class... Args>
-constexpr inline bool NothrowConstructibleV = NothrowConstructibleImpl<T, Args...>::type;
+constexpr inline bool NothrowConstructibleV = NothrowConstructibleImpl<T, Args...>::value;
 
 template <class T, class U>
-constexpr inline bool AssignableV = AssignableImpl<T, U>::type;
+constexpr inline bool AssignableV = AssignableImpl<T, U>::value;
 template <class T, class U>
-constexpr inline bool TriviallyAssignableV = TriviallyAssignableImpl<T, U>::type;
+constexpr inline bool TriviallyAssignableV = TriviallyAssignableImpl<T, U>::value;
 template <class T, class U>
-constexpr inline bool NothrowAssignableV = NothrowAssignableImpl<T, U>::type;
+constexpr inline bool NothrowAssignableV = NothrowAssignableImpl<T, U>::value;
 
 template <class T>
 constexpr inline bool MoveAssignableV = MoveAssignableImpl<T>::value;

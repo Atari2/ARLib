@@ -68,7 +68,7 @@ void* memcpy_vectorized(void* dst0, const void* src0, size_t num) {
     for (size_t i = 0; i < rem; i++) { *dst++ = *src++; }
     return dst;
 }
-int memcmp(void* dst, const void* src, size_t num) {
+int memcmp(const void* dst, const void* src, size_t num) {
     return __builtin_memcmp(dst, src, num);
 }
 #ifdef _MSC_VER

@@ -158,19 +158,19 @@ enum class PThreadPrio { NONE, INHERIT, PROTECT };
 
         #define ARLIB_PTHREAD_MUTEX_INITIALIZER                                                                        \
             {                                                                                                          \
-                { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_TIMED_NP) }                                          \
+                { __ARLIB_PTHREAD_MUTEX_INITIALIZER(static_cast<unsigned int>(PThreadMutex::TIMED_NP)) }               \
             }
         #define ARLIB_PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP                                                           \
             {                                                                                                          \
-                { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_RECURSIVE_NP) }                                      \
+                { __ARLIB_PTHREAD_MUTEX_INITIALIZER(static_cast<unsigned int>(PThreadMutex::RECURSIVE_NP)) }           \
             }
         #define ARLIB_PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP                                                          \
             {                                                                                                          \
-                { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_ERRORCHECK_NP) }                                     \
+                { __ARLIB_PTHREAD_MUTEX_INITIALIZER(static_cast<unsigned int>(PThreadMutex::ERRORCHECK_NP)) }          \
             }
         #define ARLIB_PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP                                                            \
             {                                                                                                          \
-                { __ARLIB_PTHREAD_MUTEX_INITIALIZER(PTHREAD_MUTEX_ADAPTIVE_NP) }                                       \
+                { __ARLIB_PTHREAD_MUTEX_INITIALIZER(static_cast<unsigned int>(PThreadMutex::ADAPTIVE_NP)) }            \
             }
 enum class PThreadRWLock {
     PREFER_READER_NP,
@@ -187,11 +187,15 @@ enum class PThreadRWLock {
 
         #define ARLIB_PTHREAD_RWLOCK_INITIALIZER                                                                       \
             {                                                                                                          \
-                { __ARLIB_PTHREAD_RWLOCK_INITIALIZER(PTHREAD_RWLOCK_DEFAULT_NP) }                                      \
+                { __ARLIB_PTHREAD_RWLOCK_INITIALIZER(static_cast<unsigned int>(PThreadRWLock::DEFAULT_NP)) }           \
             }
         #define ARLIB_PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP                                                \
             {                                                                                                          \
-                { __ARLIB_PTHREAD_RWLOCK_INITIALIZER(PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP) }                   \
+                {                                                                                                      \
+                    __ARLIB_PTHREAD_RWLOCK_INITIALIZER(                                                                \
+                    static_cast<unsigned int>(PThreadRWLock::PREFER_WRITER_NONRECURSIVE_NP)                            \
+                    )                                                                                                  \
+                }                                                                                                      \
             }
 enum class PThreadSched { INHERIT, EXPLICIT };
 enum class PThreadScope { SYSTEM, PROCESS };

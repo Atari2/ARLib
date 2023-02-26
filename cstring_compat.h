@@ -124,7 +124,7 @@ template <size_t N>
     return __builtin_memcmp(arr1, arr2, N) == 0;
 }
 void* memcpy_vectorized(void* dst0, const void* src0, size_t num);
-int memcmp(void* dst, const void* src, size_t num);
+int memcmp(const void* dst, const void* src, size_t num);
 #if HAS_BUILTIN(__builtin_memmove)
 constexpr void* memmove(void* dst, const void* src, size_t num) {
     return __builtin_memmove(dst, src, num);
