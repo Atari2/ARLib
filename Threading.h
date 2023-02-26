@@ -609,6 +609,7 @@ class JThread {
         try_cancel_and_join();
         m_thread = move(other.m_thread);
         m_source = move(other.m_source);
+        return *this;
     }
     void swap(JThread& other) noexcept {
         m_thread.swap(other.m_thread);
