@@ -5,6 +5,11 @@
     #include "../Conversion.h"
     #include "../TypeTraits.h"
 namespace ARLib {
+using WinDword  = unsigned long;
+using WinWord   = unsigned short;
+using WinHandle = void*;
+    #define ARLIB_INVALID_HANDLE_VALUE ((WinHandle)(__int64)-1)
+    #define ARLIB_INFINITE_TIMEOUT     -1
 namespace internal {
     struct SRWLock {
         void* Ptr;
@@ -13,6 +18,47 @@ namespace internal {
     struct ConditionVariable {
         void* Ptr;
     };
+    struct Overlapped {
+        unsigned long long Internal;
+        unsigned long long InternalHigh;
+        union {
+            struct {
+                WinDword Offset;
+                WinDword OffsetHigh;
+            } DUMMYSTRUCTNAME;
+            void* Pointer;
+        } DUMMYUNIONNAME;
+        WinHandle hEvent;
+    };
+    using LPOverlapped = Overlapped*;
+    struct ProcessInformation {
+        WinHandle hProcess;
+        WinHandle hThread;
+        WinDword dwProcessId;
+        WinDword dwThreadId;
+    };
+    struct StartupInfoA {
+        WinDword cb;
+        char* lpReserved;
+        char* lpDesktop;
+        char* lpTitle;
+        WinDword dwX;
+        WinDword dwY;
+        WinDword dwXSize;
+        WinDword dwYSize;
+        WinDword dwXCountChars;
+        WinDword dwYCountChars;
+        WinDword dwFillAttribute;
+        WinDword dwFlags;
+        WinWord wShowWindow;
+        WinWord cbReserved2;
+        unsigned char* lpReserved2;
+        WinHandle hStdInput;
+        WinHandle hStdOutput;
+        WinHandle hStdError;
+    };
+    using LPOverlappedCompletionRoutine =
+    void(__stdcall*)(WinDword dwErrorCode, WinDword dwNumberOfBytesTransfered, LPOverlapped lpOverlapped);
 }    // namespace internal
 class CriticalSection {
     public:

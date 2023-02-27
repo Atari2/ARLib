@@ -15,6 +15,15 @@ namespace ARLib {
 
 VERIFY_WIN32_STRUCT(SRWLOCK, internal::SRWLock);
 VERIFY_WIN32_STRUCT(CONDITION_VARIABLE, internal::ConditionVariable);
+VERIFY_WIN32_STRUCT(OVERLAPPED, internal::Overlapped);
+VERIFY_WIN32_STRUCT(PROCESS_INFORMATION, internal::ProcessInformation);
+VERIFY_WIN32_STRUCT(STARTUPINFOA, internal::StartupInfoA);
+VERIFY_WIN32_STRUCT(WORD, WinWord);
+VERIFY_WIN32_STRUCT(DWORD, WinDword);
+VERIFY_WIN32_STRUCT(HANDLE, WinHandle);
+VERIFY_WIN32_STRUCT(LPOVERLAPPED_COMPLETION_ROUTINE, internal::LPOverlappedCompletionRoutine);
+static_assert(ARLIB_INVALID_HANDLE_VALUE == INVALID_HANDLE_VALUE);
+static_assert(ARLIB_INFINITE_TIMEOUT == INFINITE);
 CriticalSection::CriticalSection() {
     InitializeSRWLock(cast<::PSRWLOCK>(&m_srw_lock));
 }
