@@ -12,5 +12,5 @@ extern "C"
 namespace ARLib {
 size_t UnixFileSize(FILE* fp);
 void UnixClose(int fd);
-}
+}    // namespace ARLib
 #endif

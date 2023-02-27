@@ -70,9 +70,9 @@ class Tuple : Tuple<Args...> {
 
     public:
     constexpr static inline size_t size = 1 + sizeof...(Args);
-    constexpr Tuple()                             = default;
-    constexpr Tuple(const Tuple&)                 = default;
-    constexpr Tuple(Tuple&&) noexcept             = default;
+    constexpr Tuple()                   = default;
+    constexpr Tuple(const Tuple&)       = default;
+    constexpr Tuple(Tuple&&) noexcept   = default;
     constexpr explicit Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(arg) {}
     constexpr Tuple& operator=(const Tuple&)     = default;
     constexpr Tuple& operator=(Tuple&&) noexcept = default;
@@ -161,7 +161,7 @@ class Tuple<T> {
     using TupleBaseArray = decltype(get_tuple_base_array_start<T>());
     public:
     constexpr static inline size_t size = 1;
-    constexpr Tuple()                             = default;
+    constexpr Tuple()                   = default;
     constexpr explicit Tuple(T arg) : m_member(arg) {}
     constexpr bool operator==(const Tuple& other) const { return m_member == other.m_member; }
     constexpr Tuple& operator=(T&& value) {

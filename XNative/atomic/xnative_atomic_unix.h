@@ -41,9 +41,7 @@ const void* storage, void* cmp, size_t size, void* param, equal_callback_t callb
 ) noexcept;
 void atomic_notify_all(const void* const storage) noexcept;
 void atomic_notify_one(const void* const storage) noexcept;
-int atomic_wait_nolock(
-volatile void* const storage, void* const comparand, const unsigned long timeout
-);
+int atomic_wait_nolock(volatile void* const storage, void* const comparand, const unsigned long timeout);
 void atomic_notify_all_nolock(const void* const storage) noexcept;
 void atomic_notify_one_nolock(const void* const storage) noexcept;
 template <Integral Int, class T>
@@ -242,7 +240,9 @@ struct AtomicIntegralStorage : public AtomicStorage<T> {
         return static_cast<Val>(result);
     }
     Val fetch_or(const Val operand) noexcept {
-        Conv result = atomic_integral_op_nolock(addressof_atomic<Conv>(this->m_storage), static_cast<Conv>(operand), AtomicIntegralOp::Or);
+        Conv result = atomic_integral_op_nolock(
+        addressof_atomic<Conv>(this->m_storage), static_cast<Conv>(operand), AtomicIntegralOp::Or
+        );
         return static_cast<Val>(result);
     }
     Val fetch_xor(const Val operand) noexcept {

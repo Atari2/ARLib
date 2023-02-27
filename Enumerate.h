@@ -156,13 +156,11 @@ class MapIterate {
     auto begin() const { return MapIterator<Iter, Functor>{ m_start, m_end, m_func }; }
     auto end() const { return MapIterator<Iter, Functor>{ m_end, m_end, m_func }; }
 };
-
 template <typename Container>
 concept ReverseIterable = requires(Container cont) {
-    { cont.rbegin() } -> IteratorConcept;
-    { cont.rend() } -> IteratorConcept;
-};
-
+                              { cont.rbegin() } -> IteratorConcept;
+                              { cont.rend() } -> IteratorConcept;
+                          };
 template <ReverseIterable Container>
 class ReverseIterate {
     using Iter = decltype(declval<Container>().rbegin());

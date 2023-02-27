@@ -44,8 +44,12 @@ class Array {
     constexpr ConstIterator<T> end() const {
         return ConstIterator<T>{ PointerTraits<const T*>::pointer_to(*_m_storage_) + S };
     }
-    constexpr ReverseIterator<T> rbegin() { return ReverseIterator<T>{ PointerTraits<T*>::pointer_to(*_m_storage_) + S - 1 }; }
-    constexpr ReverseIterator<T> rend() { return ReverseIterator<T>{ PointerTraits<T*>::pointer_to(*_m_storage_) - 1 }; }
+    constexpr ReverseIterator<T> rbegin() {
+        return ReverseIterator<T>{ PointerTraits<T*>::pointer_to(*_m_storage_) + S - 1 };
+    }
+    constexpr ReverseIterator<T> rend() {
+        return ReverseIterator<T>{ PointerTraits<T*>::pointer_to(*_m_storage_) - 1 };
+    }
     constexpr ConstReverseIterator<T> rbegin() const {
         return ConstReverseIterator<T>{ ConstReverseIterator<const T*>::pointer_to(*_m_storage_) + S - 1 };
     }
