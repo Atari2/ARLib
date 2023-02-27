@@ -6,6 +6,13 @@
     #if not defined(ATOMIC_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
         #error "Don't include the XNative files directly. Use Atomic.h"
     #endif
+// while writing this file a lot of work was taken from MSVC-STL's implementation of atomics
+// as such, a lot of the implementation code was taken from that, since atomic operations are very tricky
+// and I wanted to make sure that I got the implementation right
+// for this reason, I'll include these files have got code under the STL's copyright which I'll include here:
+// Copyright (c) Microsoft Corporation.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// the full license text can be found at https://github.com/microsoft/STL/blob/main/LICENSE.txt
 namespace ARLib {
 class Mutex;
 template <class T>
@@ -44,8 +51,8 @@ void __stdcall atomic_notify_one(const void* const storage) noexcept;
 int __stdcall atomic_wait_nolock(
 volatile void* const storage, void* const comparand, const size_t size, const unsigned long timeout
 );
-void __stdcall atomic_notify_all_nolock(const void* const storage) noexcept;
-void __stdcall atomic_notify_one_nolock(const void* const storage) noexcept;
+void atomic_notify_all_nolock(const void* const storage) noexcept;
+void atomic_notify_one_nolock(const void* const storage) noexcept;
 template <Integral Int, class T>
 Int reinterpret_cast_atomic(const T& source) noexcept {
     if constexpr (Integral<T> && sizeof(Int) == sizeof(T)) {
@@ -216,12 +223,14 @@ struct AtomicStorage<T> {
         return false;
     }
     void wait(Val expected) const noexcept {
-        const auto storage        = addressof(m_storage);
+        const auto storage  = addressof(m_storage);
         auto expected_bytes = reinterpret_cast_atomic<Conv>(expected);
         while (true) {
             const Conv observed_bytes = reinterpret_cast_atomic<Conv>(load());
             if (expected_bytes != observed_bytes) { return; }
-            atomic_wait_nolock(reinterpret_cast<volatile void*>(const_cast<T*>(storage)), &expected_bytes, sizeof(Conv), 0xFFFFFFFF);
+            atomic_wait_nolock(
+            reinterpret_cast<volatile void*>(const_cast<T*>(storage)), &expected_bytes, sizeof(Conv), 0xFFFFFFFF
+            );
         }
     }
     void notify_one() noexcept { atomic_notify_one_nolock(addressof(m_storage)); }

@@ -3,6 +3,13 @@
 #endif
 #include "xnative_atomic_windows.h"
 
+// while writing this file a lot of work was taken from MSVC-STL's implementation of atomics
+// as such, a lot of the implementation code was taken from that, since atomic operations are very tricky
+// and I wanted to make sure that I got the implementation right
+// for this reason, I'll include these files have got code under the STL's copyright which I'll include here:
+// Copyright (c) Microsoft Corporation.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// the full license text can be found at https://github.com/microsoft/STL/blob/main/LICENSE.txt
 #ifdef WINDOWS
 #include "../../Threading.h"
 #include <intrin.h>
@@ -33,15 +40,12 @@ struct WaitContext {
     WaitContext* prev;
     internal::ConditionVariable condition;
 };
-#pragma warning(push)
-#pragma warning(disable : 4324)    // structure was padded due to alignment specifier
 struct alignas(64) WaitTableEntry {
     SharedMutex lock           = { 0 };
     WaitContext wait_list_head = { nullptr, nullptr, nullptr, { 0 } };
 
     constexpr WaitTableEntry() noexcept = default;
 };
-#pragma warning(pop)
 [[nodiscard]] WaitTableEntry& atomic_wait_table_entry(const void* const storage) noexcept {
     static WaitTableEntry wait_table[256];
     auto index = reinterpret_cast<uintptr_t>(storage);
@@ -93,10 +97,8 @@ const void* storage, void* cmp, size_t size, void* param, equal_callback_t callb
     }
 
     GuardedWaitContext context{ storage, &entry.wait_list_head };
-    for (;;) {
-        if (!callback(storage, cmp, size, param)) {    // note: under lock to prevent lost wakes
-            return TRUE;
-        }
+    while (true) {
+        if (!callback(storage, cmp, size, param)) { return TRUE; }
 
         if (!SleepConditionVariableSRW(
             cast<PCONDITION_VARIABLE>(&context.condition), cast<PSRWLOCK>(&entry.lock), timeout, 0
@@ -104,10 +106,7 @@ const void* storage, void* cmp, size_t size, void* param, equal_callback_t callb
             return FALSE;
         }
 
-        if (timeout != 0xFFFF'FFFF) {
-            // spurious wake to recheck the clock
-            return TRUE;
-        }
+        if (timeout != 0xFFFF'FFFF) { return TRUE; }
     }
 }
 void __stdcall atomic_notify_one(const void* const storage) noexcept {
@@ -126,7 +125,7 @@ void __stdcall atomic_notify_one(const void* const storage) noexcept {
 }
 void __stdcall atomic_notify_all(const void* const storage) noexcept {
     auto& entry = atomic_wait_table_entry(storage);
-    SRWLockGuard guard(entry.lock);
+    SRWLockGuard guard{ entry.lock };
     WaitContext* context = entry.wait_list_head.next;
 
     if (context == nullptr) { return; }
@@ -141,10 +140,10 @@ volatile void* const storage, void* const comparand, const size_t size, const un
     const auto result = WaitOnAddress(storage, comparand, size, timeout);
     return result;
 }
-void __stdcall atomic_notify_all_nolock(const void* const storage) noexcept {
+void atomic_notify_all_nolock(const void* const storage) noexcept {
     WakeByAddressAll(const_cast<void*>(storage));
 }
-void __stdcall atomic_notify_one_nolock(const void* const storage) noexcept {
+void atomic_notify_one_nolock(const void* const storage) noexcept {
     WakeByAddressSingle(const_cast<void*>(storage));
 }
 void atomic_store_nolock(volatile char* addend, char value) {

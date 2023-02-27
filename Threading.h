@@ -371,9 +371,9 @@ struct StopState;
 class StopToken;
 class StopCallbackBase {
     #ifdef COMPILER_MSVC
-    #define ARLIB_CDECL __cdecl
+        #define ARLIB_CDECL __cdecl
     #else
-    #define ARLIB_CDECL 
+        #define ARLIB_CDECL
     #endif
     friend StopState;
     using Callback = void(ARLIB_CDECL*)(StopCallbackBase*) noexcept;
@@ -590,14 +590,11 @@ class JThread {
     JThread() noexcept : m_thread{}, m_source{ NoStopState{} } {}
     template <class Fn, class... Args>
     requires(!SameAs<RemoveCvRefT<Fn>, JThread>)
-    explicit JThread(Fn&& fx, Args&&... args)
-    {
+    explicit JThread(Fn&& fx, Args&&... args) {
         if constexpr (CallableWith<DecayT<Fn>, StopToken, DecayT<Args>...>) {
             m_thread = Thread{ Forward<Fn>(fx), m_source.get_token(), Forward<Args>(args)... };
         } else {
-            m_thread = Thread {
-                Forward<Fn>(fx), Forward<Args>(args)...
-            };
+            m_thread = Thread{ Forward<Fn>(fx), Forward<Args>(args)... };
         }
     }
     ~JThread() { try_cancel_and_join(); }

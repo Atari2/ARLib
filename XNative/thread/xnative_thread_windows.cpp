@@ -2,6 +2,13 @@
 #define INCLUDED_FROM_OWN_CPP___
 #endif
 #include "xnative_thread_windows.h"
+// while writing this file a lot of work was taken from MSVC-STL's implementation of threads
+// as such, a lot of the implementation code was taken from that, since threads are very tricky
+// and I wanted to make sure that I got the implementation right
+// for this reason, I'll include these files have got code under the STL's copyright which I'll include here:
+// Copyright (c) Microsoft Corporation.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// the full license text can be found at https://github.com/microsoft/STL/blob/main/LICENSE.txt
 #ifdef WINDOWS
 #include "../../EnumHelpers.h"
 #include "../../Conversion.h"
