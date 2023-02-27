@@ -2,6 +2,7 @@
 #ifdef UNIX
     #include <sys/stat.h>
     #include <cstdio>
+    #include <unistd.h>
     #include "../Types.h"
 namespace ARLib {
 size_t UnixFileSize(FILE* fp) {
@@ -10,6 +11,9 @@ size_t UnixFileSize(FILE* fp) {
     int ec = fstat(fd, &st);
     if (ec < 0) return 0;
     return static_cast<size_t>(st.st_size);
+}
+void UnixClose(int fd) {
+    ::close(fd);
 }
 }    // namespace ARLib
 #endif
