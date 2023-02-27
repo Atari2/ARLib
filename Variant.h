@@ -203,6 +203,12 @@ namespace detail {
                 tail.template visit<Callable>(visitor);
             }
         }
+        bool is_empty() const {
+            if (is_active)
+                return false;
+            else
+                return tail.is_empty();
+        }
         ~VariantStorage() {
             if (is_active)
                 head.~First();
@@ -317,6 +323,7 @@ namespace detail {
                 if (is_active) { visitor(head); }
             }
         }
+        bool is_empty() const { return is_active; }
         ~VariantStorage() {
             if (is_active) head.~Type();
         };
@@ -358,6 +365,7 @@ namespace detail {
             return head;
         }
         bool active() const { return is_active; }
+        bool is_empty() const { return is_active; }
         ~VariantStorage() {
             if (is_active) head.~MonostateT();
         };
@@ -433,6 +441,7 @@ class Variant {
     void visit(Callable visitor) {
         m_storage.template visit<Callable>(visitor);
     }
+    bool is_empty() const { return m_storage.is_empty(); }
     ~Variant() = default;
 };
 template <>
@@ -478,6 +487,7 @@ class Variant<detail::MonostateT> {
         return m_storage.active();
     }
     bool is_active() const { return m_storage.active(); }
+    bool is_empty() const { return m_storage.is_empty(); }
     ~Variant() = default;
 };
 // free functions to avoid template keyword when calling member functions in templated functions.
