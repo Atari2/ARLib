@@ -40,6 +40,9 @@ class Span {
     constexpr T& back() { return *(m_end - 1); }
     constexpr const T& back() const { return *(m_end - 1); }
     constexpr bool empty() const { return m_begin == m_end; }
+    constexpr auto operator[](Pair<size_t, size_t> range) const {
+        return subspan(range.first(), range.second() - range.first());
+    }
     constexpr auto subspan(size_t offset, size_t count) const {
         offset = clamp_offset(offset);
         count  = clamp_count(offset, count);
