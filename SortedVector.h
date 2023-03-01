@@ -154,22 +154,22 @@ struct PrintInfo<SortedVector<T>> {
     explicit PrintInfo(const SortedVector<T>& vector) : m_vector(vector) {}
     String repr() const {
         if (m_vector.empty()) { return "[]"_s; }
-        String con{};
+        String con{ "[" };
         if constexpr (IsSameV<T, String>) {
             for (const auto& s : m_vector) {
-                con.append("[\"");
+                con.append('"');
                 con.append(PrintInfo<T>{ s }.repr());
-                con.append("\"], ");
+                con.append("\", ");
             }
         } else {
             for (const auto& s : m_vector) {
-                con.append('[');
                 con.append(PrintInfo<T>{ s }.repr());
-                con.append("], ");
+                con.append(", ");
             }
         }
-
-        return con.substring(0, con.size() - 2);
+        con = con.substring(0, con.size() - 2);
+        con.append(']');
+        return con;
     }
 };
 }    // namespace ARLib

@@ -1032,3 +1032,24 @@ TEST(ARLibTests, SortingTest) {
     sort(strings);
     for (const auto& [g, e] : zip(strings, expected)) { EXPECT_EQ(g, e); }
 }
+TEST(ARLibTests, SpanTests) {
+    Vector<int> vec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    Array arr       = { "Hello"_sv, "World"_sv, "How"_sv, "Are"_sv, "You"_sv };
+
+    auto span  = vec.span();
+    auto span2 = span.subspan(2, 5);
+    auto span3 = span.subspan(123123, 1234123);
+    auto span4 = arr.span().subspan(1, 3);
+    auto span5 = GenericView{ arr }.span().subspan(1, 3);
+    EXPECT_EQ(span4, span5);
+    EXPECT_EQ(span4.size(), 3);
+    EXPECT_EQ(span3.size(), 0);
+    EXPECT_TRUE(span3.empty());
+    EXPECT_EQ(span.size(), vec.size());
+    EXPECT_EQ(span2.size(), 5);
+    EXPECT_EQ(span2[0], 3);
+    EXPECT_EQ(span2[1], 4);
+    EXPECT_EQ(span4[0], "World"_sv);
+    EXPECT_EQ(span4[1], "How"_sv);
+    EXPECT_EQ(span4[2], "Are"_sv);
+}

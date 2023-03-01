@@ -5,6 +5,7 @@
 #include "PrintInfo.h"
 #include "TypeTraits.h"
 #include "GenericView.h"
+#include "Span.h"
 namespace ARLib {
 template <typename T, size_t S>
 class Array {
@@ -58,6 +59,8 @@ class Array {
     }
     constexpr auto view() const { return IteratorView{ *this }; }
     constexpr auto view() { return IteratorView{ *this }; }
+    constexpr auto span() const { return Span<const T>{ _m_storage_, S }; }
+    constexpr auto span() { return Span<T>{ _m_storage_, S }; }
     constexpr auto enumerate() const {
         ConstEnumerate en{ *this };
         return IteratorView{ en };

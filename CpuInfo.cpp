@@ -64,7 +64,7 @@ CPUInfo::CPUInfo() noexcept {
 #ifdef COMPILER_CLANG
     [[maybe_unused]] uint32_t cpuid_max = static_cast<uint32_t>(get_cpuid_max(0u, nullptr));
 #else
-    uint32_t cpuid_max = get_cpuid_max(0u, nullptr);
+    [[maybe_unused]] uint32_t cpuid_max = get_cpuid_max(0u, nullptr);
 #endif
 #ifndef __SSE__
     if (cpuid_max < 1) return;    // comments in cpuid.h say x86_64 always has cpuid

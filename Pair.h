@@ -9,8 +9,17 @@ struct Pair {
     T _m_first;
     U _m_second;
 
+    template <typename Ty, typename Uy>
+    constexpr static inline bool PairConstructible = Constructible<T, Ty> && Constructible<U, Uy>;
+    template <typename Ty, typename Uy>
+    constexpr static inline bool PairConvertibleTo = ConvertibleTo<Ty, T> && ConvertibleTo<Uy, U>;
+
     constexpr Pair() = default;
     template <typename Ty, typename Uy>
+    requires(PairConvertibleTo<Ty, Uy> && !PairConstructible<Ty, Uy>)
+    constexpr Pair(Ty first, Uy second) : _m_first(static_cast<T>(first)), _m_second(static_cast<U>(second)) {}
+    template <typename Ty, typename Uy>
+    requires(PairConstructible<Ty, Uy> && !PairConvertibleTo<Ty, Uy>)
     constexpr Pair(Ty first, Uy second) : _m_first(first), _m_second(second) {}
     constexpr Pair(T&& first, U&& second) : _m_first(Forward<T>(first)), _m_second(Forward<U>(second)) {}
     constexpr Pair(const T& first, const U& second) : _m_first(first), _m_second(second) {}
@@ -91,13 +100,12 @@ struct Pair<T&, U&> {
     }
     ~Pair() = default;
 };
-template <Printable A, Printable B>
+template <typename A, typename B>
 struct PrintInfo<Pair<A, B>> {
     const Pair<A, B>& m_pair;
     explicit PrintInfo(const Pair<A, B>& pair) : m_pair(pair) {}
     String repr() const {
-        return "{ "_s + PrintInfo<A>{ m_pair.first() }.repr() + ", "_s + PrintInfo<B>{ m_pair.second() }.repr() +
-               " }"_s;
+        return "{ "_s + print_conditional<A>(m_pair.first()) + ", "_s + print_conditional<B>(m_pair.second()) + " }"_s;
     }
 };
 }    // namespace ARLib
