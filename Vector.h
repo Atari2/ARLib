@@ -12,6 +12,7 @@
 #include "cstring_compat.h"
 #include "std_includes.h"
 #include "GenericView.h"
+#include "Span.h"
 namespace ARLib {
 // this in origin was `template <MoveAssignable T>`
 // however that failed to compile when used as a return type, didn't when using auto
@@ -353,6 +354,8 @@ class Vector {
         m_capacity = 0;
         return view;
     }
+    auto span() const { return Span<const T>{ m_storage, m_size }; }
+    auto span() { return Span<T>{ m_storage, m_size }; }
     constexpr auto enumerate() const {
         ConstEnumerate en{ *this };
         return IteratorView{ en };

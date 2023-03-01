@@ -5,6 +5,7 @@
 #include "Iterator.h"
 #include "PrintInfo.h"
 #include "TypeTraits.h"
+#include "Span.h"
 namespace ARLib {
 template <typename T>
 class GenericView {
@@ -33,6 +34,8 @@ class GenericView {
     constexpr const T& operator[](size_t index) const { return m_begin_view[index]; }
     constexpr const T* data() const { return m_begin_view; }
     constexpr T* data() { return m_begin_view; }
+    constexpr auto span() const { return Span<const T>{ m_begin_view, m_end_view }; }
+    constexpr auto span() { return Span<T>{ m_begin_view, m_end_view }; }
     template <typename Functor>
     constexpr void for_each(Functor func) {
         for (auto& item : *this) { func(item); }

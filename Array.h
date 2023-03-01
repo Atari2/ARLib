@@ -5,6 +5,7 @@
 #include "PrintInfo.h"
 #include "TypeTraits.h"
 #include "GenericView.h"
+#include "Span.h"
 namespace ARLib {
 template <typename T, size_t S>
 class Array {
@@ -44,8 +45,12 @@ class Array {
     constexpr ConstIterator<T> end() const {
         return ConstIterator<T>{ PointerTraits<const T*>::pointer_to(*_m_storage_) + S };
     }
-    constexpr ReverseIterator<T> rbegin() { return ReverseIterator<T>{ PointerTraits<T*>::pointer_to(*_m_storage_) + S - 1 }; }
-    constexpr ReverseIterator<T> rend() { return ReverseIterator<T>{ PointerTraits<T*>::pointer_to(*_m_storage_) - 1 }; }
+    constexpr ReverseIterator<T> rbegin() {
+        return ReverseIterator<T>{ PointerTraits<T*>::pointer_to(*_m_storage_) + S - 1 };
+    }
+    constexpr ReverseIterator<T> rend() {
+        return ReverseIterator<T>{ PointerTraits<T*>::pointer_to(*_m_storage_) - 1 };
+    }
     constexpr ConstReverseIterator<T> rbegin() const {
         return ConstReverseIterator<T>{ ConstReverseIterator<const T*>::pointer_to(*_m_storage_) + S - 1 };
     }
@@ -54,6 +59,8 @@ class Array {
     }
     constexpr auto view() const { return IteratorView{ *this }; }
     constexpr auto view() { return IteratorView{ *this }; }
+    constexpr auto span() const { return Span<const T>{ _m_storage_, S }; }
+    constexpr auto span() { return Span<T>{ _m_storage_, S }; }
     constexpr auto enumerate() const {
         ConstEnumerate en{ *this };
         return IteratorView{ en };
