@@ -482,7 +482,7 @@ class StopSource {
     ~StopSource() {
         const auto local = m_state;
         if (local != nullptr) {
-            if ((local->m_stop_tokens.fetch_sub(2) >> 1) == 1) {
+            if ((local->m_stop_sources.fetch_sub(2) >> 1) == 1) {
                 if (local->m_stop_tokens.fetch_sub(1) == 1) { delete local; }
             }
         }
