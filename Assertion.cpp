@@ -1,12 +1,13 @@
 #include "Assertion.h"
 #include "Compat.h"
 #include "StackTrace.h"
+#include "cstdarg_compat.h"
+
 #ifdef COMPILER_MSVC
     #include <intrin.h>
 #endif
 #ifdef DEBUG_NEW_DELETE
     #include <cstdio>
-    #include <cstdarg>
 #else
     #include "cstdio_compat.h"
 #endif

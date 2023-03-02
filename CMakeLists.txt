@@ -283,6 +283,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${CMAKE_CURRENT_SOURCE_DIR}/cmath_compat.h
     ${CMAKE_CURRENT_SOURCE_DIR}/cstdio_compat.h
     ${CMAKE_CURRENT_SOURCE_DIR}/cstring_compat.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/cstdarg_compat.h
     ${CMAKE_CURRENT_SOURCE_DIR}/BaseTraits.h
     ${CMAKE_CURRENT_SOURCE_DIR}/GenericView.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Utility.h

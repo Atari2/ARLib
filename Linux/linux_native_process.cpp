@@ -344,6 +344,7 @@ ProcessResult UnixProcess::launch() {
             if (m_working_dir.has_value()) chdir(m_working_dir.value().data());
             execvpe(m_cmdline.data(), m_argv, m_envp);
             // if success, it doesn't go here, so if we continue we know for sure execve failed
+            [[fallthrough]];
         case -1:
             return ProcessResult::from_error(last_error());
         default:

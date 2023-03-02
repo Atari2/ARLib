@@ -2,7 +2,7 @@
 #include "Assertion.h"
 #include "arlib_osapi.h"
 #include "PrintfImpl.h"
-#include <cstdarg>
+#include "cstdarg_compat.h"
 #include <cstdio>
 #ifdef WINDOWS
     #include "Windows/win_native_io.h"

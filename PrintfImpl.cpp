@@ -13,7 +13,7 @@
 #include "cstdio_compat.h"
 #include "arlib_osapi.h"
 #include "WStringView.h"
-#include <stdarg.h>
+#include "cstdarg_compat.h"
 namespace ARLib {
 /*
     double-precision	sign bit, 11-bit exponent, 52-bit significand

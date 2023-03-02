@@ -5,6 +5,7 @@
 #include "EnumHelpers.h"
 #include "Variant.h"
 #include "Array.h"
+#include "cstdarg_compat.h"
 
 // these defines help intellisense
 #ifndef _In_z_
@@ -14,13 +15,7 @@
     #define _Printf_format_string_
 #endif
 
-#if not defined(_VA_LIST_DEFINED) and not defined(_VA_LIST)
-    #ifndef _MSC_VER
-typedef __builtin_va_list va_list;
-    #else
-typedef char* va_list;
-    #endif
-#endif
+
 namespace ARLib {
 MAKE_FANCY_ENUM(PrintfErrorCodes, Ok, InvalidFormat, MissingType, InvalidType, NotImplemented);
 struct PrintfBuffer {
