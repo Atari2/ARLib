@@ -13,6 +13,7 @@ class RefBox {
     constexpr RefBox(T& obj) : m_boxed(&obj) {}
     constexpr const TPtr ptr() const { return m_boxed; }
     constexpr TPtr ptr() { return m_boxed; }
+    constexpr operator T&() { return *m_boxed; }
     constexpr T& operator*() { return *m_boxed; }
     constexpr const T& operator*() const { return *m_boxed; }
     constexpr auto operator->() { return m_boxed; }
