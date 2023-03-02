@@ -3,10 +3,22 @@
 #include "Macros.h"
 #include "SourceLocation.h"
 #include "TypeTraits.h"
-#include "cstdio_compat.h"
 
 void abort_arlib();
 void assertion_failed__();
+void _assert_printf(const char*, ...);
+void _assert_puts(const char*);
+#if DEBUG_NEW_DELETE
+    #undef PRINT_SOURCE_LOCATION
+    #undef PRINT_BACKTRACE
+    #define PRINT_SOURCE_LOCATION                                                                                      \
+        ARLib::SourceLocation loc_ = ARLib::SourceLocation::current();                                                 \
+        _assert_printf(                                                                                                \
+        "Function `%s` in file %s, at line %u and column %u\n", loc_.function_name(), loc_.file_name(), loc_.line(),   \
+        loc_.column()                                                                                                  \
+        );
+    #define PRINT_BACKTRACE()
+#endif
 namespace ARLib {
 enum class AssertWhat { Eq, NonEq, PtrEq, PtrNonEq };
 template <typename T1, typename T2, AssertWhat T3>
@@ -46,7 +58,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, msg);                                                                     \
             } else {                                                                                                   \
-                ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                          \
+                _assert_puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                         \
                 PRINT_SOURCE_LOCATION                                                                                  \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
@@ -57,7 +69,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                     \
             } else {                                                                                                   \
-                ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                      \
+                _assert_printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                     \
                 PRINT_SOURCE_LOCATION                                                                                  \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
@@ -69,7 +81,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, msg);                                                                     \
             } else {                                                                                                   \
-                ARLib::puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                          \
+                _assert_puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                         \
                 PRINT_SOURCE_LOCATION                                                                                  \
             }                                                                                                          \
         }
@@ -78,7 +90,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                     \
             } else {                                                                                                   \
-                ARLib::printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                      \
+                _assert_printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                     \
                 PRINT_SOURCE_LOCATION                                                                                  \
             }                                                                                                          \
         }
@@ -94,7 +106,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
         if (is_constant_evaluated()) {                                                                                 \
             CONSTEVAL_STATIC_ASSERT(false, msg);                                                                       \
         } else {                                                                                                       \
-            ARLib::puts(msg);                                                                                          \
+            _assert_puts(msg);                                                                                         \
             PRINT_SOURCE_LOCATION                                                                                      \
             assertion_failed__();                                                                                      \
         }                                                                                                              \
@@ -105,7 +117,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
         if (is_constant_evaluated()) {                                                                                 \
             CONSTEVAL_STATIC_ASSERT(false, fmt);                                                                       \
         } else {                                                                                                       \
-            ARLib::printf(fmt "\n", __VA_ARGS__);                                                                      \
+            _assert_printf(fmt "\n", __VA_ARGS__);                                                                     \
             PRINT_SOURCE_LOCATION                                                                                      \
             assertion_failed__();                                                                                      \
         }                                                                                                              \

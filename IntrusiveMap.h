@@ -22,8 +22,8 @@ class IntrusiveMap {
     Key m_keys[SIZE]{};
     Val m_vals[SIZE]{};
     bool m_tombs[SIZE]{};
-    size_t m_size = 0;
-
+    size_t m_size              = 0;
+    bool m_lost_entries        = false;
     constexpr static auto npos = static_cast<size_t>(-1);
     size_t search_internal(const Key& key) {
         size_t index = 0;
@@ -46,8 +46,12 @@ class IntrusiveMap {
     }
 
     public:
+    bool lost_entries() const { return m_lost_entries; }
     void insert(Key key, Val val) {
-        HARD_ASSERT_FMT(m_size < SIZE, "Intrusive map is full at size %zu", SIZE)
+        if (m_size >= SIZE) {
+            m_lost_entries = true;
+            return;
+        }
         auto index = search_internal(key);
         if (index == npos) {
             index = search_tomb_internal();
@@ -76,6 +80,7 @@ class IntrusiveMap {
     ~IntrusiveMap()
     requires IsSameV<RemoveReferenceT<decltype(*this)>, DebugNewDeleteMap>
     {
+        if (m_lost_entries) return;
         for (size_t i = 0; i < MAP_SIZE; i++) {
             auto [size, type] = m_vals[i];
             if (m_tombs[i]) {

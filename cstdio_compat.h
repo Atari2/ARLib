@@ -5,6 +5,13 @@
 
 extern "C"
 {
+#if not defined(_VA_LIST_DEFINED) and not defined(_VA_LIST)
+    #ifndef _MSC_VER
+    typedef __builtin_va_list va_list;
+    #else
+    typedef char* va_list;
+    #endif
+#endif
 #ifdef WINDOWS
     #ifndef _FILE_DEFINED
         #define _FILE_DEFINED
