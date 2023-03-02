@@ -1053,3 +1053,32 @@ TEST(ARLibTests, SpanTests) {
     EXPECT_EQ(span4[1], "How"_sv);
     EXPECT_EQ(span4[2], "Are"_sv);
 }
+TEST(ARLibTests, ProcessTests) {
+    if constexpr (windows_build) {
+        auto proc = Process{ "cmd"_sv };
+        proc.with_args({ "/c"_sv, "echo"_sv, "Hello World"_sv }).set_pipe(HandleType::Output);
+        auto err = proc.launch();
+        EXPECT_TRUE(err.is_ok());
+        auto ec = proc.wait_for_exit();
+        EXPECT_TRUE(ec.is_ok());
+        EXPECT_EQ(ec.to_ok(), 0);
+        EXPECT_EQ(proc.output().string_view(), "Hello World\r\n"_sv);
+        auto pipe = Process{ "where" }.with_args({ "cmd"_sv }) | Process{ "findstr" }.with_args({ "System32"_sv });
+        auto piperr = pipe.run();
+        EXPECT_TRUE(piperr.is_ok());
+        EXPECT_EQ(pipe.output().string_view(), "C:\\Windows\\System32\\cmd.exe\r\n"_sv);
+    } else {
+        auto proc = Process{ "echo"_sv };
+        proc.with_args({ "Hello World"_sv }).set_pipe(HandleType::Output);
+        auto err = proc.launch();
+        EXPECT_TRUE(err.is_ok());
+        auto ec = proc.wait_for_exit();
+        EXPECT_TRUE(ec.is_ok());
+        EXPECT_EQ(ec.to_ok(), 0);
+        EXPECT_EQ(proc.output().string_view(), "Hello World\n"_sv);
+        auto pipe   = Process{ "echo" }.with_args({ "hello\nworld\ntesting"_sv }) | Process{ "grep" }.with_args({ "world"_sv });
+        auto piperr = pipe.run();
+        EXPECT_TRUE(piperr.is_ok());
+        EXPECT_EQ(pipe.output().string_view(), "world\n"_sv);
+    }
+}

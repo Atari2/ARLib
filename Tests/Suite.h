@@ -19,6 +19,7 @@
 #include "../Optional.h"
 #include "../Printer.h"
 #include "../PriorityQueue.h"
+#include "../Process.h"
 #include "../Random.h"
 #include "../Result.h"
 #include "../SSOVector.h"
