@@ -176,6 +176,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${CMAKE_CURRENT_SOURCE_DIR}/Ordering.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/Path.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PrintInfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Process.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Random.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/StackTrace.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/String.cpp
@@ -229,6 +230,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${CMAKE_CURRENT_SOURCE_DIR}/HashBase.h
     ${CMAKE_CURRENT_SOURCE_DIR}/HashMap.h
     ${CMAKE_CURRENT_SOURCE_DIR}/HashTable.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ImplProcessCommon.h
     ${CMAKE_CURRENT_SOURCE_DIR}/IntrusiveMap.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Invoke.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Iterator.h
@@ -250,6 +252,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${CMAKE_CURRENT_SOURCE_DIR}/Printer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PrintfImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PriorityQueue.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Process.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Random.h
     ${CMAKE_CURRENT_SOURCE_DIR}/RefBox.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Result.h
@@ -323,12 +326,16 @@ if (ON_WINDOWS)
         ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_io.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_structs.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_structs.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_process.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Windows/win_native_process.h
     )
 else()
     list(APPEND ARLIB_SOURCE_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/Linux/arlib_linuxapi.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Linux/linux_native_io.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Linux/linux_native_io.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Linux/linux_native_process.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Linux/linux_native_process.h
     )
 endif()
 list(APPEND ARLIB_SOURCE_FILES ${LIB_SOURCE_FILES_H} ${LIB_SOURCE_FILES_CPP})
