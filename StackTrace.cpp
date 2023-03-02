@@ -164,7 +164,7 @@ BackTrace capture_backtrace() {
             String demangled_full_symbol{ symbols[i], len };
             demangled_full_symbol.ireplace(name_to_demangle.data(), demangled, 1);
             size_t sz = demangled_full_symbol.size();
-            trace.append_frame(demangled_full_symbol.release(), sz + 1);
+            trace.append_frame(demangled_full_symbol.release(), sz + 1, false);
         }
     }
     std::free(symbols);
