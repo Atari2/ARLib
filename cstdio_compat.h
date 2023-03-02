@@ -68,6 +68,7 @@ size_t fwrite(const void* buffer, size_t size, size_t count, FILE* fp);
 int puts(const char* buf);
 int fputs(const char* buf, FILE* fp);
 int printf(const char* fmt, ...);
+int vprintf(const char* fmt, va_list);
 int fprintf(FILE* fp, const char* fmt, ...);
 int sprintf(char* str, const char* format, ...);
 int snprintf(char* str, size_t n, const char* format, ...);

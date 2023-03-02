@@ -141,6 +141,11 @@ int printf(const char* fmt, ...) {
     va_end(argptr);
     return static_cast<int>(ret.size());
 }
+int vprintf(const char* fmt, va_list lst) {
+    auto ret = _vsprintf(fmt, lst);
+    ARLib::fwrite(ret.data(), sizeof(char), ret.size(), stdout);
+    return static_cast<int>(ret.size());
+}
 int fprintf(FILE* fp, const char* fmt, ...) {
     va_list argptr{};
     va_start(argptr, fmt);
