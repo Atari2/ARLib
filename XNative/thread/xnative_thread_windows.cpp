@@ -17,6 +17,7 @@
 #include <process.h>
 #include <windows.h>
 #include <xthreads.h>
+#include <timeapi.h>
 namespace ARLib {
 
 MAKE_BITFIELD_ENUM(MutexType);
@@ -59,6 +60,15 @@ unsigned int __cdecl thread_hardware_concurrency() {
 }
 ThreadId __cdecl thread_id() {
     return GetCurrentThreadId();
+}
+void thread_sleep_microseconds(int64_t microseconds) {
+    timeBeginPeriod(1);
+    HANDLE tmr = CreateWaitableTimer(NULL, FALSE, NULL);
+    __assume(tmr != 0);
+    LARGE_INTEGER timerVal{ .QuadPart = -(10 * microseconds) };
+    SetWaitableTimer(tmr, &timerVal, 0, NULL, NULL, FALSE);
+    WaitForSingleObject(tmr, INFINITE);
+    timeEndPeriod(1);
 }
 ThreadState __cdecl mutex_init(MutexHandle* mtx, MutexType init) {
     *mtx = nullptr;

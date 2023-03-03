@@ -57,6 +57,7 @@ class ThreadNative {
     static ThreadId get_id(ThreadT);
     static void set_id(ThreadT&, ThreadId);
     static void swap(ThreadT&, ThreadT&);
+    static void sleep(int64_t millis);
     TEMPLATE
     static RetVal retval_create(ARGS_DECL) {
     #ifdef UNIX_OR_MINGW

@@ -622,6 +622,11 @@ class JThread {
     bool request_stop() noexcept { return m_source.request_stop(); }
     friend void swap(JThread& lhs, JThread& rhs) noexcept { lhs.swap(rhs); }
 };
+class ThisThread {
+    public:
+    static auto id() { return ThreadNative::id(); }
+    static auto sleep(uint64_t microseconds) { return ThreadNative::sleep(microseconds); }
+};
 template <>
 struct Hash<Mutex> {
     [[nodiscard]] size_t operator()(const Mutex& key) const noexcept {

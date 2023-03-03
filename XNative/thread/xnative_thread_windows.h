@@ -42,6 +42,7 @@ void __cdecl thread_sleep(const XTime*);
 void __cdecl thread_yield();
 unsigned int __cdecl thread_hardware_concurrency();
 ThreadId __cdecl thread_id();
+void thread_sleep_microseconds(int64_t microseconds);
 
 ThreadState __cdecl mutex_init(MutexHandle*, MutexType);
 void __cdecl mutex_destroy(MutexHandle);

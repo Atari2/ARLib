@@ -2,6 +2,7 @@
 #ifndef DISABLE_THREADING
 
     #include "../../Compat.h"
+    #include "../../Types.h"
     #ifdef UNIX_OR_MINGW
         #if not defined(THREADBASE_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
             #error "Don't include the XNative files directly. Use ThreadBase.h or Threading.h"
@@ -211,6 +212,7 @@ enum class PThreadCancel { ENABLE, DISABLE };
 enum class PthreadCancelType { DEFERRED, ASYNCHRONOUS };
         #define ARLIB_PTHREAD_CANCELED (void*)(-1)
 
+int pthread_sleep(int64_t millis);
 int pthread_attr_destroy(PthreadAttr*);
 int pthread_attr_getdetachstate(const PthreadAttr*, int*);
         #ifndef ON_MINGW

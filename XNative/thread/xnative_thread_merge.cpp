@@ -39,6 +39,9 @@ void ThreadNative::swap(ThreadT& t1, ThreadT& t2) {
     t1      = t2;
     t2      = cp;
 }
+void ThreadNative::sleep(int64_t microseconds) {
+    pthread_sleep(microseconds);
+}
 Pair<MutexT, bool> MutexNative::init() {
     MutexT mtx{};
     auto state = pthread_mutex_init(&mtx, nullptr);
@@ -149,6 +152,9 @@ void ThreadNative::swap(ThreadT& t1, ThreadT& t2) {
     t1._Hnd  = t2._Hnd;
     t2._Id   = cp;
     t2._Hnd  = hdl;
+}
+void ThreadNative::sleep(int64_t microseconds) {
+    thread_sleep_microseconds(microseconds);
 }
 Pair<MutexT, bool> MutexNative::init() {
     MutexT mtx{};
