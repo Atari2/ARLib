@@ -306,7 +306,7 @@ class String {
     [[nodiscard]] char back() const { return get_buf_internal()[m_size - 1]; }
     // indexing access
     [[nodiscard]] char at(size_t index) const {
-        SOFT_ASSERT_FMT((index >= m_size), "Index of %llu was out of bounds of String with size %llu", index, m_size)
+        SOFT_ASSERT_FMT((index < m_size), "Index of %llu was out of bounds of String with size %llu", index, m_size)
         return get_buf_internal()[index];
     }
     [[nodiscard]] char& operator[](size_t index) { return get_buf_internal()[index]; }
