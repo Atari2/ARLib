@@ -38,7 +38,7 @@ struct SourceLocation {
 };
 void __print_debug_source_location(const SourceLocation&, const char* message);
 }    // namespace ARLib
-forceinline inline void
+inline void
 PRINT_SOURCE_LOCATION(const char* message = nullptr, ARLib::SourceLocation loc_ = ARLib::SourceLocation::current()) {
     ARLib::__print_debug_source_location(loc_, message);
 }
