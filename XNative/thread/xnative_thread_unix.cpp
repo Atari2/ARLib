@@ -9,8 +9,11 @@
 #include <unistd.h>
 namespace ARLib {
 int pthread_sleep(int64_t microseconds) {
+    constexpr int64_t microesconds_in_second = 1'000'000;
+    const int64_t secds                      = microseconds / microesconds_in_second;
+    const int64_t nsecs                      = (microseconds % microesconds_in_second) * 1'000;
     struct timespec spec {
-        .tv_sec = 0, .tv_nsec = microseconds * 1'000
+        .tv_sec = secds, .tv_nsec = nsecs
     };
 
     return ::clock_nanosleep(CLOCK_MONOTONIC, 0, &spec, nullptr); // millis to nano
