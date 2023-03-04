@@ -2,6 +2,7 @@
 #include "Badge.h"
 #include "TypeTraits.h"
 #include "Types.h"
+#include "Invoke.h"
 
 // this is a hacky fix to an issue that can lead to the Hashable concept constraint not finding the appropriate function
 // so if it wasn't included yet, include it
@@ -182,7 +183,7 @@ concept Reservable = requires(C a) {
 
 template <typename Callable, typename... Args>
 concept CallableWith = requires(Callable func, Args... args) {
-                           { func(args...) } -> SameAs<ResultOfT<Callable(Args...)>>;
+                           { invoke(func, args...) } -> SameAs<ResultOfT<Callable(Args...)>>;
                        };
 
 template <typename Cls, typename F, typename Res, typename... Args>
@@ -199,7 +200,7 @@ concept CallMembFn = CallMembFnImplStruct<Cls, F, Res, Args...>::is_mbm_fn;
 
 template <typename Callable, typename Res, typename... Args>
 concept CallableWithRes = requires(Callable func, Args... args) {
-                              { func(args...) } -> SameAs<Res>;
+                              { invoke_r<Res>(func, args...) } -> SameAs<Res>;
                           } || CallMembFn<MembFnCls<Callable>, MembFnFn<Callable>, Res, Args...>;
 
 template <typename T>
