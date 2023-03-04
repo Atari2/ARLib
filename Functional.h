@@ -103,41 +103,6 @@ namespace detail {
         }
     };
 }    // namespace detail
-template <typename Func, typename... Args>
-class PartialFunction {
-    Func m_function;
-    detail::PartialArguments<Args...> m_pargs;
-    template <size_t... Indexes>
-    constexpr void apply_impl(Args&&... args, IndexSequence<Indexes...>) {
-        (m_pargs.template set<Indexes>(Forward<Args>(args)), ...);
-    }
-    template <size_t N, typename... Rest>
-    constexpr auto run_impl(Rest&... rest) {
-        if constexpr (N == 0)
-            return m_function(m_pargs.template get<0>(), rest...);
-        else
-            return run_impl<N - 1>(m_pargs.template get<N>(), rest...);
-    }
-
-    public:
-    PartialFunction()                                      = default;
-    PartialFunction(const PartialFunction&)                = default;
-    PartialFunction(PartialFunction&&) noexcept            = default;
-    PartialFunction& operator=(const PartialFunction&)     = default;
-    PartialFunction& operator=(PartialFunction&&) noexcept = default;
-    const auto& partial_args() const { return m_pargs; }
-    constexpr explicit PartialFunction(Func func, Args... args) : m_function(move(func)) {
-        MakeIndexSequence<sizeof...(Args)> seq{};
-        apply_impl(Forward<Args>(args)..., seq);
-    }
-    template <typename... Rest>
-    constexpr ResultOfT<Func(Args..., Rest...)> operator()(Rest... rest)
-    requires CallableWith<Func, Args..., Rest...>
-    {
-        return run_impl<sizeof...(Args) - 1>(rest...);
-    }
-};
-
 template <typename Sig>
 class Function;
 class FunctionBase {
@@ -328,6 +293,98 @@ class Function<Res(Args...)> : public fntraits::MbUOrBFn<Res, Args...>, private 
     using InvokerType     = Res (*)(const fntraits::AnyData&, Args&&...);
     InvokerType m_invoker = nullptr;
 };
+template <typename Sig, typename... PArgs>
+class PartialFunction {
+    DecayT<Sig> m_function;
+    detail::PartialArguments<PArgs...> m_pargs;
+    template <size_t... Indexes>
+    constexpr void apply_impl(PArgs&&... args, IndexSequence<Indexes...>) {
+        (m_pargs.template set<Indexes>(Forward<PArgs>(args)), ...);
+    }
+    template <size_t N, typename... Rest>
+    constexpr auto run_impl(Rest&... rest) {
+        if constexpr (N == 0)
+            return m_function(m_pargs.template get<0>(), rest...);
+        else
+            return run_impl<N - 1>(m_pargs.template get<N>(), rest...);
+    }
+
+    public:
+    PartialFunction()                                      = default;
+    PartialFunction(const PartialFunction&)                = default;
+    PartialFunction(PartialFunction&&) noexcept            = default;
+    PartialFunction& operator=(const PartialFunction&)     = default;
+    PartialFunction& operator=(PartialFunction&&) noexcept = default;
+    const auto& partial_args() const { return m_pargs; }
+    template <typename Functor>
+    explicit PartialFunction(Functor&& func, PArgs&&... args) : m_function{ Forward<Functor>(func) } {
+        MakeIndexSequence<sizeof...(PArgs)> seq{};
+        apply_impl(Forward<PArgs>(args)..., seq);
+    }
+    template <typename... Rest>
+    auto operator()(Rest... rest) {
+        return run_impl<sizeof...(PArgs) - 1>(rest...);
+    }
+};
+template <typename Func, typename... Args, typename... PArgs>
+class PartialFunction<Func(Args...), PArgs...> {
+    Function<Func(Args...)> m_function;
+    detail::PartialArguments<PArgs...> m_pargs;
+    template <size_t... Indexes>
+    constexpr void apply_impl(PArgs&&... args, IndexSequence<Indexes...>) {
+        (m_pargs.template set<Indexes>(Forward<PArgs>(args)), ...);
+    }
+    template <size_t N, typename... Rest>
+    constexpr auto run_impl(Rest&... rest) {
+        if constexpr (N == 0)
+            return m_function(m_pargs.template get<0>(), rest...);
+        else
+            return run_impl<N - 1>(m_pargs.template get<N>(), rest...);
+    }
+    template <typename Functor>
+    explicit PartialFunction(Functor&& func, PArgs&&... args) : m_function{ Forward<Functor>(func) } {
+        MakeIndexSequence<sizeof...(PArgs)> seq{};
+        apply_impl(Forward<PArgs>(args)..., seq);
+    }
+
+    friend struct PartialFunctionFactory;
+
+    public:
+    PartialFunction()                                      = default;
+    PartialFunction(const PartialFunction&)                = default;
+    PartialFunction(PartialFunction&&) noexcept            = default;
+    PartialFunction& operator=(const PartialFunction&)     = default;
+    PartialFunction& operator=(PartialFunction&&) noexcept = default;
+    const auto& partial_args() const { return m_pargs; }
+    template <typename... Rest>
+    auto operator()(Rest... rest) {
+        return run_impl<sizeof...(PArgs) - 1>(rest...);
+    }
+};
+template <typename Func, typename... Args>
+using MakeFuncSig = Func(Args...);
+struct PartialFunctionFactory {
+    template <typename Func, typename... Args, typename... PArgs>
+    static auto make_partial_function(MakeFuncSig<Func, Args...>&& func, PArgs&&... pargs) {
+        using Sig = MakeFuncSig<Func, Args...>;
+        return PartialFunction<Func(Args...), PArgs...>{ Forward<Sig>(func), Forward<PArgs>(pargs)... };
+    }
+    template <typename Func, typename... PArgs>
+    static auto make_partial_function(Func&& func, PArgs&&... pargs) {
+        return PartialFunction<Func, PArgs...>{ Forward<Func>(func), Forward<PArgs>(pargs)... };
+    }
+};
+template <typename Func, typename... Args, typename... PArgs>
+auto make_partial_function(MakeFuncSig<Func, Args...>&& func, PArgs&&... pargs) {
+    using Sig = MakeFuncSig<Func, Args...>;
+    return PartialFunctionFactory::make_partial_function<Func, Args..., PArgs...>(
+    Forward<Sig>(func), Forward<PArgs>(pargs)...
+    );
+}
+template <typename Func, typename... PArgs>
+auto make_partial_function(Func&& func, PArgs&&... pargs) {
+    return PartialFunctionFactory::make_partial_function<Func, PArgs...>(Forward<Func>(func), Forward<PArgs>(pargs)...);
+}
 template <typename Arg, typename... Args>
 struct PrintInfo<detail::PartialArguments<Arg, Args...>> {
     const detail::PartialArguments<Arg, Args...>& m_partial;
@@ -342,10 +399,10 @@ struct PrintInfo<detail::PartialArguments<Arg, Args...>> {
         }
     }
 };
-template <typename Func, typename... Args>
-struct PrintInfo<PartialFunction<Func, Args...>> {
-    const PartialFunction<Func, Args...>& m_func;
-    explicit PrintInfo(const PartialFunction<Func, Args...>& func) : m_func(func) {}
+template <typename Func, typename... Args, typename... PArgs>
+struct PrintInfo<PartialFunction<Func(Args...), PArgs...>> {
+    const PartialFunction<Func(Args...), PArgs...>& m_func;
+    explicit PrintInfo(const PartialFunction<Func(Args...), PArgs...>& func) : m_func(func) {}
     String repr() {
         return "PartialFunction "_s + String{ typeid(Func).name() } + " with partial arguments: ("_s +
                PrintInfo<detail::PartialArguments<Args...>>{ m_func.partial_args() }.repr() + ")"_s;
