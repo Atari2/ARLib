@@ -1083,3 +1083,18 @@ TEST(ARLibTests, ProcessTests) {
         EXPECT_EQ(pipe.output().string_view(), "world\n"_sv);
     }
 }
+TEST(ARLibTests, AsyncTest) {
+    auto long_running_task = [](StringView str, Pair<int, int> pair) {
+        ThisThread::sleep(2'000'000);
+        return str.extract_string() + IntToStr(pair.first()) + IntToStr(pair.second());
+    };
+    auto fut  = create_async_task(long_running_task, "Hello World"_sv, Pair{ 10, 20 });
+    auto fut2 = create_async_task(&String::at, "Hello World"_s, 1_sz);
+    auto fut3 = create_deferred_task(long_running_task, "Hello World"_sv, Pair{ 20, 30 });
+    auto res3 = fut3.wait();
+    auto res  = fut.wait();
+    auto res2 = fut2.wait();
+    EXPECT_EQ(res, "Hello World1020"_s);
+    EXPECT_EQ(res2, 'e');
+    EXPECT_EQ(res3, "Hello World2030"_s);
+}
