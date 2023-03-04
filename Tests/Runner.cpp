@@ -195,11 +195,11 @@ TEST(ARLibTests, PartialFuncTests) {
     auto decl2 = [](int a, int b) {
         return a + b;
     };
-    PartialFunction func3{ decl2, 10 };
-    PartialFunction func1{ test_partial_func, 10, "hello"_s };
-    PartialFunction func2{ decl, 10, "hello"_s };
-    auto res1 = func1(Tuple<String, int>{ "world"_s, 10 });
-    auto res2 = func2(Tuple<String, int>{ "world"_s, 10 });
+    auto func3 = make_partial_function(decl2, 10);
+    auto func1 = make_partial_function(test_partial_func, 10, "hello"_s);
+    auto func2 = make_partial_function(decl, 10, "hello"_s);
+    auto res1  = func1(Tuple<String, int>{ "world"_s, 10 });
+    auto res2  = func2(Tuple<String, int>{ "world"_s, 10 });
     EXPECT_EQ(res1, res2);
     EXPECT_EQ(res1, 30ull);
     EXPECT_EQ(res2, 30ull);
@@ -423,7 +423,7 @@ TEST(ARLibTests, PartialFuncTest2) {
     auto func = [](int a, int b) {
         return a + b;
     };
-    PartialFunction partial{ func, 10 };
+    auto partial = make_partial_function(func, 10);
     Map<ARLib::String, decltype(partial)> map{};
     map.add("hello"_s, partial);
     map.add("world"_s, partial);
@@ -1063,7 +1063,7 @@ TEST(ARLibTests, ProcessTests) {
         EXPECT_TRUE(ec.is_ok());
         EXPECT_EQ(ec.to_ok(), 0);
         EXPECT_EQ(proc.output().string_view(), "Hello World\r\n"_sv);
-        auto pipe = Process{ "where" }.with_args({ "cmd"_sv }) | Process{ "findstr" }.with_args({ "System32"_sv });
+        auto pipe   = Process{ "where" }.with_args({ "cmd"_sv }) | Process{ "findstr" }.with_args({ "System32"_sv });
         auto piperr = pipe.run();
         EXPECT_TRUE(piperr.is_ok());
         EXPECT_EQ(pipe.output().string_view(), "C:\\Windows\\System32\\cmd.exe\r\n"_sv);
@@ -1076,7 +1076,8 @@ TEST(ARLibTests, ProcessTests) {
         EXPECT_TRUE(ec.is_ok());
         EXPECT_EQ(ec.to_ok(), 0);
         EXPECT_EQ(proc.output().string_view(), "Hello World\n"_sv);
-        auto pipe   = Process{ "echo" }.with_args({ "hello\nworld\ntesting"_sv }) | Process{ "grep" }.with_args({ "world"_sv });
+        auto pipe =
+        Process{ "echo" }.with_args({ "hello\nworld\ntesting"_sv }) | Process{ "grep" }.with_args({ "world"_sv });
         auto piperr = pipe.run();
         EXPECT_TRUE(piperr.is_ok());
         EXPECT_EQ(pipe.output().string_view(), "world\n"_sv);

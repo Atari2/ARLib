@@ -138,10 +138,10 @@ bool run_all_legacy_tests() {
         auto decl = [](int a, const String& b, Tuple<String, int> c) {
             return static_cast<size_t>(a) + b.size() + c.get<0>().size() + static_cast<size_t>(c.get<1>());
         };
-        PartialFunction func1{ test_partial_func, 10, "hello"_s };
-        PartialFunction func2{ decl, 10, "hello"_s };
-        auto res1 = func1(Tuple<String, int>{ "world"_s, 10 });
-        auto res2 = func2(Tuple<String, int>{ "world"_s, 10 });
+        auto func1 = make_partial_function(test_partial_func, 10, "hello"_s);
+        auto func2 = make_partial_function(decl, 10, "hello"_s);
+        auto res1  = func1(Tuple<String, int>{ "world"_s, 10 });
+        auto res2  = func2(Tuple<String, int>{ "world"_s, 10 });
         RETURN_IF_NOT_EQ(res1, res2)
         RETURN_IF_NOT_EQ(res1, 30ull)
         RETURN_IF_NOT_EQ(res2, 30ull)
