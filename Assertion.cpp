@@ -2,6 +2,7 @@
 #include "Compat.h"
 #include "StackTrace.h"
 #include "cstdarg_compat.h"
+#include "SourceLocation.h"
 
 #ifdef COMPILER_MSVC
     #include <intrin.h>
@@ -26,17 +27,22 @@ void assertion_failed__() {
     BACKTRACE();
     abort_arlib();
 }
-void _assert_printf(const char* fmt, ...) {
+void _assert_printf(const ARLib::SourceLocation& loc, const char* fmt, ...) {
+    static char buf[2048];
     va_list lst{};
     va_start(lst, fmt);
 #ifdef DEBUG_NEW_DELETE
-    ::vprintf(fmt, lst);
+    ::vsnprintf(buf, sizeof(buf), fmt, lst);
 #else
-    ARLib::vprintf(fmt, lst);
+    int ret = ARLib::vsnprintf(buf, sizeof(buf), fmt, lst);
+    buf[ret] = '\0';
 #endif
     va_end(lst);
+    PRINT_SOURCE_LOCATION(buf, loc);
+
 }
-void _assert_puts(const char* str) {
+void _assert_puts(const ARLib::SourceLocation& loc, const char* str) {
+    PRINT_SOURCE_LOCATION(str, loc);
 #ifdef DEBUG_NEW_DELETE
     ::puts(str);
 #else

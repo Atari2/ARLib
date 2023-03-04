@@ -178,6 +178,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${CMAKE_CURRENT_SOURCE_DIR}/PrintInfo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Process.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Random.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SourceLocation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/StackTrace.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/String.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/StringView.cpp

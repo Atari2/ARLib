@@ -36,10 +36,10 @@ struct SourceLocation {
     const char* file_     = "";
     const char* function_ = "";
 };
+void __print_debug_source_location(const SourceLocation&, const char* message);
 }    // namespace ARLib
-#define PRINT_SOURCE_LOCATION                                                                                          \
-    ARLib::SourceLocation loc_ = ARLib::SourceLocation::current();                                                     \
-    ARLib::printf(                                                                                                     \
-    "Function `%s` in file %s, at line %u and column %u\n", loc_.function_name(), loc_.file_name(), loc_.line(),       \
-    loc_.column()                                                                                                      \
-    );
+forceinline inline void
+PRINT_SOURCE_LOCATION(const char* message = nullptr, ARLib::SourceLocation loc_ = ARLib::SourceLocation::current()) {
+    ARLib::__print_debug_source_location(loc_, message);
+}
+

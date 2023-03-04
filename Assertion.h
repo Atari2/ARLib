@@ -6,17 +6,10 @@
 
 void abort_arlib();
 void assertion_failed__();
-void _assert_printf(const char*, ...);
-void _assert_puts(const char*);
+void _assert_printf(const ARLib::SourceLocation& loc, const char*, ...);
+void _assert_puts(const ARLib::SourceLocation& loc, const char*);
 #if DEBUG_NEW_DELETE
-    #undef PRINT_SOURCE_LOCATION
     #undef PRINT_BACKTRACE
-    #define PRINT_SOURCE_LOCATION                                                                                      \
-        ARLib::SourceLocation loc_ = ARLib::SourceLocation::current();                                                 \
-        _assert_printf(                                                                                                \
-        "Function `%s` in file %s, at line %u and column %u\n", loc_.function_name(), loc_.file_name(), loc_.line(),   \
-        loc_.column()                                                                                                  \
-        );
     #define PRINT_BACKTRACE()
 #endif
 namespace ARLib {
@@ -58,8 +51,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, msg);                                                                     \
             } else {                                                                                                   \
-                _assert_puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                         \
-                PRINT_SOURCE_LOCATION                                                                                  \
+                _assert_puts(ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);       \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
             unreachable                                                                                                \
@@ -69,8 +61,9 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                     \
             } else {                                                                                                   \
-                _assert_printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                     \
-                PRINT_SOURCE_LOCATION                                                                                  \
+                _assert_printf(                                                                                        \
+                ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__    \
+                );                     \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
             unreachable                                                                                                \
@@ -81,8 +74,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, msg);                                                                     \
             } else {                                                                                                   \
-                _assert_puts("ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                         \
-                PRINT_SOURCE_LOCATION                                                                                  \
+                _assert_puts(ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                         \
             }                                                                                                          \
         }
     #define SOFT_ASSERT_FMT(val, fmt, ...)                                                                             \
@@ -90,8 +82,9 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                     \
             } else {                                                                                                   \
-                _assert_printf("ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__);                     \
-                PRINT_SOURCE_LOCATION                                                                                  \
+                _assert_printf(                                                                                        \
+                ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__    \
+                );                     \
             }                                                                                                          \
         }
 #else
@@ -106,8 +99,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
         if (is_constant_evaluated()) {                                                                                 \
             CONSTEVAL_STATIC_ASSERT(false, msg);                                                                       \
         } else {                                                                                                       \
-            _assert_puts(msg);                                                                                         \
-            PRINT_SOURCE_LOCATION                                                                                      \
+            _assert_puts(ARLib::SourceLocation::current(), msg);                                                                                         \
             assertion_failed__();                                                                                      \
         }                                                                                                              \
         unreachable                                                                                                    \
@@ -117,8 +109,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
         if (is_constant_evaluated()) {                                                                                 \
             CONSTEVAL_STATIC_ASSERT(false, fmt);                                                                       \
         } else {                                                                                                       \
-            _assert_printf(fmt "\n", __VA_ARGS__);                                                                     \
-            PRINT_SOURCE_LOCATION                                                                                      \
+            _assert_printf(ARLib::SourceLocation::current(), fmt "\n", __VA_ARGS__);                                                                     \
             assertion_failed__();                                                                                      \
         }                                                                                                              \
         unreachable                                                                                                    \

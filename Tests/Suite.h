@@ -56,12 +56,12 @@ bool decl_and_run(T lambda, Args... args) {
     }    // namespace ARLib
 #define RETURN_IF_NOT_EQ(x, y)                                                                                         \
     if (!assert_eq(x, y)) {                                                                                            \
-        PRINT_SOURCE_LOCATION                                                                                          \
+        PRINT_SOURCE_LOCATION();                                                                                       \
         return false;                                                                                                  \
     }
 #define RETURN_IF_EQ(x, y)                                                                                             \
     if (assert_eq(x, y)) {                                                                                             \
-        PRINT_SOURCE_LOCATION                                                                                          \
+        PRINT_SOURCE_LOCATION();                                                                                       \
         return false;                                                                                                  \
     }
 bool run_all_legacy_tests();
