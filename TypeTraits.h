@@ -14,11 +14,11 @@ namespace ARLib {
 template <class>
 constexpr inline bool AlwaysFalse = false;
 template <class T>
-constexpr inline T&& ForwardTrait(typename RemoveReference<T>::type& t) noexcept {
+compiler_intrinsic constexpr inline T&& ForwardTrait(typename RemoveReference<T>::type& t) noexcept {
     return static_cast<T&&>(t);
 }
 template <class T>
-constexpr inline T&& ForwardTrait(typename RemoveReference<T>::type&& t) noexcept {
+compiler_intrinsic constexpr inline T&& ForwardTrait(typename RemoveReference<T>::type&& t) noexcept {
     return static_cast<T&&>(t);
 }
 template <typename P>
