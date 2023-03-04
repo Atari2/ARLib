@@ -79,5 +79,6 @@ int vprintf(const char* fmt, va_list);
 int fprintf(FILE* fp, const char* fmt, ...);
 int sprintf(char* str, const char* format, ...);
 int snprintf(char* str, size_t n, const char* format, ...);
+int vsnprintf(char* buf, size_t n, const char* format, va_list args);
 int scprintf(const char* format, ...);
 }    // namespace ARLib

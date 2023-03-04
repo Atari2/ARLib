@@ -172,6 +172,12 @@ int snprintf(char* str, size_t n, const char* format, ...) {
     va_end(argptr);
     return static_cast<int>(ret.size());
 }
+int vsnprintf(char* buf, size_t n, const char* format, va_list args) {
+    auto ret = _vsprintf_frombuf(format, args, { buf, n, {} });
+    if (ret.error_code != PrintfErrorCodes::Ok) { return -1; }
+    ret.finalize();
+    return static_cast<int>(ret.size());
+}
 int scprintf(const char* format, ...) {
     va_list argptr{};
     va_start(argptr, format);
