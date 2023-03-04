@@ -304,10 +304,18 @@ class PartialFunction {
     template <size_t N, typename... Rest>
     constexpr auto run_impl(Rest&... rest) {
         if constexpr (N == 0)
-            return m_function(m_pargs.template get<0>(), rest...);
+            return invoke(m_function, m_pargs.template get<0>(), rest...);
         else
             return run_impl<N - 1>(m_pargs.template get<N>(), rest...);
     }
+    
+    template <typename Functor>
+    explicit PartialFunction(Functor&& func, PArgs&&... args) : m_function{ Forward<Functor>(func) } {
+        MakeIndexSequence<sizeof...(PArgs)> seq{};
+        apply_impl(Forward<PArgs>(args)..., seq);
+    }
+
+    friend struct PartialFunctionFactory;
 
     public:
     PartialFunction()                                      = default;
@@ -316,11 +324,7 @@ class PartialFunction {
     PartialFunction& operator=(const PartialFunction&)     = default;
     PartialFunction& operator=(PartialFunction&&) noexcept = default;
     const auto& partial_args() const { return m_pargs; }
-    template <typename Functor>
-    explicit PartialFunction(Functor&& func, PArgs&&... args) : m_function{ Forward<Functor>(func) } {
-        MakeIndexSequence<sizeof...(PArgs)> seq{};
-        apply_impl(Forward<PArgs>(args)..., seq);
-    }
+
     template <typename... Rest>
     auto operator()(Rest... rest) {
         return run_impl<sizeof...(PArgs) - 1>(rest...);
@@ -337,7 +341,7 @@ class PartialFunction<Func(Args...), PArgs...> {
     template <size_t N, typename... Rest>
     constexpr auto run_impl(Rest&... rest) {
         if constexpr (N == 0)
-            return m_function(m_pargs.template get<0>(), rest...);
+            return invoke(m_function, m_pargs.template get<0>(), rest...);
         else
             return run_impl<N - 1>(m_pargs.template get<N>(), rest...);
     }
