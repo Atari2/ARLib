@@ -625,7 +625,7 @@ class JThread {
 class ThisThread {
     public:
     static auto id() { return ThreadNative::id(); }
-    static auto sleep(uint64_t microseconds) { return ThreadNative::sleep(microseconds); }
+    static auto sleep(int64_t microseconds) { return ThreadNative::sleep(microseconds); }
 };
 template <>
 struct Hash<Mutex> {
