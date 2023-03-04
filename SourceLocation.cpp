@@ -2,7 +2,7 @@
 #include "Assertion.h"
 #include "Compat.h"
 #ifdef WINDOWS
-#include <Windows.h>
+    #include <Windows.h>
 #endif
 #include "CharConvHelpers.h"
 namespace ARLib {
@@ -16,11 +16,13 @@ namespace ARLib {
 }
 void __print_debug_source_location(const SourceLocation& loc_, [[maybe_unused]] const char* message) {
 #ifdef DEBUG_NEW_DELETE
+    _assert_printf("%s", message);
     _assert_printf(
     "Function `%s` in file %s, at line %u and column %u\n", loc_.function_name(), loc_.file_name(), loc_.line(),
     loc_.column()
     );
 #else
+    ARLib::printf("%s", message);
     ARLib::printf(
     "Function `%s` in file %s, at line %u and column %u\n", loc_.function_name(), loc_.file_name(), loc_.line(),
     loc_.column()
@@ -32,9 +34,13 @@ void __print_debug_source_location(const SourceLocation& loc_, [[maybe_unused]] 
         char* buf        = new char[len];
         int ret          = 0;
         if (message != nullptr) {
-            ret = ARLib::snprintf(buf, len, "%s(%d): in function '%s': %s", loc_.file_name(), loc_.line(), loc_.function_name(), message);
+            ret = ARLib::snprintf(
+            buf, len, "%s(%d): in function '%s': %s", loc_.file_name(), loc_.line(), loc_.function_name(), message
+            );
         } else {
-            ret = ARLib::snprintf(buf, len, "%s(%d): in function '%s'\n", loc_.file_name(), loc_.line(), loc_.function_name());
+            ret = ARLib::snprintf(
+            buf, len, "%s(%d): in function '%s'\n", loc_.file_name(), loc_.line(), loc_.function_name()
+            );
         }
         buf[ret] = '\0';
         OutputDebugStringA(buf);
