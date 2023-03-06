@@ -334,7 +334,7 @@ inline String ToString(Stringable auto& value) {
 BASIC_PRINT_IMPL(short, IntToStr)
 BASIC_PRINT_IMPL(unsigned short, IntToStr)
 BASIC_PRINT_IMPL(int, IntToStr)
-BASIC_PRINT_IMPL(unsigned int, IntToStr<SupportedBase::Hexadecimal>);
+BASIC_PRINT_IMPL(unsigned int, IntToStr);
 BASIC_PRINT_IMPL(long, IntToStr)
 BASIC_PRINT_IMPL(unsigned long, IntToStr)
 BASIC_PRINT_IMPL(long long, IntToStr)
@@ -342,7 +342,7 @@ BASIC_PRINT_IMPL(unsigned long long, IntToStr)
 BASIC_PRINT_IMPL(long double, LongDoubleToStr);
 BASIC_PRINT_IMPL(double, DoubleToStr)
 BASIC_PRINT_IMPL(float, FloatToStr)
-BASIC_PRINT_IMPL(unsigned char, IntToStr<SupportedBase::Hexadecimal>);
+BASIC_PRINT_IMPL(unsigned char, IntToStr);
 BASIC_PRINT_IMPL(char, CharToStr);
 BASIC_PRINT_IMPL(bool, BoolToStr)
 
