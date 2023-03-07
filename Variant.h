@@ -383,6 +383,7 @@ class Variant {
     String get_printinfo_string() const { return m_storage.get_printinfo_string(); }
 
     public:
+    Variant() = default;
     template <typename T>
     requires IsAnyOfV<T, Types...>
     Variant(const T& value) : m_storage(value) {}
