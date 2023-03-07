@@ -45,8 +45,8 @@ String LongDoubleToStrImpl(long double value, const char* fmt, int precision) {
     const auto len = static_cast<size_t>(scprintf(fmt, value)) + static_cast<size_t>(precision);
     String str{};
     str.reserve(len);
-    char fmtc  = ARLib::tolower(fmt[1]);
-    bool upper = fmtc != fmt[1];
+    char fmtc  = ARLib::tolower(fmt[2]);
+    bool upper = fmtc != fmt[2];
     std::chars_format char_format[]{ std::chars_format::scientific, std::chars_format::fixed,
                                      std::chars_format::general };
     char* ptr    = str.rawptr();

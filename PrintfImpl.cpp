@@ -655,6 +655,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                     case Size::Missing:
                         APPEND_AND_RET_IF_FAIL(double, double);
                         break;
+                    case Size::Long:
                     case Size::LongDouble:
                         APPEND_AND_RET_IF_FAIL(long double, long double);
                         break;
