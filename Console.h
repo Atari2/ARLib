@@ -14,6 +14,7 @@ struct Console {
             buf += c;
             c = static_cast<char>(ARLib::getchar());
         }
+        if (buf.size() == 0) return buf;
         if (buf.back() == '\r') { buf.set_size(buf.size() - 1); }
         return buf;
     }
@@ -24,6 +25,7 @@ struct Console {
             buf += c;
             c = static_cast<char>(ARLib::getchar());
         }
+        if (buf.size() == 0) return 0;
         return StrToInt(buf, base);
     }
     template <size_t N, typename... Args>
