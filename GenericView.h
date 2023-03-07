@@ -122,6 +122,29 @@ class IteratorView {
             return copy;
         }
     }
+    template <template <typename> typename NewCont>
+    NewCont<IteratorOutputType<Iter>> collect()
+    requires Pushable<NewCont<IteratorOutputType<Iter>>, IteratorOutputType<Iter>>
+    {
+        using RealCont = NewCont<IteratorOutputType<Iter>>;
+        if (m_stolen_storage != nullptr) {
+            if constexpr (SameAs<RealCont, Cont> && IterCanSubtractForSize<Iter>) {
+                return RealCont{ m_stolen_storage, size() };
+            } else {
+                RealCont copy{};
+                if constexpr (Reservable<RealCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
+                for (auto it = m_begin; it != m_end; ++it) { copy.append(move(*it)); }
+                delete[] m_stolen_storage;
+                m_stolen_storage = nullptr;
+                return copy;
+            }
+        } else {
+            RealCont copy{};
+            if constexpr (Reservable<RealCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
+            for (auto it = m_begin; it != m_end; ++it) { copy.append(move(*it)); }
+            return copy;
+        }
+    }
     template <typename Functor>
     auto filter(Functor func) {
         auto filter_iter = FilterIterate{ *this, func };
