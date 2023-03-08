@@ -853,13 +853,19 @@ TEST(ARLibTests, PrintfTestGeneric) {
 TEST(ARLibTests, PrintfTestDoubleOnly) {
     // the expected values come from std printf implementation
     constexpr StringView expected_from_double{ "25.650000000000 25.650000 25.65 25.65 2.565e+01 2.565000E+01\n" };
+    constexpr StringView expected_from_width_prec{ "+000000.00000000 +0.00000000           +0.00000000" };
     constexpr int expected_bsz_double = 61;
+    constexpr int expected_bsz_width_prec = 50;
     char buffer[1024]{};
     double v = 25.65;
     int bsz  = ARLib::sprintf(buffer, "%.12f %F %g %G %.3e %E\n", v, v, v, v, v, v);
     EXPECT_EQ(expected_bsz_double, bsz);
     buffer[bsz] = '\0';
     EXPECT_EQ(StringView{ buffer }, expected_from_double);
+    bsz = ARLib::sprintf(buffer, "%+016.8Lf %-+16.8Lf %+16.8Lf", 0.0L, 0.0L, 0.0L);
+    EXPECT_EQ(expected_bsz_width_prec, bsz);
+    buffer[bsz] = '\0';
+    EXPECT_EQ(StringView{ buffer }, expected_from_width_prec);
 }
 // path tests
 TEST(ARLibTests, PathTestsRemoveFileSpec) {

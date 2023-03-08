@@ -284,7 +284,22 @@ Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& 
         case Type::Float:
             {
                 auto temp = RealToStr<FloatFmtOpt::f>(val, precision);
-                return sign() + (temp.substring(0, temp.index_of('.') + 1_sz + info.precision));
+                temp      = temp.substring(0, temp.index_of('.') + 1_sz + info.precision);
+                const auto s = sign();
+                if (info.width != NumberTraits<int>::max && (temp.size() + s.size()) <= info.width) {
+                    char fillchar = ' ';
+                    if (has_flag(Flags::LeadingZeros) && !has_flag(Flags::LeftAlign)) { 
+                        fillchar = '0';
+                    }
+                    if (has_flag(Flags::LeftAlign)) {
+                        temp = s + temp + String{ info.width - temp.size() - s.size(), fillchar };
+                    } else if (fillchar == '0') {
+                        temp = s + String{ info.width - temp.size() - s.size(), fillchar } + temp;
+                    } else {
+                        temp = String{ info.width - temp.size() - s.size(), fillchar } + s + temp;
+                    }
+                }
+                return temp;
             }
         case Type::FloatCompact:
             {
