@@ -71,6 +71,37 @@ uint64_t BigInt::to_absolute_value_for_division() const {
     for (size_t i = 0; i < m_buffer.size(); i++) { value += (static_cast<uint64_t>(m_buffer[i]) * pows[i]); }
     return value;
 }
+uint64_t BigInt::to_absolute_value() const {
+    if (sign() == Sign::Minus) {
+        constexpr int64_t pows[] = { 1ll,
+                                     1'00ll,
+                                     1'00'00ll,
+                                     1'00'00'00ll,
+                                     1'00'00'00'00ll,
+                                     1'00'00'00'00'00ll,
+                                     1'00'00'00'00'00'00ll,
+                                     1'00'00'00'00'00'00'00ll };
+        static_assert(sizeof_array(pows) == NumberTraits<int64_t>::size);
+        if (!fits()) return NumberTraits<int64_t>::min;
+        int64_t value = 0;
+        for (size_t i = 0; i < m_buffer.size(); i++) { value += (static_cast<int64_t>(m_buffer[i]) * pows[i]); }
+        value = -value;
+        return static_cast<uint64_t>(value);
+    } else {
+        constexpr uint64_t pows[] = { 1ull,
+                                      1'00ull,
+                                      1'00'00ull,
+                                      1'00'00'00ull,
+                                      1'00'00'00'00ull,
+                                      1'00'00'00'00'00ull,
+                                      1'00'00'00'00'00'00ull,
+                                      1'00'00'00'00'00'00'00ull };
+        if (!fits()) return NumberTraits<uint64_t>::max;
+        uint64_t value = 0;
+        for (size_t i = 0; i < m_buffer.size(); i++) { value += (static_cast<uint64_t>(m_buffer[i]) * pows[i]); }
+        return value;
+    }
+}
 // this is omega-slow in the case of a bigint with more than 16 digits
 // divided by another bigint with more than 16 digits
 // because it doesn't hit any fast path and it has to do a subtraction on a loop in a loop
