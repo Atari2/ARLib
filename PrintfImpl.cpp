@@ -29,8 +29,7 @@ static DoubleRepr double_to_bits(FloatingPoint auto num_orig) {
     // %A specifies `double` precision only
     double num = static_cast<double>(num_orig);
     static_assert(sizeof(double) == sizeof(uint64_t));
-    uint64_t val = 0;
-    ARLib::memcpy(&val, &num, sizeof(double));
+    uint64_t val                       = BitCast<uint64_t>(num);
     constexpr uint64_t highest_bitmask = 1_u64 << 63_u64;
     constexpr uint64_t exp_bitmask     = 0b0111111111110000000000000000000000000000000000000000000000000000;
     constexpr uint64_t signif_bitmask  = 0b0000000000001111111111111111111111111111111111111111111111111111;
@@ -283,14 +282,12 @@ Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& 
             }
         case Type::Float:
             {
-                auto temp = RealToStr<FloatFmtOpt::f>(val, precision);
-                temp      = temp.substring(0, temp.index_of('.') + 1_sz + info.precision);
+                auto temp    = RealToStr<FloatFmtOpt::f>(val, precision);
+                temp         = temp.substring(0, temp.index_of('.') + 1_sz + info.precision);
                 const auto s = sign();
                 if (info.width != NumberTraits<int>::max && (temp.size() + s.size()) <= info.width) {
                     char fillchar = ' ';
-                    if (has_flag(Flags::LeadingZeros) && !has_flag(Flags::LeftAlign)) { 
-                        fillchar = '0';
-                    }
+                    if (has_flag(Flags::LeadingZeros) && !has_flag(Flags::LeftAlign)) { fillchar = '0'; }
                     if (has_flag(Flags::LeftAlign)) {
                         temp = s + temp + String{ info.width - temp.size() - s.size(), fillchar };
                     } else if (fillchar == '0') {
@@ -355,15 +352,41 @@ Result<String, PrintfErrorCodes> format_single_arg(PrintfTypes::PrintfInfo& info
         return format_real_like_type(info, val);
     } else if constexpr (SameAs<const char*, T>) {
         if (info.type != Type::String) { return PrintfErrorCodes::InvalidType; }
-        if (info.precision != PrintfInfo::missing_precision_marker) { return String{ val, info.precision }; }
-        return String{ val };
+        String ret{};
+        if (info.precision != PrintfInfo::missing_precision_marker) {
+            ret = String{ val, min_bt(info.precision, strlen(val)) };
+        } else {
+            ret = String{ val };
+        }
+        if (info.width != NumberTraits<int>::max && info.width > ret.size()) {
+            if ((info.flags & Flags::LeftAlign) != Flags::None) {
+                ret = ret + String{ info.width - ret.size(), ' ' };
+            } else if ((info.flags & Flags::LeadingZeros) != Flags::None)  {
+                ret = String{ info.width - ret.size(), '0' } + ret;
+            } else {
+                ret = String{ info.width - ret.size(), ' ' } + ret;
+            }
+        }
+        return ret;
     } else if constexpr (SameAs<const wchar_t*, T>) {
         HARD_ASSERT(info.type == Type::WideString || info.type == Type::AnsiString, "Invalid type");
         if (info.type != Type::WideString && info.type != Type::AnsiString) { return PrintfErrorCodes::InvalidType; }
+        String ret{};
         if (info.precision != PrintfInfo::missing_precision_marker) {
-            return wchar_to_char(WStringView{ val, info.precision });
+            ret = wstring_to_string(WStringView{ val, min_bt(info.precision, wstrlen(val)) });
+        } else {
+            ret = wstring_to_string(WStringView{val});
         }
-        return wchar_to_char(WStringView{ val });
+        if (info.width != NumberTraits<int>::max && info.width > ret.size()) {
+            if ((info.flags & Flags::LeftAlign) != Flags::None) {
+                ret = ret + String{ info.width - ret.size(), ' ' };
+            } else if ((info.flags & Flags::LeadingZeros) != Flags::None) {
+                ret = String{ info.width - ret.size(), '0' } + ret;
+            } else {
+                ret = String{ info.width - ret.size(), ' ' } + ret;
+            }
+        }
+        return ret;
     } else if constexpr (SameAs<const void*, T>) {
         constexpr auto ptrlen = sizeof(void*) * 2;
         auto ptrstr           = IntToStr<SupportedBase::Hexadecimal>(BitCast<uintptr_t>(val));

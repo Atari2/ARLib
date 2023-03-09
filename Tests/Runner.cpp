@@ -867,6 +867,27 @@ TEST(ARLibTests, PrintfTestDoubleOnly) {
     buffer[bsz] = '\0';
     EXPECT_EQ(StringView{ buffer }, expected_from_width_prec);
 }
+TEST(ARLibTests, PrintfTestStringOnly) {
+    // the expected values come from std printf implementation
+    constexpr StringView expected_from_leftaligned{ "'hello               ' 10" };
+    constexpr StringView expected_from_zerofill{ "'000000000000000hello' 10" };
+    char buffer[1024]{};
+    int bsz = ARLib::sprintf(buffer, "'%-20.5s' %d", "hello world", 10);
+    EXPECT_EQ(bsz, expected_from_leftaligned.size());
+    EXPECT_EQ(StringView{ buffer }, expected_from_leftaligned);
+    bsz = ARLib::sprintf(buffer, "'%020.5s' %d", "hello world", 10);
+    EXPECT_EQ(bsz, expected_from_zerofill.size());
+    EXPECT_EQ(StringView{ buffer }, expected_from_zerofill);
+
+    constexpr StringView expected_from_leftalignedw{ "'hello ù            ' 10" };
+    constexpr StringView expected_from_zerofillw{ "'00000000000hello ù ' 10" };
+    bsz = ARLib::sprintf(buffer, "'%-20.8S' %d", L"hello ù world", 10);
+    EXPECT_EQ(bsz, expected_from_leftalignedw.size());
+    EXPECT_EQ(StringView{ buffer }, expected_from_leftalignedw);
+    bsz = ARLib::sprintf(buffer, "'%020.8S' %d", L"hello ù world", 10);
+    EXPECT_EQ(bsz, expected_from_zerofillw.size());
+    EXPECT_EQ(StringView{ buffer }, expected_from_zerofillw);
+}
 // path tests
 TEST(ARLibTests, PathTestsRemoveFileSpec) {
     Path p1{ R"(C:\Users\user\folder\file.txt)" };
