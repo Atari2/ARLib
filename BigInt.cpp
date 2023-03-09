@@ -82,7 +82,7 @@ uint64_t BigInt::to_absolute_value() const {
                                      1'00'00'00'00'00'00ll,
                                      1'00'00'00'00'00'00'00ll };
         static_assert(sizeof_array(pows) == NumberTraits<int64_t>::size);
-        if (!fits()) return NumberTraits<int64_t>::min;
+        if (!fits()) return static_cast<uint64_t>(NumberTraits<int64_t>::min);
         int64_t value = 0;
         for (size_t i = 0; i < m_buffer.size(); i++) { value += (static_cast<int64_t>(m_buffer[i]) * pows[i]); }
         value = -value;

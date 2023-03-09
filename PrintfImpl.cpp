@@ -361,8 +361,8 @@ Result<String, PrintfErrorCodes> format_single_arg(PrintfTypes::PrintfInfo& info
         if (info.width != NumberTraits<int>::max && info.width > ret.size()) {
             if ((info.flags & Flags::LeftAlign) != Flags::None) {
                 ret = ret + String{ info.width - ret.size(), ' ' };
-            } else if ((info.flags & Flags::LeadingZeros) != Flags::None)  {
-                ret = String{ info.width - ret.size(), '0' } + ret;
+            } else if ((info.flags & Flags::LeadingZeros) != Flags::None) {
+                ret = String{ info.width - ret.size(), windows_build ? '0' : ' ' } + ret;
             } else {
                 ret = String{ info.width - ret.size(), ' ' } + ret;
             }
@@ -373,15 +373,22 @@ Result<String, PrintfErrorCodes> format_single_arg(PrintfTypes::PrintfInfo& info
         if (info.type != Type::WideString && info.type != Type::AnsiString) { return PrintfErrorCodes::InvalidType; }
         String ret{};
         if (info.precision != PrintfInfo::missing_precision_marker) {
-            ret = wstring_to_string(WStringView{ val, min_bt(info.precision, wstrlen(val)) });
+            // precision on %S is UB according to Clang.
+            // therefore, we will implement it like this and hope for the best.
+            if constexpr (windows_build) {
+                ret = wstring_to_string(WStringView{ val, min_bt(info.precision, wstrlen(val)) });
+            } else {
+                ret = wstring_to_string(WStringView{ val });
+                ret = ret.substring(0, min_bt(info.precision, ret.size()));
+            }
         } else {
-            ret = wstring_to_string(WStringView{val});
+            ret = wstring_to_string(WStringView{ val });
         }
         if (info.width != NumberTraits<int>::max && info.width > ret.size()) {
             if ((info.flags & Flags::LeftAlign) != Flags::None) {
                 ret = ret + String{ info.width - ret.size(), ' ' };
             } else if ((info.flags & Flags::LeadingZeros) != Flags::None) {
-                ret = String{ info.width - ret.size(), '0' } + ret;
+                ret = String{ info.width - ret.size(), windows_build ? '0' : ' ' } + ret;
             } else {
                 ret = String{ info.width - ret.size(), ' ' } + ret;
             }

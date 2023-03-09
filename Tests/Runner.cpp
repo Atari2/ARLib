@@ -854,7 +854,7 @@ TEST(ARLibTests, PrintfTestDoubleOnly) {
     // the expected values come from std printf implementation
     constexpr StringView expected_from_double{ "25.650000000000 25.650000 25.65 25.65 2.565e+01 2.565000E+01\n" };
     constexpr StringView expected_from_width_prec{ "+000000.00000000 +0.00000000           +0.00000000" };
-    constexpr int expected_bsz_double = 61;
+    constexpr int expected_bsz_double     = 61;
     constexpr int expected_bsz_width_prec = 50;
     char buffer[1024]{};
     double v = 25.65;
@@ -870,23 +870,35 @@ TEST(ARLibTests, PrintfTestDoubleOnly) {
 TEST(ARLibTests, PrintfTestStringOnly) {
     // the expected values come from std printf implementation
     constexpr StringView expected_from_leftaligned{ "'hello               ' 10" };
-    constexpr StringView expected_from_zerofill{ "'000000000000000hello' 10" };
+    constexpr StringView expected_from_zerofill_win{ "'000000000000000hello' 10" };
+    constexpr StringView expected_from_zerofill_lin{ "'               hello' 10" };
     char buffer[1024]{};
     int bsz = ARLib::sprintf(buffer, "'%-20.5s' %d", "hello world", 10);
     EXPECT_EQ(bsz, expected_from_leftaligned.size());
     EXPECT_EQ(StringView{ buffer }, expected_from_leftaligned);
     bsz = ARLib::sprintf(buffer, "'%020.5s' %d", "hello world", 10);
-    EXPECT_EQ(bsz, expected_from_zerofill.size());
-    EXPECT_EQ(StringView{ buffer }, expected_from_zerofill);
+    if constexpr (windows_build) {
+        EXPECT_EQ(bsz, expected_from_zerofill_win.size());
+        EXPECT_EQ(StringView{ buffer }, expected_from_zerofill_win);
+    } else {
+        EXPECT_EQ(bsz, expected_from_zerofill_lin.size());
+        EXPECT_EQ(StringView{ buffer }, expected_from_zerofill_lin);
+    }
 
     constexpr StringView expected_from_leftalignedw{ "'hello ù            ' 10" };
-    constexpr StringView expected_from_zerofillw{ "'00000000000hello ù ' 10" };
+    constexpr StringView expected_from_zerofillw_win{ "'00000000000hello ù ' 10" };
+    constexpr StringView expected_from_zerofillw_lin{ "'            hello ù' 10" };
     bsz = ARLib::sprintf(buffer, "'%-20.8S' %d", L"hello ù world", 10);
     EXPECT_EQ(bsz, expected_from_leftalignedw.size());
     EXPECT_EQ(StringView{ buffer }, expected_from_leftalignedw);
     bsz = ARLib::sprintf(buffer, "'%020.8S' %d", L"hello ù world", 10);
-    EXPECT_EQ(bsz, expected_from_zerofillw.size());
-    EXPECT_EQ(StringView{ buffer }, expected_from_zerofillw);
+    if constexpr (windows_build) {
+        EXPECT_EQ(bsz, expected_from_zerofillw_win.size());
+        EXPECT_EQ(StringView{ buffer }, expected_from_zerofillw_win);
+    } else {
+        EXPECT_EQ(bsz, expected_from_zerofillw_lin.size());
+        EXPECT_EQ(StringView{ buffer }, expected_from_zerofillw_lin);
+    }
 }
 // path tests
 TEST(ARLibTests, PathTestsRemoveFileSpec) {
