@@ -166,6 +166,10 @@ class IteratorView {
         auto map_iter = MapIterate{ *this, conversion_func };
         return IteratorView<decltype(map_iter)>{ release_storage(), map_iter.begin(), map_iter.end() };
     }
+    auto enumerate() { 
+        auto enum_iter = Enumerate{ *this };
+        return IteratorView<decltype(enum_iter)>{ release_storage(), enum_iter.begin(), enum_iter.end() };
+    }
     template <typename Functor>
     requires(CallableWithRes<Functor, ItemType, ItemType>)
     IteratorView inplace_transform(Functor&& func) {

@@ -241,7 +241,7 @@ class LoopIterator {
 };
 template <class IterUnit, class Functor>
 requires requires(IterUnit iter, Functor func) {
-             { invoke(func, *iter) } -> SameAs<bool>;
+             { invoke(func, *iter) } -> ConvertibleTo<bool>;
          }
 class IfIterator {
     IterUnit m_current_iter;
