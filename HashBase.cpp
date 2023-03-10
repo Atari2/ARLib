@@ -11,7 +11,7 @@ static forceinline size_t bitcast_copy(const char* p) {
 static forceinline size_t xorshift(size_t val) {
     return val ^ (val >> 47);
 }
-static size_t copy_remainder(const char* p, int n) {
+static forceinline size_t copy_remainder(const char* p, int n) {
     size_t result = 0;
     while (n > 0) { result = (result << BITS_PER_BYTE) + static_cast<uint8_t>(p[--n]); }
     return result;
