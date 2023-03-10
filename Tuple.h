@@ -258,9 +258,13 @@ requires(Printable<RemoveCvRefT<Args>>, ...)
 struct PrintInfo<Tuple<Args...>> {
     const Tuple<Args...>& m_tuple;
     explicit PrintInfo(const Tuple<Args...>& tuple) : m_tuple(tuple) {}
+    template <size_t... Idxs>
+    void _append_all_args(String& str, IndexSequence<Idxs...>) const {
+        (str.append(print_conditional(get<Idxs>(m_tuple)) + ", "_s), ...);
+    }
     String repr() const {
         String str{ "{ " };
-        (str.append(print_conditional(get<Args>(m_tuple)) + ", "_s), ...);
+        _append_all_args(str, IndexSequenceFor<Args...>{});
         str = str.substring(0, str.size() - 2);
         str.append(" }");
         return str;
