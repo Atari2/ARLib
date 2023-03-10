@@ -57,8 +57,8 @@ class Array {
     constexpr ConstIterator<T> rend() const {
         return ConstIterator<T>{ ConstReverseIterator<const T*>::pointer_to(*_m_storage_) - 1 };
     }
-    constexpr auto view() const { return IteratorView{ *this }; }
-    constexpr auto view() { return IteratorView{ *this }; }
+    constexpr auto iter() const { return IteratorView{ *this }; }
+    constexpr auto iter() { return IteratorView{ *this }; }
     constexpr auto span() const { return Span<const T>{ _m_storage_, S }; }
     constexpr auto span() { return Span<T>{ _m_storage_, S }; }
     constexpr auto enumerate() const {

@@ -206,7 +206,7 @@ struct ForEachEnum {
     constexpr auto end() const {
         return EnumHelpers::EnumIterator<T>{ EnumHelpers::EnumMapProvider<T>::enum_array.size() };
     }
-    constexpr auto view() const { return IteratorView{ *this }; }
+    constexpr auto iter() const { return IteratorView{ *this }; }
 };
 template <EnumHelpers::EnumSupportsMap T>
 constexpr auto for_each_enum() {

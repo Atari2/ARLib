@@ -28,7 +28,7 @@ FsString normalize_slashes(FsString&& path) {
             vec.append(native_backslash);
         }
     }
-    return vec.view().collect<FsString>();
+    return vec.iter().collect<FsString>();
 }
 bool Path::operator==(const Path& other) const {
     return m_path == other.m_path;

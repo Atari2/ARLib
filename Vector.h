@@ -347,9 +347,9 @@ class Vector {
         reserve(size);
         m_size = size;
     }
-    auto view() const& { return IteratorView{ *this }; }
-    auto view() & { return IteratorView{ *this }; }
-    auto view() && {
+    auto iter() const& { return IteratorView{ *this }; }
+    auto iter() & { return IteratorView{ *this }; }
+    auto iter() && {
         auto view  = IteratorView<Vector<T>>{ m_storage, m_size };
         m_capacity = 0;
         return view;
