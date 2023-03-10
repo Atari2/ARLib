@@ -405,6 +405,20 @@ TEST(ARLibTests, GenericViewTests) {
          }).collect<Vector<String>>();
     EXPECT_EQ(filtered.size(), 56ull);
     EXPECT_EQ(Printer::format("{}", filtered), form_filtered);
+
+    Array expected_from_en{
+        Pair{0_sz,  1.0},
+        Pair{ 1_sz, 2.0},
+        Pair{ 2_sz, 3.0},
+        Pair{ 3_sz, 4.0},
+        Pair{ 4_sz, 5.0}
+    };
+    for (const auto& [i, v] :
+         "1\n2\n3\n\n4\n\n5"_sv.split("\n").iter().filter(&StringView::size).map(StrViewToDouble).enumerate()) {
+        const auto& [exp_i, exp_v] = expected_from_en[i];
+        EXPECT_EQ(exp_i, i);
+        EXPECT_EQ(exp_v, v);
+    }
 }
 TEST(ARLibTests, StringTest2) {
     String str{ "ciao come ciao io ciao sono ciao pippo" };
