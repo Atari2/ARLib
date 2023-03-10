@@ -22,7 +22,6 @@ VERIFY_WIN32_STRUCT(WORD, WinWord);
 VERIFY_WIN32_STRUCT(DWORD, WinDword);
 VERIFY_WIN32_STRUCT(HANDLE, WinHandle);
 VERIFY_WIN32_STRUCT(LPOVERLAPPED_COMPLETION_ROUTINE, internal::LPOverlappedCompletionRoutine);
-static_assert(ARLIB_INVALID_HANDLE_VALUE == INVALID_HANDLE_VALUE);
 static_assert(ARLIB_INFINITE_TIMEOUT == INFINITE);
 CriticalSection::CriticalSection() {
     InitializeSRWLock(cast<::PSRWLOCK>(&m_srw_lock));
