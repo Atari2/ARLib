@@ -163,6 +163,8 @@ class Enumerator {
     using Unit = Pair<size_t, T>;
 
     public:
+    using InputValueType  = IteratorInputType<Iter>;
+    using OutputValueType = Unit;
     explicit Enumerator(Rt* begin) : m_iter(begin), m_index(0) {}
     Enumerator(Rt* begin, size_t index) : m_iter(begin), m_index(index) {}
     Enumerator(Iter iter, size_t index) : m_iter(iter), m_index(index) {}
@@ -177,10 +179,10 @@ class Enumerator {
         this->operator++();
         return copy;
     }
-    bool operator==(const Enumerator& other) const { return m_index == other.m_index; }
-    bool operator!=(const Enumerator& other) const { return m_index != other.m_index; }
-    bool operator<(const Enumerator& other) const { return m_index < other.m_index; }
-    bool operator>(const Enumerator& other) const { return m_index > other.m_index; }
+    bool operator==(const Enumerator& other) const { return m_iter == other.m_iter; }
+    bool operator!=(const Enumerator& other) const { return m_iter != other.m_iter; }
+    bool operator<(const Enumerator& other) const { return m_iter < other.m_iter; }
+    bool operator>(const Enumerator& other) const { return m_iter > other.m_iter; }
     size_t operator-(const Enumerator& other) const { return m_iter - other.m_iter; }
 };
 template <typename T>

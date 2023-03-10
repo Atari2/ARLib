@@ -65,7 +65,7 @@ class Enumerate {
     public:
     explicit Enumerate(T container) : m_container(Forward<T>(container)) {}
     auto begin() const { return Enumerator{ ARLib::begin(m_container), 0ull }; }
-    auto end() const { return Enumerator{ ARLib::end(m_container), m_container.size() }; }
+    auto end() const { return Enumerator{ ARLib::end(m_container), it_npos }; }
 };
 template <EnumerableC T>
 Enumerate(T&) -> Enumerate<T&>;
