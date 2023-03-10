@@ -153,7 +153,8 @@ class ZipIterator {
         return (... && (m_current_tuple.template get<Tps>() > other.m_current_tuple.template get<Tps>()));
     }
 };
-template <IteratorConcept Iter>
+template <Incrementable Iter>
+requires (Dereferencable<Iter>)
 class Enumerator {
     using T  = decltype(*declval<Iter>());
     using Rt = RemoveReferenceT<T>;

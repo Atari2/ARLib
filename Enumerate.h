@@ -58,7 +58,7 @@ class Iterate {
     auto begin() const { return LoopIterator<T, CMP>{ m_begin, m_step }; }
     auto end() const { return LoopIterator<T, CMP>{ m_end, m_step }; }
 };
-template <EnumerableC T>
+template <Iterable T>
 class Enumerate {
     T m_container;
 
