@@ -332,17 +332,14 @@ HANDLE Win32Process::choose_handle(Win32PipeType type) {
     // error = 2
     HANDLE handles[3]{};
     bool redirects[3]{ m_redirected_stdout, m_redirected_stdin, m_redirected_stderr };
-    switch (redirects[from_enum(type)]) {
-        case true:
-            handles[from_enum(Win32PipeType::Output)] = m_pipes.output;
-            handles[from_enum(Win32PipeType::Input)]  = m_pipes.input;
-            handles[from_enum(Win32PipeType::Error)]  = m_pipes.error;
-            break;
-        case false:
-            handles[from_enum(Win32PipeType::Output)] = GetStdHandle(STD_OUTPUT_HANDLE);
-            handles[from_enum(Win32PipeType::Input)]  = GetStdHandle(STD_INPUT_HANDLE);
-            handles[from_enum(Win32PipeType::Error)]  = GetStdHandle(STD_ERROR_HANDLE);
-            break;
+    if (redirects[from_enum(type)]) {
+        handles[from_enum(Win32PipeType::Output)] = m_pipes.output;
+        handles[from_enum(Win32PipeType::Input)]  = m_pipes.input;
+        handles[from_enum(Win32PipeType::Error)]  = m_pipes.error;
+    } else {
+        handles[from_enum(Win32PipeType::Output)] = GetStdHandle(STD_OUTPUT_HANDLE);
+        handles[from_enum(Win32PipeType::Input)]  = GetStdHandle(STD_INPUT_HANDLE);
+        handles[from_enum(Win32PipeType::Error)]  = GetStdHandle(STD_ERROR_HANDLE);
     }
     return handles[from_enum(type)];
 }
@@ -463,7 +460,6 @@ Result<exit_code_t, ProcessError> Win32Process::wait_for_exit() {
 void Win32Process::setup_error_reader() {
     m_error_reader_thread = JThread{ [this](StopToken stoken) {
         if (!m_redirected_stderr) return;
-        LONGLONG offset   = 0;
         HANDLE hdl        = choose_handle(Win32PipeType::Error);
         while (!stoken.stop_requested()) { peek_and_read_pipe(hdl); }
     } };
@@ -471,7 +467,6 @@ void Win32Process::setup_error_reader() {
 void Win32Process::setup_output_reader() {
     m_output_reader_thread = JThread{ [this](StopToken stoken) {
         if (!m_redirected_stdout) return;
-        LONGLONG offset    = 0;
         HANDLE hdl         = choose_handle(Win32PipeType::Output);
         while (!stoken.stop_requested()) { peek_and_read_pipe(hdl); }
     } };
