@@ -170,6 +170,14 @@ class IteratorView {
         auto enum_iter = Enumerate{ *this };
         return IteratorView<decltype(enum_iter)>{ release_storage(), enum_iter.begin(), enum_iter.end() };
     }
+    template <Iterable C>
+    auto zip(C&& cont) & {
+        return ARLib::zip(*this, Forward<C>(cont));
+    }
+    template <Iterable C>
+    auto zip(C&& cont) && {
+        return ARLib::zip(move(*this), Forward<C>(cont));
+    }
     template <typename Functor>
     requires(CallableWithRes<Functor, ItemType, ItemType>)
     IteratorView inplace_transform(Functor&& func) {

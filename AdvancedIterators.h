@@ -47,66 +47,54 @@ class PairIterator {
                m_current_pair.template get<1>() > other.m_current_pair.template get<1>();
     }
 };
-template <typename... Tps>
-requires(sizeof...(Tps) > 0)
-auto types_into_ref_tuple() {
-    if constexpr (sizeof...(Tps) == 1) {
-        Tuple<Tps&...>* ptr{};
-        return *ptr;
+template <typename Tp, typename... Tps>
+auto& types_into_ref_tuple(Tp&& tp, Tps&&... tps) {
+    using RealT = decltype(tp);
+    using Ref   = ConditionalT<IsLvalueReferenceV<RealT>, Tp&, Tp>;
+    if constexpr (sizeof...(Tps) == 0) {
+        Tuple<Ref>* tup{};
+        return *tup;
     } else {
-        using A1  = TypeArray<Tps...>;
-        using Cur = typename A1::template At<0>;
-        using A2  = TypeArray<AddLvalueReferenceT<Cur>>;
-        return types_into_ref_tuple<1>(A1{}, A2{});
+        using Arr = TypeArray<Ref>;
+        return types_into_ref_tuple<Tps...>(Arr{}, Forward<Tps>(tps)...);
     }
 }
-template <size_t Idx, typename... P1, typename... P2>
-requires(Idx < sizeof...(P1))
-auto types_into_ref_tuple(TypeArray<P1...>, TypeArray<P2...>) {
-    using A1  = TypeArray<P1...>;
-    using Cur = typename A1::template At<Idx>;
-    using A2  = TypeArray<P2..., AddLvalueReferenceT<Cur>>;
-    if constexpr ((Idx + 1) == sizeof...(P1)) {
-        Tuple<P2..., AddLvalueReferenceT<Cur>>* ptr{};
-        return *ptr;
+template <typename Tp, typename... Tps, typename... Rem>
+auto& types_into_ref_tuple(TypeArray<Tps...>, Tp&& tp, Rem&&... rem) {
+    using RealT = decltype(tp);
+    using Ref   = ConditionalT<IsLvalueReferenceV<RealT>, Tp&, Tp>;
+    if constexpr (sizeof...(Rem) == 0) {
+        Tuple<Tps..., Ref>* tup{};
+        return *tup;
     } else {
-        return types_into_ref_tuple<Idx + 1>(A1{}, A2{});
+        using Arr = TypeArray<Tps..., Ref>;
+        return types_into_ref_tuple<Rem...>(Arr{}, Forward<Rem>(rem)...);
     }
 }
-template <typename... Tps>
-requires(sizeof...(Tps) > 0)
-auto types_into_iter_tuple() {
-    if constexpr (sizeof...(Tps) == 1) {
-        using VT     = AddLvalueReferenceT<decltype(*declval<Tps...>())>;
-        using TupleT = Tuple<VT>;
-        TupleT* ptr{};
-        return *ptr;
+template <typename Tp, typename... Tps>
+auto& types_into_iter_tuple(Tp tp, Tps... tps) {
+    using RealT = decltype(*tp);
+    if constexpr (sizeof...(Tps) == 0) {
+        Tuple<RealT>* tup{};
+        return *tup;
     } else {
-        using A1  = TypeArray<Tps...>;
-        using Cur = typename A1::template At<0>;
-        using VT  = AddLvalueReferenceT<decltype(*declval<Cur>())>;
-        using A2  = TypeArray<VT>;
-        return types_into_iter_tuple<1>(A1{}, A2{});
+        using Arr = TypeArray<RealT>;
+        return types_into_iter_tuple<Tps...>(Arr{}, tps...);
     }
 }
-template <size_t Idx, typename... P1, typename... P2>
-requires(Idx < sizeof...(P1))
-auto types_into_iter_tuple(TypeArray<P1...>, TypeArray<P2...>) {
-    using A1  = TypeArray<P1...>;
-    using Cur = typename A1::template At<Idx>;
-    using VT  = AddLvalueReferenceT<decltype(*declval<Cur>())>;
-    using A2  = TypeArray<P2..., VT>;
-    if constexpr ((Idx + 1) == sizeof...(P1)) {
-        using TupleT = Tuple<P2..., VT>;
-        TupleT* ptr{};
-        return *ptr;
+template <typename Tp, typename... Tps, typename... Rem>
+auto& types_into_iter_tuple(TypeArray<Tps...>, Tp tp, Rem... rem) {
+    using RealT = decltype(*tp);
+    if constexpr (sizeof...(Rem) == 0) {
+        Tuple<Tps..., RealT>* tup{};
+        return *tup;
     } else {
-        return types_into_iter_tuple<Idx + 1>(A1{}, A2{});
+        using Arr = TypeArray<Tps..., RealT>;
+        return types_into_iter_tuple<Rem...>(Arr{}, rem...);
     }
 }
 template <typename... Tps>
 class ZipIterator {
-    using RetVal   = decltype(types_into_iter_tuple<Tps...>());
     using IterUnit = Tuple<Tps...>;
     IterUnit m_current_tuple;
     template <size_t... Vals>
@@ -118,14 +106,16 @@ class ZipIterator {
         (..., m_current_tuple.template get<Vals>()--);
     }
     template <size_t... Vals>
-    RetVal iget(IndexSequence<Vals...>) {
-        return RetVal{ *m_current_tuple.template get<Vals>()... };
+    auto iget(IndexSequence<Vals...>) {
+        using TupleType = RemoveReferenceT<decltype(types_into_iter_tuple(m_current_tuple.template get<Vals>()...))>;
+        return TupleType{ *m_current_tuple.template get<Vals>()... };
     }
 
     public:
     ZipIterator(Tps... iterators) : m_current_tuple(iterators...) {}
     explicit ZipIterator(IterUnit curr_pair) : m_current_tuple(curr_pair){};
-    RetVal operator*() { return iget(IndexSequenceFor<Tps...>{}); }
+    auto operator*() { return iget(IndexSequenceFor<Tps...>{}); }
+    auto operator*() const { return iget(IndexSequenceFor<Tps...>{}); }
     ZipIterator& operator++() {
         iincrement(IndexSequenceFor<Tps...>{});
         return *this;
@@ -154,7 +144,7 @@ class ZipIterator {
     }
 };
 template <Incrementable Iter>
-requires (Dereferencable<Iter>)
+requires(Dereferencable<Iter>)
 class Enumerator {
     using T  = decltype(*declval<Iter>());
     using Rt = RemoveReferenceT<T>;

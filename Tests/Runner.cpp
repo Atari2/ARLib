@@ -413,11 +413,12 @@ TEST(ARLibTests, GenericViewTests) {
         Pair{ 3_sz, 4.0},
         Pair{ 4_sz, 5.0}
     };
-    for (const auto& [i, v] :
-         "1\n2\n3\n\n4\n\n5"_sv.split("\n").iter().filter(&StringView::size).map(StrViewToDouble).enumerate()) {
-        const auto& [exp_i, exp_v] = expected_from_en[i];
-        EXPECT_EQ(exp_i, i);
-        EXPECT_EQ(exp_v, v);
+    for (const auto& [exp, act] :
+         "1\n2\n3\n\n4\n\n5"_sv.split("\n").iter().filter(&StringView::size).map(StrViewToDouble).enumerate().zip(expected_from_en)) {
+        const auto& [exp_i, exp_v] = exp;
+        const auto& [act_i, act_v] = act;
+        EXPECT_EQ(exp_i, act_i);
+        EXPECT_EQ(exp_v, act_v);
     }
 }
 TEST(ARLibTests, StringTest2) {

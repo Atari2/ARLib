@@ -101,9 +101,8 @@ class PairIterate {
     auto begin() const { return PairIterator{ m_first.begin(), m_second.begin() }; }
     auto end() const { return PairIterator{ m_first.end(), m_second.end() }; }
 };
-template <Iterable... Conts>
+template <typename ZipContainer, Iterable... Conts>
 class ZipIterate {
-    using ZipContainer = decltype(types_into_ref_tuple<Conts...>());
     ZipContainer m_tuple;
     size_t m_size;
     template <size_t... Vals>
@@ -122,14 +121,23 @@ class ZipIterate {
         return *min(ARLib::begin(sizes), ARLib::end(sizes));
     }
     public:
-    ZipIterate(Conts&... conts) : m_tuple{ conts... }, m_size{} { m_size = isize(IndexSequenceFor<Conts...>{}); }
+    ZipIterate(const Conts&... conts) : m_tuple{ conts... }, m_size{} {
+        m_size = isize(IndexSequenceFor<Conts...>{});
+    }
+    template <typename... UConts>
+    ZipIterate(UConts&&... conts) : m_tuple{ Forward<UConts>(conts)... }, m_size{} {
+        m_size = isize(IndexSequenceFor<Conts...>{});
+    }
     auto begin() const { return ibegin(IndexSequenceFor<Conts...>{}); }
     auto end() const { return iend(IndexSequenceFor<Conts...>{}); }
+    auto begin() { return ibegin(IndexSequenceFor<Conts...>{}); }
+    auto end() { return iend(IndexSequenceFor<Conts...>{}); }
     size_t size() const { return m_size; }
 };
 template <Iterable... Conts>
-auto zip(Conts&... conts) {
-    return ZipIterate{ conts... };
+auto zip(Conts&&... conts) {
+    using ZipContainer = RemoveReferenceT<decltype(types_into_ref_tuple(Forward<Conts>(conts)...))>;
+    return ZipIterate<ZipContainer, Conts...>{ Forward<Conts>(conts)... };
 }
 template <Iterable Container, typename Functor>
 class FilterIterate {

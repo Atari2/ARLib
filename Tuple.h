@@ -39,7 +39,7 @@ auto get_tuple_base_array_start() {
     }
 }
 template <typename T, typename... Args>
-class Tuple : Tuple<Args...> {
+class Tuple : public Tuple<Args...> {
     using BaseTuple      = Tuple<Args...>;
     using TupleBaseArray = decltype(get_tuple_base_array_start<T, Args...>());
     T m_member;
@@ -73,7 +73,10 @@ class Tuple : Tuple<Args...> {
     constexpr Tuple()                   = default;
     constexpr Tuple(const Tuple&)       = default;
     constexpr Tuple(Tuple&&) noexcept   = default;
-    constexpr explicit Tuple(T arg, Args... args) : Tuple<Args...>(args...), m_member(arg) {}
+    constexpr explicit Tuple(const T& arg, const Args&... args) : Tuple<Args...>(args...), m_member(arg) {}
+    template <typename U, typename... Yrgs>
+    constexpr explicit Tuple(U&& arg, Yrgs&&... args) :
+        Tuple<Args...>(Forward<Yrgs>(args)...), m_member(Forward<U>(arg)) {}
     constexpr Tuple& operator=(const Tuple&)     = default;
     constexpr Tuple& operator=(Tuple&&) noexcept = default;
     constexpr bool operator==(const Tuple& other) const { return equality_impl<sizeof...(Args) - 1>(other); }
@@ -162,7 +165,9 @@ class Tuple<T> {
     public:
     constexpr static inline size_t size = 1;
     constexpr Tuple()                   = default;
-    constexpr explicit Tuple(T arg) : m_member(arg) {}
+    constexpr explicit Tuple(const T& arg) : m_member(arg) {}
+    template <typename U>
+    constexpr explicit Tuple(U&& arg) : m_member(Forward<U>(arg)) {}
     constexpr bool operator==(const Tuple& other) const { return m_member == other.m_member; }
     constexpr Tuple& operator=(T&& value) {
         m_member = move(value);
@@ -179,12 +184,12 @@ class Tuple<T> {
         return m_member;
     }
     template <size_t N>
-    constexpr T& get() {
+    constexpr auto& get() {
         static_assert(N == 0);
         return m_member;
     }
     template <size_t N>
-    constexpr const T& get() const {
+    constexpr const auto& get() const {
         static_assert(N == 0);
         return m_member;
     }
@@ -199,6 +204,31 @@ class Tuple<T> {
         m_member = move(f);
     }
 };
+}    // namespace ARLib
+// tuple_size and tuple_element specializations for ARLib::Tuple
+template <typename... Types>
+struct std::tuple_size<ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
+template <typename... Types>
+struct std::tuple_size<const ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
+template <class Head, class... Tail>
+struct std::tuple_element<0, ARLib::Tuple<Head, Tail...>> {
+    using type = Head;
+    using BaseType = ARLib::Tuple<Head, Tail...>;
+};
+template <std::size_t I, class Head, class... Tail>
+struct std::tuple_element<I, ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, ARLib::Tuple<Tail...>> {};
+template <class Head, class... Tail>
+struct std::tuple_element<0, const ARLib::Tuple<Head, Tail...>> {
+    using type     = ARLib::AddConstT<Head>;
+    using BaseType = ARLib::AddConstT<ARLib::Tuple<Head, Tail...>>;
+};
+template <std::size_t I, class Head, class... Tail>
+struct std::tuple_element<I, const ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, const ARLib::Tuple<Tail...>> {};
+namespace ARLib {
+template <typename... Args>
+auto make_tuple(Args&&... args) {
+    return Tuple{ Forward<Args>(args)... };
+}
 // free functions to avoid template keyword when calling member functions in templated functions.
 template <typename Tp, typename... Args>
 requires IsAnyOfV<Tp, Args...>
@@ -207,18 +237,20 @@ auto& get(Tuple<Args...>& tuple) {
 }
 template <typename Tp, typename... Args>
 requires IsAnyOfV<Tp, Args...>
-const auto& get(const Tuple<Args...>& tuple) {
+auto& get(const Tuple<Args...>& tuple) {
     return tuple.template get<Tp>();
 }
 template <size_t Idx, typename... Args>
 requires(Idx < sizeof...(Args))
-auto& get(Tuple<Args...>& tuple) {
-    return tuple.template get<Idx>();
+constexpr auto& get(Tuple<Args...>& tuple) {
+    using Base = typename std::tuple_element<Idx, Tuple<Args...>>::BaseType;
+    return static_cast<Base&>(tuple).template get<0>();
 }
 template <size_t Idx, typename... Args>
 requires(Idx < sizeof...(Args))
-const auto& get(const Tuple<Args...>& tuple) {
-    return tuple.template get<Idx>();
+constexpr const auto& get(const Tuple<Args...>& tuple) {
+    using Base = typename std::tuple_element<Idx, Tuple<Args...>>::BaseType;
+    return static_cast<const Base&>(tuple).template get<0>();
 }
 template <typename Tp, typename... Args>
 requires IsAnyOfV<Tp, Args...>
@@ -271,21 +303,3 @@ struct PrintInfo<Tuple<Args...>> {
     }
 };
 }    // namespace ARLib
-// tuple_size and tuple_element specializations for ARLib::Tuple
-template <typename... Types>
-struct std::tuple_size<ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
-template <typename... Types>
-struct std::tuple_size<const ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
-template <std::size_t I, class Head, class... Tail>
-struct std::tuple_element<I, ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, ARLib::Tuple<Tail...>> {};
-template <class Head, class... Tail>
-struct std::tuple_element<0, ARLib::Tuple<Head, Tail...>> {
-    using type = Head;
-};
-template <std::size_t I, class Head, class... Tail>
-struct std::tuple_element<I, const ARLib::Tuple<Head, Tail...>> :
-    std::tuple_element<I - 1, const ARLib::Tuple<Tail...>> {};
-template <class Head, class... Tail>
-struct std::tuple_element<0, const ARLib::Tuple<Head, Tail...>> {
-    using type = const Head;
-};
