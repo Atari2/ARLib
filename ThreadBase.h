@@ -13,7 +13,7 @@ namespace detail {
     RetVal invoke_deferred(void* rawvals) noexcept {
         const UniquePtr<Tup> fnvals(static_cast<Tup*>(rawvals));
         const Tup& tup = *fnvals;
-        invoke(move(get<Indices>(tup))...);
+        invoke(move(get<Indices, false>(tup))...);
     #ifdef COMPILER_MSVC
         cond_do_broadcast_at_thread_exit();
     #endif

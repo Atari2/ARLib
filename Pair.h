@@ -3,6 +3,7 @@
 #include "PrintInfo.h"
 #include "Types.h"
 #include "Utility.h"
+#include "TupleDestructuring.h"
 namespace ARLib {
 template <typename T, typename U>
 struct Pair {
@@ -39,27 +40,114 @@ struct Pair {
     constexpr const U& second() const { return _m_second; }
     template <size_t Index>
     auto& get() & {
-        static_assert(Index == 0 || Index == 1);
-        if constexpr (Index == 0)
-            return _m_first;
-        else if constexpr (Index == 1)
-            return _m_second;
+        if constexpr (IsTupleV<T> && IsTupleV<U>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first.template get<Index>();
+            } else {
+                return _m_second.template get<Index - tsize>();
+            }
+        } else if constexpr (IsTupleV<T>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = 1;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first.template get<Index>();
+            } else {
+                return _m_second;
+            }
+        } else if constexpr (IsTupleV<U>) {
+            constexpr size_t tsize = 1;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first;
+            } else {
+                return _m_second.template get<Index - tsize>();
+            }
+        } else {
+            static_assert(Index == 0 || Index == 1);
+            if constexpr (Index == 0)
+                return _m_first;
+            else if constexpr (Index == 1)
+                return _m_second;
+        }
     }
     template <size_t Index>
     const auto& get() const& {
-        static_assert(Index == 0 || Index == 1);
-        if constexpr (Index == 0)
-            return _m_first;
-        else if constexpr (Index == 1)
-            return _m_second;
+        if constexpr (IsTupleV<T> && IsTupleV<U>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first.template get<Index>();
+            } else {
+                return _m_second.template get<Index - tsize>();
+            }
+        } else if constexpr (IsTupleV<T>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = 1;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first.template get<Index>();
+            } else {
+                return _m_second;
+            }
+        } else if constexpr (IsTupleV<U>) {
+            constexpr size_t tsize = 1;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first;
+            } else {
+                return _m_second.template get<Index - tsize>();
+            }
+        } else {
+            static_assert(Index == 0 || Index == 1);
+            if constexpr (Index == 0)
+                return _m_first;
+            else if constexpr (Index == 1)
+                return _m_second;
+        }
     }
     template <size_t Index>
     auto&& get() && {
-        static_assert(Index == 0 || Index == 1);
-        if constexpr (Index == 0)
-            return move(_m_first);
-        else if constexpr (Index == 1)
-            return move(_m_second);
+        if constexpr (IsTupleV<T> && IsTupleV<U>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return move(_m_first.template get<Index>());
+            } else {
+                return move(_m_second.template get<Index - tsize>());
+            }
+        } else if constexpr (IsTupleV<T>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = 1;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return move(_m_first.template get<Index>());
+            } else {
+                return move(_m_second);
+            }
+        } else if constexpr (IsTupleV<U>) {
+            constexpr size_t tsize = 1;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return move(_m_first);
+            } else {
+                return move(_m_second.template get<Index - tsize>());
+            }
+        } else {
+            static_assert(Index == 0 || Index == 1);
+            if constexpr (Index == 0)
+                return move(_m_first);
+            else if constexpr (Index == 1)
+                return move(_m_second);
+        }
     }
     ~Pair() = default;
 };
@@ -76,27 +164,114 @@ struct Pair<T&, U&> {
     const U& second() const { return _m_second; }
     template <size_t Index>
     auto& get() & {
-        static_assert(Index == 0 || Index == 1);
-        if constexpr (Index == 0)
-            return _m_first;
-        else if constexpr (Index == 1)
-            return _m_second;
+        if constexpr (IsTupleV<T> && IsTupleV<U>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first.template get<Index>();
+            } else {
+                return _m_second.template get<Index - tsize>();
+            }
+        } else if constexpr (IsTupleV<T>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = 1;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first.template get<Index>();
+            } else {
+                return _m_second;
+            }
+        } else if constexpr (IsTupleV<U>) {
+            constexpr size_t tsize = 1;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first;
+            } else {
+                return _m_second.template get<Index - tsize>();
+            }
+        } else {
+            static_assert(Index == 0 || Index == 1);
+            if constexpr (Index == 0)
+                return _m_first;
+            else if constexpr (Index == 1)
+                return _m_second;
+        }
     }
     template <size_t Index>
     const auto& get() const& {
-        static_assert(Index == 0 || Index == 1);
-        if constexpr (Index == 0)
-            return _m_first;
-        else if constexpr (Index == 1)
-            return _m_second;
+        if constexpr (IsTupleV<T> && IsTupleV<U>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first.template get<Index>();
+            } else {
+                return _m_second.template get<Index - tsize>();
+            }
+        } else if constexpr (IsTupleV<T>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = 1;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first.template get<Index>();
+            } else {
+                return _m_second;
+            }
+        } else if constexpr (IsTupleV<U>) {
+            constexpr size_t tsize = 1;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return _m_first;
+            } else {
+                return _m_second.template get<Index - tsize>();
+            }
+        } else {
+            static_assert(Index == 0 || Index == 1);
+            if constexpr (Index == 0)
+                return _m_first;
+            else if constexpr (Index == 1)
+                return _m_second;
+        }
     }
     template <size_t Index>
     auto&& get() && {
-        static_assert(Index == 0 || Index == 1);
-        if constexpr (Index == 0)
-            return move(_m_first);
-        else if constexpr (Index == 1)
-            return move(_m_second);
+        if constexpr (IsTupleV<T> && IsTupleV<U>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return move(_m_first.template get<Index>());
+            } else {
+                return move(_m_second.template get<Index - tsize>());
+            }
+        } else if constexpr (IsTupleV<T>) {
+            constexpr size_t tsize = std::tuple_size<T>::value;
+            constexpr size_t usize = 1;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return move(_m_first.template get<Index>());
+            } else {
+                return move(_m_second);
+            }
+        } else if constexpr (IsTupleV<U>) {
+            constexpr size_t tsize = 1;
+            constexpr size_t usize = std::tuple_size<U>::value;
+            static_assert(Index < (tsize + usize), "Invalid index passed to pair<get>");
+            if constexpr (Index < tsize) {
+                return move(_m_first);
+            } else {
+                return move(_m_second.template get<Index - tsize>());
+            }
+        } else {
+            static_assert(Index == 0 || Index == 1);
+            if constexpr (Index == 0)
+                return move(_m_first);
+            else if constexpr (Index == 1)
+                return move(_m_second);
+        }
     }
     ~Pair() = default;
 };

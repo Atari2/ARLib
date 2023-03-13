@@ -8,25 +8,24 @@
 #include "../List.h"
 #include "../Span.h"
 #include "../CharConv.h"
-#include "../SortedVector.h"
-#include "../Array.h"
-
+#include "../cstdio_compat.h"
 using namespace ARLib;
 int main() {
-    Vector<int> vec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    auto span       = vec.span();
-    auto span2      = span.subspan(2, 5);
-    auto span3      = span.subspan(123123, 1234123);
-    Array arr       = { "Hello"_sv, "World"_sv, "How"_sv, "Are"_sv, "You"_sv };
-    auto span4      = arr.span().subspan(1, 3);
-    auto span5      = GenericView{ arr }.span().subspan(1, 3);
-    Printer::print("{}", span4 == span5);
-    Printer::print("Span size: {}", span.size());
-    Printer::print("Span2 size: {}", span2.size());
-    Printer::print("Span3 size: {}", span3.size());
-    Printer::print("Span4 size: {}", span4.size());
-    for (auto [i, val] : enumerate(span)) { Printer::print("span[{}]: {}", i, val); }
-    for (auto [i, val] : enumerate(span2)) { Printer::print("span[{}] {}", i, val); }
-    for (auto [i, val] : enumerate(span3)) { Printer::print("span[{}] {}", i, val); }
-    for (auto [i, val] : enumerate(span4)) { Printer::print("span[{}] {}", i, val); }
+    Array expected_from_en{
+        Pair{0_sz,  1.0},
+        Pair{ 1_sz, 2.0},
+        Pair{ 2_sz, 3.0},
+        Pair{ 3_sz, 4.0},
+        Pair{ 4_sz, 5.0}
+    };
+    for (const auto& [exp_i, exp_v, act_i, act_v] : "1\n2\n3\n\n4\n\n5"_sv.split("\n")
+                                                    .iter()
+                                                    .filter(&StringView::size)
+                                                    .map(StrViewToDouble)
+                                                    .enumerate()
+                                                    .zip(expected_from_en)) {
+        Printer::print("{} {} {} {}", exp_i, exp_v, act_i, act_v);
+    }
+    Pair<Tuple<int, double>, int> p{ make_tuple(1, 2.0), 1 };
+    auto&& [a, b, c] = Pair{ make_tuple(1, 2.0), 1 };
 }

@@ -407,16 +407,14 @@ TEST(ARLibTests, GenericViewTests) {
     EXPECT_EQ(Printer::format("{}", filtered), form_filtered);
 
     Array expected_from_en{
-        Pair{0_sz,  1.0},
-        Pair{ 1_sz, 2.0},
-        Pair{ 2_sz, 3.0},
-        Pair{ 3_sz, 4.0},
-        Pair{ 4_sz, 5.0}
+        Tuple{0_sz,  1.0},
+        Tuple{ 1_sz, 2.0},
+        Tuple{ 2_sz, 3.0},
+        Tuple{ 3_sz, 4.0},
+        Tuple{ 4_sz, 5.0}
     };
-    for (const auto& [exp, act] :
+    for (const auto& [exp_i, exp_v, act_i, act_v] :
          "1\n2\n3\n\n4\n\n5"_sv.split("\n").iter().filter(&StringView::size).map(StrViewToDouble).enumerate().zip(expected_from_en)) {
-        const auto& [exp_i, exp_v] = exp;
-        const auto& [act_i, act_v] = act;
         EXPECT_EQ(exp_i, act_i);
         EXPECT_EQ(exp_v, act_v);
     }

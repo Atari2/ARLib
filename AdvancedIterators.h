@@ -151,7 +151,7 @@ class Enumerator {
     Iter m_iter;
     size_t m_index;
 
-    using Unit = Pair<size_t, T>;
+    using Unit = Tuple<size_t, T>;
 
     public:
     using InputValueType  = IteratorInputType<Iter>;
@@ -159,7 +159,7 @@ class Enumerator {
     explicit Enumerator(Rt* begin) : m_iter(begin), m_index(0) {}
     Enumerator(Rt* begin, size_t index) : m_iter(begin), m_index(index) {}
     Enumerator(Iter iter, size_t index) : m_iter(iter), m_index(index) {}
-    Unit operator*() { return { m_index, *m_iter }; }
+    Unit operator*() { return Unit{ m_index, *m_iter }; }
     Enumerator& operator++() {
         m_index++;
         m_iter++;
