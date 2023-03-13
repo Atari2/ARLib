@@ -2,7 +2,7 @@ name: CMake
 
 on:
   push:
-    branches: [ master, matrix ]
+    branches: [ master, tuple-recursive-destructure ]
   pull_request:
     branches: [ master ]
 
