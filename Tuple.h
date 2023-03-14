@@ -3,6 +3,7 @@
 #include "Invoke.h"
 #include "PrintInfo.h"
 #include "Utility.h"
+#include "TupleDestructuring.h"
 namespace ARLib {
 template <typename T, typename... Args>
 class Tuple;
@@ -30,12 +31,11 @@ auto get_tuple_base_array_start() {
 }
 template <size_t I, typename T, typename... Args>
 struct TupleSizeImpl;
-
 template <typename T, typename... Args>
 class Tuple : public Tuple<Args...> {
-    using BaseTuple      = Tuple<Args...>;
-    using TupleBaseArray = decltype(get_tuple_base_array_start<T, Args...>());
-    constexpr static inline size_t ThisTupleSize = TupleSizeImpl<0, T, Args...>::value;
+    using BaseTuple                                      = Tuple<Args...>;
+    using TupleBaseArray                                 = decltype(get_tuple_base_array_start<T, Args...>());
+    constexpr static inline size_t ThisTupleSize         = TupleSizeImpl<0, T, Args...>::value;
     constexpr static inline size_t ThisTupleSizeNoUnpack = sizeof...(Args) + 1;
     T m_member;
     template <size_t N>
@@ -171,17 +171,14 @@ class Tuple : public Tuple<Args...> {
         }
     }
 };
-}
-#include "TupleDestructuring.h"
-namespace ARLib {
 template <template <typename...> typename Ty, typename... Inner, typename... Args>
 requires IsTupleV<Ty<Inner...>>
 class Tuple<Ty<Inner...>, Args...> : public Tuple<Args...> {
-    using BaseTuple      = Tuple<Args...>;
-    using T = Ty<Inner...>;
-    using TupleBaseArray = decltype(get_tuple_base_array_start<T, Args...>());
-    constexpr static inline size_t ThisTupleSize = TupleSizeImpl<0, T, Args...>::value;
-    constexpr static inline size_t InnerTupleSize = TupleSizeImpl<0, Inner...>::value;
+    using BaseTuple                                      = Tuple<Args...>;
+    using T                                              = Ty<Inner...>;
+    using TupleBaseArray                                 = decltype(get_tuple_base_array_start<T, Args...>());
+    constexpr static inline size_t ThisTupleSize         = TupleSizeImpl<0, T, Args...>::value;
+    constexpr static inline size_t InnerTupleSize        = TupleSizeImpl<0, Inner...>::value;
     constexpr static inline size_t ThisTupleSizeNoUnpack = sizeof...(Args) + 1;
     T m_member;
     template <size_t N>
@@ -317,10 +314,10 @@ class Tuple<Ty<Inner...>, Args...> : public Tuple<Args...> {
 template <template <typename...> typename Ty, typename... Inner, typename... Args>
 requires IsTupleV<Ty<Inner...>>
 class Tuple<Ty<Inner...>&, Args...> : public Tuple<Args...> {
-    using BaseTuple                               = Tuple<Args...>;
-    using T                                       = AddLvalueReferenceT<Ty<Inner...>>;
-    using TupleBaseArray                          = decltype(get_tuple_base_array_start<T, Args...>());
-    constexpr static inline size_t ThisTupleSize  = TupleSizeImpl<0, T, Args...>::value;
+    using BaseTuple                                      = Tuple<Args...>;
+    using T                                              = AddLvalueReferenceT<Ty<Inner...>>;
+    using TupleBaseArray                                 = decltype(get_tuple_base_array_start<T, Args...>());
+    constexpr static inline size_t ThisTupleSize         = TupleSizeImpl<0, T, Args...>::value;
     constexpr static inline size_t InnerTupleSize        = TupleSizeImpl<0, Inner...>::value;
     constexpr static inline size_t ThisTupleSizeNoUnpack = sizeof...(Args) + 1;
     T m_member;
@@ -457,10 +454,10 @@ class Tuple<Ty<Inner...>&, Args...> : public Tuple<Args...> {
 template <template <typename...> typename Ty, typename... Inner, typename... Args>
 requires IsTupleV<Ty<Inner...>>
 class Tuple<const Ty<Inner...>&, Args...> : public Tuple<Args...> {
-    using BaseTuple                               = Tuple<Args...>;
-    using T                                       = AddConstT<AddLvalueReferenceT<Ty<Inner...>>>;
-    using TupleBaseArray                          = decltype(get_tuple_base_array_start<T, Args...>());
-    constexpr static inline size_t ThisTupleSize  = TupleSizeImpl<0, T, Args...>::value;
+    using BaseTuple                                      = Tuple<Args...>;
+    using T                                              = AddConstT<AddLvalueReferenceT<Ty<Inner...>>>;
+    using TupleBaseArray                                 = decltype(get_tuple_base_array_start<T, Args...>());
+    constexpr static inline size_t ThisTupleSize         = TupleSizeImpl<0, T, Args...>::value;
     constexpr static inline size_t InnerTupleSize        = TupleSizeImpl<0, Inner...>::value;
     constexpr static inline size_t ThisTupleSizeNoUnpack = sizeof...(Args) + 1;
     T m_member;
@@ -812,8 +809,6 @@ class Tuple<const Ty<Inner...>&> {
         m_member.template set<N>(Forward<Tp>(f));
     }
 };
-}    // namespace ARLib
-namespace ARLib {
 template <typename... Args>
 auto make_tuple(Args&&... args) {
     return Tuple{ Forward<Args>(args)... };

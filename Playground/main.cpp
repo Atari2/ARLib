@@ -26,6 +26,6 @@ int main() {
                                                     .zip(expected_from_en)) {
         Printer::print("{} {} {} {}", exp_i, exp_v, act_i, act_v);
     }
-    Pair<Tuple<int, double>, int> p{ make_tuple(1, 2.0), 1 };
-    auto&& [a, b, c] = Pair{ make_tuple(1, 2.0), 1 };
+    auto&& [a, b, c] = Pair{ make_tuple("this is a long string that won't fit in SSO"_s, 2.0), 1 };
+    Printer::print("{} {} {}", a, b, c);
 }
