@@ -6,12 +6,13 @@
 #include "Utility.h"
 #include "RefBox.h"
 namespace ARLib {
-struct DefaultErr {};
-struct DefaultOk {};
+#define ARLIB_DEPRECATED [[deprecated]]
+struct ARLIB_DEPRECATED DefaultErr{};
+struct ARLIB_DEPRECATED DefaultOk {};
 
 enum class CurrType : bool { Ok, Error };
 template <typename T_ok, typename T_err = DefaultErr>
-class Result {
+class ARLIB_DEPRECATED Result {
     CurrType m_type;
     constexpr static inline bool IsReference = IsLvalueReferenceV<T_ok>;
     using T_ok_f = ConditionalT<IsLvalueReferenceV<T_ok>, RefBox<RemoveReferenceT<T_ok>>, T_ok>;
@@ -69,27 +70,27 @@ class Result {
     }
 
     public:
-    Result(T_ok&& ok)
+    ARLIB_DEPRECATED Result(T_ok&& ok)
     requires(!IsReference)
         : m_type(CurrType::Ok), m_ok(move(ok)) {}
-    Result(T_ok& ok)
+    ARLIB_DEPRECATED Result(T_ok& ok)
     requires(IsReference)
         : m_type(CurrType::Ok), m_ok(ok) {}
-    Result(T_err&& err) : m_type(CurrType::Error), m_err(move(err)) {}
+    ARLIB_DEPRECATED Result(T_err&& err) : m_type(CurrType::Error), m_err(move(err)) {}
     template <typename... Args>
-    static Result from_error(Args... args) {
+    ARLIB_DEPRECATED static Result from_error(Args... args) {
         T_err err{ args... };
         Result res{ Forward<T_err>(err) };
         return res;
     }
     template <typename... Args>
-    static Result from_ok(Args... args) {
+    ARLIB_DEPRECATED static Result from_ok(Args... args) {
         T_ok_f ok{ args... };
         Result res{ Forward<T_ok_f>(ok) };
         return res;
     }
     template <typename... Args>
-    static Result from(Args... args) {
+    ARLIB_DEPRECATED static Result from(Args... args) {
         if constexpr (Constructible<T_ok_f, Args...>) {
             return from_ok(args...);
         } else if constexpr (Constructible<T_err, Args...>) {
@@ -140,9 +141,9 @@ class Result {
 };
 
 template <typename T_err>
-using DiscardResult = class Result<DefaultOk, T_err>;
+using DiscardResult ARLIB_DEPRECATED = class Result<DefaultOk, T_err>;
 template <typename T_ok>
-using DiscardError = class Result<T_ok, DefaultErr>;
+using DiscardError ARLIB_DEPRECATED = class Result<T_ok, DefaultErr>;
 template <>
 struct PrintInfo<DefaultOk> {
     const DefaultOk& m_ok;

@@ -10,23 +10,15 @@
 #include "../CharConv.h"
 #include "../SortedVector.h"
 #include "../Array.h"
+#include "../BetterResult.h"
+#include <concepts>
 
 using namespace ARLib;
 int main() {
-    Vector<int> vec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    auto span       = vec.span();
-    auto span2      = span.subspan(2, 5);
-    auto span3      = span.subspan(123123, 1234123);
-    Array arr       = { "Hello"_sv, "World"_sv, "How"_sv, "Are"_sv, "You"_sv };
-    auto span4      = arr.span().subspan(1, 3);
-    auto span5      = GenericView{ arr }.span().subspan(1, 3);
-    Printer::print("{}", span4 == span5);
-    Printer::print("Span size: {}", span.size());
-    Printer::print("Span2 size: {}", span2.size());
-    Printer::print("Span3 size: {}", span3.size());
-    Printer::print("Span4 size: {}", span4.size());
-    for (auto [i, val] : enumerate(span)) { Printer::print("span[{}]: {}", i, val); }
-    for (auto [i, val] : enumerate(span2)) { Printer::print("span[{}] {}", i, val); }
-    for (auto [i, val] : enumerate(span3)) { Printer::print("span[{}] {}", i, val); }
-    for (auto [i, val] : enumerate(span4)) { Printer::print("span[{}] {}", i, val); }
+    vnext::Result r{ 1 };
+    vnext::Result<int> r2{ vnext::BacktraceError{ "hello"_s } };
+    HARD_ASSERT(r.is_ok(), "1");
+    HARD_ASSERT(!r.is_error(), "2");
+    HARD_ASSERT(r.ok_value() == 1, "3");
+    Printer::print("{} {}", r, r2);
 }
