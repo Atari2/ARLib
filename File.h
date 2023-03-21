@@ -13,41 +13,15 @@
 #include "cstdio_compat.h"
 #include "FileSystem.h"
 namespace ARLib {
-class OpenFileError {
+class FileError : public ErrorBase {
     Path m_filename{};
     String m_error{};
 
     public:
-    OpenFileError() = default;
-    OpenFileError(String error, Path filename) : m_filename(move(filename)), m_error(move(error)) {}
+    FileError() = default;
+    FileError(String error, Path filename) : m_filename(move(filename)), m_error(move(error)) {}
     const Path& filename() const { return m_filename; }
-    const String& error() const { return m_error; }
-};
-struct ReadFileError {
-    ReadFileError()                          = default;
-    constexpr static inline StringView error = "File couldn't be read correctly"_sv;
-};
-struct WriteFileError {
-    WriteFileError()                         = default;
-    constexpr static inline StringView error = "File couldn't be written correctly"_sv;
-};
-template <>
-struct PrintInfo<ReadFileError> {
-    const ReadFileError& m_error;
-    explicit PrintInfo(const ReadFileError& error) : m_error(error) {}
-    String repr() const { return String{ m_error.error }; }
-};
-template <>
-struct PrintInfo<OpenFileError> {
-    const OpenFileError& m_error;
-    explicit PrintInfo(const OpenFileError& error) : m_error(error) {}
-    String repr() const { return m_error.error().trim() + " ("_s + m_error.filename().narrow() + ')'; }
-};
-template <>
-struct PrintInfo<WriteFileError> {
-    const WriteFileError& m_error;
-    explicit PrintInfo(const WriteFileError& error) : m_error(error) {}
-    String repr() const { return String{ m_error.error }; }
+    const String& error_string() const override { return m_error; }
 };
 class File {
     constexpr static inline size_t LINELENGTH_MAX = 1024;
@@ -55,9 +29,8 @@ class File {
     Path m_filename;
     OpenFileMode m_mode;
 
-    using WriteResult = Result<size_t, WriteFileError>;
-    using ReadResult  = Result<String, ReadFileError>;
-    using MixResult   = Result<String, Variant<OpenFileError, ReadFileError>>;
+    using WriteResult = Result<size_t, FileError>;
+    using ReadResult = Result<String, FileError>;
     friend Hash<File>;
 
     public:
@@ -86,7 +59,7 @@ class File {
         }
     }
     static void rename(const Path& old, const Path& new_) { ARLib::rename(old.string().data(), new_.string().data()); }
-    DiscardResult<OpenFileError> open(OpenFileMode mode) {
+    DiscardResult<FileError> open(OpenFileMode mode) {
         m_mode = mode;
         switch (mode) {
             case OpenFileMode::Read:
@@ -105,32 +78,40 @@ class File {
                 break;
         }
         if (!m_ptr) {
-            return OpenFileError{ last_error(), m_filename };
+            return FileError{ last_error(), m_filename };
         } else {
-            return DefaultOk{};
+            return {};
         }
     }
     WriteResult write(const String& str) {
-        if (m_mode != OpenFileMode::Write && m_mode != OpenFileMode::Append) { return WriteResult::from_error(); }
+        if (m_mode != OpenFileMode::Write && m_mode != OpenFileMode::Append) {
+            return FileError{ "Can't write to a file opened in read-only mode"_s, m_filename };
+        }
         auto len = ARLib::fwrite(str.data(), str.size(), sizeof(char), m_ptr);
-        if (len != str.size()) { return WriteResult::from_error(); }
-        return WriteResult::from_ok(len);
+        if (len != str.size()) { return FileError{ "Failed to write the whole string into the file"_s, m_filename }; }
+        return len;
     }
     ReadResult read_n(size_t count) {
-        if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
+        if (m_mode != OpenFileMode::Read) {
+            return FileError{ "Can't read from a file not open in read mode"_s, m_filename };
+        }
         String line{ count, '\0' };
         line.set_size(ARLib::fread(line.rawptr(), count, sizeof(char), m_ptr));
-        if (line.size() != count) return ReadResult::from_error();
-        return ReadResult{ Forward<String>(line) };
+        if (line.size() != count) return FileError{ "Couldn't read requested size"_s, m_filename };
+        return line;
     }
     ReadResult read_line() {
-        if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
+        if (m_mode != OpenFileMode::Read) {
+            return FileError{ "Can't read from a file not open in read mode"_s, m_filename };
+        }
         String line{ LINELENGTH_MAX, '\0' };
         line.set_size(ARLib::fread(line.rawptr(), sizeof(char), LINELENGTH_MAX, m_ptr));
-        return ReadResult{ Forward<String>(line) };
+        return line;
     }
     ReadResult read_all() {
-        if (m_mode != OpenFileMode::Read) { return ReadResult::from_error(); }
+        if (m_mode != OpenFileMode::Read) {
+            return FileError{ "Can't read from a file not open in read mode"_s, m_filename };
+        }
         String line{};
         ARLib::fseek(m_ptr, 0, SEEK_END);
         auto len = ARLib::ftell(m_ptr);
@@ -138,13 +119,13 @@ class File {
         line.reserve(len);
         line.set_size(ARLib::fread(line.rawptr(), sizeof(char), len, m_ptr));
 #ifndef WINDOWS
-        if (line.size() != len) { return ReadResult::from_error(); }
+        if (line.size() != len) { return FileError{ "Failed to read the full file"_s, m_filename }; }
 #endif
-        return ReadResult{ Forward<String>(line) };
+        return line;
     }
     template <typename T>
     requires IsAnyOfV<T, FsString, NonFsString, Path>
-    static MixResult read_all(const T& filename) {
+    static ReadResult read_all(const T& filename) {
         File f{ filename };
         TRY(f.open(OpenFileMode::Read));
         TRY_RET(f.read_all());

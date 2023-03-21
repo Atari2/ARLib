@@ -140,9 +140,9 @@ void UnixProcess::stop_and_join_thread(JThread& t) {
         t.join();
     }
 }
-Result<exit_code_t, ProcessError> UnixProcess::wait_for_exit() {
+Result<exit_code_t, Error> UnixProcess::wait_for_exit() {
     if (!m_launched || m_child_pid == -1)
-        return Result<exit_code_t, ProcessError>::from_error("Process was not running"_s);
+        return "Process was not running"_s;
     if (m_timeout != INFINITE_TIMEOUT) {
         constexpr useconds_t tenms = 10 * 1000;
         const useconds_t usecs     = static_cast<useconds_t>(m_timeout) * 1000;
@@ -152,7 +152,7 @@ Result<exit_code_t, ProcessError> UnixProcess::wait_for_exit() {
             elapsed += tenms;
             if (elapsed >= usecs) {
                 m_exit_handler_thread.request_stop();
-                return Result<exit_code_t, ProcessError>::from_error("Timeout reached waiting for process"_s);
+                return "Timeout reached waiting for process"_s;
             }
         }
     } else {
@@ -160,20 +160,20 @@ Result<exit_code_t, ProcessError> UnixProcess::wait_for_exit() {
     }
     stop_and_join_thread(m_output_reader_thread);
     stop_and_join_thread(m_error_reader_thread);
-    return Result<exit_code_t, ProcessError>::from_ok(m_exit_code);
+    return m_exit_code;
 }
 ProcessResult UnixProcess::wait_for_input(int) {
-    return ProcessResult::from_error("Waiting for input is not supported on Linux"_s);
+    return "Waiting for input is not supported on Linux"_s;
 }
 ProcessResult UnixProcess::suspend() {
     int ret = kill(m_child_pid, SIGSTOP);
-    if (ret == 0) return ProcessResult::from_ok();
-    return ProcessResult::from_error(last_error());
+    if (ret == 0) return {};
+    return last_error();
 }
 ProcessResult UnixProcess::resume() {
     int ret = kill(m_child_pid, SIGCONT);
-    if (ret == 0) return ProcessResult::from_ok();
-    return ProcessResult::from_error(last_error());
+    if (ret == 0) return {};
+    return last_error();
 }
 bool UnixProcess::terminate(exit_code_t exit_code) {
     (void)exit_code;    // unusued for now
@@ -237,11 +237,11 @@ void UnixProcess::peek_and_read_pipe(int pipe) {
 }
 ProcessResult UnixProcess::write_input(StringView input, UnixProcess::completion_routine_t routine) {
     if (!m_redirected_stdin)
-        return ProcessResult::from_error("To write to a process' input without pipes just use stdin"_s);
+        return "To write to a process' input without pipes just use stdin"_s;
     int fd = choose_handle(UnixPipeType::Input);
     if (routine == nullptr) {
         if (static_cast<size_t>(write(fd, input.data(), input.size())) != input.size())
-            return ProcessResult::from_error(last_error());
+            return last_error();
     } else {
         JThread writer_thread{ [=]() {
             auto written = write(fd, input.data(), input.size());
@@ -249,15 +249,15 @@ ProcessResult UnixProcess::write_input(StringView input, UnixProcess::completion
         } };
         writer_thread.detach();
     }
-    return ProcessResult::from_ok();
+    return {};
 }
 ProcessResult UnixProcess::write_data(const ReadOnlyView<uint8_t>& data, UnixProcess::completion_routine_t routine) {
     if (!m_redirected_stdin)
-        return ProcessResult::from_error("To write to a process' input without pipes just use stdin"_s);
+        return "To write to a process' input without pipes just use stdin"_s;
     int fd = choose_handle(UnixPipeType::Input);
     if (routine == nullptr) {
         if (static_cast<size_t>(write(fd, data.data(), data.size())) != data.size())
-            return ProcessResult::from_error(last_error());
+            return last_error();
     } else {
         JThread writer_thread{ [=]() {
             auto written = write(fd, data.data(), data.size());
@@ -265,7 +265,7 @@ ProcessResult UnixProcess::write_data(const ReadOnlyView<uint8_t>& data, UnixPro
         } };
         writer_thread.detach();
     }
-    return ProcessResult::from_ok();
+    return {};
 }
 ProcessResult UnixProcess::set_pipe(UnixPipeType type) {
     int ret_val = 0;
@@ -287,20 +287,20 @@ ProcessResult UnixProcess::set_pipe(UnixPipeType type) {
     }
     if (ret_val == -1) {
         redirects[from_enum(type)].get() = false;
-        return ProcessResult::from_error("Cannot open pipe"_s);
+        return "Cannot open pipe"_s;
     }
-    return ProcessResult::from_ok();
+    return {};
 }
 ProcessResult UnixProcess::flush_input() {
     auto fd = choose_handle(UnixPipeType::Input);
     int ret = fsync(fd);
-    if (ret != 0) return ProcessResult::from_error("Couldn't flush pipe"_s);
-    return ProcessResult::from_ok();
+    if (ret != 0) return "Couldn't flush pipe"_s;
+    return {};
 }
 ProcessResult UnixProcess::close_pipe(UnixPipeType type) {
     int ret_val = 0;
     bool redirects[3]{ m_redirected_stdout, m_redirected_stdin, m_redirected_stderr };
-    if (!redirects[from_enum(type)]) { return ProcessResult::from_error("Pipe is already closed"_s); }
+    if (!redirects[from_enum(type)]) { return "Pipe is already closed"_s; }
     switch (type) {
         case UnixPipeType::Input:
             ret_val = close(m_pipes.write_pipe(type));
@@ -314,8 +314,8 @@ ProcessResult UnixProcess::close_pipe(UnixPipeType type) {
             ret_val = close(m_pipes.read_pipe(type));
             break;
     }
-    if (ret_val == -1) { return ProcessResult::from_error("Cannot close pipe"_s); }
-    return ProcessResult::from_ok();
+    if (ret_val == -1) { return "Cannot close pipe"_s; }
+    return {};
 }
 char** copy_environ() {
     size_t count         = 0;
@@ -346,7 +346,7 @@ ProcessResult UnixProcess::launch() {
             // if success, it doesn't go here, so if we continue we know for sure execve failed
             [[fallthrough]];
         case -1:
-            return ProcessResult::from_error(last_error());
+            return last_error();
         default:
             // old process
             m_launched  = true;
@@ -354,9 +354,9 @@ ProcessResult UnixProcess::launch() {
             setup_exit_handler();
     }
     if (m_launch_waits_for_exit) {
-        if (auto res = wait_for_exit(); res.is_error()) { return ProcessResult::from_error(res.to_error()); };
+        if (auto res = wait_for_exit(); res.is_error()) { return res.to_error(); };
     }
-    return ProcessResult::from_ok();
+    return {};
 }
 const OutputType& UnixProcess::output() const {
     return m_output;

@@ -7,14 +7,14 @@ ProcessPipeline::ProcessPipeline(Process&& lhs, Process&& rhs) {
 ProcessPipeline::ProcessPipeline(ProcessPipeline&& pipe, Process&& lhs) : m_processes(move(pipe.m_processes)) {
     m_processes.push_back(Forward<Process>(lhs));
 }
-DiscardResult<ProcessError> ProcessPipeline::run() {
+ProcessResult ProcessPipeline::run() {
     String last_output;
     for (size_t i = 0; i < m_processes.size(); i++) {
         auto& proc = m_processes[i];
         proc.set_pipe(HandleType::Output);
         proc.set_pipe(HandleType::Input);
         auto merr = proc.launch();
-        if (merr.is_error()) { return DiscardResult<ProcessError>::from_error(merr.to_error()); }
+        if (merr.is_error()) { return merr.to_error(); }
         if (last_output.size() > 0) {
             proc.write_input(last_output.view());
             proc.flush_input();
@@ -23,7 +23,7 @@ DiscardResult<ProcessError> ProcessPipeline::run() {
         proc.wait_for_exit();
         last_output = proc.output();
     }
-    return DiscardResult<ProcessError>::from_ok();
+    return {};
 }
 ProcessPipeline operator|(ProcessPipeline&& pipeline, Process&& lhs) {
     return ProcessPipeline{ Forward<ProcessPipeline>(pipeline), Forward<Process>(lhs) };

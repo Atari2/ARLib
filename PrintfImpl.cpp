@@ -4,7 +4,6 @@
 #include "CharConv.h"
 #include "EnumHelpers.h"
 #include "Printer.h"
-#include "Result.h"
 #include "SSOVector.h"
 #include "StringView.h"
 #include "TypeTraits.h"
@@ -15,11 +14,19 @@
 #include "WStringView.h"
 #include "cstdarg_compat.h"
 namespace ARLib {
+class PrintfError : public ErrorBase {
+    PrintfErrorCodes m_code;
+    String m_error;
+    public:
+    PrintfError(PrintfError&&) = default;
+    PrintfError(PrintfErrorCodes code) : m_code{ code }, m_error(enum_to_str(code)) {}
+    auto code() const { return m_code; }
+    const String& error_string() const override { return m_error; }
+};
 /*
     double-precision	sign bit, 11-bit exponent, 52-bit significand
     assumes iec559 compliance
     */
-
 struct DoubleRepr {
     bool sign;
     int16_t exp;
@@ -147,7 +154,7 @@ constexpr bool type_is_any_of(PrintfTypes::Type type) {
     return any_of(tps, [type](auto t) { return t == type; });
 }
 template <Integral T>
-Result<String, PrintfErrorCodes> format_integer_like_type(const PrintfTypes::PrintfInfo& info, T val) {
+Result<String, PrintfError> format_integer_like_type(const PrintfTypes::PrintfInfo& info, T val) {
     using namespace PrintfTypes;
     auto has_flag = [&](Flags flag) {
         return (info.flags & flag) != Flags::None;
@@ -225,7 +232,7 @@ Result<String, PrintfErrorCodes> format_integer_like_type(const PrintfTypes::Pri
     return formatted_arg;
 }
 template <FloatingPoint T>
-Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& info, T val) {
+Result<String, PrintfError> format_real_like_type(PrintfTypes::PrintfInfo& info, T val) {
     // FIXME: adhere to the spec
     using namespace PrintfTypes;
     if (info.precision == PrintfInfo::missing_precision_marker) {
@@ -340,18 +347,18 @@ Result<String, PrintfErrorCodes> format_real_like_type(PrintfTypes::PrintfInfo& 
                 return builder.upper();
             }
         default:
-            return PrintfErrorCodes::InvalidType;
+            return PrintfError{ PrintfErrorCodes::InvalidType };
     }
 }
 template <AllowedFormatArgs T>
-Result<String, PrintfErrorCodes> format_single_arg(PrintfTypes::PrintfInfo& info, T val) {
+Result<String, PrintfError> format_single_arg(PrintfTypes::PrintfInfo& info, T val) {
     using namespace PrintfTypes;
     if constexpr (Integral<T>) {
         return format_integer_like_type(info, val);
     } else if constexpr (FloatingPoint<T>) {
         return format_real_like_type(info, val);
     } else if constexpr (SameAs<const char*, T>) {
-        if (info.type != Type::String) { return PrintfErrorCodes::InvalidType; }
+        if (info.type != Type::String) { return PrintfError{ PrintfErrorCodes::InvalidType }; }
         String ret{};
         if (info.precision != PrintfInfo::missing_precision_marker) {
             ret = String{ val, min_bt(info.precision, strlen(val)) };
@@ -370,7 +377,9 @@ Result<String, PrintfErrorCodes> format_single_arg(PrintfTypes::PrintfInfo& info
         return ret;
     } else if constexpr (SameAs<const wchar_t*, T>) {
         HARD_ASSERT(info.type == Type::WideString || info.type == Type::AnsiString, "Invalid type");
-        if (info.type != Type::WideString && info.type != Type::AnsiString) { return PrintfErrorCodes::InvalidType; }
+        if (info.type != Type::WideString && info.type != Type::AnsiString) {
+            return PrintfErrorCodes::InvalidType;
+        }
         String ret{};
         if (info.precision != PrintfInfo::missing_precision_marker) {
             // precision on %S is UB according to Clang.
@@ -583,7 +592,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
             formatted_arg = res.to_ok();
             return PrintfErrorCodes::Ok;
         } else {
-            return res.to_error();
+            return res.to_error().code();
         }
     };
 

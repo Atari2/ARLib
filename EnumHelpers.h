@@ -35,7 +35,7 @@ namespace EnumHelpers {
         public:
         constexpr bool insert(V key, StringView val) {
             if (m_size == m_internal_map.size()) return false;
-            size_t idx = from_enum(key) & FOR_MOD_OPS;
+            size_t idx = static_cast<size_t>(from_enum(key)) & FOR_MOD_OPS;
             while (m_internal_map[idx].first().used) { idx = (idx + 1) & FOR_MOD_OPS; }
             m_internal_map[idx] = Pair{
                 KeyBkt{move(key), true},
@@ -45,7 +45,7 @@ namespace EnumHelpers {
             return true;
         }
         constexpr StringView operator[](V key) const {
-            size_t idx     = from_enum(key) & FOR_MOD_OPS;
+            size_t idx     = static_cast<size_t>(from_enum(key)) & FOR_MOD_OPS;
             size_t n_tries = 0;
             while (m_internal_map[idx].first().key != key) {
                 idx = (idx + 1) & FOR_MOD_OPS;
@@ -82,9 +82,10 @@ namespace EnumHelpers {
             } else {
                 auto first_nospace_idx = sub.index_not_of(' ');
                 auto last_nospace_idx  = sub.index_of(' ', first_nospace_idx);
+                using Ut               = UnderlyingTypeT<T>;
                 const auto value       = to_enum<T>(
-                Signed ? StrViewToI64(sub.substringview_fromlen(equal_idx + 1)) :
-                               StrViewToU64(sub.substringview_fromlen(equal_idx + 1))
+                Signed ? static_cast<Ut>(StrViewToI64(sub.substringview_fromlen(equal_idx + 1))) :
+                               static_cast<Ut>(StrViewToU64(sub.substringview_fromlen(equal_idx + 1)))
                 );
                 current_val = from_enum(value) + UnderlyingTypeT<T>{ 1 };
                 return Pair{ sub.substringview_fromlen(
@@ -114,7 +115,7 @@ namespace EnumHelpers {
             const bool inserted = map.insert(v, k);
             if (is_constant_evaluated()) {
                 // this allocation is here for the same reason as the one at line 178
-                if (!inserted) { new int[from_enum(v)]; }
+                if (!inserted) { new int[static_cast<size_t>(from_enum(v))]; }
             }
         }
         return map;

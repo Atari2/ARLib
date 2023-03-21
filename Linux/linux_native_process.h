@@ -173,7 +173,7 @@ class UnixProcess {
     UnixProcess& set_blocking();
     UnixProcess& set_wait_at_destruction(bool wait = true);
     String get_last_error();
-    Result<exit_code_t, ProcessError> wait_for_exit();
+    Result<exit_code_t, Error> wait_for_exit();
     ProcessResult wait_for_input(int ms_timeout = -1);
     ProcessResult launch();
     ProcessResult suspend();

@@ -35,59 +35,48 @@ ArgParser::ParseResult ArgParser::parse() {
         auto it = m_arguments.find(name);
         if (it != m_arguments.end()) {
             if (opt.found) {
-                return ArgParserError{
-                    Printer::format("Argument parsing error: Option \"{}\" was specified twice\n", name)
-                };
+                return Printer::format("Argument parsing error: Option \"{}\" was specified twice\n", name);
             }
             opt.found = true;
             it        = m_arguments.remove(it);
             if (opt.requires_value()) {
                 if (it == m_arguments.end()) {
-                    return ArgParserError{ Printer::format(
+                    return Printer::format(
                     "Argument parsing error: Option \"{}\" requires an argument \"{}\" but it wasn't given any\n", name,
                     opt.value_name
-                    ) };
+                    );
                 }
                 if (opt.type == Option::Type::String) {
                     if (!opt.assign(*it)) {
-                        return ArgParserError{
-                            "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s
-                        };
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
+                       
                     }
                 } else if (opt.type == Option::Type::Int) {
                     int value          = opt.value.get<IntRef>().get();
                     const auto& strval = *it;
                     value              = StrViewToInt(strval);
                     if (!opt.assign(value)) {
-                        return ArgParserError{
-                            "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s
-                        };
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
                 } else if (opt.type == Option::Type::Uint) {
                     unsigned int value = opt.value.get<UintRef>().get();
                     const auto& strval = *it;
                     value              = StrViewToUInt(strval);
                     if (!opt.assign(value)) {
-                        return ArgParserError{
-                            "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s
-                        };
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
                 } else if (opt.type == Option::Type::Real) {
                     double value       = opt.value.get<RealRef>().get();
                     const auto& strval = *it;
                     value              = StrViewToDouble(strval);
                     if (!opt.assign(value)) {
-                        return ArgParserError{
-                            "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s
-                        };
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
                 }
                 m_arguments.remove(*it);
             } else if (opt.type == Option::Type::Bool) {
                 if (!opt.assign(true)) {
-                    return ArgParserError{
-                        "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s
-                    };
+                    return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                 }
             }
         }
@@ -98,7 +87,7 @@ ArgParser::ParseResult ArgParser::parse() {
         String s{ "Argument parsing error: Unrecognized options found: " };
         for (const auto& unm : m_unmatched_arguments) { s += "\""_s + unm + "\", "_s; }
         s += '\n';
-        return ArgParserError{ move(s) };
+        return move(s);
     }
     return DefaultOk{};
 }

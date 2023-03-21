@@ -22,7 +22,6 @@
 #include "../PriorityQueue.h"
 #include "../Process.h"
 #include "../Random.h"
-#include "../Result.h"
 #include "../SSOVector.h"
 #include "../Set.h"
 #include "../SortedVector.h"

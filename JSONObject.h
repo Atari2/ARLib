@@ -7,6 +7,8 @@
 #include "String.h"
 #include "UniquePtr.h"
 #include "Variant.h"
+#include "Result.h"
+
 namespace ARLib {
 namespace JSON {
 
@@ -259,7 +261,7 @@ namespace JSON {
         String error_string{};
         size_t error_offset{};
     };
-    class ParseError {
+    class ParseError : public ErrorBase {
         ErrorInfo m_info;
 
         public:
@@ -268,6 +270,7 @@ namespace JSON {
         ParseError(ErrorInfo info) : m_info(move(info)){};
         const ErrorInfo& info() const { return m_info; }
         const String& message() const { return m_info.error_string; }
+        const String& error_string() const { return m_info.error_string; }
         size_t offset() const { return m_info.error_offset; }
     };
 }    // namespace JSON

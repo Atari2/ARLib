@@ -130,12 +130,12 @@ TEST(ARLibTests, OptionalTests) {
     EXPECT_EQ(str2, "hello cpp"_s);
 }
 TEST(ARLibTests, ResulTests) {
-    Result<String> res{ "hello"_s };
+    Result<String> res{ "hello"_s, emplace_ok };
     EXPECT_EQ(res.is_ok(), true);
     EXPECT_EQ(res.is_error(), false);
     String b = res.to_ok();
     EXPECT_EQ(b, "hello"_s);
-    auto res2 = Result<String>::from_error();
+    auto res2 = Result<String>{ "error"_s, emplace_error };
     EXPECT_EQ(res2.is_ok(), false);
     EXPECT_EQ(res2.is_error(), true);
 }
