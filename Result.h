@@ -66,6 +66,9 @@ class Result {
     Result()
     requires(DefaultConstructible<ResT> && !IsReference)
         : m_ok{}, m_type{ CurrType::Ok } {}
+    Result(ResT val)
+    requires(IsReference)
+        : m_ok{ val }, m_type{ CurrType::Ok } {}
     template <typename O>
     Result(O&& val, EmplaceOk)
     requires(Constructible<ResT, O> && Constructible<ErrorType, O>)
