@@ -24,6 +24,7 @@ class Error : public ErrorBase {
     bool operator==(const Error& other) const { return m_error_string == other.m_error_string; }
     ~Error() {}
 };
+#ifdef DEBUG
 class BacktraceError final : public Error {
     BackTrace m_bt;
     public:
@@ -34,6 +35,17 @@ class BacktraceError final : public Error {
     }
     ~BacktraceError() {}
 };
+#else
+class BacktraceError final : public Error {
+    public:
+    BacktraceError(BacktraceError&&) = default;
+    BacktraceError(ConvertibleTo<String> auto val) : Error{ move(val) } {
+        m_error_string += '\n';
+        m_error_string += "[no backtrace available in release mode]"_s;
+    }
+    ~BacktraceError() {}
+};
+#endif
 struct EmplaceOk {};
 struct EmplaceErr {};
 constexpr inline EmplaceOk emplace_ok{};
