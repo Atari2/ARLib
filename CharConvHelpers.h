@@ -5,6 +5,7 @@
 #include "StringView.h"
 #include "cmath_compat.h"
 #include "cstdio_compat.h"
+#include "Result.h"
 namespace ARLib {
 namespace detail {
     // clang forced my hand
@@ -54,11 +55,11 @@ namespace detail {
 #endif
 // these functions expect an already whitespace trimmed string
 template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
-constexpr RetType StrViewTo64Decimal(const StringView str) {
+Result<RetType> StrViewTo64Decimal(const StringView str) {
     size_t start_idx = 0;
     size_t end_idx   = str.size();
 
-    if (str.empty()) return 0;
+    if (str.empty()) return "Failed to convert string to integer, string was empty"_s;
 
     bool neg = false;
     if constexpr (Signed) {
@@ -75,7 +76,7 @@ constexpr RetType StrViewTo64Decimal(const StringView str) {
         start_idx++;
     }
 
-    if (start_idx == end_idx) return 0;
+    if (start_idx == end_idx) return RetType{ 0 };
     constexpr size_t max_uint64_size = strlen("18446744073709551615");
     constexpr size_t max_int64_size  = strlen("9223372036854775807");
 
@@ -89,7 +90,7 @@ constexpr RetType StrViewTo64Decimal(const StringView str) {
 
     constexpr auto max_size = get_max_size();
 
-    if (end_idx - start_idx > max_size) return 0;
+    if (end_idx - start_idx > max_size) return "Failed to convert string to integer, out of range"_s;
 
     constexpr auto get_values_table = [&]() -> const RetType(&)[max_size] {
         if constexpr (Signed)
@@ -111,7 +112,7 @@ constexpr RetType StrViewTo64Decimal(const StringView str) {
         return result;
 }
 template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
-constexpr RetType StrViewTo64Binary(const StringView str) {
+Result<RetType> StrViewTo64Binary(const StringView str) {
     size_t start_idx = 0;
     size_t end_idx   = str.size();
 
@@ -132,7 +133,7 @@ constexpr RetType StrViewTo64Binary(const StringView str) {
         start_idx++;
     }
 
-    if (start_idx == end_idx) return 0;
+    if (start_idx == end_idx) return RetType{ 0 };
 
     // out of range check
     constexpr size_t max_int64_size  = strlen("111111111111111111111111111111111111111111111111111111111111111");
@@ -146,7 +147,7 @@ constexpr RetType StrViewTo64Binary(const StringView str) {
 
     constexpr auto max_size = get_max_size();
 
-    if (end_idx - start_idx > max_size) return 0;
+    if (end_idx - start_idx > max_size) return "Failed to convert string to integer, out of range"_s;
     // 0-1 => 48-49
     for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
         result |= static_cast<RetType>(str[idx] - '0') << tbl_idx;
@@ -158,7 +159,7 @@ constexpr RetType StrViewTo64Binary(const StringView str) {
         return result;
 }
 template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
-constexpr RetType StrViewTo64Octal(const StringView str) {
+Result<RetType> StrViewTo64Octal(const StringView str) {
     size_t start_idx = 0;
     size_t end_idx   = str.size();
     bool neg         = false;
@@ -179,7 +180,7 @@ constexpr RetType StrViewTo64Octal(const StringView str) {
         start_idx++;
     }
 
-    if (start_idx == end_idx) return 0;
+    if (start_idx == end_idx) return RetType{ 0 };
 
     // out of range check
     constexpr size_t max_int64_size  = strlen("777777777777777777777");
@@ -194,7 +195,7 @@ constexpr RetType StrViewTo64Octal(const StringView str) {
 
     constexpr auto max_size = get_max_size();
 
-    if (end_idx - start_idx > max_size) return 0;
+    if (end_idx - start_idx > max_size) return "Failed to convert string to integer, out of range"_s;
     // 0-1 => 48-49
     for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
         result |= static_cast<RetType>(str[idx] - '0') << (tbl_idx * 3);
@@ -206,7 +207,7 @@ constexpr RetType StrViewTo64Octal(const StringView str) {
         return result;
 }
 template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
-constexpr RetType StrViewTo64Hexadecimal(const StringView str) {
+Result<RetType> StrViewTo64Hexadecimal(const StringView str) {
     size_t start_idx = 0;
     size_t end_idx   = str.size();
     bool neg         = false;
@@ -226,7 +227,7 @@ constexpr RetType StrViewTo64Hexadecimal(const StringView str) {
         start_idx++;
     }
 
-    if (start_idx == end_idx) return 0;
+    if (start_idx == end_idx) return RetType{ 0 };
 
     // out of range check
     constexpr size_t max_int64_size  = strlen("7fffffffffffffff");
@@ -240,7 +241,7 @@ constexpr RetType StrViewTo64Hexadecimal(const StringView str) {
 
     constexpr auto max_size = get_max_size();
 
-    if (end_idx - start_idx > max_size) return 0;
+    if (end_idx - start_idx > max_size) return "Failed to convert string to integer, out of range"_s;
     // 0-1 => 48-49
     for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
         char c   = toupper(str[idx]);
@@ -253,28 +254,28 @@ constexpr RetType StrViewTo64Hexadecimal(const StringView str) {
     else
         return result;
 }
-forceinline constexpr auto StrViewToI64Decimal(const StringView str) {
+inline auto StrViewToI64Decimal(const StringView str) {
     return StrViewTo64Decimal<true>(str);
 }
-forceinline constexpr auto StrViewToI64Binary(const StringView str) {
+inline auto StrViewToI64Binary(const StringView str) {
     return StrViewTo64Binary<true>(str);
 }
-forceinline constexpr auto StrViewToI64Octal(const StringView str) {
+inline auto StrViewToI64Octal(const StringView str) {
     return StrViewTo64Octal<true>(str);
 }
-forceinline constexpr auto StrViewToI64Hexadecimal(const StringView str) {
+inline auto StrViewToI64Hexadecimal(const StringView str) {
     return StrViewTo64Hexadecimal<true>(str);
 }
-forceinline constexpr auto StrViewToU64Decimal(const StringView str) {
+inline auto StrViewToU64Decimal(const StringView str) {
     return StrViewTo64Decimal<false>(str);
 }
-forceinline constexpr auto StrViewToU64Binary(const StringView str) {
+inline auto StrViewToU64Binary(const StringView str) {
     return StrViewTo64Binary<false>(str);
 }
-forceinline constexpr auto StrViewToU64Octal(const StringView str) {
+inline auto StrViewToU64Octal(const StringView str) {
     return StrViewTo64Octal<false>(str);
 }
-forceinline constexpr auto StrViewToU64Hexadecimal(const StringView str) {
+inline auto StrViewToU64Hexadecimal(const StringView str) {
     return StrViewTo64Hexadecimal<false>(str);
 }
 template <size_t Base>
@@ -315,6 +316,232 @@ constexpr void WriteToCharsImpl(char* ptr, size_t len, Integral auto value) {
         ptr[0]         = digits[num];
     } else
         ptr[0] = '0' + static_cast<char>(value);
+}
+namespace cxpr {
+    template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
+    constexpr RetType StrViewTo64Decimal(const StringView str) {
+        size_t start_idx = 0;
+        size_t end_idx   = str.size();
+
+        if (str.empty()) return 0;
+
+        bool neg = false;
+        if constexpr (Signed) {
+            char maybe_sign = str[0];
+            neg             = maybe_sign == '-';
+            start_idx += (maybe_sign == '-' || maybe_sign == '+');
+        }
+
+        RetType result = 0;
+
+        // skip leading zeros
+        while (start_idx < end_idx) {
+            if (str[start_idx] != '0') break;
+            start_idx++;
+        }
+
+        if (start_idx == end_idx) return 0;
+        constexpr size_t max_uint64_size = strlen("18446744073709551615");
+        constexpr size_t max_int64_size  = strlen("9223372036854775807");
+
+        // out of range check
+        auto get_max_size = [&]() {
+            if (Signed)
+                return max_int64_size;
+            else
+                return max_uint64_size;
+        };
+
+        constexpr auto max_size = get_max_size();
+
+        if (end_idx - start_idx > max_size) return 0;
+
+        constexpr auto get_values_table = [&]() -> const RetType(&)[max_size] {
+            if constexpr (Signed)
+                return detail::values_table_i64;
+            else
+                return detail::value_table_u64;
+        };
+
+        constexpr const RetType(&values_table)[max_size] = get_values_table();
+
+        // 0-9 => 48-57
+        for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
+            result += static_cast<RetType>(str[idx] - '0') * values_table[tbl_idx];
+            if (idx == 0) break;
+        }
+        if constexpr (Signed)
+            return result * (neg ? -1 : 1);
+        else
+            return result;
+    }
+    template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
+    constexpr RetType StrViewTo64Binary(const StringView str) {
+        size_t start_idx = 0;
+        size_t end_idx   = str.size();
+
+        bool neg = false;
+        if constexpr (Signed) {
+            char maybe_sign = str[0];
+            neg             = maybe_sign == '-';
+            start_idx += (maybe_sign == '-' || maybe_sign == '+');
+        }
+        RetType result = 0;
+
+        // skip b if string is e.g. 0b11
+        if (str[start_idx] == '0' && str[start_idx + 1] == 'b') start_idx += 2;
+
+        // skip leading zeros
+        while (start_idx < end_idx) {
+            if (str[start_idx] != '0') break;
+            start_idx++;
+        }
+
+        if (start_idx == end_idx) return 0;
+
+        // out of range check
+        constexpr size_t max_int64_size  = strlen("111111111111111111111111111111111111111111111111111111111111111");
+        constexpr size_t max_uint64_size = strlen("1111111111111111111111111111111111111111111111111111111111111111");
+        auto get_max_size                = [&]() {
+            if (Signed)
+                return max_int64_size;
+            else
+                return max_uint64_size;
+        };
+
+        constexpr auto max_size = get_max_size();
+
+        if (end_idx - start_idx > max_size) return 0;
+        // 0-1 => 48-49
+        for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
+            result |= static_cast<RetType>(str[idx] - '0') << tbl_idx;
+            if (idx == 0) break;
+        }
+        if constexpr (Signed)
+            return result * (neg ? -1 : 1);
+        else
+            return result;
+    }
+    template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
+    constexpr RetType StrViewTo64Octal(const StringView str) {
+        size_t start_idx = 0;
+        size_t end_idx   = str.size();
+        bool neg         = false;
+
+        if constexpr (Signed) {
+            char maybe_sign = str[0];
+            neg             = maybe_sign == '-';
+            start_idx += (maybe_sign == '-' || maybe_sign == '+');
+        }
+        RetType result = 0;
+
+        // skip b if string is e.g. 0o11
+        if (str[start_idx] == '0' && str[start_idx + 1] == 'o') start_idx += 2;
+
+        // skip leading zeros
+        while (start_idx < end_idx) {
+            if (str[start_idx] != '0') break;
+            start_idx++;
+        }
+
+        if (start_idx == end_idx) return 0;
+
+        // out of range check
+        constexpr size_t max_int64_size  = strlen("777777777777777777777");
+        constexpr size_t max_uint64_size = strlen("1777777777777777777777");
+
+        auto get_max_size = [&]() {
+            if (Signed)
+                return max_int64_size;
+            else
+                return max_uint64_size;
+        };
+
+        constexpr auto max_size = get_max_size();
+
+        if (end_idx - start_idx > max_size) return 0;
+        // 0-1 => 48-49
+        for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
+            result |= static_cast<RetType>(str[idx] - '0') << (tbl_idx * 3);
+            if (idx == 0) break;
+        }
+        if constexpr (Signed)
+            return result * (neg ? -1 : 1);
+        else
+            return result;
+    }
+    template <bool Signed = true, typename RetType = ConditionalT<Signed, int64_t, uint64_t>>
+    constexpr RetType StrViewTo64Hexadecimal(const StringView str) {
+        size_t start_idx = 0;
+        size_t end_idx   = str.size();
+        bool neg         = false;
+        if constexpr (Signed) {
+            char maybe_sign = str[0];
+            neg             = maybe_sign == '-';
+            start_idx += (maybe_sign == '-' || maybe_sign == '+');
+        }
+        RetType result = 0;
+
+        // skip b if string is e.g. 0x11
+        if (str[start_idx] == '0' && str[start_idx + 1] == 'x') start_idx += 2;
+
+        // skip leading zeros
+        while (start_idx < end_idx) {
+            if (str[start_idx] != '0') break;
+            start_idx++;
+        }
+
+        if (start_idx == end_idx) return 0;
+
+        // out of range check
+        constexpr size_t max_int64_size  = strlen("7fffffffffffffff");
+        constexpr size_t max_uint64_size = strlen("ffffffffffffffff");
+
+        static_assert(max_int64_size == max_uint64_size);
+
+        auto get_max_size = [&]() {
+            return max_uint64_size;
+        };
+
+        constexpr auto max_size = get_max_size();
+
+        if (end_idx - start_idx > max_size) return 0;
+        // 0-1 => 48-49
+        for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
+            char c   = toupper(str[idx]);
+            auto num = c >= 'A' ? (c - 'A' + 10) : (c - '0');
+            result |= static_cast<RetType>(num) << static_cast<RetType>(tbl_idx * 4ull);
+            if (idx == 0) break;
+        }
+        if constexpr (Signed)
+            return result * (neg ? -1 : 1);
+        else
+            return result;
+    }
+    forceinline constexpr auto StrViewToI64Decimal(const StringView str) {
+        return cxpr::StrViewTo64Decimal<true>(str);
+    }
+    forceinline constexpr auto StrViewToI64Binary(const StringView str) {
+        return cxpr::StrViewTo64Binary<true>(str);
+    }
+    forceinline constexpr auto StrViewToI64Octal(const StringView str) {
+        return cxpr::StrViewTo64Octal<true>(str);
+    }
+    forceinline constexpr auto StrViewToI64Hexadecimal(const StringView str) {
+        return cxpr::StrViewTo64Hexadecimal<true>(str);
+    }
+    forceinline constexpr auto StrViewToU64Decimal(const StringView str) {
+        return cxpr::StrViewTo64Decimal<false>(str);
+    }
+    forceinline constexpr auto StrViewToU64Binary(const StringView str) {
+        return cxpr::StrViewTo64Binary<false>(str);
+    }
+    forceinline constexpr auto StrViewToU64Octal(const StringView str) {
+        return cxpr::StrViewTo64Octal<false>(str);
+    }
+    forceinline constexpr auto StrViewToU64Hexadecimal(const StringView str) {
+        return cxpr::StrViewTo64Hexadecimal<false>(str);
+    }
 }
 #ifdef COMPILER_GCC
     #pragma GCC diagnostic pop

@@ -61,35 +61,35 @@ TEST(ARLibTests, CharConv) {
     constexpr auto expected_u = NumberTraits<ARLib::uint64_t>::max;
 
     constexpr StringView s_hex{ "-0x7fffffffffffffff" };
-    constexpr auto res_hex = StrViewToI64(s_hex, 16);
+    constexpr auto res_hex = cxpr::StrViewToI64(s_hex, 16);
     static_assert(res_hex == -expected, "StrViewToI64 failed with base 16");
 
     constexpr StringView s_uhex{ "0xffffffffffffffff" };
-    constexpr auto res_uhex = StrViewToU64(s_uhex, 16);
+    constexpr auto res_uhex = cxpr::StrViewToU64(s_uhex, 16);
     static_assert(res_uhex == expected_u, "StrViewToU64 failed with base 16");
 
     constexpr StringView s_oct{ "0o137726051051" };
-    constexpr auto res_oct = StrViewToI64(s_oct, 8);
+    constexpr auto res_oct = cxpr::StrViewToI64(s_oct, 8);
     static_assert(res_oct == 12873912873, "StrViewToI64 failed with base 8");
 
     constexpr StringView s_dec{ "   -123809" };
-    constexpr auto res_dec = StrViewToI64(s_dec);
+    constexpr auto res_dec = cxpr::StrViewToI64(s_dec);
     static_assert(res_dec == -123809, "StrViewToI64 failed with base 10");
 
     constexpr StringView s_bin{ "0b111111111111111111111111111111111111111111111111111111111111111" };
-    constexpr auto res_bin = StrViewToI64(s_bin, 2);
+    constexpr auto res_bin = cxpr::StrViewToI64(s_bin, 2);
     static_assert(res_bin == expected, "StrViewToI64 failed with base 2");
 
     constexpr StringView s_4{ "  1233   " };
-    constexpr auto res_4 = StrViewToI64(s_4, 4);
+    constexpr auto res_4 = cxpr::StrViewToI64(s_4, 4);
     static_assert(res_4 == 111, "StrViewToI64 failed with base 4");
 
     constexpr StringView s_15{ "1233" };
-    constexpr auto res_15 = StrViewToI64(s_15, 15);
+    constexpr auto res_15 = cxpr::StrViewToI64(s_15, 15);
     static_assert(res_15 == 3873, "StrViewToI64 failed with base 4");
 
-    EXPECT_EQ(StrToUInt(a), 1234);
-    EXPECT_EQ(StrToFloat(b), 123.123f);
+    EXPECT_EQ(StrToUInt(a), Result{ 1234_u32 });
+    EXPECT_EQ(StrToFloat(b), Result{ 123.123f });
     int c   = 101010;
     float d = 987.65f;
     EXPECT_EQ(IntToStr(c), "101010"_s);
@@ -413,8 +413,14 @@ TEST(ARLibTests, GenericViewTests) {
         Pair{ 3_sz, 4.0},
         Pair{ 4_sz, 5.0}
     };
-    for (const auto& [exp, act] :
-         "1\n2\n3\n\n4\n\n5"_sv.split("\n").iter().filter(&StringView::size).map(StrViewToDouble).enumerate().zip(expected_from_en)) {
+    for (const auto& [exp, act] : "1\n2\n3\nasdf\n4\n\n5"_sv.split("\n")
+                                  .iter()
+                                  .filter(&StringView::size)
+                                  .map(StrViewToDouble)
+                                  .filter(&Result<double>::is_ok)
+                                  .map(&Result<double>::to_ok)
+                                  .enumerate()
+                                  .zip(expected_from_en)) {
         const auto& [exp_i, exp_v] = exp;
         const auto& [act_i, act_v] = act;
         EXPECT_EQ(exp_i, act_i);

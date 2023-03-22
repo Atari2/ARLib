@@ -52,23 +52,20 @@ ArgParser::ParseResult ArgParser::parse() {
                        
                     }
                 } else if (opt.type == Option::Type::Int) {
-                    int value          = opt.value.get<IntRef>().get();
                     const auto& strval = *it;
-                    value              = StrViewToInt(strval);
+                    TRY_SET(value, StrViewToInt(strval));
                     if (!opt.assign(value)) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
                 } else if (opt.type == Option::Type::Uint) {
-                    unsigned int value = opt.value.get<UintRef>().get();
                     const auto& strval = *it;
-                    value              = StrViewToUInt(strval);
+                    TRY_SET(value, StrViewToUInt(strval));
                     if (!opt.assign(value)) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
                 } else if (opt.type == Option::Type::Real) {
-                    double value       = opt.value.get<RealRef>().get();
                     const auto& strval = *it;
-                    value              = StrViewToDouble(strval);
+                    TRY_SET(value, StrViewToDouble(strval));
                     if (!opt.assign(value)) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }

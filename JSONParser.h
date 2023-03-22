@@ -38,7 +38,7 @@ namespace JSON {
     Parsed<String> eat_until_space_or_delim(ParseState& state);
     Parsed<JString> parse_quoted_string(ParseState& state);
     Parsed<String> parse_non_delimited(ParseState& state);
-    Number parse_number(const String& raw_value);
+    Parsed<Number> parse_number(const String& raw_value);
     Parsed<Array> parse_array(ParseState& state);
     String dump_array(const Array& arr, size_t indent = 1);
     String dump_json(const Object& obj, size_t indent = 1);

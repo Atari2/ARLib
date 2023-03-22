@@ -107,11 +107,11 @@ namespace JSON {
         STATE_EXIT();
         return string;
     }
-    Number parse_number(const String& raw_value) {
+    Parsed<Number> parse_number(const String& raw_value) {
         if (raw_value.contains('.') || raw_value.contains('E') || raw_value.contains('e')) {
-            return Number{ number_tag, StrToDouble(raw_value) };
+            TRY_RET(StrToDouble(raw_value));
         } else {
-            return Number{ number_tag, StrToI64(raw_value) };
+            TRY_RET(StrToI64(raw_value));
         }
     }
     Parsed<Array> parse_array(ParseState& state) {
@@ -149,7 +149,8 @@ namespace JSON {
                         } else if (raw_value == "false"_s) {
                             arr.append(ValueObj::construct(Bool{ bool_tag, false }));
                         } else {
-                            arr.append(ValueObj::construct(parse_number(raw_value)));
+                            TRY_SET(number, parse_number(raw_value));
+                            arr.append(ValueObj::construct(move(number)));
                         }
                         break;
                     }
@@ -218,7 +219,8 @@ namespace JSON {
                         } else if (raw_value == "false"_s) {
                             obj.add(move(key), ValueObj::construct(Bool{ bool_tag, false }));
                         } else if (check_if_valid_number(raw_value)) {
-                            obj.add(move(key), ValueObj::construct(parse_number(raw_value)));
+                            TRY_SET(value, parse_number(raw_value));
+                            obj.add(move(key), ValueObj::construct(move(value)));
                         } else {
                             return ParseError{ "Expected a valid json type but got "_s + raw_value, state.index() };
                         }

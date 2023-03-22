@@ -10,6 +10,7 @@
 namespace ARLib {
 class ErrorBase {
     public:
+    bool operator==(const ErrorBase& other) const { return error_string() == other.error_string(); }
     virtual const String& error_string() const = 0;
     virtual ~ErrorBase()                       = default;
 };
@@ -20,6 +21,7 @@ class Error : public ErrorBase {
     Error(Error&&) = default;
     Error(ConvertibleTo<String> auto val) : m_error_string{ move(val) } {}
     const String& error_string() const override { return m_error_string; }
+    bool operator==(const Error& other) const { return m_error_string == other.m_error_string; }
     ~Error() {}
 };
 class BacktraceError final : public Error {
@@ -114,6 +116,16 @@ class Result {
     auto to_ok() {
         HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
         return move(m_ok);
+    }
+    bool operator==(const Result& other) const {
+        if (m_type == other.m_type) {
+            if (m_type == CurrType::Ok) {
+                return ok_value() == other.ok_value();
+            } else {
+                return error_value() == other.error_value();
+            }
+        }
+        return false;
     }
     explicit operator bool() const { return is_ok(); }
     ~Result() {

@@ -84,8 +84,8 @@ namespace EnumHelpers {
                 auto last_nospace_idx  = sub.index_of(' ', first_nospace_idx);
                 using Ut               = UnderlyingTypeT<T>;
                 const auto value       = to_enum<T>(
-                Signed ? static_cast<Ut>(StrViewToI64(sub.substringview_fromlen(equal_idx + 1))) :
-                               static_cast<Ut>(StrViewToU64(sub.substringview_fromlen(equal_idx + 1)))
+                Signed ? static_cast<Ut>(cxpr::StrViewToI64(sub.substringview_fromlen(equal_idx + 1))) :
+                               static_cast<Ut>(cxpr::StrViewToU64(sub.substringview_fromlen(equal_idx + 1)))
                 );
                 current_val = from_enum(value) + UnderlyingTypeT<T>{ 1 };
                 return Pair{ sub.substringview_fromlen(

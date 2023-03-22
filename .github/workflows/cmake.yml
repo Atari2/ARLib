@@ -2,7 +2,7 @@ name: CMake
 
 on:
   push:
-    branches: [ master, matrix ]
+    branches: [ master, result-rework ]
   pull_request:
     branches: [ master ]
 

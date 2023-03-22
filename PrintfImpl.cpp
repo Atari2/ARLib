@@ -491,7 +491,9 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                 } else {
                     size_t end_width = i;
                     while (is_num(format[end_width])) ++end_width;
-                    int width      = StrViewToInt(format.substringview(i, end_width));
+                    auto width_or_error      = StrViewToInt(format.substringview(i, end_width));
+                    if (width_or_error.is_error()) { INVALID_FORMAT; }
+                    auto width     = width_or_error.to_ok();
                     cur_info.width = static_cast<size_t>(width);
                     i              = end_width - 1;
                 }
@@ -505,8 +507,9 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                 } else {
                     size_t end_precision = i;
                     while (is_num(format[end_precision])) ++end_precision;
-                    int precision      = StrViewToInt(format.substringview(i, end_precision));
-                    cur_info.precision = static_cast<size_t>(precision);
+                    auto precision_or_error      = StrViewToInt(format.substringview(i, end_precision));
+                    if (precision_or_error.is_error()) { INVALID_FORMAT; }
+                    cur_info.precision = static_cast<size_t>(precision_or_error.to_ok());
                     i                  = end_precision - 1;
                 }
                 can_parse = AllowedToParse::NoPrecision;
