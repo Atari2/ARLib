@@ -138,6 +138,7 @@ TEST(ARLibTests, ResulTests) {
     auto res2 = Result<String>{ "error"_s, emplace_error };
     EXPECT_EQ(res2.is_ok(), false);
     EXPECT_EQ(res2.is_error(), true);
+    res2.ignore_error();
 }
 TEST(ARLibTests, StackTests) {
     Stack<String> stack{};
@@ -417,7 +418,10 @@ TEST(ARLibTests, GenericViewTests) {
                                   .iter()
                                   .filter(&StringView::size)
                                   .map(StrViewToDouble)
-                                  .filter(&Result<double>::is_ok)
+                                  .filter([](auto&& res) {
+                                      if (res.is_error()) { res.ignore_error(); }
+                                      return res.is_ok();
+                                  })
                                   .map(&Result<double>::to_ok)
                                   .enumerate()
                                   .zip(expected_from_en)) {
@@ -823,6 +827,7 @@ TEST(ARLibTests, ArgParserTests) {
     auto result2 = parser2.parse();
     EXPECT_TRUE(result2.is_error());
     EXPECT_FALSE(result2.is_ok());
+    result2.ignore_error();
 }
 TEST(ARLibTests, PrintfWideString) {
     char buffer[1024]{};

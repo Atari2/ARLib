@@ -91,6 +91,7 @@ bool run_all_legacy_tests() {
         auto res2 = Result<String>{ "error"_s, emplace_error };
         RETURN_IF_NOT_EQ(res2.is_ok(), false)
         RETURN_IF_NOT_EQ(res2.is_error(), true)
+        res2.ignore_error();
         return true;
     };
     auto stack_test = []() -> bool {

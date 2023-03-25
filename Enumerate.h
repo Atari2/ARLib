@@ -150,6 +150,8 @@ class FilterIterate {
     FilterIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
     auto begin() const { return IfIterator<Iter, Functor>{ m_start, m_end, m_func }; }
     auto end() const { return IfIterator<Iter, Functor>{ m_end, m_end, m_func, true }; }
+    auto begin() { return IfIterator<Iter, Functor>{ m_start, m_end, m_func }; }
+    auto end() { return IfIterator<Iter, Functor>{ m_end, m_end, m_func, true }; }
 };
 template <Iterable Container, typename Functor>
 class MapIterate {
@@ -163,6 +165,8 @@ class MapIterate {
     MapIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
     auto begin() const { return MapIterator<Iter, Functor>{ m_start, m_end, m_func }; }
     auto end() const { return MapIterator<Iter, Functor>{ m_end, m_end, m_func }; }
+    auto begin() { return MapIterator<Iter, Functor>{ m_start, m_end, m_func }; }
+    auto end() { return MapIterator<Iter, Functor>{ m_end, m_end, m_func }; }
 };
 template <typename Container>
 concept ReverseIterable = requires(Container cont) {

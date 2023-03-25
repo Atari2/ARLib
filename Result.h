@@ -142,11 +142,15 @@ class Result {
         }
         return false;
     }
+    void ignore_error() { 
+        m_err.reset();
+    }
     explicit operator bool() const { return is_ok(); }
     ~Result() {
         if (m_type == CurrType::Ok) {
             m_ok.~Res();
         } else {
+            if (m_err.exists()) ASSERT_NOT_REACHED("Result with error was not handled");
             m_err.~UniquePtr();
         }
     }

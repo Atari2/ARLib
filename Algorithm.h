@@ -190,7 +190,7 @@ requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutp
          CopyConstructible<IteratorOutputType<Iter>>
 Iter partition(Iter lo, Iter hi) {
     // FIXME: find a way to avoid this copy of the pivot
-    IteratorOutputType<Iter> pivot = *(lo + ((hi - lo) / 2));
+    auto pivot = *(lo + ((hi - lo) / 2));
     auto i                         = lo - 1;
     auto j                         = hi + 1;
     for (;;) {

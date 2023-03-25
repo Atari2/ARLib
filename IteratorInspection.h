@@ -17,7 +17,7 @@ struct IteratorValueType<Iterator, true> {
 };
 template <typename Iterator>
 struct IteratorValueType<Iterator, false> {
-    using type = RemoveReferenceT<decltype(*declval<Iterator>())>;
+    using type = decltype(*declval<Iterator>());
 };
 template <typename Iterator, bool HasIOTypes>
 struct IteratorIOType {};
