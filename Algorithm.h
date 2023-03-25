@@ -187,7 +187,7 @@ auto transform(const C& cont, Functor func) {
 // follows very naive quicksort implementation
 template <IteratorConcept Iter>
 requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutputType<Iter>> &&
-         CopyConstructible<IteratorOutputType<Iter>>
+         CopyConstructible<RemoveReferenceT<IteratorOutputType<Iter>>>
 Iter partition(Iter lo, Iter hi) {
     // FIXME: find a way to avoid this copy of the pivot
     auto pivot = *(lo + ((hi - lo) / 2));
