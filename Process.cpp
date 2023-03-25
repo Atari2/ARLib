@@ -11,16 +11,15 @@ ProcessResult ProcessPipeline::run() {
     String last_output;
     for (size_t i = 0; i < m_processes.size(); i++) {
         auto& proc = m_processes[i];
-        proc.set_pipe(HandleType::Output);
-        proc.set_pipe(HandleType::Input);
-        auto merr = proc.launch();
-        if (merr.is_error()) { return merr.to_error(); }
+        TRY(proc.set_pipe(HandleType::Output));
+        TRY(proc.set_pipe(HandleType::Input));
+        TRY(proc.launch());
         if (last_output.size() > 0) {
-            proc.write_input(last_output.view());
-            proc.flush_input();
-            proc.close_pipe(HandleType::Input);
+            TRY(proc.write_input(last_output.view()));
+            TRY(proc.flush_input());
+            TRY(proc.close_pipe(HandleType::Input));
         }
-        proc.wait_for_exit();
+        if (auto merr = proc.wait_for_exit(); merr.is_error()) { return merr.to_error(); };
         last_output = proc.output();
     }
     return {};

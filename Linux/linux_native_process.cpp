@@ -293,8 +293,18 @@ ProcessResult UnixProcess::set_pipe(UnixPipeType type) {
 }
 ProcessResult UnixProcess::flush_input() {
     auto fd = choose_handle(UnixPipeType::Input);
+    char buf[256]{};
+    char fdbuf[32]{};
+    snprintf(fdbuf, sizeof(fdbuf), "/proc/self/fd/%d", fd);
+    auto readn = readlink(fdbuf, buf, sizeof(buf));
+    if (readn == -1) { return "Couldn't read proc/self/fd"_s; }
+    buf[readn] = '\0';
+    if (StringView{ buf }.starts_with("pipe")) { 
+        // pipes do not support synchronization
+        return {};
+    }
     int ret = fsync(fd);
-    if (ret != 0) return "Couldn't flush pipe"_s;
+    if (ret != 0) return "Couldn't flush pipe because "_s + last_error();
     return {};
 }
 ProcessResult UnixProcess::close_pipe(UnixPipeType type) {

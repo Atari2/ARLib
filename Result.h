@@ -22,7 +22,7 @@ class Error : public ErrorBase {
     Error(ConvertibleTo<String> auto val) : m_error_string{ move(val) } {}
     const String& error_string() const override { return m_error_string; }
     bool operator==(const Error& other) const { return m_error_string == other.m_error_string; }
-    ~Error() {}
+    virtual ~Error() {}
 };
 #ifdef DEBUG
 class BacktraceError final : public Error {
@@ -33,7 +33,7 @@ class BacktraceError final : public Error {
         m_error_string += '\n';
         m_error_string += PrintInfo<BackTrace>{ m_bt }.repr();
     }
-    ~BacktraceError() {}
+    virtual ~BacktraceError() {}
 };
 #else
 class BacktraceError final : public Error {
@@ -43,7 +43,7 @@ class BacktraceError final : public Error {
         m_error_string += '\n';
         m_error_string += "[no backtrace available in release mode]"_s;
     }
-    ~BacktraceError() {}
+    virtual ~BacktraceError() {}
 };
 #endif
 struct EmplaceOk {};
@@ -60,7 +60,7 @@ class Result {
         Res m_ok;
         UniquePtr<ErrorBase> m_err;
     };
-    CurrType m_type : 1 { CurrType::Ok };
+    CurrType m_type : 1;
 
     public:
     Result()
@@ -99,6 +99,13 @@ class Result {
         m_type = other.m_type;
     }
     Result(ErrorType&& val) : m_err{ new ErrorType{ move(val) } }, m_type{ CurrType::Err } {}
+    Result(Result&& other) noexcept : m_type(other.m_type) {
+        if (other.m_type == CurrType::Ok) {
+            m_ok = move(other.m_ok);
+        } else {
+            m_err = move(other.m_err);
+        }
+    }
     CurrType type() const { return m_type; }
     bool is_error() const { return m_type == CurrType::Err; }
     bool is_ok() const { return m_type == CurrType::Ok; }
@@ -142,8 +149,8 @@ class Result {
         }
         return false;
     }
-    void ignore_error() { 
-        m_err.reset();
+    void ignore_error() {
+        if (m_type == CurrType::Err) m_err.reset();
     }
     explicit operator bool() const { return is_ok(); }
     ~Result() {
