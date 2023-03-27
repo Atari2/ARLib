@@ -37,6 +37,11 @@ namespace JSON {
         }
     };
     struct JString : public String {
+        JString() = default;
+        JString(String&& other) noexcept : String(Forward<String>(other)) {
+
+        }
+        JString(const String& other) : String(other) {}
         operator Value() &&;
     };
     // Null detail impl
@@ -207,6 +212,12 @@ namespace JSON {
             constexpr auto val = map_t_to_enum<T>();
             if (val != m_type) return false;
             return get<val>() == value;
+        }
+        template <JSONTypeExt T>
+        operator T() const {
+            constexpr auto val = map_t_to_enum<T>();
+            if (val != m_type) ASSERT_NOT_REACHED("Invalid type requested");
+            return get<val>();
         }
         template <Type T>
         const auto& get() const {
