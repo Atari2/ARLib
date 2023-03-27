@@ -111,17 +111,6 @@ class HashMap {
         return m_table.find_if(Hash<Key>{}(key), [&key](const auto& entry) { return entry.key() == key; });
     }
     Val& operator[](const Key& key) { return (*find(key)).value(); }
-    Val& operator[](const Key& key)
-    requires(DefaultConstructible<Val> && CopyConstructible<Key>)
-    {
-        auto iter = find(key);
-        if (iter == m_table.tend()) {
-            m_table.insert({ Key{ key }, Val{} });
-            return (*find(key)).value();
-        } else {
-            return (*iter).value();
-        }
-    }
     const Val& operator[](const Key& key) const { return (*find(key)).value(); }
     Iter begin() { return m_table.tbegin(); }
     Iter end() { return m_table.tend(); }
