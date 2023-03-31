@@ -13,6 +13,7 @@ set(ARLIB_LINK_OPTIONS "")
 
 option(ARLIB_FORCE_SANITIZERS "Always enable sanitizers, even in release builds" OFF)
 option(ARLIB_DISABLE_SANITIZERS "Always disable sanitizers, this takes precendence over ARLIB_FORCE_SANITIZERS" OFF)
+option(ARLIB_USE_LIBCXX "Use libc++ as standard library (only available when compiling with clang, will be ignored otherwise)" OFF)
 if (MSVC)
     option(MSVC_STATIC_STL "Use the static version of the MSVC STL to link" OFF)
     if (NOT MSVC_STATIC_STL)
@@ -451,11 +452,24 @@ else()
 			-Wduplicated-branches		# gcc only
 			-Wlogical-op				# gcc only
 			)
-    elseif(ON_CLANG)
-		list(APPEND ARLIB_COMPILE_WARNINGS
+    elseif(ON_CLANG AND ARLIB_USE_LIBCXX)
+        message(STATUS "Using libc++ instead of libstdc++")
+        list(APPEND ARLIB_COMPILE_OPTIONS
+            -stdlib=libc++
+        )
+        list(APPEND ARLIB_LINK_LIBRARIES
+            -lc++abi
+            -lc++
+        )
+        list(APPEND ARLIB_COMPILE_WARNINGS
 			-Wno-gnu-zero-variadic-macro-arguments
 			-Wno-nested-anon-types
-			)
+		)
+    elseif(ON_CLANG)
+    	list(APPEND ARLIB_COMPILE_WARNINGS
+			-Wno-gnu-zero-variadic-macro-arguments
+			-Wno-nested-anon-types
+		)
 	endif()
 	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 endif()

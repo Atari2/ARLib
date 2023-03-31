@@ -5,9 +5,17 @@
 // this is here so I can declare the proper constructor in the cpp file
 // and avoid "#include <compare>" in here
 // it's only needed because otherwise I can't use <=> in my DefaultOrdering<T> class in SortedVector<T>
+
 namespace std {
+#ifdef _LIBCPP_VERSION
+inline namespace __1 {
+    class strong_ordering;
+    class partial_ordering;
+}    // namespace __1
+#else
 struct strong_ordering;
 struct partial_ordering;
+#endif
 }    // namespace std
 namespace ARLib {
 enum class OrderingType { Less = -1, Equal = 0, Greater = 1, NoOrder = 2 };

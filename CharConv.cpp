@@ -2,6 +2,9 @@
 #include "Assertion.h"
 #include "StringView.h"
 #include "Vector.h"
+#ifdef _LIBCPP_VERSION
+#include <stdlib.h>
+#endif
 #include <charconv>
 namespace ARLib {
 Result<uint64_t> StrViewToU64(const StringView view, int base) {
@@ -177,7 +180,13 @@ Result<int64_t> StrViewToI64(const StringView view, int base) {
 // using the stdlib for now because this is too hard to get right
 // one day I'll actual write it properly
 Result<double> StrViewToDouble(const StringView str) {
-    double val                = 0.0;
+    double val = 0.0;
+#ifdef _LIBCPP_VERSION
+    char* ptr = NULL;
+    val = strtod(str.data(), &ptr);
+    if (ptr == str.data()) return "Failed to convert string to double"_s;
+    return val;
+#else
     auto res = std::from_chars(str.data(), str.data() + str.size(), val);
     if (res.ec == std::errc::invalid_argument) {
         return "Failed to convert string to double, invalid argument"_s;
@@ -185,6 +194,7 @@ Result<double> StrViewToDouble(const StringView str) {
         return "Failed to convert string to double, argument out of range"_s;
     }
     return val;
+#endif
 }
 Result<float> StrViewToFloat(const StringView str) {
     TRY_SET(val, StrViewToDouble(str));

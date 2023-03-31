@@ -26,6 +26,10 @@ endif()
 	
 include(FetchContent)
 
+if (ON_CLANG AND ARLIB_USE_LIBCXX)
+	set(BENCHMARK_USE_LIBCXX ON)
+endif()
+
 FetchContent_Declare(
     googlebenchmark
     GIT_REPOSITORY "https://github.com/google/benchmark"

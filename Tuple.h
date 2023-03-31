@@ -8,10 +8,16 @@
 // but this avoids having to #include <utility>
 // so I'll do it
 namespace std {
-template <class T>
-struct tuple_size;
-template <size_t I, class T>
-struct tuple_element;
+#ifdef _LIBCPP_VERSION
+inline namespace __1 {
+#endif
+    template <class T>
+    struct tuple_size;
+    template <size_t I, class T>
+    struct tuple_element;
+#ifdef _LIBCPP_VERSION
+}
+#endif
 }    // namespace std
 namespace ARLib {
 template <typename T, typename... Args>
