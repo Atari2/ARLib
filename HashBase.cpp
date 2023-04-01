@@ -2,7 +2,15 @@
 #include "Types.h"
 #include "cstring_compat.h"
 #include "Utility.h"
+#ifdef ON_WINDOWS
+    #include <intrin.h>
+#endif
 namespace ARLib {
+#ifdef ON_WINDOWS
+uint32_t hash_bswap(uint32_t value) {
+    return _byteswap_ulong(value);
+}
+#endif
 static forceinline size_t bitcast_copy(const char* p) {
     size_t result;
     memcpy(&result, p, sizeof(result));

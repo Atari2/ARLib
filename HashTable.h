@@ -189,7 +189,7 @@ template <typename T, typename HashCls = Hash<T>>
 requires Hashable<T, HashCls> && EqualityComparable<T> && requires(const HashCls& h, const T& t) {
                                                               { h(t) } -> ConvertibleTo<size_t>;
                                                           }
-class HashTable {
+class [[deprecated("HashTable has been deprecated in favour of FlatSet")]] HashTable {
     constexpr static inline size_t s_primes_bkt_sizes[]       = { 61, 97, 149, 223, 257, 281, 317, 379, 433, 503 };
     constexpr static inline size_t max_bucket_acceptable_size = 10;
     HashTableStorage<T> m_storage;

@@ -70,7 +70,8 @@ class HashAlgorithm<HashType::CRC32> {
     template <Iterable C>
     requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
     constexpr static uint32_t calculate(const C& cont) {
-        return calculate(GenericView{ cont });
+        using T = RemoveReferenceT<ContainerValueTypeT<AddConstT<C>>>;
+        return calculate(GenericView<T>{ cont });
     }
 };
 template <>
@@ -91,7 +92,8 @@ class HashAlgorithm<HashType::MD5> {
     template <Iterable C>
     requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
     static MD5Result calculate(const C& cont) {
-        return calculate(GenericView{ cont });
+        using T = RemoveReferenceT<ContainerValueTypeT<AddConstT<C>>>;
+        return calculate(GenericView<T>{ cont });
     }
 };
 template <>
@@ -105,7 +107,8 @@ class HashAlgorithm<HashType::SHA1> {
     template <Iterable C>
     requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
     static SHA1Result calculate(const C& cont) {
-        return calculate(GenericView{ cont });
+        using T = RemoveReferenceT<ContainerValueTypeT<AddConstT<C>>>;
+        return calculate(GenericView<T>{ cont });
     }
 };
 template <>
@@ -119,7 +122,8 @@ class HashAlgorithm<HashType::SHA256> {
     template <Iterable C>
     requires IsAnyOfV<RemoveCvRefT<ContainerValueTypeT<C>>, uint8_t, int8_t>
     static SHA256Result calculate(const C& cont) {
-        return calculate(GenericView{ cont });
+        using T = RemoveReferenceT<ContainerValueTypeT<AddConstT<C>>>;
+        return calculate(GenericView<T>{ cont });
     }
 };
 template <>

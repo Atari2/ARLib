@@ -395,6 +395,41 @@
 			<Item Name="[value]" ExcludeView="simple">m_value</Item>
 		</Expand>
 	</Type>
+	<Type Name="ARLib::BitMask&lt;*&gt;">
+		<DisplayString>{{ {m_mask} }}</DisplayString>
+		<Expand>
+			<Item Name="[value]" ExcludeView="simple">m_mask</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::FlatMapEntry&lt;*&gt;">
+		<DisplayString>{{ key={m_key} value={m_val} }}</DisplayString>
+		<Expand>
+			<Item Name="[key]" ExcludeView="simple">m_key</Item>
+			<Item Name="[value]" ExcludeView="simple">m_val</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::FlatSetStorage&lt;*&gt;">
+		<Intrinsic Name="v" Expression="initialized_mask"/>
+		<Intrinsic Name="size" Expression="(unsigned short)(((((v() - ((v() >> 1) &amp; 21845)) &amp; 13107) + (((v() - ((v() >> 1) &amp; 21845)) >> 2) &amp; 13107) + (((v() - ((v() >> 1) &amp; 21845)) &amp; 13107) + (((v() - ((v() >> 1) &amp; 21845)) >> 2) &amp; 13107) >> 4)) &amp; 3855) * 257) >> 8"/>
+		<DisplayString>{{ size={size()} }}</DisplayString>
+		<Expand>
+			<Item Name="[mask]">initialized_mask</Item>
+			<Item Name="[existing items]">size()</Item>
+			<IndexListItems>
+				<Size>16</Size>
+				<ValueNode Condition="(initialized_mask &amp; (1 &lt;&lt; $i)) != 0">*($T1*)(&amp;storage[$i*ObjectSize])</ValueNode>
+				<ValueNode Condition="(initialized_mask &amp; (1 &lt;&lt; $i)) == 0">"Empty/Deleted"</ValueNode>
+			</IndexListItems>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::FlatSet&lt;*&gt;">
+		<DisplayString>{{ {m_buckets}, {m_hasher}, size={m_size} }}</DisplayString>
+		<Expand>
+			<Item Name="[buckets]" ExcludeView="simple">m_buckets</Item>
+			<Item Name="[size]" ExcludeView="simple">m_size</Item>
+			<Item Name="[hasher]" ExcludeView="simple">m_hasher</Item>
+		</Expand>
+	</Type>
 	<Type Name="ARLib::Map&lt;*&gt;">
 		<DisplayString>{{ {m_storage} }}</DisplayString>
 		<Expand>

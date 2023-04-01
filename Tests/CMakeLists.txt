@@ -25,6 +25,11 @@ if (MSVC)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARLIB_SANITIZERS_FLAGS}")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARLIB_SANITIZERS_FLAGS}")
 endif()
+if (ON_CLANG AND ARLIB_USE_LIBCXX)
+	# we need to set -stdlib=libc++ in CMAKE_CXX_FLAGS because googletest needs it
+	# otherwise we get linker errors.
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif()
 
 include(FetchContent)
 

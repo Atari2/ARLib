@@ -66,7 +66,11 @@ void print_backtrace() {
     }
     BackTrace btrace = capture_backtrace();
     puts("---- BACKTRACE START ----");
-    for (size_t i = 0; i < btrace.size(); i++) { printf("\t%s\n", btrace.backtrace_at(i)); }
+    constexpr size_t start_frames_to_skip = windows_build ? 6 : 3;
+    constexpr size_t end_frames_to_skip   = windows_build ? 2 : 4;
+    for (size_t i = end_frames_to_skip; i < btrace.size() - start_frames_to_skip; i++) {
+        printf("\t%s\n", btrace.backtrace_at(i));
+    }
     puts("---- BACKTRACE END ----");
 }
     #ifdef ON_WINDOWS

@@ -99,15 +99,9 @@ class ArgParser {
     String construct_help_string() const;
 
     public:
-    struct ArgParserError {
-        String error;
-    };
-    struct GetOptionError {
-        StringView error;
-    };
     template <typename T>
-    using GetResult   = Result<AddLvalueReferenceT<T>, GetOptionError>;
-    using ParseResult = DiscardResult<ArgParserError>;
+    using GetResult   = Result<AddLvalueReferenceT<T>>;
+    using ParseResult = DiscardResult<>;
 
     constexpr static inline auto no_value = NoValueTag{};
     ArgParser(int argc, const char** argv);
@@ -137,7 +131,7 @@ class ArgParser {
     auto get(StringView opt_name) {
         using Tp = RemoveCvRefT<T>;
         auto it  = m_options.find([&](const auto& kvp) { return kvp.first() == opt_name; });
-        if (it == m_options.end()) return GetResult<Tp>{ GetOptionError{ "Invalid option" } };
+        if (it == m_options.end()) return GetResult<Tp>{ "Invalid option"_s };
         auto& [_, value] = *it;
         if constexpr (SameAs<Tp, bool>) {
             if (value.type == Option::Type::Bool) {
@@ -145,35 +139,31 @@ class ArgParser {
             } else if (value.type == Option::Type::NoValue) {
                 return GetResult<Tp>{ value.found };
             } else {
-                return GetResult<Tp>{ GetOptionError{ "Requested type `bool` for option containing int or string" } };
+                return GetResult<Tp>{ "Requested type `bool` for option containing int or string"_s };
             }
         } else if constexpr (SameAs<Tp, String>) {
             if (value.type == Option::Type::String) {
                 return GetResult<Tp>{ value.value.template get<StringRef>().get() };
             } else {
-                return GetResult<Tp>{ GetOptionError{
-                "Requested type `string` for option containing int, string or none" } };
+                return GetResult<Tp>{ "Requested type `string` for option containing int, string or none"_s };
             }
         } else if constexpr (SignedIntegral<Tp>) {
             if (value.type == Option::Type::Int) {
                 return GetResult<Tp>{ value.value.template get<IntRef>().get() };
             } else {
-                return GetResult<Tp>{ GetOptionError{
-                "Requested type `int` for option containing bool, string or none" } };
+                return GetResult<Tp>{ "Requested type `int` for option containing bool, string or none"_s };
             }
         } else if constexpr (UnsignedIntegral<Tp>) {
             if (value.type == Option::Type::Uint) {
                 return GetResult<Tp>{ value.value.template get<UintRef>().get() };
             } else {
-                return GetResult<Tp>{ GetOptionError{
-                "Requested type `uint` for option containing bool, string or none" } };
+                return GetResult<Tp>{ "Requested type `uint` for option containing bool, string or none"_s };
             }
         } else if constexpr (FloatingPoint<Tp>) {
             if (value.type == Option::Type::Real) {
                 return GetResult<Tp>{ value.value.template get<RealRef>().get() };
             } else {
-                return GetResult<Tp>{ GetOptionError{
-                "Requested type `real` for option containing bool, string or none" } };
+                return GetResult<Tp>{ "Requested type `real` for option containing bool, string or none"_s };
             }
         } else {
             static_assert(dependant_false<T>, "Invalid get() call");

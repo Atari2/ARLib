@@ -33,6 +33,16 @@ template <class Key>
     static_assert(IsTrivialV<Key>, "Only trivial types can be directly hashed.");
     return fn_append_bytes(offset_basis, reinterpret_cast<const unsigned char*>(first), count * sizeof(Key));
 }
+uint32_t hash_bswap(uint32_t value);
+template <class Key>
+[[nodiscard]] size_t hash_integral_fast(const Key& k) noexcept {
+    static_assert(IsIntegralV<Key>, "Only integer types may call this function");
+    #ifdef ON_WINDOWS
+    return static_cast<size_t>(k ^ hash_bswap(static_cast<uint32_t>(k * 1086221891)));
+    #else
+    return static_cast<size_t>(k ^ __builtin_bswap32(static_cast<uint32_t>(k * 1086221891)));
+    #endif
+}
 
 template <class Key>
 struct Hash;
@@ -61,7 +71,13 @@ template <class Key>
 struct Hash :
     ConditionallyEnabledHash<
     Key, !IsConstV<Key> && !IsVolatileV<Key> && (IsEnumV<Key> || IsIntegralV<Key> || IsPointerV<Key>)> {
-    static size_t do_hash(const Key& key) noexcept { return hash_representation(key); }
+    static size_t do_hash(const Key& key) noexcept {
+        if constexpr (IsIntegralV<Key>)
+            return hash_integral_fast(key);
+        else if constexpr (IsEnumV<Key>)
+            return hash_integral_fast(static_cast<UnderlyingTypeT<Key>>(key));
+        return hash_representation(key);
+    }
 };
 template <>
 struct Hash<float> {

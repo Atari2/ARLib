@@ -137,7 +137,7 @@ class Win32Process {
     Win32Process& set_blocking();
     Win32Process& set_wait_at_destruction(bool wait = true);
     String get_last_error();
-    Result<exit_code_t, ProcessError> wait_for_exit();
+    Result<exit_code_t> wait_for_exit();
     ProcessResult wait_for_input(size_t ms_timeout = ARLIB_INFINITE_TIMEOUT);
     ProcessResult launch();
     ProcessResult suspend();

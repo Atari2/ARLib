@@ -112,11 +112,7 @@ class ArgumentString {
             return get<StringView>(m_argument);
     }
 };
-struct ProcessError {
-    static inline String m_no_error_string{ "No error" };
-    String error;
-};
-using ProcessResult = DiscardResult<ProcessError>;
+using ProcessResult = DiscardResult<Error>;
 template <typename CharT>
 struct StringTAllocatedRAII {
     CharT* ptr;

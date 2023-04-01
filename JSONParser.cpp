@@ -8,10 +8,10 @@ namespace ARLib {
 namespace JSON {
 
 #define STATE_ENTER()                                                                                                  \
-    if (!state.enter()) return ParseError{ "Reached depth limit of "_s + IntToStr(state.depth_limit), state.index() };
+    if (!state.enter()) return ParseError{ "Reached depth limit of "_s + IntToStr(state.depth_limit), state.index() }
 
 #define STATE_EXIT()                                                                                                   \
-    if (!state.exit()) return ParseError{ "Trying to exit from a depth of 0 "_s, state.index() };
+    if (!state.exit()) return ParseError{ "Trying to exit from a depth of 0 "_s, state.index() }
 
 #define CHK_SIZE(c)                                                                                                    \
     if (state.invalid_index()) { return ParseError{ "Expected " #c " but end of file was reached"_s, state.index() }; }
@@ -107,11 +107,11 @@ namespace JSON {
         STATE_EXIT();
         return string;
     }
-    Number parse_number(const String& raw_value) {
+    Parsed<Number> parse_number(const String& raw_value) {
         if (raw_value.contains('.') || raw_value.contains('E') || raw_value.contains('e')) {
-            return Number{ number_tag, StrToDouble(raw_value) };
+            TRY_RET(StrToDouble(raw_value));
         } else {
-            return Number{ number_tag, StrToI64(raw_value) };
+            TRY_RET(StrToI64(raw_value));
         }
     }
     Parsed<Array> parse_array(ParseState& state) {
@@ -149,7 +149,8 @@ namespace JSON {
                         } else if (raw_value == "false"_s) {
                             arr.append(ValueObj::construct(Bool{ bool_tag, false }));
                         } else {
-                            arr.append(ValueObj::construct(parse_number(raw_value)));
+                            TRY_SET(number, parse_number(raw_value));
+                            arr.append(ValueObj::construct(move(number)));
                         }
                         break;
                     }
@@ -218,7 +219,8 @@ namespace JSON {
                         } else if (raw_value == "false"_s) {
                             obj.add(move(key), ValueObj::construct(Bool{ bool_tag, false }));
                         } else if (check_if_valid_number(raw_value)) {
-                            obj.add(move(key), ValueObj::construct(parse_number(raw_value)));
+                            TRY_SET(value, parse_number(raw_value));
+                            obj.add(move(key), ValueObj::construct(move(value)));
                         } else {
                             return ParseError{ "Expected a valid json type but got "_s + raw_value, state.index() };
                         }
@@ -394,16 +396,16 @@ namespace JSON {
         Parser p{ data };
         return p.parse_internal();
     }
-    FileParseResult Parser::from_file(StringView filename) {
+    ParseResult Parser::from_file(StringView filename) {
         File f{ filename.extract_string() };
         auto maybe_error = f.open(OpenFileMode::Read);
-        if (maybe_error) { return FileParseResult::from_error(maybe_error.to_error()); }
+        if (maybe_error.is_error()) { return maybe_error.to_error(); }
         auto read_res = f.read_all();
-        if (read_res.is_error()) { return FileParseResult::from_error(read_res.to_error()); }
+        if (read_res.is_error()) { return read_res.to_error(); }
         auto val       = read_res.to_ok();
         auto parse_res = Parser::parse(val.view());
-        if (parse_res.is_error()) { return FileParseResult::from_error(parse_res.to_error()); }
-        return FileParseResult{ parse_res.to_ok() };
+        if (parse_res.is_error()) { return parse_res.to_error(); }
+        return parse_res.to_ok();
     }
 }    // namespace JSON
 }    // namespace ARLib

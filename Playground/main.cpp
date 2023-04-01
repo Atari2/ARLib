@@ -1,32 +1,40 @@
-#include "../Printer.h"
-#include "../String.h"
-#include "../Vector.h"
-#include "../Enumerate.h"
-#include "../JSONParser.h"
-#include "../FileSystem.h"
-#include "../Set.h"
-#include "../List.h"
-#include "../Span.h"
+#include "../PrintfImpl.h"
+#include "../ArgParser.h"
 #include "../CharConv.h"
-#include "../SortedVector.h"
-#include "../Array.h"
-
+#include "../Printer.h"
+#include "../File.h"
+#include "../JSONParser.h"
 using namespace ARLib;
-int main() {
-    Vector<int> vec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    auto span       = vec.span();
-    auto span2      = span.subspan(2, 5);
-    auto span3      = span.subspan(123123, 1234123);
-    Array arr       = { "Hello"_sv, "World"_sv, "How"_sv, "Are"_sv, "You"_sv };
-    auto span4      = arr.span().subspan(1, 3);
-    auto span5      = GenericView{ arr }.span().subspan(1, 3);
-    Printer::print("{}", span4 == span5);
-    Printer::print("Span size: {}", span.size());
-    Printer::print("Span2 size: {}", span2.size());
-    Printer::print("Span3 size: {}", span3.size());
-    Printer::print("Span4 size: {}", span4.size());
-    for (auto [i, val] : enumerate(span)) { Printer::print("span[{}]: {}", i, val); }
-    for (auto [i, val] : enumerate(span2)) { Printer::print("span[{}] {}", i, val); }
-    for (auto [i, val] : enumerate(span3)) { Printer::print("span[{}] {}", i, val); }
-    for (auto [i, val] : enumerate(span4)) { Printer::print("span[{}] {}", i, val); }
+struct TestJson {
+    int val;
+    String str;
+    static JSON::Parsed<TestJson> deserialize(StringView string) {
+        auto obj = JSON::Parser::parse(string);
+        if (obj.is_error()) return obj.to_error();
+        auto jval = obj.to_ok();
+        TestJson val{ .val = jval["val"_s].get<JSON::Type::JNumber>(),
+                      .str = jval["str"_s].get<JSON::Type::JString>() };
+        return val;
+    }
+    String serialize() const { 
+        JSON::Object obj;
+        obj.add("val"_s, JSON::Number{val});
+        obj.add("str"_s, JSON::JString{ str });
+        return JSON::dump_json(obj);
+    }
+};
+int main(int argc, char** argv) {
+    Result r{ 1 };
+    Result<int> r2{ BacktraceError{ "hello"_s } };
+    HARD_ASSERT(r.is_ok(), "1");
+    HARD_ASSERT(!r.is_error(), "2");
+    HARD_ASSERT(r.ok_value() == 1, "3");
+    ArgParser parser{ argc, argv };
+    String filename;
+    parser.add_option("--file", "FILE", "File to pass", filename);
+    if (auto res = parser.parse(); res.is_error()) { Printer::print("{}", res.to_error()); }
+    if (parser.help_requested()) { parser.print_help(); }
+    auto j = R"({"hello world": 1})"_json;
+    auto obj = MUST(TestJson::deserialize(R"({"val": 10, "str": "Hello World!"})"_sv));
+    Printer::print("{}", obj.serialize());
 }

@@ -7,8 +7,9 @@
 #include "TypeTraits.h"
 #include "Span.h"
 namespace ARLib {
-template <typename T>
+template <typename VT>
 class GenericView {
+    using T = RemoveReferenceT<VT>;
     T* m_begin_view = nullptr;
     T* m_end_view   = nullptr;
 
@@ -54,7 +55,7 @@ class IteratorView {
     using Iter = decltype(declval<Cont>().begin());
     Iter m_begin;
     Iter m_end;
-    using ItemType             = IteratorInputType<Iter>;
+    using ItemType             = RemoveReferenceT<IteratorInputType<Iter>>;
     ItemType* m_stolen_storage = nullptr;
     ItemType* release_storage() {
         ItemType* storage = m_stolen_storage;

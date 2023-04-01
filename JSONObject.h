@@ -7,6 +7,8 @@
 #include "String.h"
 #include "UniquePtr.h"
 #include "Variant.h"
+#include "Result.h"
+
 namespace ARLib {
 namespace JSON {
 
@@ -35,6 +37,11 @@ namespace JSON {
         }
     };
     struct JString : public String {
+        JString() = default;
+        JString(String&& other) noexcept : String(Forward<String>(other)) {
+
+        }
+        JString(const String& other) : String(other) {}
         operator Value() &&;
     };
     // Null detail impl
@@ -206,6 +213,12 @@ namespace JSON {
             if (val != m_type) return false;
             return get<val>() == value;
         }
+        template <JSONTypeExt T>
+        operator T() const {
+            constexpr auto val = map_t_to_enum<T>();
+            if (val != m_type) ASSERT_NOT_REACHED("Invalid type requested");
+            return get<val>();
+        }
         template <Type T>
         const auto& get() const {
             // Value, Object, String, Number, Array, Bool, Null
@@ -259,7 +272,7 @@ namespace JSON {
         String error_string{};
         size_t error_offset{};
     };
-    class ParseError {
+    class ParseError : public ErrorBase {
         ErrorInfo m_info;
 
         public:
@@ -268,6 +281,7 @@ namespace JSON {
         ParseError(ErrorInfo info) : m_info(move(info)){};
         const ErrorInfo& info() const { return m_info; }
         const String& message() const { return m_info.error_string; }
+        const String& error_string() const { return m_info.error_string; }
         size_t offset() const { return m_info.error_offset; }
     };
 }    // namespace JSON

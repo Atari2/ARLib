@@ -5,7 +5,7 @@
 #include "CpuInfo.h"
 namespace ARLib {
 consteval char operator""_c(const unsigned long long num) {
-    CONSTEVAL_STATIC_ASSERT(num < 255, "Can't convert numbers over 255 to char");
+    CONSTEVAL_STATIC_ASSERT(num <= 255, "Can't convert numbers over 255 to char");
     return static_cast<char>(num);
 }
 consteval wchar_t operator""_wc(const unsigned long long num) {

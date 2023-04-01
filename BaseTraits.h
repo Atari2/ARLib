@@ -27,7 +27,7 @@ using TriviallyAssignableImpl = std::is_trivially_assignable<T, U>;
 template <class T, class U>
 using NothrowAssignableImpl = std::is_nothrow_assignable<T, U>;
 
-#if not(defined(COMPILER_MSVC) || (defined(WINDOWS) && defined(COMPILER_CLANG)))
+#ifdef COMPILER_GCC
 template <class T>
 using IsDestructibleSafe = std::__is_destructible_safe<T>;
 #endif

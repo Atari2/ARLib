@@ -83,14 +83,15 @@ bool run_all_legacy_tests() {
         return true;
     };
     auto result = []() -> bool {
-        Result<String> res{ "hello"_s };
+        Result<String> res{ "hello"_s, emplace_ok };
         RETURN_IF_NOT_EQ(res.is_ok(), true)
         RETURN_IF_NOT_EQ(res.is_error(), false)
         String b = res.to_ok();
         RETURN_IF_NOT_EQ(b, "hello"_s)
-        auto res2 = Result<String>::from_error();
+        auto res2 = Result<String>{ "error"_s, emplace_error };
         RETURN_IF_NOT_EQ(res2.is_ok(), false)
         RETURN_IF_NOT_EQ(res2.is_error(), true)
+        res2.ignore_error();
         return true;
     };
     auto stack_test = []() -> bool {

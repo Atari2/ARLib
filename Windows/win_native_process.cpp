@@ -30,33 +30,33 @@ ProcessResult Win32Process::suspend() {
     HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     THREADENTRY32 threadEntry{};
     threadEntry.dwSize = sizeof(THREADENTRY32);
-    if (!Thread32First(hThreadSnap, &threadEntry)) return ProcessResult::from_error(get_last_error());
+    if (!Thread32First(hThreadSnap, &threadEntry)) return get_last_error();
     do {
         if (threadEntry.th32OwnerProcessID == m_p_info.dwProcessId) {
             HANDLE hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, threadEntry.th32ThreadID);
             if (hthread == INVALID_HANDLE_VALUE || hthread == nullptr) continue;
-            if (SuspendThread(hthread) == (DWORD)-1) { return ProcessResult::from_error(get_last_error()); }
-            if (!CloseHandle(hthread)) return ProcessResult::from_error(get_last_error());
+            if (SuspendThread(hthread) == (DWORD)-1) { return get_last_error(); }
+            if (!CloseHandle(hthread)) return get_last_error();
         }
     } while (Thread32Next(hThreadSnap, &threadEntry));
-    if (!CloseHandle(hThreadSnap)) return ProcessResult::from_error(get_last_error());
-    return ProcessResult::from_ok();
+    if (!CloseHandle(hThreadSnap)) return get_last_error();
+    return {};
 }
 ProcessResult Win32Process::resume() {
     HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     THREADENTRY32 threadEntry{};
     threadEntry.dwSize = sizeof(THREADENTRY32);
-    if (!Thread32First(hThreadSnap, &threadEntry)) return ProcessResult::from_error(get_last_error());
+    if (!Thread32First(hThreadSnap, &threadEntry)) return get_last_error();
     do {
         if (threadEntry.th32OwnerProcessID == m_p_info.dwProcessId) {
             HANDLE hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, threadEntry.th32ThreadID);
             if (hthread == INVALID_HANDLE_VALUE || hthread == nullptr) continue;
-            if (ResumeThread(hthread) == (DWORD)-1) { return ProcessResult::from_error(get_last_error()); }
-            if (!CloseHandle(hthread)) return ProcessResult::from_error(get_last_error());
+            if (ResumeThread(hthread) == (DWORD)-1) { return get_last_error(); }
+            if (!CloseHandle(hthread)) return get_last_error();
         }
     } while (Thread32Next(hThreadSnap, &threadEntry));
-    if (!CloseHandle(hThreadSnap)) return ProcessResult::from_error(get_last_error());
-    return ProcessResult::from_ok();
+    if (!CloseHandle(hThreadSnap)) return get_last_error();
+    return {};
 }
 bool Win32Process::terminate(exit_code_t exit_code) {
     m_exit_code = exit_code;
@@ -74,19 +74,18 @@ ProcessResult Win32Process::wait_for_input(size_t ms_timeout) {
     if (GetGUIThreadInfo(m_p_info.dwThreadId, &info)) {
         switch (WaitForInputIdle(m_p_info.hProcess, static_cast<DWORD>(ms_timeout))) {
             case WAIT_FAILED:
-                return ProcessResult::from_error(get_last_error());
+                return get_last_error();
             case WAIT_TIMEOUT:
-                return ProcessResult::from_error("Timeout expired"_s);
+                return "Timeout expired"_s;
             default:
-                return ProcessResult::from_ok();
+                return {};
         }
     } else {
-        return ProcessResult::from_error("Cannot wait for input on processes without Message queue"_s);
+        return "Cannot wait for input on processes without Message queue"_s;
     }
 }
 ProcessResult Win32Process::write_input(StringView input, Win32Process::completion_routine_t routine) {
-    if (!m_redirected_stdin)
-        return ProcessResult::from_error("To write to a process' input without pipes or files just use stdin"_s);
+    if (!m_redirected_stdin) return "To write to a process' input without pipes or files just use stdin"_s;
     DWORD dwWritten{};
     BOOL bSuccess = FALSE;
     HANDLE hdl    = choose_handle(Win32PipeType::Input);
@@ -99,17 +98,17 @@ ProcessResult Win32Process::write_input(StringView input, Win32Process::completi
         );
         // the SleepEx is here to set the thread state to Alertable
         SleepEx(0, TRUE);
-        if (bSuccess == FALSE) { return ProcessResult::from_error(get_last_error()); }
+        if (bSuccess == FALSE) { return get_last_error(); }
     } else {
         bSuccess = WriteFile(hdl, input.data(), static_cast<DWORD>(input.size()), &dwWritten, NULL);
-        if (dwWritten != input.size() || bSuccess == FALSE) { return ProcessResult::from_error(get_last_error()); }
+        if (dwWritten != input.size() || bSuccess == FALSE) { return get_last_error(); }
         if (auto ret = flush_input(); ret.is_error()) { return ret.to_error(); };
     }
-    return ProcessResult::from_ok();
+    return {};
 }
 ProcessResult Win32Process::write_data(const ReadOnlyView<uint8_t>& data, Win32Process::completion_routine_t routine) {
     if (!m_redirected_stdin)
-        return ProcessResult::from_error("To write to a process' input without pipes or files just use stdin"_s);
+        return "To write to a process' input without pipes or files just use stdin"_s;
     DWORD dwWritten{};
     BOOL bSuccess = FALSE;
     HANDLE hdl    = choose_handle(Win32PipeType::Input);
@@ -121,13 +120,13 @@ ProcessResult Win32Process::write_data(const ReadOnlyView<uint8_t>& data, Win32P
         hdl, data.data(), static_cast<DWORD>(data.size()), overlapped, cast<LPOVERLAPPED_COMPLETION_ROUTINE>(routine)
         );
         SleepEx(0, TRUE);
-        if (bSuccess == FALSE) { return ProcessResult::from_error(get_last_error()); }
+        if (bSuccess == FALSE) { return get_last_error(); }
     } else {
         bSuccess = WriteFile(hdl, data.data(), static_cast<DWORD>(data.size()), &dwWritten, NULL);
-        if (dwWritten != data.size() || bSuccess == FALSE) { return ProcessResult::from_error(get_last_error()); }
+        if (dwWritten != data.size() || bSuccess == FALSE) { return get_last_error(); }
         if (auto ret = flush_input(); ret.is_error()) { return ret.to_error(); };
     }
-    return ProcessResult::from_ok();
+    return {};
 }
 ProcessResult Win32Process::set_pipe(Win32PipeType type) {
     constexpr static Array<StringView, 3> pipe_names{
@@ -151,7 +150,7 @@ ProcessResult Win32Process::set_pipe(Win32PipeType type) {
     HANDLE pipe_rd = Win32PipeType::Input == type ? pipe_hdl : pipe;
     HANDLE pipe_wr = Win32PipeType::Input == type ? pipe : pipe_hdl;
     if (pipe_rd == INVALID_HANDLE_VALUE || pipe_wr == INVALID_HANDLE_VALUE) {
-        return ProcessResult::from_error(get_last_error());
+        return get_last_error();
     }
     switch (type) {
         case Win32PipeType::Output:
@@ -178,7 +177,7 @@ ProcessResult Win32Process::set_pipe(Win32PipeType type) {
         SetHandleInformation(pipe_rd, HANDLE_FLAG_INHERIT, 0);
     else
         SetHandleInformation(pipe_wr, HANDLE_FLAG_INHERIT, 0);
-    return ProcessResult::from_ok();
+    return {};
 }
 void Win32Process::stop_and_join_thread(JThread& t) {
     if (t.joinable()) {
@@ -189,7 +188,7 @@ void Win32Process::stop_and_join_thread(JThread& t) {
 ProcessResult Win32Process::close_pipe(Win32PipeType type) {
     BOOL ret_val = 0;
     bool redirects[3]{ m_redirected_stdout, m_redirected_stdin, m_redirected_stderr };
-    if (!redirects[from_enum(type)]) { return ProcessResult::from_error("Pipe is already closed"_s); }
+    if (!redirects[from_enum(type)]) { return "Pipe is already closed"_s; }
     switch (type) {
         case Win32PipeType::Input:
             ret_val = DisconnectNamedPipe(m_pipes.input);
@@ -203,14 +202,14 @@ ProcessResult Win32Process::close_pipe(Win32PipeType type) {
             ret_val = DisconnectNamedPipe(m_pipes.error);
             break;
     }
-    if (!ret_val) { return ProcessResult::from_error("Cannot close pipe"_s); }
-    return ProcessResult::from_ok();
+    if (!ret_val) { return "Cannot close pipe"_s; }
+    return {};
 }
 ProcessResult Win32Process::flush_input() {
-    if (!m_redirected_stdin) return ProcessResult::from_ok();
+    if (!m_redirected_stdin) return {};
     auto hdl = choose_handle(Win32PipeType::Input);
-    if (!FlushFileBuffers(hdl)) { return ProcessResult::from_error("Couldn't flush file buffer"_s); }
-    return ProcessResult::from_ok();
+    if (!FlushFileBuffers(hdl)) { return "Couldn't flush file buffer"_s; }
+    return {};
 }
 Win32Process& Win32Process::with_cwd(StringView cwd) {
     m_working_dir = String{ cwd };
@@ -421,8 +420,8 @@ void Win32Process::peek_and_read_pipe(WinHandle pipe) {
         }
     }
 }
-Result<exit_code_t, ProcessError> Win32Process::wait_for_exit() {
-    if (!m_launched) return EXIT_FAILURE;
+Result<exit_code_t, Error> Win32Process::wait_for_exit() {
+    if (!m_launched) return exit_code_t{ EXIT_FAILURE };
 
     // stop the exit handler thread, we're about to check for exit ourselves anyway
     m_exit_handler_thread.request_stop();
@@ -431,7 +430,7 @@ Result<exit_code_t, ProcessError> Win32Process::wait_for_exit() {
     if (GetExitCodeProcess(m_p_info.hProcess, &m_exit_code)) {
         if (m_exit_code == STILL_ACTIVE) { wait_result = WaitForSingleObject(m_p_info.hProcess, m_timeout); }
     } else {
-        return Result<exit_code_t, ProcessError>::from_error(get_last_error());
+        return get_last_error();
     }
 
     GetExitCodeProcess(m_p_info.hProcess, &m_exit_code);
@@ -443,7 +442,7 @@ Result<exit_code_t, ProcessError> Win32Process::wait_for_exit() {
     if (wait_result == WAIT_TIMEOUT) {
         // the wait has timeouted, but terminate didn't work either
         // idk? panico? print last error and go on
-        if (!terminate(EXIT_FAILURE)) return Result<exit_code_t, ProcessError>::from_error(get_last_error());
+        if (!terminate(EXIT_FAILURE)) return get_last_error();
     }
     stop_and_join_thread(m_output_reader_thread);
     stop_and_join_thread(m_error_reader_thread);
@@ -455,7 +454,7 @@ Result<exit_code_t, ProcessError> Win32Process::wait_for_exit() {
     CloseHandle(m_p_info.hProcess);
     CloseHandle(m_p_info.hThread);
     m_launched = false;
-    return Result<exit_code_t, ProcessError>::from_ok(m_exit_code);
+    return m_exit_code;
 }
 void Win32Process::setup_error_reader() {
     m_error_reader_thread = JThread{ [this](StopToken stoken) {
@@ -495,12 +494,12 @@ ProcessResult Win32Process::launch() {
     setup_exit_handler();
     if (m_launch_waits_for_exit) {
         auto res = wait_for_exit();
-        if (res.is_error()) { return ProcessResult::from_error(res.to_error()); }
+        if (res.is_error()) { return res.to_error(); }
     }
     if (m_launched) {
-        return ProcessResult::from_ok();
+        return {};
     } else {
-        return ProcessResult::from_error(get_last_error());
+        return get_last_error();
     }
 }
 bool Win32Process::good() const noexcept {
