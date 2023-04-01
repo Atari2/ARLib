@@ -8,6 +8,7 @@
 #include "../Enumerate.h"
 #include "../EventLoop.h"
 #include "../FixedMatrix.h"
+#include "../FlatMap.h"
 #include "../Functional.h"
 #include "../GenericView.h"
 #include "../Hash.h"

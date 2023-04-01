@@ -60,7 +60,7 @@ struct Hash<HashMapEntry<Key, Value>> {
 };
 template <typename Key, typename Val, template <class> class HashCls = Hash>
 requires Hashable<HashMapEntry<Key, Val, HashCls<Key>>, HashCls<HashMapEntry<Key, Val, HashCls<Key>>>>
-class HashMap {
+class [[deprecated("HashMap has been deprecated in favour of FlatMap")]] HashMap {
     using MapEntry  = HashMapEntry<Key, Val, HashCls<Key>>;
     using Iter      = HashTableIterator<MapEntry>;
     using ConstIter = ConstHashTableIterator<MapEntry>;

@@ -1163,3 +1163,22 @@ TEST(ARLibTests, AsyncTest) {
     EXPECT_EQ(res2, 'e');
     EXPECT_EQ(res3, "Hello World2030"_s);
 }
+TEST(ARLibTests, FlatMapTest) {
+    FlatMap<String, int> map{};
+    auto val = map.insert("hello"_s, 10);
+    auto ex  = map.insert("world"_s, 20);
+    EXPECT_EQ(val, true);
+    EXPECT_EQ(ex, true);
+    auto r = map["hello"_s];
+    EXPECT_EQ(r, 10);
+    val = map.insert("hello"_s, 30);
+    EXPECT_EQ(val, false);
+    r = map["hello"_s];
+    EXPECT_EQ(r, 30);
+    EXPECT_EQ(map.size(), 2ull);
+    auto res = map.remove("hello"_s);
+    EXPECT_EQ(res, true);
+    res = map.remove("hello"_s);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(map.size(), 1ull);
+}

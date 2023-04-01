@@ -8,12 +8,13 @@
 #include "../Array.h"
 #include "../Chrono.h"
 #include "../Assertion.h"
+#include "../Set.h"
+#include "../FlatSet.h"
+#include "../FlatMap.h"
 #include <benchmark/benchmark.h>
 #include <inttypes.h>
 #include <unordered_map>
-#include <string_view>
-#include <array>
-using namespace std::string_view_literals;
+#include <unordered_set>
 
 using namespace ARLib;
 static void BM_ARLibSprintf(benchmark::State& state) {
@@ -57,7 +58,7 @@ constexpr static const Array strings{
     "nHTVA6jzsS"_sv, "2phWwNfCHp"_sv, "HQ6oNmPko5"_sv, "LgUFsTN0eC"_sv, "hlDB7lRGJ0"_sv, "8kGMMJV7PR"_sv,
     "M798JiFBuA"_sv, "Sq51RKKFUZ"_sv, "6Lg6W9hZ9X"_sv, "HA741LK6Ai"_sv,
 };
-static void BM_StdUnorderedMap(benchmark::State& state) {
+static void BM_StdUnorderedMapStringView(benchmark::State& state) {
     std::unordered_map<StringView, int, Hash<StringView>> stdmap{};
     for (auto _ : state) {
         stdmap.clear();
@@ -75,15 +76,32 @@ static void BM_StdUnorderedMap(benchmark::State& state) {
         if (stdmap.size() != 0) { ASSERT_NOT_REACHED("Map size is wrong") }
     }
 }
-static void BM_ARLibHashMap(benchmark::State& state) {
-    HashMap<StringView, int> map{};
+static void BM_StdUnorderedMapInt(benchmark::State& state) {
+    std::unordered_map<int, int, Hash<int>> stdmap{};
+    for (auto _ : state) {
+        stdmap.clear();
+        for (int i = 0; i < 400; ++i) {
+            stdmap.insert({ i, i });
+            if (auto it = stdmap.find(i); it != stdmap.end()) {
+                if ((*it).second != i) { ASSERT_NOT_REACHED("Value is wrong"); }
+            } else {
+                ASSERT_NOT_REACHED("Value not found");
+            }
+        }
+        if (stdmap.size() != 400) { ASSERT_NOT_REACHED("Map size is wrong") }
+        for (int i = 0; i < 400; ++i) { stdmap.erase(i); }
+        if (stdmap.size() != 0) { ASSERT_NOT_REACHED("Map size is wrong") }
+    }
+}
+static void BM_ARLibFlatMapStringView(benchmark::State& state) {
+    FlatMap<StringView, int> map{};
     for (auto _ : state) {
         map.clear();
         int i = 0;
         for (const auto& s : strings) {
-            map.add(s, ++i);
+            map.insert(s, ++i);
             if (auto it = map.find(s); it != map.end()) {
-                if ((*it).value() != i) { ASSERT_NOT_REACHED("Value is wrong"); }
+                if ((*it).val() != i) { ASSERT_NOT_REACHED("Value is wrong"); }
             } else {
                 ASSERT_NOT_REACHED("Value not found");
             }
@@ -93,8 +111,27 @@ static void BM_ARLibHashMap(benchmark::State& state) {
         if (map.size() != 0) { ASSERT_NOT_REACHED("Map size is wrong") }
     }
 }
+static void BM_ARLibFlatMapInt(benchmark::State& state) {
+    FlatMap<int, int> map{};
+    for (auto _ : state) {
+        map.clear();
+        for (int i = 0; i < 400; ++i) {
+            map.insert(i, i);
+            if (auto it = map.find(i); it != map.end()) {
+                if ((*it).val() != i) { ASSERT_NOT_REACHED("Value is wrong"); }
+            } else {
+                ASSERT_NOT_REACHED("Value not found");
+            }
+        }
+        if (map.size() != 400) { ASSERT_NOT_REACHED("Map size is wrong") }
+        for (int i = 0; i < 400; ++i) { map.remove(i); }
+        if (map.size() != 0) { ASSERT_NOT_REACHED("Map size is wrong") }
+    }
+}
 BENCHMARK(BM_StdSprintf);
 BENCHMARK(BM_ARLibSprintf);
-BENCHMARK(BM_StdUnorderedMap);
-BENCHMARK(BM_ARLibHashMap);
+BENCHMARK(BM_StdUnorderedMapStringView);
+BENCHMARK(BM_StdUnorderedMapInt);
+BENCHMARK(BM_ARLibFlatMapStringView);
+BENCHMARK(BM_ARLibFlatMapInt);
 BENCHMARK_MAIN();
