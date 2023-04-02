@@ -37,8 +37,8 @@ constexpr auto find_if(const C& cont, Func condition) {
         if (condition(*begin)) return index;
     return npos_;
 }
-template <IteratorConcept Iter>
-requires MoreComparable<IteratorOutputType<Iter>>
+template <typename Iter>
+requires (Incrementable<Iter> && Dereferencable<Iter> && MoreComparable<IteratorOutputType<Iter>>)
 constexpr Iter max(Iter begin, Iter end) {
     if (begin == end) return begin;
     Iter value{ begin };
@@ -46,8 +46,8 @@ constexpr Iter max(Iter begin, Iter end) {
         if (*begin > *value) value = begin;
     return value;
 }
-template <IteratorConcept Iter>
-requires LessComparable<IteratorOutputType<Iter>>
+template <typename Iter>
+requires (Incrementable<Iter> && Dereferencable<Iter> && LessComparable<IteratorOutputType<Iter>>)
 constexpr Iter min(Iter begin, Iter end) {
     if (begin == end) return begin;
     Iter value{ begin };
@@ -55,7 +55,8 @@ constexpr Iter min(Iter begin, Iter end) {
         if (*begin < *value) value = begin;
     return value;
 }
-template <IteratorConcept Iter, typename Functor = decltype(sum_default<IteratorOutputType<Iter>>)>
+template <typename Iter, typename Functor = decltype(sum_default<IteratorOutputType<Iter>>)>
+requires(Incrementable<Iter> && Dereferencable<Iter>)
 constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<IteratorOutputType<Iter>>) {
     if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
     auto total = func(*begin);
@@ -63,7 +64,8 @@ constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<IteratorOutp
     for (; begin != end; ++begin) total += func(*begin);
     return total;
 }
-template <IteratorConcept Iter, bool ROUND = false>
+template <typename Iter, bool ROUND = false>
+requires(Incrementable<Iter> && Dereferencable<Iter>)
 constexpr auto avg(Iter begin, Iter end) {
     size_t sz = 0;
     if constexpr (ROUND) {
