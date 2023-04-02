@@ -38,7 +38,7 @@ namespace JSON {
     if (value_or_error.is_error()) { return value_or_error.to_error(); }                                               \
     auto value = value_or_error.to_ok();                                                                               \
     skip_whitespace(state);                                                                                            \
-    obj.add(move(key), ValueObj::construct(move(value)));
+    obj.insert(move(key), ValueObj::construct(move(value)));
 
 #define ADD_TO_ARR_WITH(func)                                                                                          \
     auto value_or_error = func(state);                                                                                 \
@@ -213,14 +213,14 @@ namespace JSON {
                         if (result.is_error()) return result.to_error();
                         auto raw_value = result.to_ok();
                         if (raw_value == "null"_s) {
-                            obj.add(move(key), ValueObj::construct(Null{ null_tag }));
+                            obj.insert(move(key), ValueObj::construct(Null{ null_tag }));
                         } else if (raw_value == "true"_s) {
-                            obj.add(move(key), ValueObj::construct(Bool{ bool_tag, true }));
+                            obj.insert(move(key), ValueObj::construct(Bool{ bool_tag, true }));
                         } else if (raw_value == "false"_s) {
-                            obj.add(move(key), ValueObj::construct(Bool{ bool_tag, false }));
+                            obj.insert(move(key), ValueObj::construct(Bool{ bool_tag, false }));
                         } else if (check_if_valid_number(raw_value)) {
                             TRY_SET(value, parse_number(raw_value));
-                            obj.add(move(key), ValueObj::construct(move(value)));
+                            obj.insert(move(key), ValueObj::construct(move(value)));
                         } else {
                             return ParseError{ "Expected a valid json type but got "_s + raw_value, state.index() };
                         }
@@ -309,7 +309,7 @@ namespace JSON {
     String dump_json_compact(const Object& obj) {
         String repr{ "{" };
         for (const auto& entry : obj) {
-            const auto& val = *entry.value();
+            const auto& val = *entry.val();
             const auto& key = entry.key();
             repr.append("\""_s + key + '"');
             repr.append(":"_s);
@@ -346,7 +346,7 @@ namespace JSON {
         String repr{ prev_indent_string + "{\n"_s };
         size_t i = 0;
         for (const auto& entry : obj) {
-            const auto& val = *entry.value();
+            const auto& val = *entry.val();
             const auto& key = entry.key();
             repr.append(indent_string);
             repr.append("\""_s + key + '"');

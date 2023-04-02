@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CharConv.h"
-#include "HashMap.h"
+#include "FlatMap.h"
 #include "Map.h"
 #include "PrintInfo.h"
 #include "String.h"
@@ -18,8 +18,8 @@ namespace JSON {
     // types
     class ValueObj;
     using Value = UniquePtr<ValueObj>;
-    struct Object : public HashMap<String, Value> {
-        using Parent = HashMap<String, Value>;
+    struct Object : public FlatMap<String, Value> {
+        using Parent = FlatMap<String, Value>;
 
         operator Value() &&;
         ValueObj& operator[](const String& key) { return *(static_cast<Parent*>(this)->operator[](key)); }
@@ -307,7 +307,7 @@ template <>
 struct PrintInfo<JSON::Object> {
     const JSON::Object& m_object;
     PrintInfo(const JSON::Object& obj) : m_object(obj) {}
-    String repr() const { return PrintInfo<HashMap<String, JSON::Value>>{ m_object }.repr(); }
+    String repr() const { return PrintInfo<FlatMap<String, JSON::Value>>{ m_object }.repr(); }
 };
 template <>
 struct PrintInfo<JSON::Number> {

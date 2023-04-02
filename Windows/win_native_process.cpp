@@ -224,7 +224,7 @@ Win32Process& Win32Process::with_env(std::initializer_list<EnvironMapString> env
         unicode_process = false;
         m_env_buffer.set<char*>(nullptr);
     }
-    for (const auto& env_value : env_values) m_environment.add(env_value);
+    for (const auto& env_value : env_values) m_environment.insert(env_value);
 
     if (unicode_process) {
         wchar_t*& env_buffer = get<wchar_t*>(m_env_buffer);

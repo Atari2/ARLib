@@ -2,7 +2,7 @@
 #include "../Compat.h"
 #include "../Functional.h"
 #include "../Threading.h"
-#include "../HashMap.h"
+#include "../FlatMap.h"
 #include "../ImplProcessCommon.h"
 #include "../Result.h"
 
@@ -90,7 +90,7 @@ class Win32Process {
     OutputType m_error{};
     Optional<String> m_working_dir;
 
-    HashMap<EnvironString, EnvironString> m_environment;
+    FlatMap<EnvironString, EnvironString> m_environment;
     Vector<WinHandle> m_internal_handles{};
     Vector<internal::LPOverlapped> m_overlapped{};
     internal::ProcessInformation m_p_info{};
