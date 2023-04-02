@@ -48,9 +48,11 @@ namespace internal {
     BitMask<uint32_t> match_empty(const MetadataBlock& block);
     BitMask<uint32_t> match_non_empty(const MetadataBlock& block);
 }    // namespace internal
-template <Hashable T, typename HashCls>
+template <typename T, typename HashCls>
+requires Hashable<T, HashCls>
 class FlatSet;
-template <Hashable T, typename HashCls>
+template <typename T, typename HashCls>
+requires Hashable<T, HashCls>
 class FlatSetIterator {
     friend FlatSet<T, HashCls>;
     const FlatSet<T, HashCls>* m_set;
@@ -67,14 +69,18 @@ class FlatSetIterator {
     }
     FlatSetIterator operator++(int);
     FlatSetIterator& operator++();
+    FlatSetIterator operator--(int);
+    FlatSetIterator& operator--();
 };
 template <typename T>
 struct FlatSetStorage {
     constexpr static inline size_t ObjectSize  = sizeof(T) + (sizeof(T) % alignof(T));
     constexpr static inline size_t StorageSize = ObjectSize * internal::flatset_bucket_size;
+    // we do not need to value initialize the storage
+    // since we call new (mem) T on it and that doesn't need memory to be zerod.
     alignas(T) uint8_t storage[StorageSize];
     uint16_t initialized_mask{ 0 };
-    FlatSetStorage() = default;
+    FlatSetStorage() = default;     
     FlatSetStorage(const FlatSetStorage& other) {
         for (auto bit : BitMask{ other.initialized_mask }) { initialize_at(bit, T{ other.at(bit) }); }
     }
@@ -122,7 +128,8 @@ struct FlatSetStorage {
         for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
     }
 };
-template <Hashable T, typename HashCls = Hash<T>>
+template <typename T, typename HashCls = Hash<T>>
+requires Hashable<T, HashCls>
 class FlatSet {
     friend FlatSetIterator<T, HashCls>;
     using Control                                    = internal::Control;
@@ -285,11 +292,13 @@ class FlatSet {
         return ins;
     }
 };
-template <Hashable T, typename HashCls>
+template <typename T, typename HashCls>
+requires Hashable<T, HashCls>
 const T& FlatSetIterator<T, HashCls>::operator*() const {
     return m_set->m_buckets[m_current_bucket].m_bucket.at(*m_current_item);
 }
-template <Hashable T, typename HashCls>
+template <typename T, typename HashCls>
+requires Hashable<T, HashCls>
 FlatSetIterator<T, HashCls>& FlatSetIterator<T, HashCls>::operator++() {
     auto end = BitMask{ 0_u32 };
     ++m_current_item;
@@ -301,7 +310,8 @@ FlatSetIterator<T, HashCls>& FlatSetIterator<T, HashCls>::operator++() {
     }
     return *this;
 }
-template <Hashable T, typename HashCls>
+template <typename T, typename HashCls>
+requires Hashable<T, HashCls>
 FlatSetIterator<T, HashCls> FlatSetIterator<T, HashCls>::operator++(int) {
     FlatSetIterator copy{ *this };
     this->operator++();

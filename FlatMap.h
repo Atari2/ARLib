@@ -4,7 +4,7 @@
 #include "Vector.h"
 #include "FlatSet.h"
 namespace ARLib {
-template <Hashable Key, typename Val>
+template <typename Key, typename Val, typename HashCls = Hash<Key>>
 class FlatMapEntry {
     Key m_key;
     Val m_val;
@@ -28,23 +28,29 @@ class FlatMapEntry {
         }
     }
 };
-template <Hashable Key, typename Val>
-struct Hash<FlatMapEntry<Key, Val>> {
-    size_t operator()(const FlatMapEntry<Key, Val>& key) const { return Hash<Key>{}(key.key()); }
+template <typename Key, typename Val, typename HashCls>
+requires Hashable<Key, HashCls>
+struct Hash<FlatMapEntry<Key, Val, HashCls>> {
+    HashCls m_hasher;
+    size_t operator()(const FlatMapEntry<Key, Val, HashCls>& key) const { return m_hasher(key.key()); }
 };
-template <Hashable Key, typename Val, typename HashCls = Hash<FlatMapEntry<Key, Val>>>
+template <typename Key, typename Val, typename HashCls = Hash<Key>>
+requires Hashable<Key, HashCls>
 class FlatMap {
-    using Entry = FlatMapEntry<Key, Val>;
-    FlatSet<Entry, HashCls> m_table{};
+    using Entry = FlatMapEntry<Key, Val, HashCls>;
+    FlatSet<Entry> m_table{};
 
     public:
+    using ValueType = Entry;
     FlatMap() = default;
     auto find(const Key& value) const { return m_table.find(value); }
-    // template <Hashable O>
-    // requires EqualityComparableWith<O, Key>
-    // auto find(O&& value) const {
-    //     return m_table.find(Forward<O>(value));
-    // }
+
+    // support heterogeneous lookup
+    template <typename O>
+    requires (EqualityComparableWith<O, Key> && Hashable<O, HashCls>)
+    auto find(O&& value) const {
+        return m_table.find(Forward<O>(value));
+    }
     auto begin() const { return m_table.begin(); }
     auto end() const { return m_table.end(); }
     bool contains(const Key& value) const { return find(value) != end(); }
@@ -69,24 +75,49 @@ class FlatMap {
     }
     size_t size() const { return m_table.size(); }
 };
+template <typename A, typename B, typename H>
+struct PrintInfo<FlatMapEntry<A, B, H>> {
+    const FlatMapEntry<A, B, H>& m_entry;
+    explicit PrintInfo(const FlatMapEntry<A, B, H>& entry) : m_entry(entry) {}
+    String repr() const {
+        return "{ "_s + print_conditional<A>(m_entry.key()) + ": "_s + print_conditional<B>(m_entry.val()) + " }"_s;
+    }
+};
+template <Printable A, Printable B, typename H>
+struct PrintInfo<FlatMap<A, B, H>> {
+    const FlatMap<A, B, H>& m_map;
+    explicit PrintInfo(const FlatMap<A, B, H>& map) : m_map(map) {}
+    String repr() const {
+        if (m_map.size() == 0) { return "{}"_s; }
+        String con{};
+        con.append("{ ");
+        for (const auto& [k, v] : m_map) {
+            con.append(PrintInfo<A>{ k }.repr());
+            con.append(": "_s);
+            con.append(PrintInfo<B>{ v }.repr());
+            con.append(", ");
+        }
+        return con.substring(0, con.size() - 2) + " }"_s;
+    }
+};
 }    // namespace ARLib
-template <typename K, typename V>
-struct std::tuple_size<ARLib::FlatMapEntry<K, V>> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
-template <typename K, typename V>
-struct std::tuple_size<const ARLib::FlatMapEntry<K, V>> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
-template <typename K, typename V>
-struct std::tuple_element<0, ARLib::FlatMapEntry<K, V>> {
+template <typename K, typename V, typename H>
+struct std::tuple_size<ARLib::FlatMapEntry<K, V, H>> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
+template <typename K, typename V, typename H>
+struct std::tuple_size<const ARLib::FlatMapEntry<K, V, H>> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
+template <typename K, typename V, typename H>
+struct std::tuple_element<0, ARLib::FlatMapEntry<K, V, H>> {
     using type = K;
 };
-template <typename K, typename V>
-struct std::tuple_element<1, ARLib::FlatMapEntry<K, V>> {
+template <typename K, typename V, typename H>
+struct std::tuple_element<1, ARLib::FlatMapEntry<K, V, H>> {
     using type = V;
 };
-template <typename K, typename V>
-struct std::tuple_element<0, const ARLib::FlatMapEntry<K, V>> {
+template <typename K, typename V, typename H>
+struct std::tuple_element<0, const ARLib::FlatMapEntry<K, V, H>> {
     using type = const K;
 };
-template <typename K, typename V>
-struct std::tuple_element<1, const ARLib::FlatMapEntry<K, V>> {
+template <typename K, typename V, typename H>
+struct std::tuple_element<1, const ARLib::FlatMapEntry<K, V, H>> {
     using type = const V;
 };
