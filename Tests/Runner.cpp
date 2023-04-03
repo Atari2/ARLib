@@ -1182,3 +1182,63 @@ TEST(ARLibTests, FlatMapTest) {
     EXPECT_EQ(res, false);
     EXPECT_EQ(map.size(), 1ull);
 }
+TEST(ARLibTests, FlatMapSetExtraTest) {
+    constexpr static size_t n_of_strings = 1024;
+    Set<String> strings{};    // using Set to make sure the strings are all unique
+    FlatSet<String> set{};
+    FlatMap<String, int> map{};
+
+    auto generate_string = [](size_t max_len) {
+        String s{};
+        size_t len = Random::PCG::bounded_random_s(max_len);
+        if (len == 0) { len = 1; }
+        s.reserve(len);
+
+        constexpr uint32_t start = ' ';
+        constexpr uint32_t range = '}' - start;
+
+        for (size_t i = 0; i < len; ++i) { s.append(static_cast<char>(Random::PCG::bounded_random_s(range) + start)); }
+        return s;
+    };
+    auto fill_set = [&strings, &set]() {
+        for (const auto& s : strings) { EXPECT_TRUE(set.insert(String{ s })); }
+        EXPECT_EQ(set.size(), n_of_strings);
+    };
+    auto search_set = [&strings, &set]() {
+        for (const auto& s : strings) { EXPECT_NE(set.find(s), set.end()); }
+    };
+    auto erase_set = [&strings, &set]() {
+        for (const auto& s : strings) { EXPECT_TRUE(set.remove(s)); }
+        EXPECT_EQ(set.size(), 0);
+    };
+    auto fill_map = [&strings, &map]() {
+        for (const auto& [i, s] : enumerate(strings)) { EXPECT_TRUE(map.insert(String{ s }, i)); }
+        EXPECT_EQ(map.size(), n_of_strings);
+    };
+    auto search_map = [&strings, &map]() {
+        for (const auto& s : strings) { EXPECT_NE(map.find(s), map.end()); }
+    };
+    auto erase_map = [&strings, &map]() {
+        for (const auto& s : strings) { EXPECT_TRUE(map.remove(s)); }
+        EXPECT_EQ(map.size(), 0);
+    };
+    strings.reserve(n_of_strings);
+
+    auto fill_strings_thread = JThread{ [&](StopToken tok) {
+        while (strings.size() < n_of_strings) {
+            strings.insert(generate_string(32));
+            if (tok.stop_requested()) return;
+        }
+    } };
+
+    ThisThread::sleep(10'000); // sleep for 10 ms and hope the strings vector is filled enough
+    fill_strings_thread.request_stop();
+    fill_strings_thread.join();
+
+    fill_set();
+    search_set();
+    erase_set();
+    fill_map();
+    search_map();
+    erase_map();
+}
