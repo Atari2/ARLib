@@ -7,8 +7,9 @@ ProcessPipeline::ProcessPipeline(Process&& lhs, Process&& rhs) {
 ProcessPipeline::ProcessPipeline(ProcessPipeline&& pipe, Process&& lhs) : m_processes(move(pipe.m_processes)) {
     m_processes.push_back(Forward<Process>(lhs));
 }
-ProcessResult ProcessPipeline::run() {
+Result<exit_code_t> ProcessPipeline::run() {
     String last_output;
+    exit_code_t last_exit_code{};
     for (size_t i = 0; i < m_processes.size(); i++) {
         auto& proc = m_processes[i];
         TRY(proc.set_pipe(HandleType::Output));
@@ -19,10 +20,11 @@ ProcessResult ProcessPipeline::run() {
             TRY(proc.flush_input());
             TRY(proc.close_pipe(HandleType::Input));
         }
-        if (auto merr = proc.wait_for_exit(); merr.is_error()) { return merr.to_error(); };
+        TRY_SET(ec, proc.wait_for_exit());
+        ec          = last_exit_code;
         last_output = proc.output();
     }
-    return {};
+    return last_exit_code;
 }
 ProcessPipeline operator|(ProcessPipeline&& pipeline, Process&& lhs) {
     return ProcessPipeline{ Forward<ProcessPipeline>(pipeline), Forward<Process>(lhs) };

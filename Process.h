@@ -22,7 +22,7 @@ class ProcessPipeline {
     ProcessPipeline(Process&& lhs, Process&& rhs);
     ProcessPipeline(ProcessPipeline&& pipe, Process&& lhs);
 
-    ProcessResult run();
+    Result<exit_code_t> run();
     inline auto begin() const { return m_processes.begin(); }
     inline auto end() const { return m_processes.end(); }
     inline size_t size() const { return m_processes.size(); }

@@ -1131,6 +1131,7 @@ TEST(ARLibTests, ProcessTests) {
         auto pipe   = Process{ "where" }.with_args({ "cmd"_sv }) | Process{ "findstr" }.with_args({ "System32"_sv });
         auto piperr = pipe.run();
         EXPECT_TRUE(piperr.is_ok());
+        EXPECT_EQ(piperr.to_ok(), 0);
         EXPECT_EQ(pipe.output().string_view(), "C:\\Windows\\System32\\cmd.exe\r\n"_sv);
     } else {
         auto proc = Process{ "echo"_sv };
@@ -1145,6 +1146,7 @@ TEST(ARLibTests, ProcessTests) {
         Process{ "echo" }.with_args({ "hello\nworld\ntesting"_sv }) | Process{ "grep" }.with_args({ "world"_sv });
         auto piperr = pipe.run();
         EXPECT_TRUE(piperr.is_ok());
+        EXPECT_EQ(piperr.to_ok(), 0);
         EXPECT_EQ(pipe.output().string_view(), "world\n"_sv);
     }
 }

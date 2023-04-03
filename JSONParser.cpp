@@ -387,9 +387,7 @@ namespace JSON {
     ParseResult Parser::parse_internal() {
         ParseState state{ m_view };
         skip_whitespace(state);
-        auto object_or_error = parse_object(state);
-        if (object_or_error.is_error()) return object_or_error.to_error();
-        auto obj = object_or_error.to_ok();
+        TRY_SET(obj, parse_object(state));
         return ParseResult{ Document{ move(obj) } };
     }
     ParseResult Parser::parse(StringView data) {
@@ -398,14 +396,9 @@ namespace JSON {
     }
     ParseResult Parser::from_file(StringView filename) {
         File f{ filename.extract_string() };
-        auto maybe_error = f.open(OpenFileMode::Read);
-        if (maybe_error.is_error()) { return maybe_error.to_error(); }
-        auto read_res = f.read_all();
-        if (read_res.is_error()) { return read_res.to_error(); }
-        auto val       = read_res.to_ok();
-        auto parse_res = Parser::parse(val.view());
-        if (parse_res.is_error()) { return parse_res.to_error(); }
-        return parse_res.to_ok();
+        TRY(f.open(OpenFileMode::Read));
+        TRY_SET(val, f.read_all());
+        TRY_RET(Parser::parse(val.view()));
     }
 }    // namespace JSON
 }    // namespace ARLib
