@@ -21,8 +21,8 @@ Result<exit_code_t> ProcessPipeline::run() {
             TRY(proc.close_pipe(HandleType::Input));
         }
         TRY_SET(ec, proc.wait_for_exit());
-        ec          = last_exit_code;
-        last_output = proc.output();
+        last_exit_code = ec;
+        last_output    = proc.output();
     }
     return last_exit_code;
 }
