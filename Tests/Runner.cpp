@@ -1190,7 +1190,7 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
     FlatSet<String> set{};
     FlatMap<String, int> map{};
 
-    auto generate_string = [](size_t max_len) {
+    auto generate_string = [](uint32_t max_len) {
         String s{};
         size_t len = Random::PCG::bounded_random_s(max_len);
         if (len == 0) { len = 1; }
@@ -1204,7 +1204,7 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
     };
     auto fill_set = [&strings, &set]() {
         for (const auto& s : strings) { EXPECT_TRUE(set.insert(String{ s })); }
-        EXPECT_EQ(set.size(), n_of_strings);
+        EXPECT_EQ(set.size(), strings.size());
     };
     auto search_set = [&strings, &set]() {
         for (const auto& s : strings) { EXPECT_NE(set.find(s), set.end()); }
@@ -1214,11 +1214,16 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
         EXPECT_EQ(set.size(), 0);
     };
     auto fill_map = [&strings, &map]() {
-        for (const auto& [i, s] : enumerate(strings)) { EXPECT_TRUE(map.insert(String{ s }, i)); }
-        EXPECT_EQ(map.size(), n_of_strings);
+        for (const auto& [i, s] : enumerate(strings)) { EXPECT_TRUE(map.insert(String{ s }, static_cast<int>(i))); }
+        EXPECT_EQ(map.size(), strings.size());
     };
     auto search_map = [&strings, &map]() {
-        for (const auto& s : strings) { EXPECT_NE(map.find(s), map.end()); }
+        for (const auto& [i, s] : enumerate(strings)) {
+            auto it = map.find(s);
+            EXPECT_NE(it, map.end());
+            EXPECT_EQ((*it).val(), i);
+            EXPECT_EQ(map[s], i);
+        }
     };
     auto erase_map = [&strings, &map]() {
         for (const auto& s : strings) { EXPECT_TRUE(map.remove(s)); }
@@ -1233,7 +1238,7 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
         }
     } };
 
-    ThisThread::sleep(10'000); // sleep for 10 ms and hope the strings vector is filled enough
+    ThisThread::sleep(10'000);    // sleep for 10 ms and hope the strings vector is filled enough
     fill_strings_thread.request_stop();
     fill_strings_thread.join();
 
