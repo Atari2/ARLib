@@ -1,9 +1,9 @@
 #pragma once
 #include "Concepts.h"
-#include "HashTable.h"
 #include "Vector.h"
 #include "PrintInfo.h"
 namespace ARLib {
+enum InsertionResult { New, Replace };
 template <EqualityComparable Key, typename Val>
 struct MapEntry {
     Key m_key;

@@ -43,6 +43,9 @@ class FlatMap {
     public:
     using ValueType = Entry;
     FlatMap()       = default;
+    FlatMap(std::initializer_list<Entry> entry) {
+        for (auto& e : entry) { m_table.insert(Entry{ e }); }
+    }
     auto find(const Key& value) const { return m_table.find(value); }
     // support heterogeneous lookup
     template <typename O>

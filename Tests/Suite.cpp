@@ -18,26 +18,6 @@ bool run_all_legacy_tests() {
     auto strlen_test = [](const String& a, size_t b) -> bool {
         return assert_eq(a.size(), b);
     };
-    auto hashmap = []() -> bool {
-        HashMap<String, int> map{};
-        auto val = map.add("hello"_s, 10);
-        auto ex  = map.add("world"_s, 20);
-        RETURN_IF_NOT_EQ(val, InsertionResult::New)
-        RETURN_IF_NOT_EQ(ex, InsertionResult::New)
-        auto r = map["hello"_s];
-        RETURN_IF_NOT_EQ(r, 10)
-        val = map.add("hello"_s, 30);
-        RETURN_IF_NOT_EQ(val, InsertionResult::Replace)
-        r = map["hello"_s];
-        RETURN_IF_NOT_EQ(r, 30)
-        RETURN_IF_NOT_EQ(map.size(), 2ull)
-        auto res = map.remove("hello"_s);
-        RETURN_IF_NOT_EQ(res, DeletionResult::Success)
-        res = map.remove("hello"_s);
-        RETURN_IF_NOT_EQ(res, DeletionResult::Failure)
-        RETURN_IF_NOT_EQ(map.size(), 1ull)
-        return true;
-    };
     auto charconv = []() -> bool {
         String a{ "1234" };
         String b{ "123.123" };
@@ -255,7 +235,6 @@ bool run_all_legacy_tests() {
     ASSERT_TEST("String equality", streq, "hello"_s, "hello"_s)
     ASSERT_TEST("Vector equality", vec_test, Vector{ "hello"_s, "world"_s }, Vector{ "hello"_s, "world"_s })
     ASSERT_TEST("String length", strlen_test, "hello"_s, ARLib::strlen("hello"))
-    ASSERT_TEST("Hashmap tests", hashmap)
     ASSERT_TEST("String to integer/float conversions", charconv)
     ASSERT_TEST("Sorted vector correctness", sortedvec)
     ASSERT_TEST("Set correctness, uniqueness", set)

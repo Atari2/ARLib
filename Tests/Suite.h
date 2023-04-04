@@ -12,7 +12,6 @@
 #include "../Functional.h"
 #include "../GenericView.h"
 #include "../Hash.h"
-#include "../HashMap.h"
 #include "../JSONParser.h"
 #include "../LinkedSet.h"
 #include "../List.h"

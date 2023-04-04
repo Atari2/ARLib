@@ -34,25 +34,6 @@ TEST(ARLibTests, VectorEquality) {
 TEST(ARLibTests, Strlen) {
     EXPECT_EQ("hello"_s.size(), ARLib::strlen("hello"));
 }
-TEST(ARLibTests, HashMap) {
-    HashMap<String, int> map{};
-    auto val = map.add("hello"_s, 10);
-    auto ex  = map.add("world"_s, 20);
-    EXPECT_EQ(val, InsertionResult::New);
-    EXPECT_EQ(ex, InsertionResult::New);
-    auto r = map["hello"_s];
-    EXPECT_EQ(r, 10);
-    val = map.add("hello"_s, 30);
-    EXPECT_EQ(val, InsertionResult::Replace);
-    r = map["hello"_s];
-    EXPECT_EQ(r, 30);
-    EXPECT_EQ(map.size(), 2ull);
-    auto res = map.remove("hello"_s);
-    EXPECT_EQ(res, DeletionResult::Success);
-    res = map.remove("hello"_s);
-    EXPECT_EQ(res, DeletionResult::Failure);
-    EXPECT_EQ(map.size(), 1ull);
-}
 TEST(ARLibTests, CharConv) {
     String a{ "1234" };
     String b{ "123.123" };
@@ -500,7 +481,7 @@ TEST(ARLibTests, MoreFormatTests) {
 TEST(ARLibTests, ContainerAlgoTest) {
     Vector<int> vec1{ 1, 2, 3, 4, 5, 6 };
     Vector<String> vec2{ "hello"_s, "world"_s, "why"_s };
-    HashMap<String, Vector<int>> map{
+    FlatMap<String, Vector<int>> map{
         {"hello"_s,  Vector<int>{ 1, 2, 3, 4, 5 } },
         { "world"_s, Vector<int>{ 6, 7, 8, 9, 10 }}
     };
@@ -525,7 +506,7 @@ TEST(ARLibTests, ContainerAlgoTest) {
     map,
     [](const auto& entry) {
         auto b = entry.key() == "hello"_s || entry.key() == "world"_s;
-        return b && all_of(entry.value(), [](int a) { return a < 11; });
+        return b && all_of(entry.val(), [](int a) { return a < 11; });
     }
     ),
     true

@@ -1,6 +1,5 @@
 #include "../Printer.h"
 #include "../CharConv.h"
-#include "../HashMap.h"
 #include "../String.h"
 #include "../Vector.h"
 #include "../Enumerate.h"
