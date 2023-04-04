@@ -5,7 +5,7 @@
 namespace ARLib {
 template <typename T, size_t SSO = 15>
 class SSOVector {
-    T m_situ_storage[SSO];
+    T m_situ_storage[SSO]{};
     size_t m_capacity = SSO;
     size_t m_size     = 0;
     T* m_storage      = addressof(m_situ_storage[0]);
@@ -15,7 +15,7 @@ class SSOVector {
         if (m_capacity == SSO) {
             m_storage  = new T[new_capacity];
             m_capacity = new_capacity;
-            ConditionalBitCopy(m_storage, addressof(m_situ_storage[0]), m_size);
+            ConditionalBitMove(m_storage, addressof(m_situ_storage[0]), m_size);
         } else {
             T* new_storage = new T[new_capacity];
             ConditionalBitMove(new_storage, m_storage, m_size);
@@ -72,7 +72,7 @@ class SSOVector {
     }
     SSOVector(SSOVector&& other) noexcept : m_capacity(other.m_capacity), m_size(other.m_size) {
         if (other.m_capacity == SSO) {
-            ConditionalBitCopy(m_situ_storage, other.m_situ_storage, other.m_capacity);
+            ConditionalBitMove(m_situ_storage, other.m_situ_storage, other.m_capacity);
         } else {
             m_storage        = other.m_storage;
             other.m_storage  = addressof(other.m_situ_storage[0]);
@@ -135,7 +135,7 @@ class SSOVector {
         m_capacity = other.m_capacity;
         if (other.m_capacity == SSO) {
             m_storage = addressof(m_situ_storage[0]);
-            ConditionalBitCopy(m_storage, other.m_storage, other.m_size);
+            ConditionalBitMove(m_storage, other.m_storage, other.m_size);
         } else {
             m_storage       = other.m_storage;
             other.m_storage = nullptr;
@@ -155,7 +155,7 @@ class SSOVector {
         m_size--;
         return move(m_storage[m_size]);
     }
-    void clear_maintaning_capacity() { m_size = 0; }
+    void clear_retain() { m_size = 0; }
     size_t size() const { return m_size; }
     size_t capacity() const { return m_capacity; }
     const T* storage() const { return m_storage; }
