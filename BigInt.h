@@ -155,7 +155,7 @@ class BigInt {
     void invert() { m_sign = to_enum<Sign>(!from_enum(m_sign)); }
     size_t size() const { return m_buffer.size(); }
     bool fits() const;
-    void clear() { m_buffer.clear_maintaning_capacity(); }
+    void clear() { m_buffer.clear_retain(); }
     uint64_t to_absolute_value() const;
 };
 static inline const BigInt __bigint_zero = BigInt{};
