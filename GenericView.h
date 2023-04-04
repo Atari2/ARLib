@@ -5,11 +5,12 @@
 #include "Iterator.h"
 #include "PrintInfo.h"
 #include "TypeTraits.h"
+#include "Optional.h"
 #include "Span.h"
 namespace ARLib {
 template <typename VT>
 class GenericView {
-    using T = RemoveReferenceT<VT>;
+    using T         = RemoveReferenceT<VT>;
     T* m_begin_view = nullptr;
     T* m_end_view   = nullptr;
 
@@ -56,6 +57,7 @@ class IteratorView {
     Iter m_begin;
     Iter m_end;
     using ItemType             = RemoveReferenceT<IteratorInputType<Iter>>;
+    using OutputType           = RemoveReferenceT<IteratorOutputType<Iter>>;
     ItemType* m_stolen_storage = nullptr;
     ItemType* release_storage() {
         ItemType* storage = m_stolen_storage;
@@ -184,6 +186,44 @@ class IteratorView {
     IteratorView inplace_transform(Functor&& func) {
         for (auto it = m_begin; it != m_end; ++it) { *it = func(*it); }
         return move(*this);
+    }
+    constexpr auto max() const { return ARLib::max(*this); }
+    constexpr auto min() const { return ARLib::min(*this); }
+    constexpr auto sum() const { return ARLib::sum(begin(), end()); }
+    template <typename Functor>
+    requires CallableWith<Functor, OutputType>
+    constexpr auto for_each(Functor f) {
+        for (auto it = m_begin; it != m_end; ++it) { invoke(Forward<Functor>(f), *it); }
+    }
+    template <typename Functor>
+    requires CallableWithRes<Functor, OutputType, bool>
+    constexpr auto all(Functor f) {
+        for (auto it = m_begin; it != m_end; ++it) {
+            if (!invoke(Forward<Functor>(f), *it)) return false;
+        }
+        return true;
+    }
+    template <typename Functor>
+    requires CallableWithRes<Functor, OutputType, bool>
+    constexpr auto any(Functor f) {
+        for (auto it = m_begin; it != m_end; ++it) {
+            if (invoke(Forward<Functor>(f), *it)) return true;
+        }
+        return false;
+    }
+    template <typename Functor>
+    requires CallableWithRes<Functor, OutputType, bool>
+    constexpr Optional<OutputType> find_if(Functor f) {
+        for (auto it = m_begin; it != m_end; ++it) {
+            if (invoke(Forward<Functor>(f), *it)) return { *it };
+        }
+        return {};
+    }
+    constexpr Optional<OutputType> find(const OutputType& val) {
+        for (auto it = m_begin; it != m_end; ++it) {
+            if (*it == val) return { *it };
+        }
+        return {};
     }
     ~IteratorView() { delete[] m_stolen_storage; }
 };
