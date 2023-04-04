@@ -6,7 +6,6 @@
 #include "Printer.h"
 #include "Array.h"
 #include "EnumHelpers.h"
-
 /*
 A FlatSet implementation with a design very similar to that of abseil's swiss tables, albeit simplified for the sake of complexity
 from here: https://github.com/abseil/abseil-cpp/blob/master/absl/container/internal/raw_hash_set.h
@@ -80,21 +79,15 @@ struct FlatSetStorage {
     // since we call new (mem) T on it and that doesn't need memory to be zerod.
     alignas(T) uint8_t storage[StorageSize];
     uint16_t initialized_mask{ 0 };
-    FlatSetStorage() = default;     
-    FlatSetStorage(const FlatSetStorage& other) {
-        for (auto bit : BitMask{ other.initialized_mask }) { initialize_at(bit, T{ other.at(bit) }); }
-    }
+    FlatSetStorage()                            = default;
+    FlatSetStorage(const FlatSetStorage& other) = delete;
     FlatSetStorage(FlatSetStorage&& other) noexcept {
         for (auto bit : BitMask{ other.initialized_mask }) {
             initialize_at(bit, move(other.at(bit)));
             other.destroy_at(bit);
         }
     }
-    FlatSetStorage& operator=(const FlatSetStorage& other) {
-        for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
-        for (auto bit : BitMask{ other.initialized_mask }) { initialize_at(bit, T{ other.at(bit) }); }
-        return *this;
-    }
+    FlatSetStorage& operator=(const FlatSetStorage& other) = delete;
     FlatSetStorage& operator=(FlatSetStorage&& other) noexcept {
         for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
         for (auto bit : BitMask{ other.initialized_mask }) {
@@ -145,8 +138,19 @@ class FlatSet {
                                     Control::Empty, Control::Empty, Control::Empty, Control::Empty,
                                     Control::Empty, Control::Empty, Control::Empty, Control::Empty };
         FlatSetStorage<T> m_bucket{};
+        Bucket() = default;
+        Bucket(Bucket&& other) noexcept : m_ctrl_block{ move(other.m_ctrl_block) }, m_bucket{ move(other.m_bucket) } {
+            for (size_t i = 0; i < m_ctrl_block.size(); ++i) { other.m_ctrl_block[i] = Control::Empty; }
+        }
+        Bucket& operator=(Bucket&& other) noexcept {
+            m_ctrl_block = move(other.m_ctrl_block);
+            m_bucket     = move(other.m_bucket);
+            for (size_t i = 0; i < m_ctrl_block.size(); ++i) { other.m_ctrl_block[i] = Control::Empty; }
+            return *this;
+        }
     };
-    Vector<Bucket> m_buckets{};
+    using BucketVec = Vector<Bucket>;
+    BucketVec m_buckets{};
     HashCls m_hasher{};
     size_t m_size = 0;
     bool needs_rehash() const { return capacity() == 0 ? false : load_factor() >= max_load_factor(); }
@@ -191,7 +195,7 @@ class FlatSet {
     }
     auto rehash() {
         size_t needed_buckets = bit_round_growth(m_buckets.size() + 1);
-        Vector<Bucket> buckets{ move(m_buckets) };
+        BucketVec buckets{ move(m_buckets) };
         m_buckets.resize(needed_buckets);
         m_size = 0;
         for (auto& b : buckets) {
@@ -286,7 +290,7 @@ class FlatSet {
             group = (group + 1) % num_groups;
         }
     }
-    bool insert(T&& value) { 
+    bool insert(T&& value) {
         auto&& [ins, it] = prepare_for_insert(value);
         m_buckets[it.m_current_bucket].m_bucket.initialize_at(*it.m_current_item, Forward<T>(value));
         return ins;

@@ -42,12 +42,11 @@ class FlatMap {
 
     public:
     using ValueType = Entry;
-    FlatMap() = default;
+    FlatMap()       = default;
     auto find(const Key& value) const { return m_table.find(value); }
-
     // support heterogeneous lookup
     template <typename O>
-    requires (EqualityComparableWith<O, Key> && Hashable<O, HashCls>)
+    requires(EqualityComparableWith<O, Key> && Hashable<O, HashCls>)
     auto find(O&& value) const {
         return m_table.find(Forward<O>(value));
     }
