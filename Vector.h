@@ -66,6 +66,8 @@ class Vector {
         T* new_storage = allocate<T>(m_capacity);
         if constexpr (MoveAssignableV<T>) {
             ConditionalBitMove(new_storage, m_storage, m_size);
+            deallocate<T, DeallocType::Multiple>(m_storage);
+            m_storage = nullptr;
         } else {
             ConditionalBitCopy(new_storage, m_storage, m_size);
         }

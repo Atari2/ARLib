@@ -23,14 +23,14 @@ constexpr void ConditionalBitCopy(T* dst, const T* src, size_t count) {
 }
 // dst and src may not overlap
 template <MoveAssignable T>
-constexpr void ConditionalBitMove(T* dst, T*& src, size_t count) {
+constexpr void ConditionalBitMove(T* dst, T* src, size_t count) {
     if (!dst || !src || count == 0) return;
     if constexpr (IsTriviallyCopiableV<T>) {
         memcpy(dst, src, count * sizeof(T));
     } else {
         for (size_t i = 0; i < count; i++) { dst[i] = ARLib::move(src[i]); }
     }
-    deallocate<T, DeallocType::Multiple>(src);
-    src = nullptr;
+    // deallocate<T, DeallocType::Multiple>(src);
+    // src = nullptr;
 }
 }    // namespace ARLib
