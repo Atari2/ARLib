@@ -1,7 +1,7 @@
 #pragma once
 #include "Compat.h"
 #include "Concepts.h"
-#include "EnumHelpers.h"
+#include "Conversion.h"
 // this is here so I can declare the proper constructor in the cpp file
 // and avoid "#include <compare>" in here
 // it's only needed because otherwise I can't use <=> in my DefaultOrdering<T> class in SortedVector<T>
