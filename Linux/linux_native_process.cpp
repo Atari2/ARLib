@@ -29,8 +29,8 @@ UnixProcess::UnixProcess(UnixProcess&& proc) noexcept :
     m_flags(proc.m_flags), m_envp(proc.m_envp), m_argv(proc.m_argv), m_child_pid(proc.m_child_pid),
     m_output(move(proc.m_output)), m_error(move(proc.m_error)),
     m_output_reader_thread(move(proc.m_output_reader_thread)), m_error_reader_thread(move(proc.m_error_reader_thread)),
-    m_exit_handler_thread(move(proc.m_exit_handler_thread)), m_redirected_stdout(proc.m_redirected_stdout),
-    m_redirected_stdin(proc.m_redirected_stdin), m_redirected_stderr(proc.m_redirected_stderr),
+    m_exit_handler_thread(move(proc.m_exit_handler_thread)), m_redirected_stdout(proc.m_redirected_stdout.load()),
+    m_redirected_stdin(proc.m_redirected_stdin.load()), m_redirected_stderr(proc.m_redirected_stderr.load()),
     on_output(move(proc.on_output)), on_error(move(proc.on_error)), on_exit(move(proc.on_exit)) {
     proc.m_launched  = false;
     proc.m_child_pid = -1;
@@ -53,9 +53,9 @@ UnixProcess& UnixProcess::operator=(UnixProcess&& proc) noexcept {
     m_output_reader_thread = move(proc.m_output_reader_thread);
     m_error_reader_thread  = move(proc.m_error_reader_thread);
     m_exit_handler_thread  = move(proc.m_exit_handler_thread);
-    m_redirected_stdout    = proc.m_redirected_stdout;
-    m_redirected_stdin     = proc.m_redirected_stdin;
-    m_redirected_stderr    = proc.m_redirected_stderr;
+    m_redirected_stdout    = proc.m_redirected_stdout.load();
+    m_redirected_stdin     = proc.m_redirected_stdin.load();
+    m_redirected_stderr    = proc.m_redirected_stderr.load();
     on_output              = move(proc.on_output);
     on_error               = move(proc.on_error);
     on_exit                = move(proc.on_exit);
@@ -81,7 +81,7 @@ UnixProcess& UnixProcess::with_cwd(StringView cwd) {
     return *this;
 }
 UnixProcess& UnixProcess::with_env(std::initializer_list<EnvironMapString> env_values) {
-    for (const auto& env_value : env_values) { m_environment.add(env_value); }
+    for (const auto& env_value : env_values) { m_environment.insert(env_value); }
     if (m_environment.size() > 0) {
         if (m_envp != nullptr) {
             for (size_t i = 0; m_envp[i]; i++) { delete[] m_envp[i]; }
@@ -141,8 +141,7 @@ void UnixProcess::stop_and_join_thread(JThread& t) {
     }
 }
 Result<exit_code_t, Error> UnixProcess::wait_for_exit() {
-    if (!m_launched || m_child_pid == -1)
-        return "Process was not running"_s;
+    if (!m_launched || m_child_pid == -1) return "Process was not running"_s;
     if (m_timeout != INFINITE_TIMEOUT) {
         constexpr useconds_t tenms = 10 * 1000;
         const useconds_t usecs     = static_cast<useconds_t>(m_timeout) * 1000;
@@ -236,12 +235,10 @@ void UnixProcess::peek_and_read_pipe(int pipe) {
     }
 }
 ProcessResult UnixProcess::write_input(StringView input, UnixProcess::completion_routine_t routine) {
-    if (!m_redirected_stdin)
-        return "To write to a process' input without pipes just use stdin"_s;
+    if (!m_redirected_stdin) return "To write to a process' input without pipes just use stdin"_s;
     int fd = choose_handle(UnixPipeType::Input);
     if (routine == nullptr) {
-        if (static_cast<size_t>(write(fd, input.data(), input.size())) != input.size())
-            return last_error();
+        if (static_cast<size_t>(write(fd, input.data(), input.size())) != input.size()) return last_error();
     } else {
         JThread writer_thread{ [=]() {
             auto written = write(fd, input.data(), input.size());
@@ -252,12 +249,10 @@ ProcessResult UnixProcess::write_input(StringView input, UnixProcess::completion
     return {};
 }
 ProcessResult UnixProcess::write_data(const ReadOnlyView<uint8_t>& data, UnixProcess::completion_routine_t routine) {
-    if (!m_redirected_stdin)
-        return "To write to a process' input without pipes just use stdin"_s;
+    if (!m_redirected_stdin) return "To write to a process' input without pipes just use stdin"_s;
     int fd = choose_handle(UnixPipeType::Input);
     if (routine == nullptr) {
-        if (static_cast<size_t>(write(fd, data.data(), data.size())) != data.size())
-            return last_error();
+        if (static_cast<size_t>(write(fd, data.data(), data.size())) != data.size()) return last_error();
     } else {
         JThread writer_thread{ [=]() {
             auto written = write(fd, data.data(), data.size());
@@ -269,7 +264,7 @@ ProcessResult UnixProcess::write_data(const ReadOnlyView<uint8_t>& data, UnixPro
 }
 ProcessResult UnixProcess::set_pipe(UnixPipeType type) {
     int ret_val = 0;
-    using rbool = RefBox<bool>;
+    using rbool = RefBox<Atomic<bool>>;
     rbool redirects[3]{ m_redirected_stdout, m_redirected_stdin, m_redirected_stderr };
     redirects[from_enum(type)].get() = true;
     switch (type) {
@@ -299,7 +294,7 @@ ProcessResult UnixProcess::flush_input() {
     auto readn = readlink(fdbuf, buf, sizeof(buf));
     if (readn == -1) { return "Couldn't read proc/self/fd"_s; }
     buf[readn] = '\0';
-    if (StringView{ buf }.starts_with("pipe")) { 
+    if (StringView{ buf }.starts_with("pipe")) {
         // pipes do not support synchronization
         return {};
     }

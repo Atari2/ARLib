@@ -2,10 +2,10 @@
 #include "../Compat.h"
 #include "../Functional.h"
 #include "../Threading.h"
-#include "../HashMap.h"
 #include "../ImplProcessCommon.h"
 #include "../Result.h"
 #include "../Atomic.h"
+#include "../FlatMap.h"
 #include "linux_native_io.h"
 
 #ifdef UNIX
@@ -118,7 +118,7 @@ class UnixProcess {
             return -1;
         }
     } m_pipes;
-    HashMap<EnvironString, EnvironString> m_environment;
+    FlatMap<EnvironString, EnvironString> m_environment;
 
     Atomic<bool> m_process_exited = false;
     String m_cmdline;
@@ -137,9 +137,9 @@ class UnixProcess {
     JThread m_error_reader_thread{};
     JThread m_exit_handler_thread{};
 
-    bool m_redirected_stdout = false;
-    bool m_redirected_stdin  = false;
-    bool m_redirected_stderr = false;
+    Atomic<bool> m_redirected_stdout = false;
+    Atomic<bool> m_redirected_stdin  = false;
+    Atomic<bool> m_redirected_stderr = false;
 
     void setup_output_reader();
     void setup_error_reader();
