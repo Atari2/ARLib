@@ -35,13 +35,13 @@ template <class Key>
 }
 uint32_t hash_bswap(uint32_t value);
 template <class Key>
-[[nodiscard]] size_t hash_integral_fast(const Key& k) noexcept {
+[[nodiscard]] size_t hash_integral_fast(Key k) noexcept {
     static_assert(IsIntegralV<Key>, "Only integer types may call this function");
-    #ifdef ON_WINDOWS
+#ifdef ON_WINDOWS
     return static_cast<size_t>(k ^ hash_bswap(static_cast<uint32_t>(k * 1086221891)));
-    #else
-    return static_cast<size_t>(k ^ __builtin_bswap32(static_cast<uint32_t>(k * 1086221891)));
-    #endif
+#else
+    return static_cast<size_t>(k ^ static_cast<Key>(__builtin_bswap32(static_cast<uint32_t>(k * 1086221891))));
+#endif
 }
 
 template <class Key>
@@ -106,7 +106,7 @@ struct Hash<nullptr_t> {
 };
 template <size_t N>
 struct Hash<char[N]> {
-    [[nodiscard]] size_t operator()(const char (&key)[N]) const noexcept { 
+    [[nodiscard]] size_t operator()(const char (&key)[N]) const noexcept {
         if constexpr (windows_build) {
             // this hash yields way better code on windows
             return hash_array_representation(key, N);
