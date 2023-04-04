@@ -27,18 +27,18 @@ constexpr auto find(const C& cont, const T& elem) {
     return find(cont.begin(), cont.end(), elem);
 }
 template <typename C, typename Func>
-requires Iterable<C> && CallableWithRes<Func, bool, decltype(*declval<C>().begin())>
+requires Iterable<C> && CallableWithRes<Func, bool, IteratorOutputType<decltype(declval<C>().begin())>>
 constexpr auto find_if(const C& cont, Func condition) {
     auto begin     = cont.begin();
     const auto end = cont.end();
     if (begin == end) return npos_;
     size_t index = 0;
     for (; begin != end; ++begin, index++)
-        if (condition(*begin)) return index;
+        if (invoke(condition, *begin)) return index;
     return npos_;
 }
 template <typename Iter>
-requires (Incrementable<Iter> && Dereferencable<Iter> && MoreComparable<IteratorOutputType<Iter>>)
+requires(Incrementable<Iter> && Dereferencable<Iter> && MoreComparable<IteratorOutputType<Iter>>)
 constexpr Iter max(Iter begin, Iter end) {
     if (begin == end) return begin;
     Iter value{ begin };
@@ -47,7 +47,7 @@ constexpr Iter max(Iter begin, Iter end) {
     return value;
 }
 template <typename Iter>
-requires (Incrementable<Iter> && Dereferencable<Iter> && LessComparable<IteratorOutputType<Iter>>)
+requires(Incrementable<Iter> && Dereferencable<Iter> && LessComparable<IteratorOutputType<Iter>>)
 constexpr Iter min(Iter begin, Iter end) {
     if (begin == end) return begin;
     Iter value{ begin };
@@ -59,7 +59,7 @@ template <typename Iter, typename Functor = decltype(sum_default<IteratorOutputT
 requires(Incrementable<Iter> && Dereferencable<Iter>)
 constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<IteratorOutputType<Iter>>) {
     if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
-    auto total = func(*begin);
+    auto total = invoke(func, *begin);
     begin++;
     for (; begin != end; ++begin) total += func(*begin);
     return total;
@@ -91,7 +91,7 @@ template <IteratorConcept Iter, typename Functor>
 requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
 constexpr auto any_of(Iter begin, Iter end, Functor func) {
     for (; begin != end; ++begin) {
-        if (func(*begin)) return true;
+        if (invoke(func, *begin)) return true;
     }
     return false;
 }
@@ -100,7 +100,7 @@ requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
 constexpr auto exactly_n(Iter begin, Iter end, Functor func, size_t n) {
     size_t how_many = 0;
     for (; begin != end; ++begin) {
-        if (func(*begin)) how_many++;
+        if (invoke(func, *begin)) how_many++;
     }
     return how_many == n;
 }
@@ -146,7 +146,7 @@ constexpr auto min(const C& cont) {
 }
 template <typename C, typename Functor>
 requires Iterable<C>
-constexpr auto sum(const C& cont, Functor func) {
+constexpr auto sum(const C& cont, Functor func = sum_default<IteratorOutputType<decltype(declval<C>().begin())>>) {
     return sum(cont.begin(), cont.end(), func);
 }
 template <typename C, bool ROUND = false>
@@ -193,8 +193,8 @@ requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutp
 Iter partition(Iter lo, Iter hi) {
     // FIXME: find a way to avoid this copy of the pivot
     auto pivot = *(lo + ((hi - lo) / 2));
-    auto i                         = lo - 1;
-    auto j                         = hi + 1;
+    auto i     = lo - 1;
+    auto j     = hi + 1;
     for (;;) {
         do { ++i; } while (*i < pivot);
         do { --j; } while (*j > pivot);
