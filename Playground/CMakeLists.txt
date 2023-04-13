@@ -21,6 +21,7 @@ list(
 
 message(STATUS "Building playground")
 add_executable(ARLibPlayground ${PLAYGROUND_SOURCE_FILES})
+target_include_directories(ARLibPlayground PUBLIC ${ARLIB_INCLUDE_DIR})
 
 if (MSVC)
 	set_property(TARGET ARLibPlayground PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})

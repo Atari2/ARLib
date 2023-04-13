@@ -1,6 +1,6 @@
-﻿#include "Suite.h"
+﻿#include "Suite.hpp"
 #include <gtest/gtest.h>
-#include "GTestPrintHelpers.h"
+#include "GTestPrintHelpers.hpp"
 
 using namespace ARLib;
 template <typename T>

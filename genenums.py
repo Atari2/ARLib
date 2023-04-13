@@ -13,7 +13,7 @@ with open(f'{folder}/enum_definitions.impl', 'r') as f:
     lines = f.readlines()
 
 try:
-    os.mkdir(f'{folder}/GeneratedEnums')
+    os.mkdir(f'{folder}/include/GeneratedEnums')
 except Exception as exc:
     pass
 
@@ -34,9 +34,9 @@ for line in filter(lambda x: x.strip() and x.strip()[0] != '#', lines):
             if required_bytes > 8:
                 raise ValueError("Can't fit these many members in 8 bytes (which is the max)")
             cls_type = f'uint{power_bit_length(required_bytes) * 8}_t'
-        with open(f'{folder}/GeneratedEnums/{cls_name}.h', 'w') as f:
+        with open(f'{folder}/include/GeneratedEnums/{cls_name}.hpp', 'w') as f:
             print(f"Generating {cls_name}")
-            f.write('#pragma once\n#include "../Types.h"\n#include "../EnumHelpers.h"\nnamespace ARLib {\n')
+            f.write('#pragma once\n#include "Types.hpp"\n#include "EnumHelpers.hpp"\nnamespace ARLib {\n')
             f.write(f'\tenum class {cls_name} : {cls_type} {{\n')
             for i, member in enumerate(cls_members):
                 f.write(f'\t\t{member.strip()} = {1 << (i - 1) if i > 0 else 0},\n')

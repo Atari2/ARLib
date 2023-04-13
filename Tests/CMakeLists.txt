@@ -6,10 +6,10 @@ set(TEST_SOURCE_FILES "")
 
 list(
 	APPEND TEST_SOURCE_FILES
-	"${CMAKE_CURRENT_SOURCE_DIR}/Suite.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/Suite.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Suite.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/Runner.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/GTestPrintHelpers.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/GTestPrintHelpers.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/GTestPrintHelpers.cpp"
 	)
 	

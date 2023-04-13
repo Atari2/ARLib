@@ -1,6 +1,6 @@
 #include <ostream>
 #include <string_view>
-#include "Suite.h"
+#include "Suite.hpp"
 namespace ARLib {
 #ifdef COMPILER_GCC
     #if __GNUC__ >= 12

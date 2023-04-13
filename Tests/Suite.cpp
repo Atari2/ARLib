@@ -1,4 +1,4 @@
-#include "Suite.h"
+#include "Suite.hpp"
 namespace ARLib {
 size_t test_partial_func(int a, String b, Tuple<String, int> c) {
     return static_cast<size_t>(a) + b.size() + c.get<0>().size() + static_cast<size_t>(c.get<1>());
