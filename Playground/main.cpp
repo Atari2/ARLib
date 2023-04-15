@@ -62,13 +62,17 @@ int main() {
         EXPECT_EQ(map.size(), 0);
     };
     strings.reserve(n_of_strings);
-
+    Atomic<bool> done{ false };
     auto fill_strings_thread = create_async_task([&]() {
-        while (strings.size() < n_of_strings) { strings.insert(generate_string(32)); }
+        while (strings.size() < n_of_strings && !done) { strings.insert(generate_string(32)); }
+        done = true;
     });
-        
+
     if (fill_strings_thread.wait_for(10'000'000) == FutureStatus::Timeout) {
-        Printer::print("Filling the set with strings timed out, only filled {} strings", strings.size());
+        Printer::print("Filling the set with strings timed out");
+        // ask for the thread to stop and wait for it
+        done = true;
+        fill_strings_thread.wait();
     } else {
         Printer::print("Filling the set with strings succeeded");
     }

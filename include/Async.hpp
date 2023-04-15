@@ -31,15 +31,16 @@ class Future {
                                                m_result = UniquePtr{ move(intermediate) };
                                            }
                                        }
+                                       m_cv.notify_all();
                                        m_result_ready.store(true);
                                    },
                                     Forward<Args>(args)... };
     }
     T wait() {
         if (!m_result_ready && m_executor_thread.joinable()) { m_executor_thread.join(); }
-        return *m_result;
+        if constexpr (!IsTVoid) { return *m_result; }
     }
-    FutureStatus wait_for(TimePoint ns) {
+    FutureStatus wait_for(Nanos ns) {
         UniqueLock<Mutex> lock{ m_mutex };
         if (m_cv.wait_for(lock, ns, [&]() { return m_result_ready.load(); })) { return FutureStatus::Ready; }
         return FutureStatus::Timeout;
@@ -61,7 +62,7 @@ class Future<T, true, Functor, Args...> {
         m_result = UniquePtr{ m_func() };
         return *m_result;
     }
-    FutureStatus wait_for([[maybe_unused]] TimePoint ns) { return FutureStatus::Deferred; }
+    FutureStatus wait_for([[maybe_unused]] Nanos ns) { return FutureStatus::Deferred; }
     bool result_ready() const { return m_result.exists(); }
     T result() const { return *m_result; }
 };

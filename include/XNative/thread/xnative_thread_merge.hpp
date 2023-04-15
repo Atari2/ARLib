@@ -125,17 +125,17 @@ class ConditionVariableNative {
     static void wait(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Predicate stop_waiting) {
         while (!stop_waiting()) { ConditionVariableNative::wait(cv, lock); }
     }
-    static CVStatus wait_for(ConditionVariableT&, UniqueLock<Mutex>*, TimePoint ns);
+    static CVStatus wait_for(ConditionVariableT&, UniqueLock<Mutex>*, Nanos ns);
     template <class Predicate>
-    static bool wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, TimePoint rel, Predicate stop_waiting) {
+    static bool wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos rel, Predicate stop_waiting) {
         while (!stop_waiting()) {
             if (ConditionVariableNative::wait_for(cv, lock, rel) == CVStatus::Timeout) { return stop_waiting(); }
         }
         return true;
     }
-    static CVStatus wait_until(ConditionVariableT&, UniqueLock<Mutex>*, TimePoint ns);
+    static CVStatus wait_until(ConditionVariableT&, UniqueLock<Mutex>*, Nanos ns);
     template <class Predicate>
-    static bool wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, TimePoint ns, Predicate stop_waiting) {
+    static bool wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns, Predicate stop_waiting) {
         while (!stop_waiting()) {
             if (ConditionVariableNative::wait_until(cv, lock, ns) == CVStatus::Timeout) { return stop_waiting(); }
         }

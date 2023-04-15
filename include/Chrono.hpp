@@ -4,7 +4,7 @@
 namespace ARLib {
 class Clock {
     public:
-    static TimePoint now() { return ChronoNative::now(); }
-    static TimeDiff diff(TimePoint t1, TimePoint t2) { return t2 - t1; }
+    static Nanos now() { return ChronoNative::now(); }
+    static TimeDiff diff(Nanos t1, Nanos t2) { return t2 - t1; }
 };
 }    // namespace ARLib

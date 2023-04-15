@@ -1211,18 +1211,15 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
         EXPECT_EQ(map.size(), 0);
     };
     strings.reserve(n_of_strings);
-
-    auto fill_strings_thread = JThread{ [&](StopToken tok) {
-        while (strings.size() < n_of_strings) {
-            strings.insert(generate_string(32));
-            if (tok.stop_requested()) return;
-        }
-    } };
-
-    ThisThread::sleep(10'000);    // sleep for 10 ms and hope the strings vector is filled enough
-    fill_strings_thread.request_stop();
-    fill_strings_thread.join();
-
+    Atomic<bool> done{ false };
+    auto fill_strings_task = create_async_task([&]() {
+        while (strings.size() < n_of_strings && !done) { strings.insert(generate_string(32)); }
+        done = true;
+    });
+    if (fill_strings_task.wait_for(10'000'000) == FutureStatus::Timeout) {
+        done = true;
+        fill_strings_task.wait();
+    }
     fill_set();
     search_set();
     erase_set();
