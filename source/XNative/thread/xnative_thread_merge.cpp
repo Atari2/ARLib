@@ -142,16 +142,16 @@ void ConditionVariableNative::wait(ConditionVariableT& cv, UniqueLock<Mutex>* lo
 CVStatus ConditionVariableNative::wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns) {
     TimeSpecC spec     = time_get();
     constexpr auto den = 1'000'000'000L;
-    spec.tv_sec += ns / den;
-    spec.tv_nsec += ns % den;
+    spec.tv_sec += ns.value / den;
+    spec.tv_nsec += ns.value % den;
     int ret = pthread_cond_timedwait(&cv, lock->mutex()->native_handle(), cast<TimeSpec*>(&spec));
     return ret == 0 ? CVStatus::NoTimeout : CVStatus::Timeout;
 }
 CVStatus ConditionVariableNative::wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns) {
     TimeSpec spec{};
     constexpr auto den = 1'000'000'000L;
-    spec.tv_sec        = ns / den;
-    spec.tv_nsec       = ns % den;
+    spec.tv_sec        = ns.value / den;
+    spec.tv_nsec       = ns.value % den;
     int ret            = pthread_cond_timedwait(&cv, lock->mutex()->native_handle(), &spec);
     return ret == 0 ? CVStatus::NoTimeout : CVStatus::Timeout;
 }
@@ -280,16 +280,16 @@ void ConditionVariableNative::wait(ConditionVariableT& cv, UniqueLock<Mutex>* lo
 }
 CVStatus ConditionVariableNative::wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns) {
     XTime spec{};
-    spec.sec  = ns / 1'000'000'000;
-    spec.nsec = ns % 1'000'000'000;
+    spec.sec  = ns.value / 1'000'000'000;
+    spec.nsec = ns.value % 1'000'000'000;
     return cond_rel_timedwait(&cv, *lock->mutex()->native_handle(), &spec) == ThreadState::Timeout ?
            CVStatus::Timeout :
            CVStatus::NoTimeout;
 }
 CVStatus ConditionVariableNative::wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns) {
     XTime spec{};
-    spec.sec  = ns / 1'000'000'000;
-    spec.nsec = ns % 1'000'000'000;
+    spec.sec  = ns.value / 1'000'000'000;
+    spec.nsec = ns.value % 1'000'000'000;
     return cond_timedwait(&cv, *lock->mutex()->native_handle(), &spec) == ThreadState::Timeout ? CVStatus::Timeout :
                                                                                                  CVStatus::NoTimeout;
 }

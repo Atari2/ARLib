@@ -550,7 +550,7 @@ TEST(ARLibTests, ChronoTest) {
     auto new_now = Clock::now();
     EXPECT_GT(new_now, now);
     auto diff = Clock::diff(now, new_now);
-    EXPECT_GT(diff, 0);
+    EXPECT_GT(diff, 0_ns);
 }
 TEST(ARLibTests, JSONTest) {
     auto maybe_obj = JSON::Parser::parse(R"({"hello world": 10, "array": [1, 2, 3, 4]})"_sv);
@@ -1216,7 +1216,7 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
         while (strings.size() < n_of_strings && !done) { strings.insert(generate_string(32)); }
         done = true;
     });
-    if (fill_strings_task.wait_for(10'000'000) == FutureStatus::Timeout) {
+    if (fill_strings_task.wait_for(10_ms) == FutureStatus::Timeout) {
         done = true;
         fill_strings_task.wait();
     }

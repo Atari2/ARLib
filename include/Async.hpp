@@ -41,6 +41,7 @@ class Future {
         if constexpr (!IsTVoid) { return *m_result; }
     }
     FutureStatus wait_for(Nanos ns) {
+        if (m_result_ready.load()) return FutureStatus::Ready;
         UniqueLock<Mutex> lock{ m_mutex };
         if (m_cv.wait_for(lock, ns, [&]() { return m_result_ready.load(); })) { return FutureStatus::Ready; }
         return FutureStatus::Timeout;

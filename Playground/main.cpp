@@ -20,7 +20,7 @@ int main() {
     constexpr static size_t n_of_strings = 1024;
     Set<String> strings{};    // using Set to make sure the strings are all unique
     FlatSet<String> set{};
-    FlatMap<String, int> map{};
+    FlatMap<String, size_t> map{};
 
     auto generate_string = [](uint32_t max_len) {
         String s{};
@@ -46,7 +46,7 @@ int main() {
         EXPECT_EQ(set.size(), 0);
     };
     auto fill_map = [&strings, &map]() {
-        for (const auto& [i, s] : enumerate(strings)) { EXPECT_TRUE(map.insert(String{ s }, static_cast<int>(i))); }
+        for (const auto& [i, s] : enumerate(strings)) { EXPECT_TRUE(map.insert(String{ s }, i)); }
         EXPECT_EQ(map.size(), strings.size());
     };
     auto search_map = [&strings, &map]() {
@@ -68,7 +68,7 @@ int main() {
         done = true;
     });
 
-    if (fill_strings_thread.wait_for(10'000'000) == FutureStatus::Timeout) {
+    if (fill_strings_thread.wait_for(10_ms) == FutureStatus::Timeout) {
         Printer::print("Filling the set with strings timed out");
         // ask for the thread to stop and wait for it
         done = true;

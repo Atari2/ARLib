@@ -5,6 +5,6 @@ namespace ARLib {
 class Clock {
     public:
     static Nanos now() { return ChronoNative::now(); }
-    static TimeDiff diff(Nanos t1, Nanos t2) { return t2 - t1; }
+    static TimeDiff diff(Nanos t1, Nanos t2) { return Nanos{ t2.value - t1.value }; }
 };
 }    // namespace ARLib

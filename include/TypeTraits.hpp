@@ -628,6 +628,15 @@ struct TypeTuple : TypeTuple<Types...> {
             return static_cast<const TypeTuple<Types...>*>(this)->template get<N - 1>();
         }
     }
+    template <typename U, size_t Index>
+    requires IsAnyOfV<U, T, Types...>
+    static constexpr size_t index_of() {
+        if constexpr (IsSameV<U, T>) { 
+            return Index;
+        } else {
+            return TypeTuple<Types...>::template index_of<U, Index + 1>();
+        }
+    }
 };
 template <typename T>
 struct TypeTuple<T> {
@@ -642,6 +651,11 @@ struct TypeTuple<T> {
             return dummy;
         }
     }
+    template <typename U, size_t Index>
+    requires(IsSameV<T, U>)
+    static constexpr size_t index_of() {
+        return Index;
+    }
 };
 template <typename... Types>
 struct TypeArray {
@@ -649,5 +663,8 @@ struct TypeArray {
     template <size_t I>
     requires(I < sizeof...(Types))
     using At = RemoveReferenceT<decltype(priv_declval<TT>().template get<I>())>;
+    template <typename T>
+    requires (IsAnyOfV<T, Types...>)
+    constexpr static inline size_t IndexOf = TT::template index_of<T, 0>();
 };
 }    // namespace ARLib
