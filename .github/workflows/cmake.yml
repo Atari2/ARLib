@@ -2,7 +2,7 @@ name: CMake
 
 on:
   push:
-    branches: [ master, result-rework ]
+    branches: [ master, separate-include-source-dir ]
   pull_request:
     branches: [ master ]
 
