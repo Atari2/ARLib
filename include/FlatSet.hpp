@@ -97,7 +97,7 @@ struct FlatSetStorage {
         return *this;
     }
     T& initialize_at(size_t index, T&& value) {
-        initialized_mask |= (1 << index);
+        initialized_mask |= static_cast<uint16_t>(1 << index);
         uint8_t* obj_ptr = &storage[ObjectSize * index];
         T* obj           = new (obj_ptr) T{ move(value) };
         return *obj;
@@ -111,7 +111,7 @@ struct FlatSetStorage {
         return Iterator{ reinterpret_cast<T*>(storage) + (sizeof(T) * internal::flatset_bucket_size) };
     }
     void destroy_at(size_t index) {
-        initialized_mask &= ~(1 << index);
+        initialized_mask &= static_cast<uint16_t>(~(1 << index));
         T& obj = *reinterpret_cast<T*>(&storage[ObjectSize * index]);
         obj.~T();
     }

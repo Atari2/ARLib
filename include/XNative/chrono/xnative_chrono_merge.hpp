@@ -15,12 +15,21 @@
     #error "Don't include the XNative files directly. Use Chrono.h"
 #endif
 namespace ARLib {
+
+struct Seconds;
+struct Millis;
+struct Micros;
+struct Nanos;
+
+template <typename T>
+concept TimeUnitType = IsAnyOfV<T, Seconds, Millis, Micros, Nanos>;
+
 struct Seconds {
     int64_t value;
 
-    template <typename T>
+    template <TimeUnitType T>
     constexpr T to() const;
-    template <typename T>
+    template <TimeUnitType T>
     constexpr operator T() const {
         return to<T>();
     }
@@ -28,9 +37,9 @@ struct Seconds {
 struct Millis {
     int64_t value;
 
-    template <typename T>
+    template <TimeUnitType T>
     constexpr T to() const;
-    template <typename T>
+    template <TimeUnitType T>
     constexpr operator T() const {
         return to<T>();
     }
@@ -38,9 +47,9 @@ struct Millis {
 struct Micros {
     int64_t value;
 
-    template <typename T>
+    template <TimeUnitType T>
     constexpr T to() const;
-    template <typename T>
+    template <TimeUnitType T>
     constexpr operator T() const {
         return to<T>();
     }
@@ -48,9 +57,9 @@ struct Micros {
 struct Nanos {
     int64_t value;
     Ordering operator<=>(const Nanos& other) const { return CompareThreeWay(this->value, other.value); };
-    template <typename T>
+    template <TimeUnitType T>
     constexpr T to() const;
-    template <typename T>
+    template <TimeUnitType T>
     constexpr operator T() const {
         return to<T>();
     }
@@ -68,8 +77,7 @@ namespace internal {
     };
     // clang-format on
 
-    template <typename To, typename From>
-    requires(IsAnyOfV<To, Seconds, Millis, Micros, Nanos> && IsAnyOfV<From, Seconds, Millis, Micros, Nanos>)
+    template <TimeUnitType To, TimeUnitType From>
     constexpr To convert_time_unit(From unit) {
         using TimeArray      = TypeArray<Seconds, Millis, Micros, Nanos>;
         constexpr size_t row = TimeArray::IndexOf<To>;
@@ -89,19 +97,19 @@ namespace internal {
         unreachable;
     }
 }    // namespace internal
-template <typename T>
+template <TimeUnitType T>
 constexpr T Seconds::to() const {
     return internal::convert_time_unit<T>(*this);
 }
-template <typename T>
+template <TimeUnitType T>
 constexpr T Millis::to() const {
     return internal::convert_time_unit<T>(*this);
 }
-template <typename T>
+template <TimeUnitType T>
 constexpr T Micros::to() const {
     return internal::convert_time_unit<T>(*this);
 }
-template <typename T>
+template <TimeUnitType T>
 constexpr T Nanos::to() const {
     return internal::convert_time_unit<T>(*this);
 }
@@ -119,12 +127,9 @@ constexpr Nanos operator""_ns(unsigned long long value) {
 };
 #define PRINT_IMPL_FOR_TIME(UnitType)                                                                                  \
     template <>                                                                                                        \
-    struct PrintInfo<UnitType> {                                                                                        \
-        const UnitType& m_unit;                                                                                         \
-     String                                                                                                            \
-        repr() const {                                                                                                 \
-            return IntToStr(m_unit.value);                                                                             \
-        }                                                                                                              \
+    struct PrintInfo<UnitType> {                                                                                       \
+        const UnitType& m_unit;                                                                                        \
+        String repr() const { return IntToStr(m_unit.value); }                                                         \
     }
 PRINT_IMPL_FOR_TIME(Seconds);
 PRINT_IMPL_FOR_TIME(Millis);

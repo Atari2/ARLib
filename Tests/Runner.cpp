@@ -1228,32 +1228,32 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
     erase_map();
 }
 TEST(ARLibTests, IteratorChainingTest) {
-    Vector<int> v{ 1, 2, 3, 4, 5 };
-    auto a = v.iter().all([](int v) { return v > 0; });
+    Vector<int> vec{ 1, 2, 3, 4, 5 };
+    auto a = vec.iter().all([](int v) { return v > 0; });
     EXPECT_EQ(a, true);
-    auto b = v.iter().any([](int v) { return v > 3; });
+    auto b = vec.iter().any([](int v) { return v > 3; });
     EXPECT_EQ(b, true);
-    auto c = v.iter().any([](int v) { return v > 5; });
+    auto c = vec.iter().any([](int v) { return v > 5; });
     EXPECT_EQ(c, false);
-    auto d = v.iter().max();
+    auto d = vec.iter().max();
     EXPECT_EQ(*d, 5);
-    auto e = v.iter().min();
+    auto e = vec.iter().min();
     EXPECT_EQ(*e, 1);
-    auto f = v.iter().sum();
+    auto f = vec.iter().sum();
     EXPECT_EQ(f, 15);
-    auto g = v.iter().filter([](int v) { return v % 2 == 0; }).map([](int v) { return v * 2; }).sum();
+    auto g = vec.iter().filter([](int v) { return v % 2 == 0; }).map([](int v) { return v * 2; }).sum();
     EXPECT_EQ(g, 12);
-    auto h = v.iter().find(3);
+    auto h = vec.iter().find(3);
     EXPECT_TRUE(h.has_value());
     EXPECT_EQ(*h, 3);
-    auto i = v.iter().find(6);
+    auto i = vec.iter().find(6);
     EXPECT_FALSE(i.has_value());
-    auto j = v.iter().find_if([](int v) { return v == 3; });
+    auto j = vec.iter().find_if([](int v) { return v == 3; });
     EXPECT_TRUE(j.has_value());
     EXPECT_EQ(*j, 3);
-    auto k = v.iter().find_if([](int v) { return v == 6; });
+    auto k = vec.iter().find_if([](int v) { return v == 6; });
     EXPECT_FALSE(k.has_value());
-    auto l = v.iter().filter([](int v) { return v % 2 == 0; }).map([](int v) { return IntToStr(v * 2); }).find("8"_s);
+    auto l = vec.iter().filter([](int v) { return v % 2 == 0; }).map([](int v) { return IntToStr(v * 2); }).find("8"_s);
     EXPECT_TRUE(l.has_value());
     EXPECT_EQ(*l, "8"_s);
 }
