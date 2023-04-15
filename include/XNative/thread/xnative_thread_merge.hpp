@@ -8,6 +8,7 @@
         #include "XNative/thread/xnative_thread_windows.hpp"
     #endif
     #include "Pair.hpp"
+    #include "Chrono.hpp"
 
     #if not defined(THREADBASE_INCLUDED__) and not defined(INCLUDED_FROM_OWN_CPP___)
         #error "Don't include the XNative files directly. Use ThreadBase.h or Threading.h"
@@ -31,6 +32,9 @@ using ThreadState   = int;
 using MutexT          = PthreadMutex;
 using MutexTimer      = TimeSpec;
 using MutexAttributes = PthreadMutexAttr;
+
+/* CONDITION_VARIABLE */
+using ConditionVariableT = PthreadCond;
     #else
 /* THREADS */
 using ThreadT       = ThreadHandle;
@@ -44,6 +48,9 @@ using RetVal        = unsigned;
 using MutexT          = MutexHandle;
 using MutexTimer      = XTime;
 using MutexAttributes = MutexType;
+/* CONDITION_VARIABLE */
+using ConditionVariableT = CondInternalImplType;
+
     #endif
 class ThreadNative {
     public:
@@ -98,6 +105,42 @@ class MutexNative {
     static bool trylock(MutexT&);
     static bool timedlock(MutexT&, MutexTimer);
     static bool unlock(MutexT&);
+};
+
+enum class CVStatus { Timeout, NoTimeout };
+
+template <typename M>
+class UniqueLock;
+class Mutex;
+class ConditionVariableNative {
+    public:
+    static Pair<ConditionVariableT, bool> init();
+    static ConditionVariableT init_noret();
+    static void destroy(ConditionVariableT&);
+    static void notify_one(ConditionVariableT&);
+    static void notify_all(ConditionVariableT&);
+
+    static void wait(ConditionVariableT&, UniqueLock<Mutex>*);
+    template <class Predicate>
+    static void wait(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Predicate stop_waiting) {
+        while (!stop_waiting()) { ConditionVariableNative::wait(cv, lock); }
+    }
+    static CVStatus wait_for(ConditionVariableT&, UniqueLock<Mutex>*, TimePoint ns);
+    template <class Predicate>
+    static bool wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, TimePoint rel, Predicate stop_waiting) {
+        while (!stop_waiting()) {
+            if (ConditionVariableNative::wait_for(cv, lock, rel) == CVStatus::Timeout) { return stop_waiting(); }
+        }
+        return true;
+    }
+    static CVStatus wait_until(ConditionVariableT&, UniqueLock<Mutex>*, TimePoint ns);
+    template <class Predicate>
+    static bool wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, TimePoint ns, Predicate stop_waiting) {
+        while (!stop_waiting()) {
+            if (ConditionVariableNative::wait_until(cv, lock, ns) == CVStatus::Timeout) { return stop_waiting(); }
+        }
+        return true;
+    }
 };
 }    // namespace ARLib
 #endif

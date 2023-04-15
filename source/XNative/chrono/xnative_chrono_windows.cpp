@@ -52,6 +52,9 @@ int __cdecl time_get(XTimeC* time, int flag) {
     }
     return flag;
 }
+long __cdecl xtime_to_millis(const XTimeC* time) {
+    return static_cast<long>(time->sec * Msec_per_sec + (time->nsec + Nsec_per_msec - 1) / Nsec_per_msec);
+}
 long __cdecl time_diff_to_millis(const XTimeC* time) {
     XTimeC now{};
     time_get(&now, TIME_UTC);

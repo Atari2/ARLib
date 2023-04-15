@@ -85,13 +85,13 @@ class CriticalSection {
     private:
     internal::SRWLock m_srw_lock;
 };
-class ConditionVariable {
+class Win32ConditionVariable {
     public:
-    ConditionVariable();
+    Win32ConditionVariable();
 
-    ~ConditionVariable()                                   = delete;
-    ConditionVariable(const ConditionVariable&)            = delete;
-    ConditionVariable& operator=(const ConditionVariable&) = delete;
+    ~Win32ConditionVariable()                              = delete;
+    Win32ConditionVariable(const Win32ConditionVariable&)  = delete;
+    Win32ConditionVariable& operator=(const Win32ConditionVariable&) = delete;
 
     void destroy();
 
@@ -103,7 +103,7 @@ class ConditionVariable {
 
     void notify_all();
 
-    static void Create(ConditionVariable*);
+    static void Create(Win32ConditionVariable*);
 
     private:
     internal::ConditionVariable m_condition_variable;
@@ -119,9 +119,9 @@ constexpr size_t CriticalSectionAlignment   = 8;
 constexpr size_t ConditionVariableAlignment = 8;
 
 constexpr size_t CriticalSectionMaxSize        = max_bt(CriticalSectionSize, sizeof(CriticalSection));
-constexpr size_t ConditionVariableMaxSize      = max_bt(ConditionlVariableSize, sizeof(ConditionVariable));
+constexpr size_t ConditionVariableMaxSize      = max_bt(ConditionlVariableSize, sizeof(Win32ConditionVariable));
 constexpr size_t CriticalSectionMaxAlignment   = max_bt(CriticalSectionAlignment, alignof(CriticalSection));
-constexpr size_t ConditionVariableMaxAlignment = max_bt(ConditionVariableAlignment, alignof(ConditionVariable));
+constexpr size_t ConditionVariableMaxAlignment = max_bt(ConditionVariableAlignment, alignof(Win32ConditionVariable));
 struct MutexInternalImplType {
     int type;
     AlignedStorageT<CriticalSectionMaxSize, CriticalSectionMaxAlignment> cs;
@@ -131,7 +131,7 @@ struct MutexInternalImplType {
 };
 struct CondInternalImplType {
     AlignedStorageT<ConditionVariableMaxSize, ConditionVariableMaxAlignment> cv;
-    ConditionVariable* _get_cv() noexcept { return reinterpret_cast<ConditionVariable*>(&cv); }
+    Win32ConditionVariable* _get_cv() noexcept { return reinterpret_cast<Win32ConditionVariable*>(&cv); }
 };
 using mutex_internal_imp_t = MutexInternalImplType;
 using cnd_internal_imp_t   = CondInternalImplType;

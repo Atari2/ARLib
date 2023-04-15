@@ -2,6 +2,8 @@
     #define INCLUDED_FROM_OWN_CPP___
 #endif
 #include "XNative/thread/xnative_thread_merge.hpp"
+#include "Threading.hpp"
+#include "Chrono.hpp"
 namespace ARLib {
 #ifdef UNIX_OR_MINGW
 Pair<ThreadT, bool> ThreadNative::create(ThreadRoutine routine, void* arg) {
@@ -115,6 +117,43 @@ bool MutexNative::timedlock(MutexT& mutex, MutexTimer timer) {
 bool MutexNative::unlock(MutexT& mutex) {
     return pthread_mutex_unlock(&mutex) == 0;
 }
+Pair<ConditionVariableT, bool> ConditionVariableNative::init() {
+    ConditionVariableT cv{};
+    pthread_cond_init(&cv, nullptr);
+    return { cv, true };
+}
+ConditionVariableT ConditionVariableNative::init_noret() {
+    ConditionVariableT cv{};
+    pthread_cond_init(&cv, nullptr);
+    return cv;
+}
+void ConditionVariableNative::destroy(ConditionVariableT& cv) {
+    pthread_cond_destroy(&cv);
+}
+void ConditionVariableNative::notify_one(ConditionVariableT& cv) {
+    pthread_cond_signal(&cv);
+}
+void ConditionVariableNative::notify_all(ConditionVariableT& cv) {
+    pthread_cond_broadcast(&cv);
+}
+void ConditionVariableNative::wait(ConditionVariableT& cv, UniqueLock<Mutex>* lock) {
+    pthread_cond_wait(&cv, lock->mutex()->native_handle());
+}
+CVStatus ConditionVariableNative::wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, TimePoint ns) {
+    TimePoint absolute = Clock::now() + ns;
+    TimeSpec spec{};
+    spec.tv_sec = absolute / 1'000'000'000;
+    spec.tv_sec = absolute % 1'000'000'000;
+    int ret     = pthread_cond_timedwait(&cv, lock->mutex()->native_handle(), &spec);
+    return ret == 0 ? CVStatus::NoTimeout : CVStatus::Timeout;
+}
+CVStatus ConditionVariableNative::wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, TimePoint ns) {
+    TimeSpec spec{};
+    spec.tv_sec = ns / 1'000'000'000;
+    spec.tv_sec = ns % 1'000'000'000;
+    int ret     = pthread_cond_timedwait(&cv, lock->mutex()->native_handle(), &spec);
+    return ret == 0 ? CVStatus::NoTimeout : CVStatus::Timeout;
+}
 #else
 Pair<ThreadT, bool> ThreadNative::create(ThreadRoutine routine, void* arg) {
     ThreadHandle t{};
@@ -215,6 +254,43 @@ bool MutexNative::timedlock(MutexT& mutex, MutexTimer timer) {
 }
 bool MutexNative::unlock(MutexT& mutex) {
     return mutex_unlock(mutex) == ThreadState::Success;
+}
+Pair<ConditionVariableT, bool> ConditionVariableNative::init() {
+    ConditionVariableT cv{};
+    cond_init_in_situ(&cv);
+    return { cv, true };
+}
+ConditionVariableT ConditionVariableNative::init_noret() {
+    ConditionVariableT cv{};
+    cond_init_in_situ(&cv);
+    return cv;
+}
+void ConditionVariableNative::destroy(ConditionVariableT& cv) {
+    cond_destroy_in_situ(&cv);
+}
+void ConditionVariableNative::notify_one(ConditionVariableT& cv) {
+    cond_signal(&cv);
+}
+void ConditionVariableNative::notify_all(ConditionVariableT& cv) {
+    cond_broadcast(&cv);
+}
+void ConditionVariableNative::wait(ConditionVariableT& cv, UniqueLock<Mutex>* lock) {
+    cond_wait(&cv, *lock->mutex()->native_handle());
+}
+CVStatus ConditionVariableNative::wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, TimePoint ns) {
+    XTime spec{};
+    spec.sec  = ns / 1'000'000'000;
+    spec.nsec = ns % 1'000'000'000;
+    return cond_rel_timedwait(&cv, *lock->mutex()->native_handle(), &spec) == ThreadState::Timeout ?
+           CVStatus::Timeout :
+           CVStatus::NoTimeout;
+}
+CVStatus ConditionVariableNative::wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, TimePoint ns) {
+    XTime spec{};
+    spec.sec  = ns / 1'000'000'000;
+    spec.nsec = ns % 1'000'000'000;
+    return cond_timedwait(&cv, *lock->mutex()->native_handle(), &spec) == ThreadState::Timeout ? CVStatus::Timeout :
+                                                                                                 CVStatus::NoTimeout;
 }
 #endif
 }    // namespace ARLib

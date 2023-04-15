@@ -3,20 +3,33 @@
 #include "Concepts.hpp"
 #include "Threading.hpp"
 #include "Printer.hpp"
+#include "Chrono.hpp"
 namespace ARLib {
+
+enum class FutureStatus { Deferred, Ready, Timeout };
 template <typename T, bool Deferred, typename Functor, typename... Args>
 class Future {
+    struct Empty {};
+    constexpr static inline bool IsTVoid = IsVoid<T>::value;
+
     Thread m_executor_thread;
     Atomic<bool> m_result_ready{ false };
-    UniquePtr<T> m_result;
+    ConditionVariable m_cv{};
+    ConditionalT<IsTVoid, Empty, UniquePtr<T>> m_result;
     Mutex m_mutex;
+
+
     public:
     Future(Functor&& func, Args&&... args) {
         m_executor_thread = Thread{ [this, f = move(func)]<typename... LArgs>(LArgs&&... largs) {
-                                       T intermediate = invoke(f, Forward<LArgs>(largs)...);
-                                       {
-                                           ScopedLock lock{ m_mutex };
-                                           m_result = UniquePtr{ move(intermediate) };
+                                       if constexpr (IsTVoid) {
+                                           invoke(f, Forward<LArgs>(largs)...);
+                                       } else {
+                                           T intermediate = invoke(f, Forward<LArgs>(largs)...);
+                                           {
+                                               ScopedLock lock{ m_mutex };
+                                               m_result = UniquePtr{ move(intermediate) };
+                                           }
                                        }
                                        m_result_ready.store(true);
                                    },
@@ -25,6 +38,11 @@ class Future {
     T wait() {
         if (!m_result_ready && m_executor_thread.joinable()) { m_executor_thread.join(); }
         return *m_result;
+    }
+    FutureStatus wait_for(TimePoint ns) {
+        UniqueLock<Mutex> lock{ m_mutex };
+        if (m_cv.wait_for(lock, ns, [&]() { return m_result_ready.load(); })) { return FutureStatus::Ready; }
+        return FutureStatus::Timeout;
     }
     bool result_ready() const { return m_result_ready.load(); }
     T result() const { return *m_result; }
@@ -43,6 +61,7 @@ class Future<T, true, Functor, Args...> {
         m_result = UniquePtr{ m_func() };
         return *m_result;
     }
+    FutureStatus wait_for([[maybe_unused]] TimePoint ns) { return FutureStatus::Deferred; }
     bool result_ready() const { return m_result.exists(); }
     T result() const { return *m_result; }
 };

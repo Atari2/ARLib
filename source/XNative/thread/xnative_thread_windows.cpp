@@ -252,7 +252,7 @@ void __cdecl cond_destroy(CondHandle condition) {
     }
 }
 void __cdecl cond_init_in_situ(CondHandle condition) {
-    ConditionVariable::Create(condition->_get_cv());
+    Win32ConditionVariable::Create(condition->_get_cv());
 }
 void __cdecl cond_destroy_in_situ(CondHandle condition) {
     condition->_get_cv()->destroy();
@@ -263,6 +263,22 @@ ThreadState __cdecl cond_wait(CondHandle condition, MutexHandle mutex) {
     condition->_get_cv()->wait(cs);
     mutex_reset_owner(mutex);
     return ThreadState::Success;
+}
+ThreadState __cdecl cond_rel_timedwait(CondHandle condition, MutexHandle mutex, const XTime* target) {
+    ThreadState res = ThreadState::Success;
+    const auto cs   = static_cast<CriticalSection*>(mutex_getconcrtcs(mutex));
+    if (target == nullptr) {
+        mutex_clear_owner(mutex);
+        condition->_get_cv()->wait(cs);
+        mutex_reset_owner(mutex);
+    } else {
+        mutex_clear_owner(mutex);
+        if (!condition->_get_cv()->wait_for(cs, xtime_to_millis(target))) {
+            if (GetLastError() == ERROR_TIMEOUT) { res = ThreadState::Timeout; }
+        }
+        mutex_reset_owner(mutex);
+    }
+    return res;
 }
 ThreadState __cdecl cond_timedwait(CondHandle condition, MutexHandle mutex, const XTime* target) {
     ThreadState res = ThreadState::Success;

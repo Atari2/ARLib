@@ -71,6 +71,7 @@ void __cdecl cond_init_in_situ(CondHandle);
 void __cdecl cond_destroy_in_situ(CondHandle);
 ThreadState __cdecl cond_wait(CondHandle, MutexHandle);
 ThreadState __cdecl cond_timedwait(CondHandle, MutexHandle, const XTime*);
+ThreadState __cdecl cond_rel_timedwait(CondHandle, MutexHandle, const XTime*);
 ThreadState __cdecl cond_broadcast(CondHandle);
 ThreadState __cdecl cond_signal(CondHandle);
 void __cdecl cond_do_broadcast_at_thread_exit();

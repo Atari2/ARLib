@@ -45,25 +45,25 @@ internal::SRWLockPtr CriticalSection::native_handle() {
 void CriticalSection::Create(CriticalSection* cs) {
     new (cs) CriticalSection;
 }
-ConditionVariable::ConditionVariable() {
+Win32ConditionVariable::Win32ConditionVariable() {
     InitializeConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable));
 }
-void ConditionVariable::destroy() {}
-void ConditionVariable::wait(CriticalSection* lock) {
-    if (!ConditionVariable::wait_for(lock, INFINITE)) { abort_arlib(); }
+void Win32ConditionVariable::destroy() {}
+void Win32ConditionVariable::wait(CriticalSection* lock) {
+    if (!Win32ConditionVariable::wait_for(lock, INFINITE)) { abort_arlib(); }
 }
-bool ConditionVariable::wait_for(CriticalSection* lock, unsigned int timeout) {
+bool Win32ConditionVariable::wait_for(CriticalSection* lock, unsigned int timeout) {
     return SleepConditionVariableSRW(
            cast<::PCONDITION_VARIABLE>(&m_condition_variable), cast<::PSRWLOCK>(lock->native_handle()), timeout, 0
            ) != 0;
 }
-void ConditionVariable::notify_one() {
+void Win32ConditionVariable::notify_one() {
     WakeConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable));
 }
-void ConditionVariable::notify_all() {
+void Win32ConditionVariable::notify_all() {
     WakeAllConditionVariable(cast<::PCONDITION_VARIABLE>(&m_condition_variable));
 }
-void ConditionVariable::Create(ConditionVariable* cond) {
-    new (cond) ConditionVariable;
+void Win32ConditionVariable::Create(Win32ConditionVariable* cond) {
+    new (cond) Win32ConditionVariable;
 }
 }    // namespace ARLib

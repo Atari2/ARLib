@@ -14,6 +14,7 @@ struct XTimeC {    // store time with nanosecond resolution
 };
 int __cdecl time_get(XTimeC*, int);
 
+long __cdecl xtime_to_millis(const XTimeC*);
 long __cdecl time_diff_to_millis(const XTimeC*);
 long __cdecl time_diff_to_millis2(const XTimeC*, const XTimeC*);
 long long __cdecl time_get_ticks();
