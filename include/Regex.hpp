@@ -8,12 +8,14 @@
 #include "Vector.hpp"
 #include "PrintInfo.hpp"
 #include "SSOVector.hpp"
+#include "UniquePtr.hpp"
 namespace ARLib {
 
 MAKE_FANCY_ENUM(
-RegexToken, Dot, GroupOpen, GroupClose, SquareOpen, SquareClose, Or, StartString, EndString, Lazy, Asterisk, Plus,
+RegexToken, size_t, Dot, GroupOpen, GroupClose, SquareOpen, SquareClose, Or, StartString, EndString, Lazy, Asterisk,
+Plus
 );
-MAKE_FANCY_ENUM(EscapedRegexToken, WhiteSpace, WordChar, NotWordChar, NumberChar);
+MAKE_FANCY_ENUM(EscapedRegexToken, size_t, WhiteSpace, WordChar, NotWordChar, NumberChar);
 struct RegexErrorInfo {
     String error_string{};
     size_t error_offset{};
@@ -35,7 +37,7 @@ class Regex {
     struct Group;
     struct CharGroup;
     private:
-    using ReTokVector = Vector<Variant<char, RegexToken, EscapedRegexToken, Group, CharGroup>>;
+    using ReTokVector = UniquePtr<Vector<Variant<char, RegexToken, EscapedRegexToken, Group, CharGroup>>>;
     public:
     struct Group {
         size_t m_group_number;
@@ -52,9 +54,7 @@ class Regex {
     public:
     template <typename StringLike>
     requires Constructible<String, StringLike>
-    Regex(StringLike&& regex) : m_regex{ regex } {
-
-    }
+    Regex(StringLike&& regex) : m_regex{ regex } {}
     template <typename StringLike>
     requires Constructible<String, StringLike>
     static auto create(StringLike&& regex) {
@@ -77,9 +77,7 @@ template <>
 struct PrintInfo<Regex::CharGroup> {
     const Regex::CharGroup& m_chargroup;
     PrintInfo(const Regex::CharGroup& chargroup) : m_chargroup(chargroup) {}
-    String repr() const {
-        return "CharGroup: { "_s + print_conditional(m_chargroup.m_char_group) + " }"_s;
-    }
+    String repr() const { return "CharGroup: { "_s + print_conditional(m_chargroup.m_char_group) + " }"_s; }
 };
 template <>
 struct PrintInfo<RegexParseError> {

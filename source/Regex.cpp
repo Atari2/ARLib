@@ -42,9 +42,9 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
         if (state.next_is_escaped) {
             if (auto fit = find(re_esc_chars, cur); fit != npos_) {
                 auto tok = to_enum<EscapedRegexToken>(fit);
-                current_tokens().emplace(tok);
+                current_tokens()->emplace(tok);
             } else {
-                current_tokens().emplace(cur);
+                current_tokens()->emplace(cur);
             }
             state.next_is_escaped = false;
         } else {
@@ -59,7 +59,7 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                 switch (tok) {
                     case RegexToken::GroupOpen:
                         if (state.in_square != 0) {
-                            current_tokens().emplace(cur);
+                            current_tokens()->emplace(cur);
                         } else {
                             state.in_group++;
                             group_stack.push({ .m_group_number = ++group_number, .m_group_regex = {} });
@@ -68,13 +68,13 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                     case RegexToken::GroupClose:
                         {
                             if (state.in_square != 0) {
-                                current_tokens().emplace(cur);
+                                current_tokens()->emplace(cur);
                             } else {
                                 if (state.in_group == 0) {
                                     return RegexParseError{ "Unmatched group parenthesis"_s, index };
                                 }
                                 Regex::Group group{ move(group_stack.pop()) };
-                                current_tokens().emplace(move(group));
+                                current_tokens()->emplace(move(group));
                                 state.in_group--;
                             }
                         }
@@ -88,15 +88,15 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                                 return RegexParseError{ "Unmatched square parenthesis"_s, index };
                             }
                             state.in_square--;
-                            current_tokens().emplace(move(current_chargroup));
+                            current_tokens()->emplace(move(current_chargroup));
                         }
                         break;
                     default:
-                        current_tokens().emplace(tok);
+                        current_tokens()->emplace(tok);
                         break;
                 }
             } else {
-                current_tokens().emplace(cur);
+                current_tokens()->emplace(cur);
             }
         }
 

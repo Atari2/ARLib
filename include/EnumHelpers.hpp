@@ -239,8 +239,8 @@ struct PrintInfo<E> {
         return #__VA_ARGS__;                                                                                           \
     }
 
-#define MAKE_FANCY_ENUM(en, ...)                                                                                       \
-    enum class en { __VA_ARGS__ };                                                                                     \
+#define MAKE_FANCY_ENUM(en, ut, ...)                                                                                   \
+    enum class en : ut { __VA_ARGS__ };                                                                                \
     ENUM_TO_STR(en, __VA_ARGS__)
 
 #define BITFIELD_ENUM_OP_OR(E)                                                                                         \

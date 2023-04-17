@@ -32,7 +32,7 @@ class Vector {
     void append_internal_single_(T&& value)
     requires MoveAssignable<T>
     {
-        T* memptr           = &m_storage[m_size++];
+        T* memptr = &m_storage[m_size++];
         new (memptr) T{ ARLib::move(value) };
     }
     void append_internal_single_(const T& value)
@@ -209,7 +209,7 @@ class Vector {
     requires Constructible<T, Args...>
     void emplace(Args&&... args) {
         ensure_capacity_();
-        T val{ args... };
+        T val{ Forward<Args>(args)... };
         if constexpr (MoveAssignable<T>) {
             append_internal_single_(Forward<T>(val));
         } else {

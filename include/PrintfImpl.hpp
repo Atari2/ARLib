@@ -14,10 +14,8 @@
 #ifndef _Printf_format_string_
     #define _Printf_format_string_
 #endif
-
-
 namespace ARLib {
-MAKE_FANCY_ENUM(PrintfErrorCodes, Ok, InvalidFormat, MissingType, InvalidType, NotImplemented);
+MAKE_FANCY_ENUM(PrintfErrorCodes, size_t, Ok, InvalidFormat, MissingType, InvalidType, NotImplemented);
 struct PrintfBuffer {
     char* buffer;
     size_t buffer_size;
