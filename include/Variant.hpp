@@ -232,11 +232,11 @@ namespace detail {
             : head(move(args)...), is_active(true) {}
         VariantStorage() : is_active(false) {}
         VariantStorage(VariantStorage&& other) noexcept : is_active(other.is_active) {
-            if (other.is_active) head = move(other.head);
+            if (other.is_active) new (&head) Type{ move(other.head) };
             is_active = other.is_active;
         }
         VariantStorage(const VariantStorage& other) : is_active(other.is_active) {
-            if (other.is_active) head = other.head;
+            if (other.is_active) new (&head) Type{ other.head };
         }
         VariantStorage& operator=(VariantStorage&& other) noexcept {
             if (other.is_active) head = move(other.head);

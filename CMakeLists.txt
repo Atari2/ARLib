@@ -188,6 +188,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${ARLIB_SOURCE_DIR}/PrintInfo.cpp
     ${ARLIB_SOURCE_DIR}/Process.cpp
     ${ARLIB_SOURCE_DIR}/Random.cpp
+    ${ARLIB_SOURCE_DIR}/Regex.cpp
     ${ARLIB_SOURCE_DIR}/SourceLocation.cpp
     ${ARLIB_SOURCE_DIR}/StackTrace.cpp
     ${ARLIB_SOURCE_DIR}/String.cpp
@@ -267,6 +268,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/Process.hpp
     ${ARLIB_INCLUDE_DIR}/Random.hpp
     ${ARLIB_INCLUDE_DIR}/RefBox.hpp
+    ${ARLIB_INCLUDE_DIR}/Regex.hpp
     ${ARLIB_INCLUDE_DIR}/Result.hpp
     ${ARLIB_INCLUDE_DIR}/SSOVector.hpp
     ${ARLIB_INCLUDE_DIR}/Set.hpp
