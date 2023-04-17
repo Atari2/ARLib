@@ -1,9 +1,11 @@
 # ARLib
+
 A simple WIP C++20 implementation of standard containers and library features that aims to be compatible with MSVC/GCC/Clang on 64 bit Windows and Linux systems.
 
 Note: the developer of this library is not responsible for any error caused by it. Everything is based on necessity as it is a personal project done mostly for fun. PR and issues are welcome but not guaranteed to be fixed/merged. Do so at your own discretion.
 
 For now it relies on:
+
 - `<compare>` for `std::strong_ordering`
 - `<type_traits>` for `std::is_foo_constructible<T, Args...>`, `std::is_foo_assignable<T, Args...>`, `std::is_union<T>`, `std::is_enum<T>`
 - `<cstdio>` for file and console I/O, and for some number -> string conversions.
@@ -14,10 +16,11 @@ For now it relies on:
 - `<pthread.h>` on Linux, this dependency can be disabled with -DDISABLE_THREADING passed upon running CMake.
 
 This library has been compiled and tested with:
+
 - MSVC 19.29.30037.0
-- GCC 11
+- GCC 12
 - Clang 12
-- Mingw x64 with GCC 11
+- Mingw x64 with GCC 12
 - clang-cl 12
 
 To build on Windows the minimum version of Visual Studio required to build is VS 2019 v16.11.
@@ -26,6 +29,7 @@ To build on Windows the minimum version of Visual Studio required to build is VS
 
 Simply run cmake with the preferred settings of your choice.
 For a standard release linux build for example:
+
 ```
 git clone https://github.com/Atari2/ARLib
 cd ARLib
@@ -38,6 +42,7 @@ ninja
 If you want to use `make` just remove the `-G "Ninja"` and call `make` after instead of `ninja`.
 
 For a standard release windows build:
+
 ```
 git clone https://github.com/Atari2/ARLib
 cd ARLib
@@ -48,6 +53,7 @@ cmake --build . --config Release
 ```
 
 To add this library to your cmake project, simply use the following in your CMakeLists.txt
+
 ```
 include(FetchContent)
 
