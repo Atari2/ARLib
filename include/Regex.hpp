@@ -37,14 +37,15 @@ class Regex {
     struct Group;
     struct CharGroup;
     private:
-    using ReTokVector = UniquePtr<Vector<Variant<char, RegexToken, EscapedRegexToken, Group, CharGroup>>>;
+    using RegexVariant = Variant<char, RegexToken, EscapedRegexToken, Group, CharGroup>;
+    using ReTokVector = UniquePtr<Vector<RegexVariant>>;
     public:
     struct Group {
         size_t m_group_number;
-        ReTokVector m_group_regex;
+        ReTokVector m_group_regex{};
     };
     struct CharGroup {
-        ReTokVector m_char_group;
+        ReTokVector m_char_group{};
     };
     private:
     ReTokVector m_regex;

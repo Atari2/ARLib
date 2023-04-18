@@ -17,7 +17,7 @@ void regex_debug_print(Func&& func) {
 static_assert(from_enum(RegexToken::Plus) + 1 == re_tok_chars.size());
 static_assert(from_enum(EscapedRegexToken::NumberChar) + 1 == re_esc_chars.size());
 Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
-    Regex::ReTokVector tokens{};
+    Regex::ReTokVector tokens{ new Vector<Regex::RegexVariant> };
     struct RegexState {
         size_t in_group;     // TODO: change these to something that supports nesting
         size_t in_square;    // TODO: change these to something that supports nesting
@@ -62,7 +62,7 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                             current_tokens()->emplace(cur);
                         } else {
                             state.in_group++;
-                            group_stack.push({ .m_group_number = ++group_number, .m_group_regex = {} });
+                            group_stack.push({ .m_group_number = ++group_number, .m_group_regex = UniquePtr{ new Vector<Regex::RegexVariant> } });
                         }
                         break;
                     case RegexToken::GroupClose:
@@ -80,6 +80,7 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                         }
                         break;
                     case RegexToken::SquareOpen:
+                        current_chargroup.m_char_group = UniquePtr{ new Vector<Regex::RegexVariant> };
                         state.in_square++;
                         break;
                     case RegexToken::SquareClose:
