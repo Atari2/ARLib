@@ -68,8 +68,6 @@ class FlatSetIterator {
     }
     FlatSetIterator operator++(int);
     FlatSetIterator& operator++();
-    FlatSetIterator operator--(int);
-    FlatSetIterator& operator--();
 };
 template <typename T>
 struct FlatSetStorage {

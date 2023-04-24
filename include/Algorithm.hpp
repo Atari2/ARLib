@@ -12,7 +12,7 @@ constexpr inline auto sum_default = [](const T& elem) {
 };
 
 constexpr inline size_t npos_ = static_cast<size_t>(-1);
-template <IteratorConcept Iter>
+template <ForwardIterator Iter>
 requires EqualityComparable<IteratorOutputType<Iter>>
 constexpr size_t find(Iter begin, Iter end, const IteratorOutputType<Iter>& elem) {
     if (begin == end) return npos_;
@@ -37,8 +37,8 @@ constexpr auto find_if(const C& cont, Func condition) {
         if (invoke(condition, *begin)) return index;
     return npos_;
 }
-template <typename Iter>
-requires(Incrementable<Iter> && Dereferencable<Iter> && MoreComparable<IteratorOutputType<Iter>>)
+template <ForwardIterator Iter>
+requires(MoreComparable<IteratorOutputType<Iter>>)
 constexpr Iter max(Iter begin, Iter end) {
     if (begin == end) return begin;
     Iter value{ begin };
@@ -46,8 +46,8 @@ constexpr Iter max(Iter begin, Iter end) {
         if (*begin > *value) value = begin;
     return value;
 }
-template <typename Iter>
-requires(Incrementable<Iter> && Dereferencable<Iter> && LessComparable<IteratorOutputType<Iter>>)
+template <ForwardIterator Iter>
+requires(LessComparable<IteratorOutputType<Iter>>)
 constexpr Iter min(Iter begin, Iter end) {
     if (begin == end) return begin;
     Iter value{ begin };
@@ -55,8 +55,7 @@ constexpr Iter min(Iter begin, Iter end) {
         if (*begin < *value) value = begin;
     return value;
 }
-template <typename Iter, typename Functor = decltype(sum_default<IteratorOutputType<Iter>>)>
-requires(Incrementable<Iter> && Dereferencable<Iter>)
+template <ForwardIterator Iter, typename Functor = decltype(sum_default<IteratorOutputType<Iter>>)>
 constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<IteratorOutputType<Iter>>) {
     if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
     auto total = invoke(func, *begin);
@@ -64,8 +63,7 @@ constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<IteratorOutp
     for (; begin != end; ++begin) total += func(*begin);
     return total;
 }
-template <typename Iter, bool ROUND = false>
-requires(Incrementable<Iter> && Dereferencable<Iter>)
+template <ForwardIterator Iter, bool ROUND = false>
 constexpr auto avg(Iter begin, Iter end) {
     size_t sz = 0;
     if constexpr (ROUND) {
@@ -79,7 +77,7 @@ constexpr auto avg(Iter begin, Iter end) {
         return total / static_cast<double>(sz);
     }
 }
-template <IteratorConcept Iter, typename Functor>
+template <ForwardIterator Iter, typename Functor>
 requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
 constexpr auto all_of(Iter begin, Iter end, Functor func) {
     for (; begin != end; ++begin) {
@@ -87,7 +85,7 @@ constexpr auto all_of(Iter begin, Iter end, Functor func) {
     }
     return true;
 }
-template <IteratorConcept Iter, typename Functor>
+template <ForwardIterator Iter, typename Functor>
 requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
 constexpr auto any_of(Iter begin, Iter end, Functor func) {
     for (; begin != end; ++begin) {
@@ -95,7 +93,7 @@ constexpr auto any_of(Iter begin, Iter end, Functor func) {
     }
     return false;
 }
-template <IteratorConcept Iter, typename Functor>
+template <ForwardIterator Iter, typename Functor>
 requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
 constexpr auto exactly_n(Iter begin, Iter end, Functor func, size_t n) {
     size_t how_many = 0;
