@@ -18,7 +18,7 @@ struct SetupLocale {
     SetupLocale() {
         currlocale = String{ std::setlocale(LC_CTYPE, nullptr) };
         if (currlocale.ends_with(".UTF-8"_sv) || currlocale.ends_with(".utf8"_sv)) return;    // already utf8
-        String half      = currlocale.split(".")[0];
+        String half      = currlocale.substring(0, currlocale.index_of('.'));
         String newlocale = half + ".UTF-8"_s;
         Array common_locales{
             "C.UTF-8"_sv, "C.utf8"_sv, "en_US.UTF-8"_sv, "en_US.utf8"_sv, "it_IT.UTF-8"_sv, "it_IT.utf8"_sv,
