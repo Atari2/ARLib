@@ -8,16 +8,20 @@
     #include "Types.hpp"
     #include "Path.hpp"
     #include "UniquePtr.hpp"
-    #include <dirent.h>
-    #include <glob.h>
+    #include "Chrono.hpp"
+struct stat;
 namespace ARLib {
 enum class UnixFileAttribute {};
 class UnixFileInfo {
     friend class UnixDirectoryIterator;
+    using StatHandle = struct ::stat*;
+    mutable StatHandle statHandle{};
     StringView fileName{};
     Path fullPath{};
+    void populate_stathandle() const;
     public:
     UnixFileInfo(UnixFileInfo&& other) noexcept : fileName(), fullPath(move(other.fullPath)) {
+        swap(statHandle, other.statHandle);
         auto idx_last_slash = fullPath.string().last_index_of('/');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
     }
@@ -34,9 +38,14 @@ class UnixFileInfo {
     constexpr UnixFileInfo() = default;
     const auto& path() const { return fullPath; }
     const auto& filename() const { return fileName; }
+    bool is_directory() const;
+    bool is_file() const;
+    size_t filesize() const;
+    Nanos last_access() const;
+    Nanos last_modification() const;
+    ~UnixFileInfo();
 };
-using GlobResult        = glob_t;
-using UnixDirIterHandle = GlobResult*;
+using UnixDirIterHandle = void*;
 bool remove_filespec(String& p);
 bool is_directory(const String& p);
 void parent_path(String& p);
@@ -53,21 +62,12 @@ class UnixDirectoryIterate {
         m_path(move(other.m_path)), m_glob_result(other.m_glob_result), m_recurse(other.m_recurse) {
         other.m_glob_result = nullptr;
     }
-    UnixDirectoryIterate& operator=(UnixDirectoryIterate&& other) noexcept {
-        if (m_glob_result) delete m_glob_result;
-        m_path              = move(other.m_path);
-        m_recurse           = other.m_recurse;
-        m_glob_result       = other.m_glob_result;
-        other.m_glob_result = nullptr;
-        return *this;
-    }
+    UnixDirectoryIterate& operator=(UnixDirectoryIterate&& other) noexcept;
     public:
     UnixDirectoryIterate(Path path, bool recurse);
     UnixDirectoryIterator begin() const;
     UnixDirectoryIterator end() const;
-    ~UnixDirectoryIterate() {
-        if (m_glob_result) delete m_glob_result;
-    }
+    ~UnixDirectoryIterate();
 };
 class UnixDirectoryIterator {
     friend class UnixDirectoryIterate;

@@ -1,6 +1,7 @@
 #pragma once
 #define FILESYSTEM_INCLUDED__
 #include "XNative/fs/xnative_fs_merge.hpp"
+#include "Chrono.hpp"
 namespace ARLib {
 class FileInfo {
     NativeFileInfo m_info;
@@ -9,6 +10,11 @@ class FileInfo {
     FileInfo(const NativeFileInfo& info) : m_info(info) {}
     const Path& path() const;
     const FsStringView& filename() const;
+    bool is_directory() const;
+    bool is_file() const;
+    size_t filesize() const;
+    Nanos last_access() const;
+    Nanos last_modification() const;
 };
 class DirectoryIterator {
     friend class DirectoryIterate;

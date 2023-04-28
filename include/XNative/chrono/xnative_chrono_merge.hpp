@@ -23,7 +23,6 @@ struct Nanos;
 
 template <typename T>
 concept TimeUnitType = IsAnyOfV<T, Seconds, Millis, Micros, Nanos>;
-
 struct Seconds {
     int64_t value;
 
@@ -56,7 +55,7 @@ struct Micros {
 };
 struct Nanos {
     int64_t value;
-    Ordering operator<=>(const Nanos& other) const { return CompareThreeWay(this->value, other.value); };
+
     template <TimeUnitType T>
     constexpr T to() const;
     template <TimeUnitType T>
@@ -66,14 +65,13 @@ struct Nanos {
 };
 namespace internal {
     enum class TimeConversionAction { Non, Mul, Div };
-    using enum TimeConversionAction;
     using TCP = Pair<TimeConversionAction, int64_t>;
     // clang-format off
     constexpr static TCP time_conversion_matrix[4][4] = {
-        { { Non, 1 },             { Div, 1'000 },     { Div, 1'000'000 }, { Div, 1'000'000'000 }},
-        { { Mul, 1'000 },         { Non, 1 },         { Div, 1'000 },     { Div, 1'000'000 }    },
-        { { Mul, 1'000'000 },     { Mul, 1'000 },     { Non, 1 },         { Div, 1'000 }        },
-        { { Mul, 1'000'000'000 }, { Mul, 1'000'000 }, { Mul, 1'000 },     { Non, 1 }            }
+        { { TimeConversionAction::Non, 1 },             { TimeConversionAction::Div, 1'000 },     { TimeConversionAction::Div, 1'000'000 }, { TimeConversionAction::Div, 1'000'000'000 }},
+        { { TimeConversionAction::Mul, 1'000 },         { TimeConversionAction::Non, 1 },         { TimeConversionAction::Div, 1'000 },     { TimeConversionAction::Div, 1'000'000 }    },
+        { { TimeConversionAction::Mul, 1'000'000 },     { TimeConversionAction::Mul, 1'000 },     { TimeConversionAction::Non, 1 },         { TimeConversionAction::Div, 1'000 }        },
+        { { TimeConversionAction::Mul, 1'000'000'000 }, { TimeConversionAction::Mul, 1'000'000 }, { TimeConversionAction::Mul, 1'000 },     { TimeConversionAction::Non, 1 }            }
     };
     // clang-format on
 
@@ -87,14 +85,69 @@ namespace internal {
         constexpr auto action = p.first();
         constexpr auto num    = p.second();
         switch (action) {
-            case Non:
+            case TimeConversionAction::Non:
                 return To{ unit.value };
-            case Mul:
+            case TimeConversionAction::Mul:
                 return To{ unit.value * num };
-            case Div:
+            case TimeConversionAction::Div:
                 return To{ unit.value / num };
         }
         unreachable;
+    }
+    using BetweenTimesOp = int64_t (*)(int64_t, int64_t);
+    constexpr int64_t op_sum(int64_t lhs, int64_t rhs) {
+        return lhs + rhs;
+    }
+    constexpr int64_t op_diff(int64_t lhs, int64_t rhs) {
+        return lhs - rhs;
+    }
+    constexpr int64_t op_mult(int64_t lhs, int64_t rhs) {
+        return lhs * rhs;
+    }
+    constexpr int64_t op_div(int64_t lhs, int64_t rhs) {
+        return lhs / rhs;
+    }
+    enum BetweenTimesOpType { Sum, Diff, Mult, Div };
+    template <BetweenTimesOpType type>
+    constexpr BetweenTimesOp choose_op() {
+        switch (type) {
+            case BetweenTimesOpType::Sum:
+                return op_sum;
+            case BetweenTimesOpType::Diff:
+                return op_diff;
+            case BetweenTimesOpType::Mult:
+                return op_mult;
+            case BetweenTimesOpType::Div:
+                return op_div;
+        }
+        unreachable;
+    }
+    template <TimeUnitType Lhs, TimeUnitType Rhs, BetweenTimesOpType OpType>
+    constexpr auto op_time_unit(Lhs lhs, Rhs rhs) {
+        using TimeArray             = TypeArray<Seconds, Millis, Micros, Nanos>;
+        constexpr size_t rhs_id     = TimeArray::IndexOf<Rhs>;
+        constexpr size_t lhs_id     = TimeArray::IndexOf<Lhs>;
+        constexpr BetweenTimesOp op = choose_op<OpType>();
+        if constexpr (rhs_id >= lhs_id) {
+            Rhs lhs_conv = convert_time_unit<Rhs, Lhs>(lhs);
+            return Rhs{ op(lhs_conv.value, rhs.value) };
+        } else {
+            Lhs rhs_conv = convert_time_unit<Lhs, Rhs>(rhs);
+            return Lhs{ op(lhs.value, rhs_conv.value) };
+        }
+    }
+    template <TimeUnitType Lhs, TimeUnitType Rhs>
+    constexpr Ordering compare_time_unit(Lhs lhs, Rhs rhs) {
+        using TimeArray             = TypeArray<Seconds, Millis, Micros, Nanos>;
+        constexpr size_t rhs_id     = TimeArray::IndexOf<Rhs>;
+        constexpr size_t lhs_id     = TimeArray::IndexOf<Lhs>;
+        if constexpr (rhs_id >= lhs_id) {
+            Rhs lhs_conv = convert_time_unit<Rhs, Lhs>(lhs);
+            return CompareThreeWay(lhs_conv.value, rhs.value);
+        } else {
+            Lhs rhs_conv = convert_time_unit<Lhs, Rhs>(rhs);
+            return CompareThreeWay(lhs.value, rhs_conv.value);
+        }
     }
 }    // namespace internal
 template <TimeUnitType T>
@@ -112,6 +165,26 @@ constexpr T Micros::to() const {
 template <TimeUnitType T>
 constexpr T Nanos::to() const {
     return internal::convert_time_unit<T>(*this);
+}
+template <TimeUnitType Lhs, TimeUnitType Rhs>
+constexpr auto operator+(const Lhs& lhs, const Rhs& rhs) {
+    return internal::op_time_unit<Lhs, Rhs, internal::BetweenTimesOpType::Sum>(lhs, rhs);
+}
+template <TimeUnitType Lhs, TimeUnitType Rhs>
+constexpr auto operator-(const Lhs& lhs, const Rhs& rhs) {
+    return internal::op_time_unit<Lhs, Rhs, internal::BetweenTimesOpType::Diff>(lhs, rhs);
+}
+template <TimeUnitType Lhs, TimeUnitType Rhs>
+constexpr auto operator*(const Lhs& lhs, const Rhs& rhs) {
+    return internal::op_time_unit<Lhs, Rhs, internal::BetweenTimesOpType::Mult>(lhs, rhs);
+}
+template <TimeUnitType Lhs, TimeUnitType Rhs>
+constexpr auto operator/(const Lhs& lhs, const Rhs& rhs) {
+    return internal::op_time_unit<Lhs, Rhs, internal::BetweenTimesOpType::Div>(lhs, rhs);
+}
+template <TimeUnitType Lhs, TimeUnitType Rhs>
+constexpr Ordering operator<=>(const Lhs& lhs, const Rhs& rhs) {
+    return internal::compare_time_unit(lhs, rhs);
 }
 constexpr Seconds operator""_sec(unsigned long long value) {
     return Seconds{ static_cast<int64_t>(value) };

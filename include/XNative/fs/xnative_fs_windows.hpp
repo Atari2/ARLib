@@ -7,8 +7,13 @@
     #include "Types.hpp"
     #include "Path.hpp"
     #include "UniquePtr.hpp"
+    #include "Chrono.hpp"
+    #include "EnumHelpers.hpp"
 namespace ARLib {
-enum class Win32FileAttribute {
+constexpr int64_t Win32TicksPerSecond = 10000000LL;
+constexpr int64_t Win32TicksFromEpoch = ((1970 - 1601) * 365 + 3 * 24 + 17) * 86400LL * Win32TicksPerSecond;
+static_assert(Win32TicksFromEpoch == 116444736000000000LL);
+enum class Win32FileAttribute : uint32_t {
     ARCHIVE               = 0x20,
     COMPRESSED            = 0x800,
     DEVICE                = 0x40,
@@ -31,6 +36,7 @@ enum class Win32FileAttribute {
     PINNED                = 0x80000,
     UNPINNED              = 0x100000
 };
+MAKE_BITFIELD_ENUM(Win32FileAttribute);
 class Win32FileInfo {
     friend class Win32DirectoryIterator;
     uint32_t fileAttributes{};
@@ -67,6 +73,27 @@ class Win32FileInfo {
     constexpr Win32FileInfo() = default;
     const auto& path() const { return fullPath; }
     const auto& filename() const { return fileName; }
+    bool is_directory() const { return (fileAttributes & from_enum(Win32FileAttribute::DIRECTORY)) != 0; }
+    bool is_file() const {
+        constexpr uint32_t regular_file_attrs = from_enum(
+        Win32FileAttribute::ARCHIVE | Win32FileAttribute::COMPRESSED | Win32FileAttribute::ENCRYPTED |
+        Win32FileAttribute::HIDDEN | Win32FileAttribute::NORMAL | Win32FileAttribute::NOT_CONTENT_INDEXED |
+        Win32FileAttribute::OFFLINE | Win32FileAttribute::READONLY | Win32FileAttribute::SPARSE_FILE |
+        Win32FileAttribute::SYSTEM | Win32FileAttribute::TEMPORARY
+        );
+        return (fileAttributes & regular_file_attrs) != 0;
+    }
+    size_t filesize() const { return fileSize; }
+    Nanos last_access() const {
+        // 100 nanoseconds itervals
+        int64_t this_file_ticks_from_epoch = lastAccess - Win32TicksFromEpoch;
+        return Nanos{ this_file_ticks_from_epoch * 100LL };
+    }
+    Nanos last_modification() const {
+        // 100 nanoseconds itervals
+        int64_t this_file_ticks_from_epoch = lastWrite - Win32TicksFromEpoch;
+        return Nanos{ this_file_ticks_from_epoch * 100LL };
+    }
     ~Win32FileInfo() = default;
 };
 using Win32DirIterHandle = void*;
