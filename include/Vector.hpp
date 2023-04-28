@@ -32,14 +32,12 @@ class Vector {
     void append_internal_single_(T&& value)
     requires MoveAssignable<T>
     {
-        T* memptr = &m_storage[m_size++];
-        new (memptr) T{ ARLib::move(value) };
+        m_storage[m_size++] = ARLib::move(value);
     }
     void append_internal_single_(const T& value)
     requires CopyAssignable<T>
     {
-        T* memptr = &m_storage[m_size++];
-        new (memptr) T{ value };
+        m_storage[m_size++] = value;
     }
     void ensure_capacity_() {
         if (m_size == m_capacity) { round_to_capacity_(m_capacity + 1); }
