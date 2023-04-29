@@ -4,10 +4,12 @@
 #include "PrintInfo.hpp"
 #include "TypeTraits.hpp"
 #include "Utility.hpp"
+#include "Ordering.hpp"
 namespace ARLib {
 struct Monostate {
     bool operator==(const Monostate&) const { return true; }
     bool operator!=(const Monostate&) const { return false; }
+    Ordering operator<=>(const Monostate&) const { return equal; }
 };
 namespace detail {
     struct MonostateT {};
@@ -101,7 +103,11 @@ namespace detail {
         requires Printable<First>
         {
             if (is_active) {
-                return PrintInfo<First>{ head }.repr();
+                if constexpr (SameAs<First, String>) {
+                    return "\""_s + head + "\""_s;
+                } else {
+                    return PrintInfo<First>{ head }.repr();
+                }
             } else {
                 return tail.get_printinfo_string();
             }
@@ -209,6 +215,18 @@ namespace detail {
             else
                 return tail.is_empty();
         }
+        Ordering operator<=>(const VariantStorage& other) const
+        requires((... && Orderable<Rest>) && Orderable<First>)
+        {
+            if (is_active != other.is_active) {
+                return unordered;
+            } else if (is_active) {
+                return head <=> other.head;
+            } else {
+                // propagate
+                return tail <=> other.tail;
+            }
+        }
         ~VariantStorage() {
             if (is_active)
                 head.~First();
@@ -267,7 +285,11 @@ namespace detail {
         requires Printable<Type>
         {
             if (is_active) {
-                return PrintInfo<Type>{ head }.repr();
+                if constexpr (SameAs<Type, String>) {
+                    return "\""_s + head + "\""_s;
+                } else {
+                    return PrintInfo<Type>{ head }.repr();
+                }
             } else {
                 return "Uninitialized variant"_s;
             }
@@ -324,6 +346,18 @@ namespace detail {
             }
         }
         bool is_empty() const { return is_active; }
+        Ordering operator<=>(const VariantStorage& other) const
+        requires(Orderable<Type>)
+        {
+            if (is_active != other.is_active) {
+                return unordered;
+            } else if (is_active) {
+                return head <=> other.head;
+            } else {
+                // what do we even do here
+                return unordered;
+            }
+        }
         ~VariantStorage() {
             if (is_active) head.~Type();
         };
@@ -366,6 +400,7 @@ namespace detail {
         }
         bool active() const { return is_active; }
         bool is_empty() const { return is_active; }
+        Ordering operator<=>(const VariantStorage& other) const { return equal; }
         ~VariantStorage() {
             if (is_active) head.~MonostateT();
         };
@@ -443,6 +478,11 @@ class Variant {
         m_storage.template visit<Callable>(visitor);
     }
     bool is_empty() const { return m_storage.is_empty(); }
+    Ordering operator<=>(const Variant& other) const
+    requires(... && Orderable<Types>)
+    {
+        return m_storage <=> other.m_storage;
+    }
     ~Variant() = default;
 };
 template <>
@@ -489,6 +529,7 @@ class Variant<detail::MonostateT> {
     }
     bool is_active() const { return m_storage.active(); }
     bool is_empty() const { return m_storage.is_empty(); }
+    Ordering operator<=>(const Variant& other) const { return equal; }
     ~Variant() = default;
 };
 // free functions to avoid template keyword when calling member functions in templated functions.
