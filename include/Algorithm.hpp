@@ -210,10 +210,12 @@ void quicksort_internal(Iter lo, Iter hi) {
     }
 }
 // in-place sorting
-template <typename C>
-requires Iterable<C>
+template <Iterable C>
 void sort(C& cont) {
-    quicksort_internal(cont.begin(), cont.end() - 1);
+    auto begin = cont.begin();
+    auto end   = cont.end();
+    if (begin == end) return;    // empty
+    quicksort_internal(begin, end - 1);
 }
 template <Iterable C>
 constexpr auto begin(C& cont) {

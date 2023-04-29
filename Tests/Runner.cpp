@@ -1077,6 +1077,8 @@ TEST(ARLibTests, SortingTest) {
     };
     sort(strings);
     for (const auto& [g, e] : zip(strings, expected)) { EXPECT_EQ(g, e); }
+    Vector<String> v2{};
+    sort(v2); // shouldn't crash
 }
 TEST(ARLibTests, SpanTests) {
     Vector<int> vec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
