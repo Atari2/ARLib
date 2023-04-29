@@ -2,21 +2,9 @@
 #include "Compat.hpp"
 #include "Concepts.hpp"
 #include "Conversion.hpp"
-// this is here so I can declare the proper constructor in the cpp file
-// and avoid "#include <compare>" in here
-// it's only needed because otherwise I can't use <=> in my DefaultOrdering<T> class in SortedVector<T>
+#include "PrintInfo.hpp"
+#include <compare>
 
-namespace std {
-#ifdef _LIBCPP_VERSION
-inline namespace __1 {
-    class strong_ordering;
-    class partial_ordering;
-}    // namespace __1
-#else
-struct strong_ordering;
-struct partial_ordering;
-#endif
-}    // namespace std
 namespace ARLib {
 enum class OrderingType { Less = -1, Equal = 0, Greater = 1, NoOrder = 2 };
 class Ordering {
@@ -65,6 +53,7 @@ class Ordering {
 static inline const Ordering less{ OrderingType::Less };
 static inline const Ordering equal{ OrderingType::Equal };
 static inline const Ordering greater{ OrderingType::Greater };
+static inline const Ordering unordered{ OrderingType::NoOrder };
 template <typename T>
 requires EqualityComparable<T> && LessComparable<T> && MoreComparable<T>
 constexpr Ordering CompareThreeWay(const T& a, const T& b) {
@@ -75,4 +64,22 @@ constexpr Ordering CompareThreeWay(const T& a, const T& b) {
     else
         return greater;
 }
+template <>
+struct PrintInfo<Ordering> {
+    const Ordering& m_ordering;
+    PrintInfo(const Ordering& ordering) : m_ordering(ordering) {}
+    String repr() const {
+        switch (m_ordering.type()) {
+            case OrderingType::Less:
+                return "less"_s;
+            case OrderingType::Equal:
+                return "equal"_s;
+            case OrderingType::Greater:
+                return "greater"_s;
+            case OrderingType::NoOrder:
+                return "unordered"_s;
+        }
+        unreachable;
+    }
+};
 }    // namespace ARLib
