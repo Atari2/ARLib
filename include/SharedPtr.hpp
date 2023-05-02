@@ -4,43 +4,8 @@
 #include "Memory.hpp"
 #include "PrintInfo.hpp"
 #include "TypeTraits.hpp"
-#ifdef COMPILER_MSVC
-    #include <intrin.h>
-    #define SYNC_INC(x) _InterlockedIncrement(x)
-    #define SYNC_DEC(x) _InterlockedDecrement(x)
-#else
-    #define SYNC_INC(x) __sync_add_and_fetch(x, 1)
-    #define SYNC_DEC(x) __sync_sub_and_fetch(x, 1)
-#endif
+#include "WeakPtr.hpp"
 namespace ARLib {
-template <typename T, bool Multiple = false>
-class RefCountBase {
-    unsigned long m_counter = 1;
-    T* m_object             = nullptr;
-    void destroy() noexcept {
-        if constexpr (Multiple) {
-            delete[] m_object;
-        } else {
-            delete m_object;
-        }
-    }
-
-    public:
-    constexpr RefCountBase() noexcept = default;
-    explicit RefCountBase(T* object) : m_object(object) {}
-    RefCountBase(const RefCountBase&)            = delete;
-    RefCountBase& operator=(const RefCountBase&) = delete;
-    void incref() noexcept { SYNC_INC(cast<volatile long*>(&m_counter)); }
-    void decref() noexcept {
-        if (SYNC_DEC(cast<volatile long*>(&m_counter)) == 0) { destroy(); }
-    }
-    T* release_storage() {
-        T* ptr   = m_object;
-        m_object = nullptr;
-        return ptr;
-    }
-    auto count() const noexcept { return m_counter; }
-};
 template <typename T>
 class SharedPtr {
     T* m_storage             = nullptr;
@@ -52,6 +17,12 @@ class SharedPtr {
             delete m_count;
             m_count = nullptr;
         }
+    }
+
+    SharedPtr(WeakPtr<T>& weak) { 
+        m_storage = weak.m_storage;
+        m_count   = weak.m_count;
+        m_count->incref();
     }
 
     public:
@@ -115,6 +86,7 @@ class SharedPtr {
         other.m_count   = m_count;
         m_count->incref();
     }
+    WeakPtr<T> weakptr() { return WeakPtr{ m_storage, m_count }; }
     T* get() { return m_storage; }
     const T* get() const { return m_storage; }
     auto refcount() const { return m_count ? m_count->count() : 0ul; }
@@ -125,6 +97,12 @@ class SharedPtr {
     const T& operator*() const { return *m_storage; }
     ~SharedPtr() { decrease_instance_count_(); }
 };
+
+template <typename T>
+SharedPtr<T> WeakPtr<T>::lock() {
+    return SharedPtr{ *this };
+}
+
 template <typename T>
 class SharedPtr<T[]> {
     using RefCount    = RefCountBase<T, true>;
