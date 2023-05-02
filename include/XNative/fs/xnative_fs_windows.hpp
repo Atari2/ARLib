@@ -85,15 +85,15 @@ class Win32FileInfo {
         return (fileAttributes & regular_file_attrs) != 0;
     }
     size_t filesize() const { return fileSize; }
-    Nanos last_access() const {
+    Instant last_access() const {
         // 100 nanoseconds itervals
         int64_t this_file_ticks_from_epoch = lastAccess - Win32TicksFromEpoch;
-        return Nanos{ this_file_ticks_from_epoch * 100LL };
+        return Instant::from_nanos(Nanos{ this_file_ticks_from_epoch * 100LL });
     }
-    Nanos last_modification() const {
+    Instant last_modification() const {
         // 100 nanoseconds itervals
         int64_t this_file_ticks_from_epoch = lastWrite - Win32TicksFromEpoch;
-        return Nanos{ this_file_ticks_from_epoch * 100LL };
+        return Instant::from_nanos(Nanos{ this_file_ticks_from_epoch * 100LL });
     }
     ~Win32FileInfo() = default;
 };

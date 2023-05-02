@@ -21,5 +21,6 @@ long long __cdecl time_get_ticks();
 
 long long __cdecl query_perf_counter();
 long long __cdecl query_perf_frequency();
+int64_t get_filetime_precise();
 }    // namespace ARLib
 #endif

@@ -1,7 +1,8 @@
 #ifndef INCLUDED_FROM_OWN_CPP___
 #define INCLUDED_FROM_OWN_CPP___
 #endif
-#include "XNative/chrono/xnative_chrono_windows.hpp"
+#include "XNative/chrono/xnative_chrono_merge.hpp"
+#include "FileSystem.hpp"
 #include "Conversion.hpp"
 #ifdef WINDOWS
 #include <windows.h>
@@ -87,6 +88,68 @@ long long __cdecl query_perf_frequency() {
         __iso_volatile_store64(&freq_cached, freq);
     }
     return freq;
+}
+int64_t get_filetime_precise() {
+    FILETIME ft{};
+    GetSystemTimePreciseAsFileTime(&ft);
+    int64_t merged = (static_cast<int64_t>(ft.dwHighDateTime) << 32) + static_cast<int64_t>(ft.dwLowDateTime);
+    return (merged - Win32TicksFromEpoch) * 100;
+}
+void Date::fill_date(const Instant& inst, Date& d) {
+    FILETIME time{};
+    FILETIME ltime{};
+    SYSTEMTIME stime{};
+    int64_t filetime    = (inst.raw_value().value / 100LL) + Win32TicksFromEpoch;
+    time.dwLowDateTime  = (filetime & MAXDWORD);
+    time.dwHighDateTime = (filetime >> (sizeof(DWORD) * CHAR_BIT)) & MAXDWORD;
+    FileTimeToLocalFileTime(&time, &ltime);
+    FileTimeToSystemTime(&ltime, &stime);
+    d.m_day             = static_cast<uint8_t>(stime.wDay);
+    d.m_dayofweek       = static_cast<uint8_t>(stime.wDayOfWeek);
+    d.m_year            = static_cast<uint16_t>(stime.wYear);
+    d.m_month           = static_cast<uint8_t>(stime.wMonth);
+    d.m_hour            = static_cast<uint8_t>(stime.wHour);
+    d.m_minute          = static_cast<uint8_t>(stime.wMinute);
+    d.m_second          = static_cast<uint8_t>(stime.wSecond);
+    d.m_extra_precision = Millis{ stime.wMilliseconds };
+}
+Instant Date::date_to_instant(const Date& d) {
+    FILETIME time{};
+    FILETIME ltime{};
+    SYSTEMTIME stime{};
+    stime.wYear         = d.m_year;
+    stime.wMonth        = d.m_month;
+    stime.wDay          = d.m_day;
+    stime.wDayOfWeek    = d.m_dayofweek;
+    stime.wHour         = d.m_hour;
+    stime.wMinute       = d.m_minute;
+    stime.wSecond       = d.m_second;
+    stime.wMilliseconds = static_cast<WORD>(d.m_extra_precision.millis().value);
+    SystemTimeToFileTime(&stime, &ltime);
+    LocalFileTimeToFileTime(&ltime, &time);
+    // 100-nanoseconds ticks
+    int64_t raw_value = static_cast<int64_t>(time.dwLowDateTime) | (static_cast<int64_t>(time.dwHighDateTime) << 32);
+    raw_value -= Win32TicksFromEpoch;
+    return Instant::from_nanos(Nanos{ raw_value * 100LL });
+}
+String Date::date_to_string(const Date& d, Date::Format fmt) {
+    char buf[256];
+    if (fmt == Format::YYYYDDMMhhmmss) {
+        int ret = ARLib::sprintf(
+        buf, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu", d.m_year, d.m_month, d.m_day, d.m_hour, d.m_minute, d.m_second
+        );
+        buf[ret] = '\0';
+    } else /* Format::WithEnglishNames */ {
+        // Tuesday, May 2 2023, 16:13:40
+        StringView weekday = d.dayname();
+        StringView monthn  = d.monthname();
+        int ret            = ARLib::sprintf(
+        buf, "%s, %s %02hhu %04hu, %02hhu:%02hhu:%02hhu", weekday.data(), monthn.data(), d.m_day, d.m_year, d.m_hour,
+        d.m_minute, d.m_second
+        );
+        buf[ret] = '\0';
+    }
+    return String{ buf };
 }
 }    // namespace ARLib
 #endif

@@ -377,9 +377,7 @@ Result<String, PrintfError> format_single_arg(PrintfTypes::PrintfInfo& info, T v
         return ret;
     } else if constexpr (SameAs<const wchar_t*, T>) {
         HARD_ASSERT(info.type == Type::WideString || info.type == Type::AnsiString, "Invalid type");
-        if (info.type != Type::WideString && info.type != Type::AnsiString) {
-            return PrintfErrorCodes::InvalidType;
-        }
+        if (info.type != Type::WideString && info.type != Type::AnsiString) { return PrintfErrorCodes::InvalidType; }
         String ret{};
         if (info.precision != PrintfInfo::missing_precision_marker) {
             // precision on %S is UB according to Clang.
@@ -491,7 +489,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                 } else {
                     size_t end_width = i;
                     while (is_num(format[end_width])) ++end_width;
-                    auto width_or_error      = StrViewToInt(format.substringview(i, end_width));
+                    auto width_or_error = StrViewToInt(format.substringview(i, end_width));
                     if (width_or_error.is_error()) { INVALID_FORMAT; }
                     auto width     = width_or_error.to_ok();
                     cur_info.width = static_cast<size_t>(width);
@@ -507,7 +505,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
                 } else {
                     size_t end_precision = i;
                     while (is_num(format[end_precision])) ++end_precision;
-                    auto precision_or_error      = StrViewToInt(format.substringview(i, end_precision));
+                    auto precision_or_error = StrViewToInt(format.substringview(i, end_precision));
                     if (precision_or_error.is_error()) { INVALID_FORMAT; }
                     cur_info.precision = static_cast<size_t>(precision_or_error.to_ok());
                     i                  = end_precision - 1;
@@ -516,8 +514,16 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
             } else if (find(valid_types, cur) != npos_) {
                 if ((can_parse & AllowedToParse::Type) == AllowedToParse::None) { INVALID_FORMAT; }
                 // type
-                cur_info.type = to_enum<Type>(cur);
-                can_parse     = AllowedToParse::None;
+                cur_info.type    = to_enum<Type>(cur);
+                in_format_spec   = false;
+                cur_info.end_idx = i + 1;
+                fmtargs.append(cur_info);
+                cur_info.flags     = Flags::None;
+                cur_info.type      = Type::None;
+                cur_info.precision = PrintfInfo::missing_precision_marker;
+                cur_info.width     = max(0);
+                cur_info.is_escape = false;
+                can_parse          = AllowedToParse::All;
             } else {
                 if ((can_parse & AllowedToParse::Size) == AllowedToParse::None) {
                     if (cur_info.type == Type::None || ((can_parse & AllowedToParse::Type) != AllowedToParse::None)) {

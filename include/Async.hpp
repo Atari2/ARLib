@@ -40,7 +40,7 @@ class Future {
         if (!m_result_ready && m_executor_thread.joinable()) { m_executor_thread.join(); }
         if constexpr (!IsTVoid) { return *m_result; }
     }
-    FutureStatus wait_for(Nanos ns) {
+    FutureStatus wait_for(Duration ns) {
         if (m_result_ready.load()) return FutureStatus::Ready;
         UniqueLock<Mutex> lock{ m_mutex };
         if (m_cv.wait_for(lock, ns, [&]() { return m_result_ready.load(); })) { return FutureStatus::Ready; }
@@ -63,7 +63,7 @@ class Future<T, true, Functor, Args...> {
         m_result = UniquePtr{ m_func() };
         return *m_result;
     }
-    FutureStatus wait_for([[maybe_unused]] Nanos ns) { return FutureStatus::Deferred; }
+    FutureStatus wait_for([[maybe_unused]] Duration ns) { return FutureStatus::Deferred; }
     bool result_ready() const { return m_result.exists(); }
     T result() const { return *m_result; }
 };

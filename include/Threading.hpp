@@ -275,8 +275,8 @@ class ConditionVariable {
     void notify_one() { ConditionVariableNative::notify_one(m_cv); }
     void notify_all() { ConditionVariableNative::notify_all(m_cv); }
     void wait(UniqueLock<Mutex>& lock) { ConditionVariableNative::wait(m_cv, &lock); }
-    CVStatus wait_for(UniqueLock<Mutex>& lock, Nanos ns) { return ConditionVariableNative::wait_for(m_cv, &lock, ns); }
-    CVStatus wait_until(UniqueLock<Mutex>& lock, Nanos ns) {
+    CVStatus wait_for(UniqueLock<Mutex>& lock, Duration ns) { return ConditionVariableNative::wait_for(m_cv, &lock, ns); }
+    CVStatus wait_until(UniqueLock<Mutex>& lock, Instant ns) {
         return ConditionVariableNative::wait_until(m_cv, &lock, ns);
     }
     template <class Predicate>
@@ -284,11 +284,11 @@ class ConditionVariable {
         ConditionVariableNative::wait(m_cv, &lock, move(stop_waiting));
     }
     template <class Predicate>
-    bool wait_for(UniqueLock<Mutex>& lock, Nanos ns, Predicate stop_waiting) {
+    bool wait_for(UniqueLock<Mutex>& lock, Duration ns, Predicate stop_waiting) {
         return ConditionVariableNative::wait_for(m_cv, &lock, ns, move(stop_waiting));
     }
     template <class Predicate>
-    bool wait_until(UniqueLock<Mutex>& lock, Nanos ns, Predicate stop_waiting) {
+    bool wait_until(UniqueLock<Mutex>& lock, Instant ns, Predicate stop_waiting) {
         return ConditionVariableNative::wait_until(m_cv, &lock, ns, move(stop_waiting));
     }
 };

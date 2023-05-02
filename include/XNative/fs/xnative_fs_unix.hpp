@@ -42,8 +42,8 @@ class UnixFileInfo {
     bool is_directory() const;
     bool is_file() const;
     size_t filesize() const;
-    Nanos last_access() const;
-    Nanos last_modification() const;
+    Instant last_access() const;
+    Instant last_modification() const;
     ~UnixFileInfo();
 };
 using UnixDirIterHandle = void*;

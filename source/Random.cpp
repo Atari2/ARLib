@@ -17,7 +17,7 @@ namespace Random {
     PCG PCG::create() {
         PCG state{ 0, 0 };
         state.seed(
-        static_cast<uint64_t>(Clock::now().value) ^ reinterpret_cast<uintptr_t>(&ARLib::Clock::diff),
+        static_cast<uint64_t>(DateClock::now().raw_value().value) ^ reinterpret_cast<uintptr_t>(&ARLib::DateClock::diff),
         reinterpret_cast<uintptr_t>(&PCG::bounded_random_s)
         );
         return state;

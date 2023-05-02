@@ -35,11 +35,11 @@ bool UnixFileInfo::is_file() const {
 size_t UnixFileInfo::filesize() const {
     return static_cast<size_t>(statHandle->st_size);
 }
-Nanos UnixFileInfo::last_access() const {
-    return Seconds{ statHandle->st_atim.tv_sec } + Nanos{ statHandle->st_atim.tv_nsec };
+Instant UnixFileInfo::last_access() const {
+    return Instant::from_nanos(Seconds{ statHandle->st_atim.tv_sec } + Nanos{ statHandle->st_atim.tv_nsec });
 }
-Nanos UnixFileInfo::last_modification() const {
-    return Seconds{ statHandle->st_atim.tv_sec } + Nanos{ statHandle->st_atim.tv_nsec };
+Instant UnixFileInfo::last_modification() const {
+    return Instant::from_nanos(Seconds{ statHandle->st_atim.tv_sec } + Nanos{ statHandle->st_atim.tv_nsec });
 }
 UnixFileInfo::~UnixFileInfo() {
     if (statHandle) delete statHandle;

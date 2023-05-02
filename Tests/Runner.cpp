@@ -544,13 +544,13 @@ TEST(ARLibTests, EventLoop) {
 }
 #endif
 TEST(ARLibTests, ChronoTest) {
-    auto now = Clock::now();
+    auto now = PerfClock::now();
     String s{};
     for (int i = 0; i < 100; i++) { s.append('c'); }
-    auto new_now = Clock::now();
+    auto new_now = PerfClock::now();
     EXPECT_GT(new_now, now);
-    auto diff = Clock::diff(now, new_now);
-    EXPECT_GT(diff, 0_ns);
+    auto diff = PerfClock::diff(now, new_now);
+    EXPECT_GT(diff, Duration{ 0_ns });
 }
 TEST(ARLibTests, JSONTest) {
     auto maybe_obj = JSON::Parser::parse(R"({"hello world": 10, "array": [1, 2, 3, 4]})"_sv);

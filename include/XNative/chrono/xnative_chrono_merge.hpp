@@ -203,9 +203,7 @@ constexpr Nanos operator""_ns(unsigned long long value) {
     template <>                                                                                                        \
     struct PrintInfo<UnitType> {                                                                                       \
         const UnitType& m_unit;                                                                                        \
-        String repr() const {                                                                                          \
-            return IntToStr(m_unit.value) + " " ext;                                                                   \
-        }                                                                                                              \
+        String repr() const { return IntToStr(m_unit.value) + " " ext; }                                               \
     }
 PRINT_IMPL_FOR_TIME(Seconds, "s");
 PRINT_IMPL_FOR_TIME(Millis, "ms");
@@ -263,6 +261,77 @@ class CommonTime {
         unreachable;
     }
 };
+// A nanosecond precision instant timestamp
+// the raw value isn't the same across OSes.
+class Instant {
+    Nanos m_instant;
+    Instant(Nanos ns) : m_instant{ ns } {}
+
+    public:
+    Instant(TimeUnitType auto&& inst) : m_instant{ inst.template to<Nanos>() } {}
+    static Instant from_nanos(Nanos ns) { return Instant{ ns }; }
+    Nanos raw_value() const { return m_instant; }
+    CommonTime to_common() const { return CommonTime{ m_instant }; }
+    Ordering operator<=>(const Instant& other) const { return m_instant <=> other.m_instant; }
+};
+class Duration {
+    Nanos m_duration;
+
+    public:
+    Duration(TimeUnitType auto&& dur) : m_duration{ dur.template to<Nanos>() } {}
+    Nanos raw_value() const { return m_duration; }
+    CommonTime to_common() const { return CommonTime{ m_duration }; }
+    Ordering operator<=>(const Duration& other) const { return m_duration <=> other.m_duration; }
+};
+// date with second precision
+class Date {
+    public:
+    enum class Format { YYYYDDMMhhmmss, WithEnglishNames };
+
+    private:
+    uint16_t m_year;
+    uint8_t m_month;        // 1-12 on Win32, 0-11 on Unix
+    uint8_t m_dayofweek;    // 0-6
+    uint8_t m_day;          // 1-31
+    uint8_t m_hour;         // 0-23
+    uint8_t m_minute;       // 0-59
+    uint8_t m_second;       // 0-59 on Win32, 0-60 on Unix
+    static void fill_date(const Instant&, Date&);
+    static Instant date_to_instant(const Date&);
+    // YYYY-MM-DD hh:mm:ss
+    static String date_to_string(const Date&, Format);
+    CommonTime m_extra_precision;    // millisecond on Win32, nanoseconds on Unix
+
+    public:
+    Date(Instant instant);
+    Instant to_instant() const;
+    Duration diff(const Date& other) const;
+    String to_string(Format fmt = Format::YYYYDDMMhhmmss) const;
+    StringView dayname() const;
+    StringView monthname() const;
+    uint16_t yearday() const;
+    CommonTime extra_precision() const { return m_extra_precision; }
+};
+template <>
+struct PrintInfo<Duration> {
+    const Duration& m_duration;
+    PrintInfo(const Duration& duration) : m_duration(duration) {}
+    String repr() const { return print_conditional(m_duration.raw_value()); }
+};
+template <>
+struct PrintInfo<Instant> {
+    const Instant& m_instant;
+    PrintInfo(const Instant& instant) : m_instant(instant) {}
+    String repr() const { return print_conditional(m_instant.raw_value()); }
+};
+template <>
+struct PrintInfo<Date> {
+    const Date& m_date;
+    PrintInfo(const Date& date) : m_date(date) {}
+    String repr() const {
+        return m_date.to_string();
+    }
+};
 template <>
 struct PrintInfo<CommonTime> {
     const CommonTime& m_time;
@@ -282,6 +351,7 @@ Ordering CommonTime::compare_self_with_other(const T& other) const {
 using TimeDiff = Nanos;
 class ChronoNative {
     public:
-    static Nanos now();
+    static Instant now();
+    static Instant datenow();
 };
 }    // namespace ARLib

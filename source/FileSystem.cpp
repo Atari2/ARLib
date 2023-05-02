@@ -15,10 +15,10 @@ bool FileInfo::is_file() const {
 size_t FileInfo::filesize() const {
     return m_info.filesize();
 }
-Nanos FileInfo::last_access() const {
+Instant FileInfo::last_access() const {
     return m_info.last_access();
 }
-Nanos FileInfo::last_modification() const {
+Instant FileInfo::last_modification() const {
     return m_info.last_modification();
 }
 }    // namespace ARLib

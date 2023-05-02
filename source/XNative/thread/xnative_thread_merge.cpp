@@ -139,19 +139,21 @@ void ConditionVariableNative::notify_all(ConditionVariableT& cv) {
 void ConditionVariableNative::wait(ConditionVariableT& cv, UniqueLock<Mutex>* lock) {
     pthread_cond_wait(&cv, lock->mutex()->native_handle());
 }
-CVStatus ConditionVariableNative::wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns) {
+CVStatus ConditionVariableNative::wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Duration ns) {
+    Nanos raw          = ns.raw_value();
     TimeSpecC spec     = time_get();
     constexpr auto den = 1'000'000'000L;
-    spec.tv_sec += ns.value / den;
-    spec.tv_nsec += ns.value % den;
+    spec.tv_sec += raw.value / den;
+    spec.tv_nsec += raw.value % den;
     int ret = pthread_cond_timedwait(&cv, lock->mutex()->native_handle(), cast<TimeSpec*>(&spec));
     return ret == 0 ? CVStatus::NoTimeout : CVStatus::Timeout;
 }
-CVStatus ConditionVariableNative::wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns) {
+CVStatus ConditionVariableNative::wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Instant ns) {
     TimeSpec spec{};
+    Nanos raw          = ns.raw_value();
     constexpr auto den = 1'000'000'000L;
-    spec.tv_sec        = ns.value / den;
-    spec.tv_nsec       = ns.value % den;
+    spec.tv_sec        = raw.value / den;
+    spec.tv_nsec       = raw.value % den;
     int ret            = pthread_cond_timedwait(&cv, lock->mutex()->native_handle(), &spec);
     return ret == 0 ? CVStatus::NoTimeout : CVStatus::Timeout;
 }
@@ -278,18 +280,20 @@ void ConditionVariableNative::notify_all(ConditionVariableT& cv) {
 void ConditionVariableNative::wait(ConditionVariableT& cv, UniqueLock<Mutex>* lock) {
     cond_wait(&cv, *lock->mutex()->native_handle());
 }
-CVStatus ConditionVariableNative::wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns) {
+CVStatus ConditionVariableNative::wait_for(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Duration ns) {
+    Nanos raw = ns.raw_value();
     XTime spec{};
-    spec.sec  = ns.value / 1'000'000'000;
-    spec.nsec = ns.value % 1'000'000'000;
+    spec.sec  = raw.value / 1'000'000'000;
+    spec.nsec = raw.value % 1'000'000'000;
     return cond_rel_timedwait(&cv, *lock->mutex()->native_handle(), &spec) == ThreadState::Timeout ?
            CVStatus::Timeout :
            CVStatus::NoTimeout;
 }
-CVStatus ConditionVariableNative::wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Nanos ns) {
+CVStatus ConditionVariableNative::wait_until(ConditionVariableT& cv, UniqueLock<Mutex>* lock, Instant ns) {
+    Nanos raw = ns.raw_value();
     XTime spec{};
-    spec.sec  = ns.value / 1'000'000'000;
-    spec.nsec = ns.value % 1'000'000'000;
+    spec.sec  = raw.value / 1'000'000'000;
+    spec.nsec = raw.value % 1'000'000'000;
     return cond_timedwait(&cv, *lock->mutex()->native_handle(), &spec) == ThreadState::Timeout ? CVStatus::Timeout :
                                                                                                  CVStatus::NoTimeout;
 }
