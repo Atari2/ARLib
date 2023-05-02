@@ -30,7 +30,7 @@ class File {
     OpenFileMode m_mode;
 
     using WriteResult = Result<size_t, FileError>;
-    using ReadResult = Result<String, FileError>;
+    using ReadResult  = Result<String, FileError>;
     friend Hash<File>;
 
     public:
@@ -87,7 +87,7 @@ class File {
         if (m_mode != OpenFileMode::Write && m_mode != OpenFileMode::Append) {
             return FileError{ "Can't write to a file opened in read-only mode"_s, m_filename };
         }
-        auto len = ARLib::fwrite(str.data(), str.size(), sizeof(char), m_ptr);
+        auto len = ARLib::fwrite(str.data(), sizeof(char), str.size(), m_ptr);
         if (len != str.size()) { return FileError{ "Failed to write the whole string into the file"_s, m_filename }; }
         return len;
     }
@@ -96,7 +96,7 @@ class File {
             return FileError{ "Can't read from a file not open in read mode"_s, m_filename };
         }
         String line{ count, '\0' };
-        line.set_size(ARLib::fread(line.rawptr(), count, sizeof(char), m_ptr));
+        line.set_size(ARLib::fread(line.rawptr(), sizeof(char), count, m_ptr));
         if (line.size() != count) return FileError{ "Couldn't read requested size"_s, m_filename };
         return line;
     }
