@@ -6,6 +6,7 @@ namespace ARLib {
 class FileInfo {
     NativeFileInfo m_info;
     public:
+    FileInfo(const Path& path) : m_info(path) {}
     FileInfo(NativeFileInfo&& info) : m_info(move(info)) {}
     FileInfo(const NativeFileInfo& info) : m_info(info) {}
     const Path& path() const;

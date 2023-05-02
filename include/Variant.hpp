@@ -400,7 +400,7 @@ namespace detail {
         }
         bool active() const { return is_active; }
         bool is_empty() const { return is_active; }
-        Ordering operator<=>(const VariantStorage& other) const { return equal; }
+        Ordering operator<=>([[maybe_unused]] const VariantStorage& other) const { return equal; }
         ~VariantStorage() {
             if (is_active) head.~MonostateT();
         };
@@ -523,13 +523,13 @@ class Variant<detail::MonostateT> {
         return m_storage.get();
     }
     template <class T>
-    requires IsSameV<T, Monostate> bool
-    contains_type() const {
+    requires IsSameV<T, Monostate>
+    bool contains_type() const {
         return m_storage.active();
     }
     bool is_active() const { return m_storage.active(); }
     bool is_empty() const { return m_storage.is_empty(); }
-    Ordering operator<=>(const Variant& other) const { return equal; }
+    Ordering operator<=>([[maybe_unused]] const Variant& other) const { return equal; }
     ~Variant() = default;
 };
 // free functions to avoid template keyword when calling member functions in templated functions.

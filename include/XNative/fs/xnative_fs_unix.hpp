@@ -20,6 +20,7 @@ class UnixFileInfo {
     Path fullPath{};
     void populate_stathandle() const;
     public:
+    UnixFileInfo(const Path& path);
     UnixFileInfo(UnixFileInfo&& other) noexcept : fileName(), fullPath(move(other.fullPath)) {
         swap(statHandle, other.statHandle);
         auto idx_last_slash = fullPath.string().last_index_of('/');

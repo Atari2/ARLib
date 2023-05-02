@@ -8,12 +8,22 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <glob.h>
+#include <stdio.h>
 #include "Chrono.hpp"
 namespace ARLib {
+UnixFileInfo::UnixFileInfo(const Path& path) {
+    char buffer[PATH_MAX] = { 0 };
+    realpath(path.string().data(), buffer);
+    fullPath            = StringView{ buffer };
+    auto idx_last_slash = fullPath.string().last_index_of('/');
+    fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+    populate_stathandle();
+}
 void UnixFileInfo::populate_stathandle() const {
-    if (statHandle == nullptr) { 
+    if (statHandle == nullptr) {
         statHandle = new struct stat;
-        stat(fullPath.string().data(), statHandle);
+        int ret    = stat(fullPath.string().data(), statHandle);
+        if (ret != 0) { ::perror("stat"); }
     }
 }
 bool UnixFileInfo::is_directory() const {

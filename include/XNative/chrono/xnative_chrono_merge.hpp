@@ -5,6 +5,7 @@
 #include "Ordering.hpp"
 #include "PrintInfo.hpp"
 #include "CharConv.hpp"
+#include "Variant.hpp"
 #ifdef UNIX_OR_MINGW
     #include "XNative/chrono/xnative_chrono_unix.hpp"
 #else
@@ -138,9 +139,9 @@ namespace internal {
     }
     template <TimeUnitType Lhs, TimeUnitType Rhs>
     constexpr Ordering compare_time_unit(Lhs lhs, Rhs rhs) {
-        using TimeArray             = TypeArray<Seconds, Millis, Micros, Nanos>;
-        constexpr size_t rhs_id     = TimeArray::IndexOf<Rhs>;
-        constexpr size_t lhs_id     = TimeArray::IndexOf<Lhs>;
+        using TimeArray         = TypeArray<Seconds, Millis, Micros, Nanos>;
+        constexpr size_t rhs_id = TimeArray::IndexOf<Rhs>;
+        constexpr size_t lhs_id = TimeArray::IndexOf<Lhs>;
         if constexpr (rhs_id >= lhs_id) {
             Rhs lhs_conv = convert_time_unit<Rhs, Lhs>(lhs);
             return CompareThreeWay(lhs_conv.value, rhs.value);
@@ -198,16 +199,86 @@ constexpr Micros operator""_us(unsigned long long value) {
 constexpr Nanos operator""_ns(unsigned long long value) {
     return Nanos{ static_cast<int64_t>(value) };
 };
-#define PRINT_IMPL_FOR_TIME(UnitType)                                                                                  \
+#define PRINT_IMPL_FOR_TIME(UnitType, ext)                                                                             \
     template <>                                                                                                        \
     struct PrintInfo<UnitType> {                                                                                       \
         const UnitType& m_unit;                                                                                        \
-        String repr() const { return IntToStr(m_unit.value); }                                                         \
+        String repr() const {                                                                                          \
+            return IntToStr(m_unit.value) + " " ext;                                                                   \
+        }                                                                                                              \
     }
-PRINT_IMPL_FOR_TIME(Seconds);
-PRINT_IMPL_FOR_TIME(Millis);
-PRINT_IMPL_FOR_TIME(Micros);
-PRINT_IMPL_FOR_TIME(Nanos);
+PRINT_IMPL_FOR_TIME(Seconds, "s");
+PRINT_IMPL_FOR_TIME(Millis, "ms");
+PRINT_IMPL_FOR_TIME(Micros, "us");
+PRINT_IMPL_FOR_TIME(Nanos, "ns");
+class CommonTime {
+    using TimeArray = TypeArray<Seconds, Millis, Micros, Nanos>;
+    Variant<Seconds, Millis, Micros, Nanos> m_time;
+    enum class Type { Seconds, Millis, Micros, Nanos };
+    Type m_type;
+    template <TimeUnitType T>
+    Ordering compare_self_with_other(const T& other) const;
+    friend PrintInfo<CommonTime>;
+
+    public:
+    CommonTime() : m_time(Seconds{ 0 }), m_type(Type::Seconds) {}
+    template <TimeUnitType T>
+    constexpr CommonTime(T time) : m_time(time), m_type(to_enum<Type>(TimeArray::IndexOf<T>)) {}
+    CommonTime(const CommonTime& other)                = default;
+    CommonTime& operator=(const CommonTime& other)     = default;
+    CommonTime(CommonTime&& other) noexcept            = default;
+    CommonTime& operator=(CommonTime&& other) noexcept = default;
+    auto type() const { return m_type; }
+    auto nanos() const {
+        Nanos ns{ 0 };
+        m_time.visit([&ns](auto&& time) { ns = time; });
+        return ns;
+    }
+    auto micros() const {
+        Micros us{ 0 };
+        m_time.visit([&us](auto&& time) { us = time; });
+        return us;
+    }
+    auto millis() const {
+        Millis ms{ 0 };
+        m_time.visit([&ms](auto&& time) { ms = time; });
+        return ms;
+    }
+    auto seconds() const {
+        Seconds s{ 0 };
+        m_time.visit([&s](auto&& time) { s = time; });
+        return s;
+    }
+    Ordering operator<=>(const CommonTime& other) const {
+        switch (other.type()) {
+            case Type::Seconds:
+                return compare_self_with_other(other.m_time.get<Seconds>());
+            case Type::Millis:
+                return compare_self_with_other(other.m_time.get<Millis>());
+            case Type::Micros:
+                return compare_self_with_other(other.m_time.get<Micros>());
+            case Type::Nanos:
+                return compare_self_with_other(other.m_time.get<Nanos>());
+        }
+        unreachable;
+    }
+};
+template <>
+struct PrintInfo<CommonTime> {
+    const CommonTime& m_time;
+    PrintInfo(const CommonTime& time) : m_time(time) {}
+    String repr() const {
+        String str{};
+        m_time.m_time.visit([&str](auto&& time) { str = print_conditional(time); });
+        return str;
+    }
+};
+template <TimeUnitType T>
+Ordering CommonTime::compare_self_with_other(const T& other) const {
+    Ordering ord = unordered;
+    m_time.visit([&ord, &other](auto&& time) { ord = time <=> other; });
+    return ord;
+}
 using TimeDiff = Nanos;
 class ChronoNative {
     public:
