@@ -47,6 +47,7 @@ class Win32FileInfo {
     WStringView fileName{};
     Path fullPath{};
     public:
+    Win32FileInfo(const Path& path);
     Win32FileInfo(Win32FileInfo&& other) noexcept :
         fileAttributes(other.fileAttributes), creationTime(other.creationTime), lastWrite(other.lastWrite),
         lastAccess(other.lastAccess), fileSize(other.fileSize), fileName(), fullPath(move(other.fullPath)) {

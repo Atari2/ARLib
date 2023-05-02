@@ -8,6 +8,27 @@
 #include <PathCch.h>
 #pragma comment(lib, "Pathcch.lib")
 namespace ARLib {
+static auto merge_dwords(DWORD low, DWORD high) {
+    return static_cast<uint64_t>(low) | (static_cast<uint64_t>(high) << (sizeof(DWORD) * CHAR_BIT));
+};
+Win32FileInfo::Win32FileInfo(const Path& path) {
+    wchar_t* tmp_buf = nullptr;
+    DWORD nChars = GetFullPathName(path.string().data(), 0, tmp_buf, NULL);
+    tmp_buf             = new wchar_t[nChars];
+    GetFullPathName(path.string().data(), nChars, tmp_buf, NULL);
+    fullPath            = WStringView{ tmp_buf };
+    auto idx_last_slash = fullPath.string().last_index_of(L'\\');
+    fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+    WIN32_FIND_DATA data{};
+    HANDLE hdl = FindFirstFileW(tmp_buf, &data);
+    fileAttributes = data.dwFileAttributes;
+    lastAccess     = merge_dwords(data.ftLastAccessTime.dwLowDateTime, data.ftLastAccessTime.dwHighDateTime);
+    lastWrite      = merge_dwords(data.ftLastWriteTime.dwLowDateTime, data.ftLastWriteTime.dwHighDateTime);
+    creationTime   = merge_dwords(data.ftCreationTime.dwLowDateTime, data.ftCreationTime.dwHighDateTime);
+    fileSize       = merge_dwords(data.nFileSizeLow, data.nFileSizeHigh);
+    delete[] tmp_buf;
+    FindClose(hdl);
+}
 Win32DirectoryIterate::Win32DirectoryIterate(Path path, bool recurse) : m_path(), m_recurse(recurse) {
     // make path a valid globbing path
     FsString str = path.string();
@@ -30,9 +51,6 @@ Win32DirectoryIterator::Win32DirectoryIterator(const Path& path, bool recurse) :
     m_hdl(INVALID_HANDLE_VALUE), m_path(path), m_recurse(recurse) {
     // end-iterator constructor
 }
-static auto merge_dwords(DWORD low, DWORD high) {
-    return static_cast<uint64_t>(low) | (static_cast<uint64_t>(high) << (sizeof(DWORD) * CHAR_BIT));
-};
 Win32DirectoryIterator::Win32DirectoryIterator(const Path& path, Win32DirIterHandle hdl, bool recurse) :
     m_hdl(hdl), m_path(path), m_recurse(recurse) {
     load_next_file();
