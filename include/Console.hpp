@@ -18,7 +18,7 @@ struct Console {
         if (buf.back() == '\r') { buf.set_size(buf.size() - 1); }
         return buf;
     }
-    static int getint(int base = 10) {
+    static Result<int> getint(int base = 10) {
         String buf{};
         char c = static_cast<char>(ARLib::getchar());
         while (!isspace(c) && c != EOF) {

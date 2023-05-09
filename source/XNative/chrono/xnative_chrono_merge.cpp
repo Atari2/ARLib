@@ -77,7 +77,8 @@ Instant ChronoNative::now() {
 }
 Instant ChronoNative::datenow() {
 #ifdef UNIX_OR_MINGW
-    auto spec = time_get();
+    constexpr auto den = 1'000'000'000L;
+    auto spec          = time_get();
     return Instant::from_nanos(Nanos{ (static_cast<int64_t>(spec.tv_sec) * den) + spec.tv_nsec });
 #else
     return Instant::from_nanos(Nanos{ get_filetime_precise() });
