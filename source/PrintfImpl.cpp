@@ -203,6 +203,7 @@ Result<String, PrintfError> format_integer_like_type(const PrintfTypes::PrintfIn
                 break;
         }
     }
+    if (is_signed && has_flag(Flags::UseSign)) { prefix = val < T{ 0 } ? ""_sv : "+"_sv; }
     // 	The precision has no effect on %c and %C
     if (info.precision != PrintfInfo::missing_precision_marker && (formatted_arg.size() + prefix.size()) < info.precision) {
         // The precision specifies the minimum number of digits to be printed.

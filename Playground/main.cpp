@@ -6,7 +6,6 @@
 
 using namespace ARLib;
 int main() {
-    auto now  = DateClock::now();
-    auto date = Date{ now };
-    Printer::print("{}", date);
+    auto oldest_date = Date{ Instant::from_nanos(0_ns), Date::Timezone::No };
+    Printer::print("{}", oldest_date);
 }

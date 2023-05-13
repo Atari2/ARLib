@@ -25,7 +25,14 @@ void Date::fill_date(const Instant& inst, Date& d) {
     spec.tv_sec         = raw.to<Seconds>().value;
     spec.tv_nsec        = (raw - raw.to<Seconds>()).value;
     time_t time         = spec.tv_sec;
-    struct tm* timeinfo = localtime(&time);
+    struct tm* timeinfo = nullptr;
+    if (d.has_timezone()) {
+        
+        timeinfo = localtime(&time);
+        d.m_tz_info.m_diff_from_utc = static_cast<int8_t>(timeinfo->tm_gmtoff / 3600);
+    } else {
+        timeinfo = gmtime(&time);
+    }
     d.m_day             = static_cast<uint8_t>(timeinfo->tm_mday);
     d.m_dayofweek       = static_cast<uint8_t>(timeinfo->tm_wday);
     d.m_year            = static_cast<uint16_t>(timeinfo->tm_year);
@@ -52,7 +59,13 @@ String Date::date_to_string(const Date& d, Date::Format fmt) {
     char buf[256];
     uint16_t real_year = d.m_year + 1900;
     uint8_t real_month = d.m_month + 1;
-    if (fmt == Format::YYYYDDMMhhmmss) {
+    if (fmt == Format::YYYYDDMMhhmmss && d.has_timezone()) {
+        int ret = ARLib::sprintf(
+        buf, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhuUTC%+03hhd", real_year, real_month, d.m_day, d.m_hour, d.m_minute,
+        d.m_second, d.m_tz_info.m_diff_from_utc
+        );
+        buf[ret] = '\0';
+    } else if (fmt == Format::YYYYDDMMhhmmss) {
         int ret = ARLib::sprintf(
         buf, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu", real_year, real_month, d.m_day, d.m_hour, d.m_minute,
         d.m_second

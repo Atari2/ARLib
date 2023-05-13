@@ -287,6 +287,11 @@ class Duration {
 class Date {
     public:
     enum class Format { YYYYDDMMhhmmss, WithEnglishNames };
+    enum class Timezone { Yes, No };
+    struct TZInfo {
+        Timezone m_has_tz;
+        int8_t m_diff_from_utc;
+    };
 
     private:
     uint16_t m_year;
@@ -301,9 +306,10 @@ class Date {
     // YYYY-MM-DD hh:mm:ss
     static String date_to_string(const Date&, Format);
     CommonTime m_extra_precision;    // millisecond on Win32, nanoseconds on Unix
+    TZInfo m_tz_info;
 
     public:
-    Date(Instant instant);
+    Date(Instant instant, Timezone tz = Timezone::Yes);
     Instant to_instant() const;
     Duration diff(const Date& other) const;
     String to_string(Format fmt = Format::YYYYDDMMhhmmss) const;
@@ -311,6 +317,8 @@ class Date {
     StringView monthname() const;
     uint16_t yearday() const;
     CommonTime extra_precision() const { return m_extra_precision; }
+    bool has_timezone() const { return m_tz_info.m_has_tz != Timezone::No; }
+    int8_t utcdiff() const { return (has_timezone() ? m_tz_info.m_diff_from_utc : 0); }
 };
 template <>
 struct PrintInfo<Duration> {
@@ -328,9 +336,7 @@ template <>
 struct PrintInfo<Date> {
     const Date& m_date;
     PrintInfo(const Date& date) : m_date(date) {}
-    String repr() const {
-        return m_date.to_string();
-    }
+    String repr() const { return m_date.to_string(); }
 };
 template <>
 struct PrintInfo<CommonTime> {

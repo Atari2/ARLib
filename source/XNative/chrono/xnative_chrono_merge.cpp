@@ -3,7 +3,8 @@
 #endif
 #include "XNative/chrono/xnative_chrono_merge.hpp"
 namespace ARLib {
-Date::Date(Instant instant) {
+Date::Date(Instant instant, Timezone tz) {
+    m_tz_info.m_has_tz = tz;
     fill_date(instant, *this);
 }
 Instant Date::to_instant() const {

@@ -544,13 +544,25 @@ TEST(ARLibTests, EventLoop) {
 }
 #endif
 TEST(ARLibTests, ChronoTest) {
-    auto now = PerfClock::now();
+    constexpr StringView expected = "1970-01-01 00:00:00";
+    auto now                      = PerfClock::now();
     String s{};
     for (int i = 0; i < 100; i++) { s.append('c'); }
     auto new_now = PerfClock::now();
     EXPECT_GT(new_now, now);
     auto diff = PerfClock::diff(now, new_now);
     EXPECT_GT(diff, Duration{ 0_ns });
+
+    auto d   = Date{ Instant::from_nanos(0_ns), Date::Timezone::No };
+    auto str = d.to_string();
+    EXPECT_EQ(str, expected);
+
+    d   = Date{ Instant::from_nanos(1_sec), Date::Timezone::No };
+    str = d.to_string();
+    EXPECT_EQ(str, "1970-01-01 00:00:01");
+    auto dur = Date{ Instant::from_nanos(1_sec) }.diff(Date{ Instant::from_nanos(0_sec) });
+    auto c = dur <=> Duration{ 1_sec };
+    EXPECT_EQ(c, equal);
 }
 TEST(ARLibTests, JSONTest) {
     auto maybe_obj = JSON::Parser::parse(R"({"hello world": 10, "array": [1, 2, 3, 4]})"_sv);
@@ -835,6 +847,7 @@ TEST(ARLibTests, PrintfTestGeneric) {
         "Hello World +0X1.90000P+5 +1234.1234  % my name is alessio 0120 0X7FFFFFFFFFFFFFFF %\n"
     };
     constexpr StringView expected_from_fill_pre{ "0X0C 000C" };
+    constexpr StringView expected_from_always_sign{ "+10 -10" };
     constexpr int expected_pn           = 37;
     constexpr int expected_bsz_misc     = 85;
     constexpr int expected_bsz_fill_pre = 9;
@@ -856,6 +869,11 @@ TEST(ARLibTests, PrintfTestGeneric) {
     EXPECT_EQ(expected_bsz_fill_pre, bsz);
     buffer[bsz] = '\0';
     EXPECT_EQ(StringView{ buffer }, expected_from_fill_pre);
+
+    bsz = ARLib::sprintf(buffer, "%+03d %+03d", 10, -10);
+    EXPECT_EQ(expected_from_always_sign.size(), bsz);
+    buffer[bsz] = '\0';
+    EXPECT_EQ(StringView{ buffer }, expected_from_always_sign);
 }
 TEST(ARLibTests, PrintfTestDoubleOnly) {
     // the expected values come from std printf implementation
@@ -1078,7 +1096,7 @@ TEST(ARLibTests, SortingTest) {
     sort(strings);
     for (const auto& [g, e] : zip(strings, expected)) { EXPECT_EQ(g, e); }
     Vector<String> v2{};
-    sort(v2); // shouldn't crash
+    sort(v2);    // shouldn't crash
 }
 TEST(ARLibTests, SpanTests) {
     Vector<int> vec = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };

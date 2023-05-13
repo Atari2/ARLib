@@ -95,15 +95,34 @@ int64_t get_filetime_precise() {
     int64_t merged = (static_cast<int64_t>(ft.dwHighDateTime) << 32) + static_cast<int64_t>(ft.dwLowDateTime);
     return (merged - Win32TicksFromEpoch) * 100;
 }
+static int64_t filetime_diff_in_ms(const FILETIME& a, const FILETIME& b) {
+    ULARGE_INTEGER mergeda{
+        .LowPart = a.dwLowDateTime, .HighPart = a.dwHighDateTime
+    };
+    ULARGE_INTEGER mergedb{
+        .LowPart = b.dwLowDateTime, .HighPart = b.dwHighDateTime
+    };
+    ULARGE_INTEGER diff{ .QuadPart = mergedb.QuadPart - mergeda.QuadPart };
+    FILETIME fd{ .dwLowDateTime = diff.LowPart, .dwHighDateTime = diff.HighPart };
+    int64_t diff_100ns_intervals =
+    (static_cast<int64_t>(fd.dwHighDateTime) << 32) + static_cast<int64_t>(fd.dwLowDateTime);
+    return diff_100ns_intervals / 10'000;
+}
 void Date::fill_date(const Instant& inst, Date& d) {
     FILETIME time{};
-    FILETIME ltime{};
     SYSTEMTIME stime{};
     int64_t filetime    = (inst.raw_value().value / 100LL) + Win32TicksFromEpoch;
     time.dwLowDateTime  = (filetime & MAXDWORD);
     time.dwHighDateTime = (filetime >> (sizeof(DWORD) * CHAR_BIT)) & MAXDWORD;
-    FileTimeToLocalFileTime(&time, &ltime);
-    FileTimeToSystemTime(&ltime, &stime);
+    if (d.has_timezone()) {
+        FILETIME ltime{};
+        FileTimeToLocalFileTime(&time, &ltime);
+        auto utcdiff                = filetime_diff_in_ms(time, ltime) / 3'600'000;
+        d.m_tz_info.m_diff_from_utc = static_cast<int8_t>(utcdiff);
+        FileTimeToSystemTime(&ltime, &stime);
+    } else {
+        FileTimeToSystemTime(&time, &stime);
+    }
     d.m_day             = static_cast<uint8_t>(stime.wDay);
     d.m_dayofweek       = static_cast<uint8_t>(stime.wDayOfWeek);
     d.m_year            = static_cast<uint16_t>(stime.wYear);
@@ -115,7 +134,6 @@ void Date::fill_date(const Instant& inst, Date& d) {
 }
 Instant Date::date_to_instant(const Date& d) {
     FILETIME time{};
-    FILETIME ltime{};
     SYSTEMTIME stime{};
     stime.wYear         = d.m_year;
     stime.wMonth        = d.m_month;
@@ -125,8 +143,13 @@ Instant Date::date_to_instant(const Date& d) {
     stime.wMinute       = d.m_minute;
     stime.wSecond       = d.m_second;
     stime.wMilliseconds = static_cast<WORD>(d.m_extra_precision.millis().value);
-    SystemTimeToFileTime(&stime, &ltime);
-    LocalFileTimeToFileTime(&ltime, &time);
+    if (d.has_timezone()) {
+        FILETIME ltime{};
+        SystemTimeToFileTime(&stime, &ltime);
+        LocalFileTimeToFileTime(&ltime, &time);
+    } else {
+        SystemTimeToFileTime(&stime, &time);
+    }
     // 100-nanoseconds ticks
     int64_t raw_value = static_cast<int64_t>(time.dwLowDateTime) | (static_cast<int64_t>(time.dwHighDateTime) << 32);
     raw_value -= Win32TicksFromEpoch;
@@ -134,7 +157,13 @@ Instant Date::date_to_instant(const Date& d) {
 }
 String Date::date_to_string(const Date& d, Date::Format fmt) {
     char buf[256];
-    if (fmt == Format::YYYYDDMMhhmmss) {
+    if (fmt == Format::YYYYDDMMhhmmss && d.has_timezone()) {
+        int ret = ARLib::sprintf(
+        buf, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhuUTC%+03hhd", d.m_year, d.m_month, d.m_day, d.m_hour, d.m_minute,
+        d.m_second, d.m_tz_info.m_diff_from_utc
+        );
+        buf[ret] = '\0';
+    } else if (fmt == Format::YYYYDDMMhhmmss) {
         int ret = ARLib::sprintf(
         buf, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu", d.m_year, d.m_month, d.m_day, d.m_hour, d.m_minute, d.m_second
         );
