@@ -13,14 +13,14 @@ static auto merge_dwords(DWORD low, DWORD high) {
 };
 Win32FileInfo::Win32FileInfo(const Path& path) {
     wchar_t* tmp_buf = nullptr;
-    DWORD nChars = GetFullPathName(path.string().data(), 0, tmp_buf, NULL);
-    tmp_buf             = new wchar_t[nChars];
+    DWORD nChars     = GetFullPathName(path.string().data(), 0, tmp_buf, NULL);
+    tmp_buf          = new wchar_t[nChars];
     GetFullPathName(path.string().data(), nChars, tmp_buf, NULL);
     fullPath            = WStringView{ tmp_buf };
     auto idx_last_slash = fullPath.string().last_index_of(L'\\');
     fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
     WIN32_FIND_DATA data{};
-    HANDLE hdl = FindFirstFileW(tmp_buf, &data);
+    HANDLE hdl     = FindFirstFileW(tmp_buf, &data);
     fileAttributes = data.dwFileAttributes;
     lastAccess     = merge_dwords(data.ftLastAccessTime.dwLowDateTime, data.ftLastAccessTime.dwHighDateTime);
     lastWrite      = merge_dwords(data.ftLastWriteTime.dwLowDateTime, data.ftLastWriteTime.dwHighDateTime);
@@ -48,11 +48,11 @@ Win32DirectoryIterator Win32DirectoryIterate::end() const {
     return Win32DirectoryIterator{ m_path, m_recurse };
 }
 Win32DirectoryIterator::Win32DirectoryIterator(const Path& path, bool recurse) :
-    m_hdl(INVALID_HANDLE_VALUE), m_path(path), m_recurse(recurse) {
+    m_hdl(INVALID_HANDLE_VALUE), m_path(&path), m_recurse(recurse) {
     // end-iterator constructor
 }
 Win32DirectoryIterator::Win32DirectoryIterator(const Path& path, Win32DirIterHandle hdl, bool recurse) :
-    m_hdl(hdl), m_path(path), m_recurse(recurse) {
+    m_hdl(hdl), m_path(&path), m_recurse(recurse) {
     load_next_file();
 }
 Win32DirectoryIterator::Win32DirectoryIterator(Win32DirectoryIterator&& other) noexcept :
@@ -60,6 +60,10 @@ Win32DirectoryIterator::Win32DirectoryIterator(Win32DirectoryIterator&& other) n
     m_recursive_iterate(move(other.m_recursive_iterate)), m_inner_curr(move(other.m_inner_curr)),
     m_inner_end(move(other.m_inner_end)) {
     other.m_hdl = INVALID_HANDLE_VALUE;
+    if (m_inner_curr.exists() && m_inner_end.exists()) {
+        m_inner_curr->m_path = &m_recursive_iterate.m_path;
+        m_inner_end->m_path  = &m_recursive_iterate.m_path;
+    }
 }
 Win32DirectoryIterator::~Win32DirectoryIterator() {
     if (m_hdl != NULL && m_hdl != INVALID_HANDLE_VALUE) { (void)FindClose(m_hdl); }
@@ -87,7 +91,7 @@ void Win32DirectoryIterator::load_next_file() {
     if (m_hdl == NULL) {
         // first time load_next_file is called
         m_hdl = FindFirstFileEx(
-        m_path.string().data(), FindExInfoBasic, &data, FindExSearchNameMatch, NULL,
+        m_path->string().data(), FindExInfoBasic, &data, FindExSearchNameMatch, NULL,
         FIND_FIRST_EX_CASE_SENSITIVE | FIND_FIRST_EX_LARGE_FETCH
         );
         isDir = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
@@ -118,7 +122,7 @@ void Win32DirectoryIterator::load_next_file() {
                 continue;
             }
             // we found a directory and we're recursing
-            m_recursive_iterate = Win32DirectoryIterate{ combine_paths(m_path, nameView), m_recurse };
+            m_recursive_iterate = Win32DirectoryIterate{ combine_paths(*m_path, nameView), m_recurse };
             m_inner_curr        = UniquePtr{ m_recursive_iterate.begin() };
             m_inner_end         = UniquePtr{ m_recursive_iterate.end() };
             return;
@@ -129,7 +133,7 @@ void Win32DirectoryIterator::load_next_file() {
     m_info.lastAccess     = merge_dwords(data.ftLastAccessTime.dwLowDateTime, data.ftLastAccessTime.dwHighDateTime);
     m_info.lastWrite      = merge_dwords(data.ftLastWriteTime.dwLowDateTime, data.ftLastWriteTime.dwHighDateTime);
     m_info.fileSize       = merge_dwords(data.nFileSizeLow, data.nFileSizeHigh);
-    construct_full_path(fullPathBuf, bufSz, m_path);
+    construct_full_path(fullPathBuf, bufSz, *m_path);
     auto res = PathCchCombineEx(fullPathBuf, bufSz, fullPathBuf, data.cFileName, PATHCCH_ALLOW_LONG_PATHS);
     if (res != S_OK) {
         m_info.fullPath = WString{ data.cFileName };

@@ -115,7 +115,6 @@ class Win32DirectoryIterate {
         m_recurse = other.m_recurse;
         return *this;
     }
-    void set_values_from_iterator(Path path, bool recurse);
     public:
     Win32DirectoryIterate(Path path, bool recurse = false);
     Win32DirectoryIterator begin() const;
@@ -125,7 +124,7 @@ class Win32DirectoryIterator {
     friend Win32DirectoryIterate;
     friend struct PrintInfo<Win32DirectoryIterator>;
     Win32DirIterHandle m_hdl;
-    const Path& m_path;
+    const Path* m_path;
     Win32FileInfo m_info;
     const bool m_recurse;
     Win32DirectoryIterate m_recursive_iterate{};
@@ -150,7 +149,7 @@ template <>
 struct PrintInfo<Win32DirectoryIterator> {
     const Win32DirectoryIterator& m_iter;
     String repr() const {
-        auto end = Win32DirectoryIterator{ m_iter.m_path, m_iter.m_recurse };
+        auto end = Win32DirectoryIterator{ *m_iter.m_path, m_iter.m_recurse };
         if (m_iter == end) { return "Win32DirectoryIterator { end }"_s; }
         return (*m_iter).path().narrow();
     }
