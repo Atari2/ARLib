@@ -48,17 +48,17 @@ Win32DirectoryIterator Win32DirectoryIterate::end() const {
     return Win32DirectoryIterator{ m_path, m_recurse };
 }
 Win32DirectoryIterator::Win32DirectoryIterator(const Path& path, bool recurse) :
-    m_hdl(INVALID_HANDLE_VALUE), m_path(&path), m_recurse(recurse) {
+    m_hdl(INVALID_HANDLE_VALUE), m_path(&path), m_recurse(recurse), m_state(State::Uninitialized) {
     // end-iterator constructor
 }
 Win32DirectoryIterator::Win32DirectoryIterator(const Path& path, Win32DirIterHandle hdl, bool recurse) :
-    m_hdl(hdl), m_path(&path), m_recurse(recurse) {
-    load_next_file();
+    m_hdl(hdl), m_path(&path), m_recurse(recurse), m_state(State::Uninitialized) {
+    load_first_file();
 }
 Win32DirectoryIterator::Win32DirectoryIterator(Win32DirectoryIterator&& other) noexcept :
     m_hdl(other.m_hdl), m_path(other.m_path), m_info(move(other.m_info)), m_recurse(other.m_recurse),
-    m_recursive_iterate(move(other.m_recursive_iterate)), m_inner_curr(move(other.m_inner_curr)),
-    m_inner_end(move(other.m_inner_end)) {
+    m_state(other.m_state), m_recursive_iterate(move(other.m_recursive_iterate)),
+    m_inner_curr(move(other.m_inner_curr)), m_inner_end(move(other.m_inner_end)) {
     other.m_hdl = INVALID_HANDLE_VALUE;
     if (m_inner_curr.exists() && m_inner_end.exists()) {
         m_inner_curr->m_path = &m_recursive_iterate.m_path;
@@ -83,56 +83,15 @@ static Path combine_paths(const Path& p, FsStringView p2) {
     PathCchCombineEx(resultBuf, sizeof_array(resultBuf), p1.string().data(), p2.data(), PATHCCH_ALLOW_LONG_PATHS);
     return Path{ WString{ resultBuf } };
 }
-void Win32DirectoryIterator::load_next_file() {
+void Win32DirectoryIterator::set_entry_info(const void* vdata) {
+    const WIN32_FIND_DATA& data = *static_cast<const WIN32_FIND_DATA*>(vdata);
     static wchar_t fullPathBuf[4096];
     constexpr size_t bufSz = sizeof_array(fullPathBuf);
-    WIN32_FIND_DATA data{};
-    bool isDir = true;
-    if (m_hdl == NULL) {
-        // first time load_next_file is called
-        m_hdl = FindFirstFileEx(
-        m_path->string().data(), FindExInfoBasic, &data, FindExSearchNameMatch, NULL,
-        FIND_FIRST_EX_CASE_SENSITIVE | FIND_FIRST_EX_LARGE_FETCH
-        );
-        isDir = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-    }
-    if (m_hdl == INVALID_HANDLE_VALUE) { return; }
-    if (m_inner_curr.exists() && m_inner_end.exists()) {
-        auto& b = *m_inner_curr;
-        auto& e = *m_inner_end;
-        if (++b != e) {
-            return;
-        } else {
-            m_inner_curr.reset();
-            m_inner_end.reset();
-        }
-    }
-    while (isDir) {
-        if (BOOL res = FindNextFile(m_hdl, &data); res == FALSE) {
-            if (GetLastError() == ERROR_NO_MORE_FILES) { m_hdl = INVALID_HANDLE_VALUE; }
-            FindClose(m_hdl);
-            return;
-        } else if (data.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY) {
-            // we found a file
-            isDir = false;
-        } else if (m_recurse) {
-            auto nameView = WStringView{ data.cFileName };
-            if (nameView == L".."_wsv || nameView == L"."_wsv) {
-                // skip dot-dot and dot
-                continue;
-            }
-            // we found a directory and we're recursing
-            m_recursive_iterate = Win32DirectoryIterate{ combine_paths(*m_path, nameView), m_recurse };
-            m_inner_curr        = UniquePtr{ m_recursive_iterate.begin() };
-            m_inner_end         = UniquePtr{ m_recursive_iterate.end() };
-            return;
-        }
-    }
-    m_info.fileAttributes = data.dwFileAttributes;
-    m_info.creationTime   = merge_dwords(data.ftCreationTime.dwLowDateTime, data.ftCreationTime.dwHighDateTime);
-    m_info.lastAccess     = merge_dwords(data.ftLastAccessTime.dwLowDateTime, data.ftLastAccessTime.dwHighDateTime);
-    m_info.lastWrite      = merge_dwords(data.ftLastWriteTime.dwLowDateTime, data.ftLastWriteTime.dwHighDateTime);
-    m_info.fileSize       = merge_dwords(data.nFileSizeLow, data.nFileSizeHigh);
+    m_info.fileAttributes  = data.dwFileAttributes;
+    m_info.creationTime    = merge_dwords(data.ftCreationTime.dwLowDateTime, data.ftCreationTime.dwHighDateTime);
+    m_info.lastAccess      = merge_dwords(data.ftLastAccessTime.dwLowDateTime, data.ftLastAccessTime.dwHighDateTime);
+    m_info.lastWrite       = merge_dwords(data.ftLastWriteTime.dwLowDateTime, data.ftLastWriteTime.dwHighDateTime);
+    m_info.fileSize        = merge_dwords(data.nFileSizeLow, data.nFileSizeHigh);
     construct_full_path(fullPathBuf, bufSz, *m_path);
     auto res = PathCchCombineEx(fullPathBuf, bufSz, fullPathBuf, data.cFileName, PATHCCH_ALLOW_LONG_PATHS);
     if (res != S_OK) {
@@ -143,6 +102,87 @@ void Win32DirectoryIterator::load_next_file() {
         auto idx_last_slash = m_info.fullPath.string().last_index_of(L'\\');
         m_info.fileName =
         m_info.fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+    }
+}
+static bool find_next_not_dot_or_dot_dot(Win32DirIterHandle hdl, WIN32_FIND_DATA& data, bool data_filled = false) {
+    while (true) {
+        if (data_filled) {
+            auto nameView = WStringView{ data.cFileName };
+            if (nameView != L".."_wsv && nameView != L"."_wsv) { return true; }
+        }
+        if (BOOL res = FindNextFile(hdl, &data); res == FALSE) {
+            if (GetLastError() != ERROR_NO_MORE_FILES) {
+                // unexpected error? for now do nothing
+            }
+            FindClose(hdl);
+            return false;
+        }
+        data_filled = true;
+    }
+}
+void Win32DirectoryIterator::load_first_file() {
+    WIN32_FIND_DATA data{};
+    m_hdl = FindFirstFileEx(
+    m_path->string().data(), FindExInfoBasic, &data, FindExSearchNameMatch, NULL,
+    FIND_FIRST_EX_CASE_SENSITIVE | FIND_FIRST_EX_LARGE_FETCH
+    );
+    if (m_hdl == INVALID_HANDLE_VALUE) {
+        m_state = State::Finished;
+    } else {
+        if (bool res = find_next_not_dot_or_dot_dot(m_hdl, data, true); res == false) {
+            m_hdl   = INVALID_HANDLE_VALUE;
+            m_state = State::Finished;
+        } else {
+            set_entry_info(&data);
+            bool isDir =
+            from_enum(to_enum<Win32FileAttribute>(m_info.fileAttributes) & Win32FileAttribute::DIRECTORY) != 0;
+            m_state = isDir ? State::Directory : State::File;
+        }
+    }
+}
+void Win32DirectoryIterator::load_next_file() {
+    WIN32_FIND_DATA data{};
+
+    HARD_ASSERT(m_state != State::Uninitialized, "State should be initialized when load_next_file() is called");
+
+    if (m_state == State::Finished) {
+        // we're done
+        return;
+    }
+
+    if (m_state == State::Recursing) {
+        HARD_ASSERT(m_inner_curr.exists(), "Inner should exist when recursing");
+        HARD_ASSERT(m_inner_end.exists(), "Inner end should exist when recursing");
+        auto& b = *m_inner_curr;
+        auto& e = *m_inner_end;
+        if (++b != e) {
+            return;
+        } else {
+            m_inner_curr.reset();
+            m_inner_end.reset();
+            m_state = State::File;
+        }
+    }
+
+    if (m_state == State::File || (m_state == State::Directory && !m_recurse)) {
+        // normal file or directory and we're not asked to recurse, load + return next
+        if (bool res = find_next_not_dot_or_dot_dot(m_hdl, data); res == false) {
+            m_hdl   = INVALID_HANDLE_VALUE;
+            m_state = State::Finished;
+        } else {
+            set_entry_info(&data);
+            bool isDir =
+            from_enum(to_enum<Win32FileAttribute>(m_info.fileAttributes) & Win32FileAttribute::DIRECTORY) != 0;
+            m_state = isDir ? State::Directory : State::File;
+        }
+    } else if (m_state == State::Directory && m_recurse) {
+        // we found a directory and we're recursing
+        m_recursive_iterate = Win32DirectoryIterate{ combine_paths(*m_path, m_info.fileName), m_recurse };
+        m_inner_curr        = UniquePtr{ m_recursive_iterate.begin() };
+        m_inner_end         = UniquePtr{ m_recursive_iterate.end() };
+        m_state             = State::Recursing;
+    } else {
+        HARD_ASSERT(false, "Unreachable");
     }
 }
 Win32DirectoryIterator& Win32DirectoryIterator::operator++() {

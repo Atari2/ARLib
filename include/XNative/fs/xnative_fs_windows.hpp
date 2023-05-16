@@ -121,16 +121,26 @@ class Win32DirectoryIterate {
     Win32DirectoryIterator end() const;
 };
 class Win32DirectoryIterator {
+    enum class State {
+        Uninitialized,
+        Directory,
+        File,
+        Recursing,
+        Finished
+    };
     friend Win32DirectoryIterate;
     friend struct PrintInfo<Win32DirectoryIterator>;
     Win32DirIterHandle m_hdl;
     const Path* m_path;
     Win32FileInfo m_info;
     const bool m_recurse;
+    State m_state;
     Win32DirectoryIterate m_recursive_iterate{};
     UniquePtr<Win32DirectoryIterator> m_inner_curr;
     UniquePtr<Win32DirectoryIterator> m_inner_end;
     void load_next_file();
+    void load_first_file();
+    void set_entry_info(const void* data);
     protected:
     Win32DirectoryIterator(const Path& path, bool recurse);
     Win32DirectoryIterator(const Path& path, Win32DirIterHandle hdl, bool recurse);
