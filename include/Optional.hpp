@@ -5,7 +5,7 @@
 #include "Ordering.hpp"
 #include "PrintInfo.hpp"
 namespace ARLib {
-template <DefaultConstructible T>
+template <typename T>
 class Optional {
     T* m_object   = nullptr;
     bool m_exists = false;
