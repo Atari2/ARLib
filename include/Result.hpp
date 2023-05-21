@@ -20,6 +20,9 @@ class Error : public ErrorBase {
     public:
     Error(Error&&) = default;
     Error(ConvertibleTo<String> auto val) : m_error_string{ move(val) } {}
+    template <typename OtherError>
+    requires DerivedFrom<OtherError, ErrorBase>
+    Error(OtherError&& other) : m_error_string{ move(other.error_string()) } {}
     const String& error_string() const override { return m_error_string; }
     bool operator==(const Error& other) const { return m_error_string == other.m_error_string; }
     virtual ~Error() {}
@@ -50,17 +53,18 @@ struct EmplaceOk {};
 struct EmplaceErr {};
 constexpr inline EmplaceOk emplace_ok{};
 constexpr inline EmplaceErr emplace_error{};
+enum class CurrType : bool { Ok, Err };
 template <typename ResT, typename ErrorType = Error>
 requires(DerivedFrom<ErrorType, ErrorBase>)
 class Result {
     constexpr static inline bool IsReference = IsLvalueReferenceV<ResT>;
     using Res                                = ConditionalT<IsReference, RefBox<RemoveReferenceT<ResT>>, ResT>;
-    enum class CurrType : bool { Ok, Err };
     union {
         Res m_ok;
         UniquePtr<ErrorBase> m_err;
     };
     CurrType m_type : 1;
+
 
     public:
     Result()
@@ -90,20 +94,21 @@ class Result {
     requires(DerivedFrom<OtherET, ErrorBase>)
         : m_err{ new OtherET{ move(val) } }, m_type{ CurrType::Err } {}
     template <typename OtherET>
+    requires(Constructible<ErrorType, OtherET>)
     Result(Result<ResT, OtherET>&& other) {
         if (other.is_ok()) {
-            m_ok = move(other.m_ok);
+            new (&m_ok) Res{ move(other.to_ok()) };
         } else {
-            m_err = move(other.m_err);
+            new (&m_err) UniquePtr<ErrorBase>{ new ErrorType{ move(other.to_error()) } };
         }
-        m_type = other.m_type;
+        m_type = other.type();
     }
     Result(ErrorType&& val) : m_err{ new ErrorType{ move(val) } }, m_type{ CurrType::Err } {}
     Result(Result&& other) noexcept : m_type(other.m_type) {
         if (other.m_type == CurrType::Ok) {
-            m_ok = move(other.m_ok);
+            new (&m_ok) Res{ move(other.m_ok) };
         } else {
-            m_err = move(other.m_err);
+            new (&m_err) UniquePtr<ErrorBase>{ move(other.m_err) };
         }
     }
     CurrType type() const { return m_type; }
