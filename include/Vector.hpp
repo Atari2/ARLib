@@ -32,18 +32,19 @@ class Vector {
     void append_internal_single_(T&& value)
     requires MoveAssignable<T>
     {
-        m_storage[m_size++] = ARLib::move(value);
+        new (&m_storage[m_size++]) T{ ARLib::move(value) };
     }
     void append_internal_single_(const T& value)
     requires CopyAssignable<T>
     {
-        m_storage[m_size++] = value;
+        new (&m_storage[m_size++]) T{ value };
     }
     void ensure_capacity_() {
         if (m_size == m_capacity) { round_to_capacity_(m_capacity + 1); }
     }
     void clear_() {
         if (m_capacity == 0) return;
+        for (size_t i = 0; i < m_size; ++i) { m_storage[i].~T(); }
         deallocate<T, DeallocType::Multiple>(m_storage);
         m_storage        = nullptr;
         m_end_of_storage = nullptr;
@@ -63,13 +64,13 @@ class Vector {
     }
     void resize_to_capacity_(size_t capacity) {
         m_capacity     = capacity;
-        T* new_storage = allocate<T>(m_capacity);
-        if constexpr (MoveAssignableV<T>) {
-            ConditionalBitMove(new_storage, m_storage, m_size);
+        T* new_storage = allocate_uninitialized<T>(m_capacity);
+        if constexpr (MoveConstructibleV<T>) {
+            UninitializedMoveConstruct(new_storage, m_storage, m_size);
             deallocate<T, DeallocType::Multiple>(m_storage);
             m_storage = nullptr;
         } else {
-            ConditionalBitCopy(new_storage, m_storage, m_size);
+            UninitializedCopyConstruct(new_storage, m_storage, m_size);
         }
         deallocate<T, DeallocType::Multiple>(m_storage);
         m_storage        = new_storage;
@@ -346,7 +347,7 @@ class Vector {
     size_t capacity() const { return m_capacity; }
     size_t size() const { return m_size; }
     void set_size(size_t size) {
-        reserve(size);
+        resize(size);
         m_size = size;
     }
     auto iter() const& { return IteratorView{ *this }; }

@@ -14,8 +14,8 @@ namespace ARLib {
 
 enum class DeallocType { Single, Multiple };
 template <class T>
-T* allocate(SourceLocation LOC = SourceLocation::current()) {
-    T* ptr = new T;
+T* allocate_uninitialized(SourceLocation LOC = SourceLocation::current()) {
+    T* ptr = static_cast<T*>(::operator new(sizeof(T)));
 #ifdef DEBUG_NEW_DELETE
     if (!get_stop_collection()) {
         ::printf(
@@ -26,8 +26,8 @@ T* allocate(SourceLocation LOC = SourceLocation::current()) {
     return ptr;
 }
 template <class T>
-T* allocate(size_t count, SourceLocation LOC = SourceLocation::current()) {
-    T* ptr = new T[count];
+T* allocate_uninitialized(size_t count, SourceLocation LOC = SourceLocation::current()) {
+    T* ptr = static_cast<T*>(::operator new(count * sizeof(T)));
 #ifdef DEBUG_NEW_DELETE
     if (!get_stop_collection()) {
         ::printf(
@@ -39,41 +39,26 @@ T* allocate(size_t count, SourceLocation LOC = SourceLocation::current()) {
     return ptr;
 }
 template <class T>
-T* allocate_emplace(void* storage, SourceLocation LOC = SourceLocation::current()) {
-    HARD_ASSERT(storage != nullptr, "Storage for emplace new shouldn't be null")
-    T* ptr = new (storage) T;
+T* allocate_initialized(SourceLocation LOC = SourceLocation::current()) {
+    T* ptr = new T{};
 #ifdef DEBUG_NEW_DELETE
     if (!get_stop_collection()) {
         ::printf(
-        "Allocated %p (placement) from `%s` in %s [%u:%u]\n", ptr, loc.function_name(), loc.file_name(), loc.line(),
-        loc.column()
+        "Allocated %p from `%s` in %s [%u:%u]\n", ptr, loc.function_name(), loc.file_name(), loc.line(), loc.column()
         );
     }
 #endif
     return ptr;
 }
-template <class T, typename... Args>
-T* construct(Args... args, SourceLocation LOC = SourceLocation::current())
-requires Constructible<T, Args...>
-{
-    T* ptr = new T{ args... };
+template <class T>
+T* allocate_initialized(size_t count, SourceLocation LOC = SourceLocation::current()) {
+    T* ptr = allocate_uninitialized<T>(count);
+    ptr    = new (ptr) T[count]{};
 #ifdef DEBUG_NEW_DELETE
     if (!get_stop_collection()) {
         ::printf(
-        "Constructed %p from `%s` in %s [%u:%u]\n", ptr, loc.function_name(), loc.file_name(), loc.line(), loc.column()
-        );
-    }
-#endif
-    return ptr;
-}
-template <class T, typename... Args>
-T* construct_emplace(void* storage, Args... args, SourceLocation LOC = SourceLocation::current()) {
-    T* ptr = new (storage) T{ args... };
-#ifdef DEBUG_NEW_DELETE
-    if (!get_stop_collection()) {
-        ::printf(
-        "Constructed %p (placement) from `%s` in %s [%u:%u]\n", ptr, loc.function_name(), loc.file_name(), loc.line(),
-        loc.column()
+        "Allocated %p with size %zu from `%s` in %s [%u:%u]\n", static_cast<void*>(ptr), count, loc.function_name(),
+        loc.file_name(), loc.line(), loc.column()
         );
     }
 #endif
@@ -96,9 +81,12 @@ void deallocate(T* allocated_ptr, SourceLocation LOC = SourceLocation::current()
             );
     }
 #endif
+    auto* ptr = const_cast<typename RemoveConst<T>::type*>(allocated_ptr);
     if constexpr (D == DeallocType::Single)
-        delete allocated_ptr;
-    else
-        delete[] allocated_ptr;
+        delete ptr;
+    else { 
+        void* mem = static_cast<void*>(ptr);
+        ::operator delete(mem);
+    }
 }
 }    // namespace ARLib

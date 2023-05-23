@@ -92,13 +92,13 @@ namespace ARLib {
         FixedColumnArray() = default;
 
         FixedColumnArray(InputType matrix, size_t idx) requires(!IsConst) {
-            m_column = allocate<Tp>(N);
+            m_column = allocate_initialized<Tp>(N);
             for (size_t i = 0; i < N; i++) {
                 m_column[i] = &matrix[i][idx];
             };
         }
         FixedColumnArray(ConstInputType matrix, size_t idx) requires IsConst {
-            m_column = allocate<Tp>(N);
+            m_column = allocate_initialized<Tp>(N);
             for (size_t i = 0; i < N; i++) {
                 m_column[i] = &matrix[i][idx];
             };
@@ -355,9 +355,9 @@ class FixedMatrix2D {
     }
     static int rank_internal(typename traits::ConstMatRefType og_matrix) {
         typename traits::MatType matrix{};
-        if constexpr (!ValidToInline) { matrix = allocate<T*>(N); }
+        if constexpr (!ValidToInline) { matrix = allocate_initialized<T*>(N); }
         for (size_t i = 0; i < N; i++) {
-            if constexpr (!ValidToInline) { matrix[i] = allocate<T>(N); }
+            if constexpr (!ValidToInline) { matrix[i] = allocate_initialized<T>(N); }
             ConditionalBitCopy(matrix[i], og_matrix[i], N);
         }
         gauss_reduce(matrix);
@@ -380,9 +380,9 @@ class FixedMatrix2D {
     requires Square
     {
         typename traits::MatType matrix{};
-        if constexpr (!ValidToInline) { matrix = allocate<double*>(N); }
+        if constexpr (!ValidToInline) { matrix = allocate_initialized<double*>(N); }
         for (size_t i = 0; i < N; i++) {
-            if constexpr (!ValidToInline) { matrix[i] = allocate<double>(N); }
+            if constexpr (!ValidToInline) { matrix[i] = allocate_initialized<double>(N); }
             ConditionalBitCopy(matrix[i], og_matrix[i], N);
         }
         gauss_reduce(matrix);
@@ -403,9 +403,9 @@ class FixedMatrix2D {
     void allocate_memory(bool zeroinit = false)
     requires(!ValidToInline)
     {
-        m_matrix = allocate<T*>(N);
+        m_matrix = allocate_initialized<T*>(N);
         for (size_t i = 0; i < N; i++) {
-            m_matrix[i] = allocate<T>(M);
+            m_matrix[i] = allocate_initialized<T>(M);
             if (zeroinit) memset(m_matrix[i], 0, M * sizeof(T));
         }
     }
@@ -452,9 +452,9 @@ class FixedMatrix2D {
     requires(sizeof...(Args) == (N * M))
     {
         double mm[N * M]{ args... };
-        if constexpr (!ValidToInline) m_matrix = allocate<T*>(N);
+        if constexpr (!ValidToInline) m_matrix = allocate_initialized<T*>(N);
         for (size_t i = 0; i < N; i++) {
-            if constexpr (!ValidToInline) m_matrix[i] = allocate<T>(M);
+            if constexpr (!ValidToInline) m_matrix[i] = allocate_initialized<T>(M);
             for (size_t j = 0; j < M; j++) { m_matrix[i][j] = mm[i * M + j]; }
         }
     }
