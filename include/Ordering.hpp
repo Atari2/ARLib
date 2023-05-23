@@ -2,7 +2,6 @@
 #include "Compat.hpp"
 #include "Concepts.hpp"
 #include "Conversion.hpp"
-#include "PrintInfo.hpp"
 #include <compare>
 
 namespace ARLib {
@@ -64,22 +63,4 @@ constexpr Ordering CompareThreeWay(const T& a, const T& b) {
     else
         return greater;
 }
-template <>
-struct PrintInfo<Ordering> {
-    const Ordering& m_ordering;
-    PrintInfo(const Ordering& ordering) : m_ordering(ordering) {}
-    String repr() const {
-        switch (m_ordering.type()) {
-            case OrderingType::Less:
-                return "less"_s;
-            case OrderingType::Equal:
-                return "equal"_s;
-            case OrderingType::Greater:
-                return "greater"_s;
-            case OrderingType::NoOrder:
-                return "unordered"_s;
-        }
-        unreachable;
-    }
-};
 }    // namespace ARLib

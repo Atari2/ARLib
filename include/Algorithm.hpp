@@ -4,6 +4,7 @@
 #include "IteratorInspection.hpp"
 #include "Utility.hpp"
 #include "cmath_compat.hpp"
+#include "Ordering.hpp"
 namespace ARLib {
 
 template <typename T>
@@ -185,28 +186,27 @@ auto transform(const C& cont, Functor func) {
     return copy;
 }
 // follows very naive quicksort implementation
-template <IteratorConcept Iter>
-requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutputType<Iter>> &&
-         CopyConstructible<RemoveReferenceT<IteratorOutputType<Iter>>>
-Iter partition(Iter lo, Iter hi) {
+template <IteratorConcept Iter, typename Functor>
+requires CopyConstructible<RemoveReferenceT<IteratorOutputType<Iter>>>
+Iter partition(Iter lo, Iter hi, Functor&& func) {
     // FIXME: find a way to avoid this copy of the pivot
     auto pivot = *(lo + ((hi - lo) / 2));
     auto i     = lo - 1;
     auto j     = hi + 1;
     for (;;) {
-        do { ++i; } while (*i < pivot);
-        do { --j; } while (*j > pivot);
+        do { ++i; } while (func(*i, pivot) == less);
+        do { --j; } while (func(*j, pivot) == greater);
         if (i > j || i == j) return j;
         swap(*i, *j);
     }
 }
-template <IteratorConcept Iter>
-requires MoreComparable<IteratorOutputType<Iter>> && LessComparable<IteratorOutputType<Iter>>
-void quicksort_internal(Iter lo, Iter hi) {
+template <IteratorConcept Iter, typename Functor>
+requires CallableWithRes<Functor, Ordering, IteratorOutputType<Iter>, IteratorOutputType<Iter>>
+void quicksort_internal(Iter lo, Iter hi, Functor&& functor) {
     if (lo < hi) {
-        auto p = partition(lo, hi);
-        quicksort_internal(lo, p);
-        quicksort_internal(p + 1, hi);
+        auto p = partition(lo, hi, functor);
+        quicksort_internal(lo, p, functor);
+        quicksort_internal(p + 1, hi, functor);
     }
 }
 // in-place sorting
@@ -215,7 +215,16 @@ void sort(C& cont) {
     auto begin = cont.begin();
     auto end   = cont.end();
     if (begin == end) return;    // empty
-    quicksort_internal(begin, end - 1);
+    quicksort_internal(begin, end - 1,[](const auto& a, const auto& b) {
+        return a <=> b;
+    });
+}
+template <Iterable C, typename Functor>
+void sort(C& cont, Functor&& func) {
+    auto begin = cont.begin();
+    auto end   = cont.end();
+    if (begin == end) return;    // empty
+    quicksort_internal(begin, end - 1, func);
 }
 template <Iterable C>
 constexpr auto begin(C& cont) {

@@ -19,6 +19,8 @@ class UnixFileInfo {
     StringView fileName{};
     Path fullPath{};
     void populate_stathandle() const;
+    void copy_from_stathandle(const struct ::stat& handle);
+    void free_stathandle();
     public:
     UnixFileInfo(const Path& path);
     UnixFileInfo(UnixFileInfo&& other) noexcept : fileName(), fullPath(move(other.fullPath)) {
@@ -29,17 +31,23 @@ class UnixFileInfo {
     UnixFileInfo(const UnixFileInfo& other) noexcept : fileName(), fullPath(other.fullPath) {
         auto idx_last_slash = fullPath.string().last_index_of('/');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+        if (other.statHandle)
+            copy_from_stathandle(*other.statHandle);
     }
     UnixFileInfo& operator=(const UnixFileInfo& other) noexcept {
         fullPath            = other.fullPath;
         auto idx_last_slash = fullPath.string().last_index_of('/');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+        if (other.statHandle)
+            copy_from_stathandle(*other.statHandle);
         return *this;
     }
     UnixFileInfo& operator=(UnixFileInfo&& other) noexcept {
         fullPath            = move(other.fullPath);
         auto idx_last_slash = fullPath.string().last_index_of('/');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+        free_stathandle();
+        swap(statHandle, other.statHandle);
         return *this;
     }
     constexpr UnixFileInfo() = default;
@@ -77,16 +85,27 @@ class UnixDirectoryIterate {
     ~UnixDirectoryIterate();
 };
 class UnixDirectoryIterator {
+    enum class State {
+        Uninitialized,
+        Directory,
+        File,
+        Recursing,
+        Finished
+    };
     friend class UnixDirectoryIterate;
     UnixDirIterHandle m_hdl;
-    const Path& m_path;
+    const Path* m_path;
     UnixFileInfo m_info;
     size_t m_index;
     bool m_recurse;
+    State m_state;
     UnixDirectoryIterate m_recursive_iterate{};
     UniquePtr<UnixDirectoryIterator> m_inner_curr;
     UniquePtr<UnixDirectoryIterator> m_inner_end;
-    void load_next_file(bool first_time = false);
+    void load_first_file();
+    void load_next_file();
+    bool find_next_not_dot_or_dot_dot();
+    void set_entry_info();
     UnixDirectoryIterator(const Path& path, bool recurse);
     UnixDirectoryIterator(const Path& path, UnixDirIterHandle hdl, bool recurse);
     public:
