@@ -67,8 +67,6 @@ class Vector {
         T* new_storage = allocate_uninitialized<T>(m_capacity);
         if constexpr (MoveConstructibleV<T>) {
             UninitializedMoveConstruct(new_storage, m_storage, m_size);
-            deallocate<T, DeallocType::Multiple>(m_storage);
-            m_storage = nullptr;
         } else {
             UninitializedCopyConstruct(new_storage, m_storage, m_size);
         }
