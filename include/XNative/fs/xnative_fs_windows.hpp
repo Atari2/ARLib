@@ -36,7 +36,7 @@ enum class Win32FileAttribute : uint32_t {
     PINNED                = 0x80000,
     UNPINNED              = 0x100000
 };
-MAKE_BITFIELD_ENUM(Win32FileAttribute);
+MAKE_BITFIELD_ENUM(Win32FileAttribute)
 class Win32FileInfo {
     friend class Win32DirectoryIterator;
     uint32_t fileAttributes{};
@@ -59,6 +59,17 @@ class Win32FileInfo {
         lastAccess(other.lastAccess), fileSize(other.fileSize), fileName(), fullPath(other.fullPath) {
         auto idx_last_slash = fullPath.string().last_index_of(L'\\');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+    }
+    Win32FileInfo& operator=(const Win32FileInfo& other) {
+        fileAttributes      = other.fileAttributes;
+        creationTime        = other.creationTime;
+        lastWrite           = other.lastWrite;
+        lastAccess          = other.lastAccess;
+        fileSize            = other.fileSize;
+        fullPath            = other.fullPath;
+        auto idx_last_slash = fullPath.string().last_index_of(L'\\');
+        fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+        return *this;
     }
     Win32FileInfo& operator=(Win32FileInfo&& other) noexcept {
         fileAttributes      = other.fileAttributes;

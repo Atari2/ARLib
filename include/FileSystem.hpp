@@ -9,6 +9,13 @@ class FileInfo {
     FileInfo(const Path& path) : m_info(path) {}
     FileInfo(NativeFileInfo&& info) : m_info(move(info)) {}
     FileInfo(const NativeFileInfo& info) : m_info(info) {}
+    FileInfo(const FileInfo& other) = default;
+    FileInfo(FileInfo&& other)  noexcept : m_info(move(other.m_info)) {}
+    FileInfo& operator=(const FileInfo& other) = default;
+    FileInfo& operator=(FileInfo&& other)  noexcept {
+        m_info = move(other.m_info);
+        return *this;
+    }
     const Path& path() const;
     const FsStringView& filename() const;
     bool is_directory() const;

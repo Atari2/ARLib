@@ -30,6 +30,12 @@ class UnixFileInfo {
         auto idx_last_slash = fullPath.string().last_index_of('/');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
     }
+    UnixFileInfo& operator=(const UnixFileInfo& other) noexcept {
+        fullPath            = other.fullPath;
+        auto idx_last_slash = fullPath.string().last_index_of('/');
+        fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
+        return *this;
+    }
     UnixFileInfo& operator=(UnixFileInfo&& other) noexcept {
         fullPath            = move(other.fullPath);
         auto idx_last_slash = fullPath.string().last_index_of('/');
