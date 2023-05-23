@@ -7,7 +7,8 @@ DiscardResult<> BigInt::init_from_string(StringView value) {
     auto view = value.substringview(from_enum(m_sign));
     for (size_t i = view.size();; i -= 2) {
         auto subview = view.substringview((i - 1) == 0 ? i - 1 : i - 2, i);
-        if (auto err = StrViewToInt(subview); err.is_error()) { return err.to_error();
+        if (auto err = StrViewToInt(subview); err.is_error()) {
+            return err.to_error();
         } else {
             m_buffer.append(static_cast<uint8_t>(err.to_ok()));
         }

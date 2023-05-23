@@ -96,12 +96,8 @@ int64_t get_filetime_precise() {
     return (merged - Win32TicksFromEpoch) * 100;
 }
 static int64_t filetime_diff_in_ms(const FILETIME& a, const FILETIME& b) {
-    ULARGE_INTEGER mergeda{
-        .LowPart = a.dwLowDateTime, .HighPart = a.dwHighDateTime
-    };
-    ULARGE_INTEGER mergedb{
-        .LowPart = b.dwLowDateTime, .HighPart = b.dwHighDateTime
-    };
+    ULARGE_INTEGER mergeda{ .LowPart = a.dwLowDateTime, .HighPart = a.dwHighDateTime };
+    ULARGE_INTEGER mergedb{ .LowPart = b.dwLowDateTime, .HighPart = b.dwHighDateTime };
     ULARGE_INTEGER diff{ .QuadPart = mergedb.QuadPart - mergeda.QuadPart };
     FILETIME fd{ .dwLowDateTime = diff.LowPart, .dwHighDateTime = diff.HighPart };
     int64_t diff_100ns_intervals =

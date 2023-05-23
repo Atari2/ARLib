@@ -15,8 +15,7 @@ int pthread_sleep(int64_t microseconds) {
     struct timespec spec {
         .tv_sec = secds, .tv_nsec = nsecs
     };
-
-    return ::clock_nanosleep(CLOCK_MONOTONIC, 0, &spec, nullptr); // millis to nano
+    return ::clock_nanosleep(CLOCK_MONOTONIC, 0, &spec, nullptr);    // millis to nano
 }
 int pthread_attr_destroy(PthreadAttr* attr) {
     return ::pthread_attr_destroy(cast<pthread_attr_t*>(attr));

@@ -34,12 +34,11 @@ void _assert_printf(const ARLib::SourceLocation& loc, const char* fmt, ...) {
 #ifdef DEBUG_NEW_DELETE
     ::vsnprintf(buf, sizeof(buf), fmt, lst);
 #else
-    int ret = ARLib::vsnprintf(buf, sizeof(buf), fmt, lst);
+    int ret  = ARLib::vsnprintf(buf, sizeof(buf), fmt, lst);
     buf[ret] = '\0';
 #endif
     va_end(lst);
     PRINT_SOURCE_LOCATION(buf, loc);
-
 }
 void _assert_puts(const ARLib::SourceLocation& loc, const char* str) {
     PRINT_SOURCE_LOCATION(str, loc);

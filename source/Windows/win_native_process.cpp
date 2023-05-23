@@ -107,8 +107,7 @@ ProcessResult Win32Process::write_input(StringView input, Win32Process::completi
     return {};
 }
 ProcessResult Win32Process::write_data(const ReadOnlyView<uint8_t>& data, Win32Process::completion_routine_t routine) {
-    if (!m_redirected_stdin)
-        return "To write to a process' input without pipes or files just use stdin"_s;
+    if (!m_redirected_stdin) return "To write to a process' input without pipes or files just use stdin"_s;
     DWORD dwWritten{};
     BOOL bSuccess = FALSE;
     HANDLE hdl    = choose_handle(Win32PipeType::Input);
@@ -149,9 +148,7 @@ ProcessResult Win32Process::set_pipe(Win32PipeType type) {
     );
     HANDLE pipe_rd = Win32PipeType::Input == type ? pipe_hdl : pipe;
     HANDLE pipe_wr = Win32PipeType::Input == type ? pipe : pipe_hdl;
-    if (pipe_rd == INVALID_HANDLE_VALUE || pipe_wr == INVALID_HANDLE_VALUE) {
-        return get_last_error();
-    }
+    if (pipe_rd == INVALID_HANDLE_VALUE || pipe_wr == INVALID_HANDLE_VALUE) { return get_last_error(); }
     switch (type) {
         case Win32PipeType::Output:
             m_pipes.output      = pipe_rd;

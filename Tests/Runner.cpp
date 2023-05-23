@@ -561,7 +561,7 @@ TEST(ARLibTests, ChronoTest) {
     str = d.to_string();
     EXPECT_EQ(str, "1970-01-01 00:00:01");
     auto dur = Date{ Instant::from_nanos(1_sec) }.diff(Date{ Instant::from_nanos(0_sec) });
-    auto c = dur <=> Duration{ 1_sec };
+    auto c   = dur <=> Duration{ 1_sec };
     EXPECT_EQ(c, equal);
 }
 TEST(ARLibTests, JSONTest) {

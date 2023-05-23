@@ -62,7 +62,8 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                             current_tokens()->emplace(cur);
                         } else {
                             state.in_group++;
-                            group_stack.push({ .m_group_number = ++group_number, .m_group_regex = UniquePtr{ new Vector<Regex::RegexVariant> } });
+                            group_stack.push({ .m_group_number = ++group_number,
+                                               .m_group_regex  = UniquePtr{ new Vector<Regex::RegexVariant> } });
                         }
                         break;
                     case RegexToken::GroupClose:

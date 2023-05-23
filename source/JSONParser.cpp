@@ -8,10 +8,14 @@ namespace ARLib {
 namespace JSON {
 
 #define STATE_ENTER()                                                                                                  \
-    if (!state.enter()) return ParseError{ "Reached depth limit of "_s + IntToStr(state.depth_limit), state.index() }
+    if (!state.enter()) return ParseError {                                                                            \
+            "Reached depth limit of "_s + IntToStr(state.depth_limit), state.index()                                   \
+        }
 
 #define STATE_EXIT()                                                                                                   \
-    if (!state.exit()) return ParseError{ "Trying to exit from a depth of 0 "_s, state.index() }
+    if (!state.exit()) return ParseError {                                                                             \
+            "Trying to exit from a depth of 0 "_s, state.index()                                                       \
+        }
 
 #define CHK_SIZE(c)                                                                                                    \
     if (state.invalid_index()) { return ParseError{ "Expected " #c " but end of file was reached"_s, state.index() }; }

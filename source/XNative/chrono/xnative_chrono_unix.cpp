@@ -27,8 +27,7 @@ void Date::fill_date(const Instant& inst, Date& d) {
     time_t time         = spec.tv_sec;
     struct tm* timeinfo = nullptr;
     if (d.has_timezone()) {
-        
-        timeinfo = localtime(&time);
+        timeinfo                    = localtime(&time);
         d.m_tz_info.m_diff_from_utc = static_cast<int8_t>(timeinfo->tm_gmtoff / 3600);
     } else {
         timeinfo = gmtime(&time);

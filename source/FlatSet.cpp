@@ -1,7 +1,7 @@
 #include "FlatSet.hpp"
 #include <immintrin.h>
 #ifdef COMPILER_MSVC
-#include <intrin.h>
+    #include <intrin.h>
 #endif
 namespace ARLib {
 namespace internal {
@@ -25,7 +25,7 @@ namespace internal {
     }
     BitMask<uint32_t> match_non_empty(const MetadataBlock& block) {
         auto all_neg_ones = _mm_set1_epi8(-1);
-        auto ctrl      = _mm_loadu_si128(reinterpret_cast<const __m128i*>(block.data()));
+        auto ctrl         = _mm_loadu_si128(reinterpret_cast<const __m128i*>(block.data()));
         return BitMask{ static_cast<uint32_t>(_mm_movemask_epi8(_mm_cmpgt_epi8(ctrl, all_neg_ones))) };
     }
 }    // namespace internal

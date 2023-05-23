@@ -3,7 +3,7 @@
 #include "StringView.hpp"
 #include "Vector.hpp"
 #ifdef _LIBCPP_VERSION
-#include <stdlib.h>
+    #include <stdlib.h>
 #endif
 #include <charconv>
 namespace ARLib {
@@ -183,7 +183,7 @@ Result<double> StrViewToDouble(const StringView str) {
     double val = 0.0;
 #ifdef _LIBCPP_VERSION
     char* ptr = NULL;
-    val = strtod(str.data(), &ptr);
+    val       = strtod(str.data(), &ptr);
     if (ptr == str.data()) return "Failed to convert string to double"_s;
     return val;
 #else

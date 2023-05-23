@@ -49,7 +49,6 @@ ArgParser::ParseResult ArgParser::parse() {
                 if (opt.type == Option::Type::String) {
                     if (!opt.assign(*it)) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
-                       
                     }
                 } else if (opt.type == Option::Type::Int) {
                     const auto& strval = *it;

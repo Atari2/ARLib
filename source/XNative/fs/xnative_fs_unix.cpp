@@ -86,30 +86,29 @@ UnixDirectoryIterator::UnixDirectoryIterator(const Path& path, bool recurse) :
     m_hdl(nullptr), m_path(&path), m_index(0), m_recurse(recurse) {
     // end-iterator constructor
 }
-
 void UnixDirectoryIterator::set_entry_info() {
     glob_t* hdl = static_cast<glob_t*>(m_hdl);
     static char pathBuf[PATH_MAX];
-    pathBuf[0]  = '\0';
+    pathBuf[0] = '\0';
     if (!m_path->is_absolute()) {
         getcwd(pathBuf, PATH_MAX);
-        size_t size            = strlen(pathBuf);
+        size_t size     = strlen(pathBuf);
         pathBuf[size]   = '/';
         pathBuf[++size] = '\0';
     }
     strcat(pathBuf, hdl->gl_pathv[m_index]);
     struct stat pathStat;
     stat(pathBuf, &pathStat);
-    m_info.fullPath = Path{ StringView{ pathBuf } };
+    m_info.fullPath   = Path{ StringView{ pathBuf } };
     size_t last_slash = m_info.fullPath.string().last_index_of('/');
-    m_info.fileName = m_info.fullPath.string().substringview(last_slash != String::npos ? last_slash + 1 : 0);
+    m_info.fileName   = m_info.fullPath.string().substringview(last_slash != String::npos ? last_slash + 1 : 0);
     m_info.copy_from_stathandle(pathStat);
 }
 bool UnixDirectoryIterator::find_next_not_dot_or_dot_dot() {
     glob_t* hdl = static_cast<glob_t*>(m_hdl);
     while (m_index < hdl->gl_pathc) {
         const char* pv = hdl->gl_pathv[m_index];
-        auto nameView = StringView{pv};
+        auto nameView  = StringView{ pv };
         if (nameView != ".."_sv && nameView != "."_sv) { return true; };
         m_index++;
     }
@@ -117,41 +116,36 @@ bool UnixDirectoryIterator::find_next_not_dot_or_dot_dot() {
 }
 void UnixDirectoryIterator::load_first_file() {
     glob_t* hdl = static_cast<glob_t*>(this->m_hdl);
-    int res = glob(m_path->string().data(), GLOB_ERR, NULL, hdl);
+    int res     = glob(m_path->string().data(), GLOB_ERR, NULL, hdl);
     if (res != 0 || hdl->gl_pathc == 0) {
         // glob error or no matches
         // set as end-iterator and return
         globfree(hdl);
-        m_hdl     = NULL;
+        m_hdl   = NULL;
         m_index = 0;
         m_state = State::Finished;
     } else {
         if (!find_next_not_dot_or_dot_dot()) {
             globfree(hdl);
-            m_hdl = NULL;
+            m_hdl   = NULL;
             m_index = 0;
             m_state = State::Finished;
         } else {
             set_entry_info();
             bool isDir = S_ISDIR(m_info.statHandle->st_mode);
-            m_state = isDir ? State::Directory : State::File;
+            m_state    = isDir ? State::Directory : State::File;
         }
     }
-
 }
-
 static Path combine_paths(const Path& p, FsStringView p2) {
-    return p.remove_filespec() / Path{p2};
+    return p.remove_filespec() / Path{ p2 };
 }
-
 void UnixDirectoryIterator::load_next_file() {
     glob_t* hdl = static_cast<glob_t*>(this->m_hdl);
 
     HARD_ASSERT(m_state != State::Uninitialized, "State should be initialized when load_next_file is called");
 
-    if (m_state == State::Finished) {
-        return;
-    }
+    if (m_state == State::Finished) { return; }
 
     if (m_state == State::Recursing) {
         HARD_ASSERT(m_inner_curr.exists(), "Inner should exist when recursing");
@@ -171,7 +165,7 @@ void UnixDirectoryIterator::load_next_file() {
         // no paths or already done everything
         // set as end iterator
         globfree(hdl);
-        m_hdl     = NULL;
+        m_hdl   = NULL;
         m_index = 0;
         return;
     }
@@ -196,7 +190,7 @@ void UnixDirectoryIterator::load_next_file() {
         } else {
             set_entry_info();
             bool isDir = S_ISDIR(m_info.statHandle->st_mode);
-            m_state = isDir ? State::Directory : State::File;
+            m_state    = isDir ? State::Directory : State::File;
         }
     } else if (m_state == State::Directory && m_recurse) {
         // we found a directory and we're recursing
@@ -214,8 +208,8 @@ UnixDirectoryIterator::UnixDirectoryIterator(const Path& path, UnixDirIterHandle
 }
 UnixDirectoryIterator::UnixDirectoryIterator(UnixDirectoryIterator&& other) noexcept :
     m_hdl(move(other.m_hdl)), m_path(move(other.m_path)), m_info(move(other.m_info)), m_index(other.m_index),
-    m_recurse(other.m_recurse), m_state(other.m_state),
-    m_recursive_iterate(move(other.m_recursive_iterate)), m_inner_curr(move(other.m_inner_curr)), m_inner_end(move(other.m_inner_end)) {
+    m_recurse(other.m_recurse), m_state(other.m_state), m_recursive_iterate(move(other.m_recursive_iterate)),
+    m_inner_curr(move(other.m_inner_curr)), m_inner_end(move(other.m_inner_end)) {
     other.m_hdl = NULL;
     if (m_inner_curr.exists() && m_inner_end.exists()) {
         m_inner_curr->m_path = &m_recursive_iterate.m_path;
@@ -227,9 +221,7 @@ UnixDirectoryIterator::~UnixDirectoryIterator() {
     m_hdl = NULL;
 }
 UnixFileInfo UnixDirectoryIterator::operator*() const {
-    if (m_inner_curr.exists()) {
-        return (*m_inner_curr).operator*();
-    }
+    if (m_inner_curr.exists()) { return (*m_inner_curr).operator*(); }
     return m_info;
 }
 UnixDirectoryIterator& UnixDirectoryIterator::operator++() {
