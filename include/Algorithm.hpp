@@ -61,7 +61,7 @@ constexpr auto sum(Iter begin, Iter end, Functor func = sum_default<IteratorOutp
     if (begin == end) return InvokeResultT<Functor, decltype(*begin)>{};
     auto total = invoke(func, *begin);
     begin++;
-    for (; begin != end; ++begin) total += func(*begin);
+    for (; begin != end; ++begin) total += invoke(func, *begin);
     return total;
 }
 template <ForwardIterator Iter, bool ROUND = false>
