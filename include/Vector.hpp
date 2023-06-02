@@ -102,7 +102,9 @@ class Vector {
         other.m_size           = 0;
         other.m_capacity       = 0;
     }
-    Vector(const Vector& other) noexcept {
+    Vector(const Vector& other) noexcept
+    requires CopyConstructible<T>
+    {
         reserve(other.capacity());
         if constexpr (IsTriviallyCopiableV<T>) {
             memcpy(m_storage, other.m_storage, sizeof(T) * other.m_size);
@@ -111,7 +113,9 @@ class Vector {
             for (auto& val : other) { append(val); }
         }
     }
-    Vector& operator=(const Vector& other) {
+    Vector& operator=(const Vector& other)
+    requires CopyConstructible<T>
+    {
         if (this == &other) return *this;
         reserve(other.capacity());
         for (size_t i = 0; i < other.m_size; i++) { m_storage[i] = other.m_storage[i]; }
@@ -148,8 +152,8 @@ class Vector {
         return true;
     }
     template <typename C>
-    requires EqualityComparableWith<C, T> bool
-    operator==(const Vector<C>& other) const {
+    requires EqualityComparableWith<C, T>
+    bool operator==(const Vector<C>& other) const {
         if (size() != other.size()) return false;
         for (size_t i = 0; i < size(); i++) {
             if (m_storage[i] == other[i]) continue;
@@ -191,13 +195,13 @@ class Vector {
     }
     void shrink_to_fit() { shrink_to_size_(); }
     void append(const T& value)
-    requires CopyAssignable<T>
+    requires CopyConstructible<T>
     {
         ensure_capacity_();
         append_internal_single_(value);
     }
     void append(T&& value)
-    requires MoveAssignable<T>
+    requires MoveConstructible<T>
     {
         ensure_capacity_();
         append_internal_single_(Forward<T>(value));

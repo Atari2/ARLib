@@ -145,7 +145,7 @@ concept MoreComparable = requires(T a, T b) {
 };
 
 template <typename T>
-concept Orderable = requires(T a, T b) {
+concept Orderable = requires(const T& a, const T& b) {
     { a <=> b } -> ConvertibleTo<Ordering>;
 };
 
