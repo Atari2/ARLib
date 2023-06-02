@@ -1,10 +1,10 @@
-#include "NextVariant.hpp"
 #include "String.hpp"
 #include "Variant.hpp"
 #include "Vector.hpp"
 #include "Array.hpp"
 #include "Printer.hpp"
 #include "CharConv.hpp"
+#include "JSONObject.hpp"
 
 using namespace ARLib;
 int main() {
@@ -35,17 +35,14 @@ int main() {
     v2::Variant<int, double, Vector<int>, String, Pair<int, double>> t1{
         "Hello world this is a long string that should be freed"
     };
-    auto s        = v2::VariantStorage<10, 8>{};
-    const auto s2        = v2::VariantStorage<10, 8>{};
-    using T = decltype(s.raw_memory());
-    using T2 = decltype(s2.raw_memory());
+    auto t2       = t1;
     const auto& v = t1.get<String>();
     Printer::print("{}", v);
     t1 = 1;
     t1.set(Vector{ 1, 2, 3 });
     Printer::print("{}", t1.current_type());
-    const auto& v2 = t1.get<Vector<int>>();
     t1.visit([](const auto& asdf) { Printer::print("{}", asdf); });
+    Printer::print("t2: {}", t2);
     /*
     constexpr Array sizes{ sizeof(int), sizeof(double), sizeof(Vector<int>), sizeof(String) };
 

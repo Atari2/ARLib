@@ -5,7 +5,14 @@
 #include "TypeTraits.hpp"
 #include "Utility.hpp"
 #include "Ordering.hpp"
+
+#define USE_NEW_VARIANT 1
+
+#if USE_NEW_VARIANT
+    #include "NextVariant.hpp"
+#endif
 namespace ARLib {
+#if !USE_NEW_VARIANT
 struct Monostate {
     bool operator==(const Monostate&) const { return true; }
     bool operator!=(const Monostate&) const { return false; }
@@ -532,6 +539,12 @@ class Variant<detail::MonostateT> {
     Ordering operator<=>([[maybe_unused]] const Variant& other) const { return equal; }
     ~Variant() = default;
 };
+#else
+template <typename... Types>
+using Variant = v2::Variant<Types...>;
+
+using Monostate = v2::Monostate;
+#endif
 // free functions to avoid template keyword when calling member functions in templated functions.
 template <typename Tp, typename... Args>
 requires IsAnyOfV<Tp, Args...>
@@ -571,9 +584,5 @@ struct PrintInfo<Variant<Arg, Args...>> {
     const Variant<Arg, Args...>& m_variant;
     explicit PrintInfo(const Variant<Arg, Args...>& variant) : m_variant(variant) {}
     String repr() const { return m_variant.get_printinfo_string(); }
-};
-template <class... Ts>
-struct VariantVisitor : Ts... {
-    using Ts::operator()...;
 };
 }    // namespace ARLib

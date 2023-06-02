@@ -1,10 +1,19 @@
 #pragma once
+#include "Assertion.hpp"
 #include "Concepts.hpp"
+#include "PrintInfo.hpp"
+#include "TypeTraits.hpp"
+#include "Utility.hpp"
+#include "Ordering.hpp"
 #include "Algorithm.hpp"
 #include "Array.hpp"
 namespace ARLib {
 namespace v2 {
-
+    struct Monostate {
+        bool operator==(const Monostate&) const { return true; }
+        bool operator!=(const Monostate&) const { return false; }
+        Ordering operator<=>(const Monostate&) const { return equal; }
+    };
     template <size_t Size, size_t Align>
     struct VariantStorage {
         alignas(Align) uint8_t m_memory[Size];
@@ -58,13 +67,29 @@ namespace v2 {
     }
     template <typename T>
     void generic_type_copy_ctor(uint8_t* dst, const uint8_t* src) {
-        const T& srcobj = *reinterpret_cast<const T*>(src);
-        new (dst) T{ srcobj };
+        if constexpr (CopyConstructible<T>) {
+            if constexpr (TriviallyCopyConstructible<T>) {
+                memcpy(dst, src, sizeof(T));
+            } else {
+                const T& srcobj = *reinterpret_cast<const T*>(src);
+                new (dst) T{ srcobj };
+            }
+        } else {
+            HARD_ASSERT(false, "Copy ctor called on type that can't be copy constructed");
+        }
     }
     template <typename T>
     void generic_type_move_ctor(uint8_t* dst, uint8_t* src) {
-        T& srcobj = *reinterpret_cast<T*>(src);
-        new (dst) T{ move(srcobj) };
+        if constexpr (MoveConstructible<T>) {
+            if constexpr (TriviallyMoveConstructible<T>) {
+                memcpy(dst, src, sizeof(T));
+            } else {
+                T& srcobj = *reinterpret_cast<T*>(src);
+                new (dst) T{ move(srcobj) };
+            }
+        } else {
+            HARD_ASSERT(false, "Move ctor called on type that can't be move constructed");
+        }
     }
     template <typename T>
     Ordering generic_cmp_func(const uint8_t* lhs, const uint8_t* rhs) {
@@ -119,6 +144,7 @@ namespace v2 {
         }
 
         public:
+        constexpr Variant() = default;
         template <typename T>
         requires VariantAnyOf<T, Types...>
         Variant(T&& value) {
@@ -126,29 +152,37 @@ namespace v2 {
             m_current_type         = index;
             m_storage.initialize(Forward<T>(value));
         }
-        Variant(const Variant& other) {
+        Variant(const Variant& other)
+        requires(CopyConstructible<Types> && ...)
+        {
             m_current_type = other.m_current_type;
             functions[m_current_type].copy_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
         }
-        Variant(Variant&& other) {
+        Variant(Variant&& other)
+        requires(MoveConstructible<Types> && ...)
+        {
             m_current_type       = other.m_current_type;
             other.m_current_type = no_type;
             functions[m_current_type].move_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
         }
-        Variant& operator=(const Variant& other) {
+        Variant& operator=(const Variant& other)
+        requires(CopyConstructible<Types> && ...)
+        {
             destroy_current();
             m_current_type = other.m_current_type;
             functions[m_current_type].copy_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
             return *this;
         }
-        Variant& operator=(Variant&& other) {
+        Variant& operator=(Variant&& other)
+        requires(MoveConstructible<Types> && ...)
+        {
             destroy_current();
             m_current_type = other.m_current_type;
             functions[m_current_type].move_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
             return *this;
         }
         template <typename... Args>
-        requires(variant_constructible(type_carrier, PackCarrier<Args...>{}))
+        requires(variant_constructible(type_carrier, PackCarrier<Args...>{}) && sizeof...(Args) > 0)
         Variant(Args&&... args) {
             using Type = RemoveCvRefT<decltype(first_constructible_of<Types...>(PackCarrier<Args...>{}))>;
             static_assert(!SameAs<Type, InvalidConstructionType>, "Args can't construct any type in variant");
@@ -166,7 +200,7 @@ namespace v2 {
             return *this;
         }
         template <typename... Args>
-        requires(variant_constructible(type_carrier, PackCarrier<Args...>{}))
+        requires(variant_constructible(type_carrier, PackCarrier<Args...>{}) && sizeof...(Args) > 0)
         Variant& operator=(Args&&... args) {
             using Type = RemoveCvRefT<decltype(first_constructible_of<Types...>(PackCarrier<Args...>{}))>;
             static_assert(!SameAs<Type, InvalidConstructionType>, "Args can't construct any type in variant");
@@ -242,7 +276,61 @@ namespace v2 {
         void visit(Callable&& visitor) const {
             (visit_if<Callable, Types>(Forward<Callable>(visitor)) || ...);
         }
+        String get_printinfo_string() const {
+            String repr{};
+            visit([&](const auto& value) { repr = print_conditional(value); });
+            return repr;
+        }
         ~Variant() { destroy_current(); }
+    };
+    template <>
+    class Variant<Monostate> {
+        Monostate m_storage{};
+        bool m_initialized{ false };
+        public:
+        Variant() = default;
+        explicit Variant(Monostate) : m_initialized(true) {}
+        Variant(const Variant& other) = default;
+        Variant(Variant&& other) noexcept : m_initialized(other.m_initialized) { other.m_initialized = false; }
+        Variant& operator=(const Variant& other) = default;
+        Variant& operator=(Variant&& other) noexcept {
+            m_initialized       = other.m_initialized;
+            other.m_initialized = false;
+            return *this;
+        }
+        Variant& operator=(Monostate) {
+            m_initialized = true;
+            return *this;
+        }
+        template <class T>
+        requires SameAs<T, Monostate>
+        auto& get() const {
+            return m_storage;
+        }
+        template <class T>
+        requires SameAs<T, Monostate>
+        auto& get() {
+            return m_storage;
+        }
+        template <size_t Idx>
+        requires(Idx == 0)
+        auto& get() const {
+            return m_storage;
+        }
+        template <size_t Idx>
+        requires(Idx == 0)
+        auto& get() {
+            return m_storage;
+        }
+        template <class T>
+        requires SameAs<T, Monostate>
+        bool contains_type() const {
+            return m_initialized;
+        }
+        bool is_active() const { return m_initialized; }
+        bool is_empty() const { return !m_initialized; }
+        Ordering operator<=>([[maybe_unused]] const Variant& other) const { return equal; }
+        ~Variant() = default;
     };
 }    // namespace v2
 }    // namespace ARLib
