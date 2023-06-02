@@ -44,7 +44,7 @@ BackTrace::BackTrace(bool failing) {
 bool BackTrace::already_generating_backtrace = false;
 void BackTrace::append_frame(char* information, size_t info_len /* includes null terminator */, bool need_to_alloc) {
     if (need_to_alloc) {
-        m_backtrace_info[m_size] = new char[info_len];
+        m_backtrace_info[m_size] = allocate_initialized<char>(info_len);
         strncpy(m_backtrace_info[m_size], information, info_len);
     } else {
         m_backtrace_info[m_size] = information;
@@ -57,7 +57,7 @@ BackTrace::BackTrace(BackTrace&& other) noexcept {
     memcpy(m_backtrace_info, other.m_backtrace_info, m_size * sizeof(char*));
 }
 BackTrace::~BackTrace() {
-    for (size_t i = 0; i < m_size; i++) { delete[] m_backtrace_info[i]; }
+    for (size_t i = 0; i < m_size; i++) { deallocate<char, DeallocType::Multiple>(m_backtrace_info[i]); }
 }
 void print_backtrace() {
     if (BackTrace::already_generating_backtrace) {
@@ -101,7 +101,7 @@ BackTrace capture_backtrace() {
             constexpr size_t len =
             sizeof_array("Failed to retrieve debug info for address %p, error was %s") + ptr_fmt_len;
             String error  = last_error();
-            char* message = new char[len + error.size()];
+            char* message = allocate_initialized<char>(len + error.size());
             snprintf(
             message, len + error.size(), "Failed to retrieve debug info for address %p, error was %s", backtrace[i],
             error.data()
@@ -117,7 +117,7 @@ BackTrace capture_backtrace() {
                 String error = last_error();
                 error.itrim();
                 size_t total_len = psymbol->NameLen + len + error.size();
-                char* message    = new char[total_len];
+                char* message    = allocate_initialized<char>(total_len);
                 snprintf(
                 message, total_len, "Failed to retrieve line info for `%s` at address %p, error was \"%s\"",
                 psymbol->Name, backtrace[i], error.data()
@@ -128,7 +128,7 @@ BackTrace capture_backtrace() {
                 size_t number_len    = StrLenFromIntegral<10>(line.LineNumber);
                 size_t displ_len     = StrLenFromIntegral<10>(displ);
                 size_t total_length  = psymbol->NameLen + ARLib::strlen(line.FileName) + number_len + displ_len + len;
-                char* backtrace_msg  = new char[total_length];
+                char* backtrace_msg  = allocate_initialized<char>(total_length);
                 snprintf(
                 backtrace_msg, total_length, "%s@%s[%d:%d]", line.FileName, psymbol->Name, line.LineNumber, displ
                 );

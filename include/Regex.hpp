@@ -1,4 +1,5 @@
 #pragma once
+#include "PrintInfo.hpp"
 #include "Types.hpp"
 #include "Concepts.hpp"
 #include "String.hpp"
@@ -6,9 +7,9 @@
 #include "Result.hpp"
 #include "Variant.hpp"
 #include "Vector.hpp"
-#include "PrintInfo.hpp"
 #include "SSOVector.hpp"
 #include "UniquePtr.hpp"
+#include "Unimplemented.hpp"
 namespace ARLib {
 
 MAKE_FANCY_ENUM(
@@ -38,8 +39,8 @@ class Regex {
     struct CharGroup;
     private:
     using RegexVariant = Variant<char, RegexToken, EscapedRegexToken, Group, CharGroup>;
-    using ReTokVector = UniquePtr<Vector<RegexVariant>>;
     public:
+    using ReTokVector  = UniquePtr<Vector<RegexVariant>>;
     struct Group {
         size_t m_group_number;
         ReTokVector m_group_regex{};
@@ -60,6 +61,12 @@ class Regex {
     requires Constructible<String, StringLike>
     static auto create(StringLike&& regex) {
         return parse_regex(String{ regex });
+    }
+    template <typename... Args>
+    Unimplemented match(Args&&... args) {
+        UnusedArgument arg{ args... };
+        arg.remove_warning();
+        return { "regex_match" };
     }
 };
 inline Regex operator""_re(const char* regex, size_t len) {

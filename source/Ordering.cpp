@@ -34,7 +34,7 @@ struct PrintInfo<Ordering> {
             case OrderingType::NoOrder:
                 return "unordered"_s;
         }
-        unreachable;
+        arlib_unreachable;
     }
 };
 }    // namespace ARLib

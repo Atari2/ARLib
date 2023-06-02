@@ -379,7 +379,7 @@ endif()
 
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
-	list(APPEND ARLIB_COMPILE_OPTIONS /utf-8 /std:c++20 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
+	list(APPEND ARLIB_COMPILE_OPTIONS /utf-8 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
     list(APPEND ARLIB_LINK_LIBRARIES synchronization winmm)
     if (MSVC AND NOT ON_CLANG)
         list(APPEND ARLIB_COMPILE_OPTIONS /Zc:inline-)
@@ -429,7 +429,7 @@ if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 else()
 	add_subdirectory(ASM_GCC)
-	list(APPEND ARLIB_COMPILE_OPTIONS -std=c++20 -msse4.1 ${AVX_FLAGS} -fno-exceptions)
+	list(APPEND ARLIB_COMPILE_OPTIONS -msse4.1 ${AVX_FLAGS} -fno-exceptions)
 	if (DEBUG_BUILD AND NOT ON_WINDOWS)
 		list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
 		list(APPEND ARLIB_LINK_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
@@ -468,6 +468,9 @@ else()
         list(APPEND ARLIB_LINK_LIBRARIES
             -lc++abi
             -lc++
+        )
+        list(APPEND ARLIB_LINK_OPTIONS
+            -fuse-ld=lld
         )
         list(APPEND ARLIB_COMPILE_WARNINGS
 			-Wno-gnu-zero-variadic-macro-arguments

@@ -54,7 +54,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
                 _assert_puts(ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);       \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
-            unreachable                                                                                                \
+            arlib_unreachable                                                                                                \
         }
     #define HARD_ASSERT_FMT(val, fmt, ...)                                                                             \
         if (!(val)) {                                                                                                  \
@@ -66,7 +66,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
                 );                     \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
-            unreachable                                                                                                \
+            arlib_unreachable                                                                                                \
         }
 
     #define SOFT_ASSERT(val, msg)                                                                                      \
@@ -102,7 +102,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             _assert_puts(ARLib::SourceLocation::current(), msg);                                                                                         \
             assertion_failed__();                                                                                      \
         }                                                                                                              \
-        unreachable                                                                                                    \
+        arlib_unreachable                                                                                                    \
     }
 #define ASSERT_NOT_REACHED_FMT(fmt, ...)                                                                               \
     {                                                                                                                  \
@@ -112,7 +112,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             _assert_printf(ARLib::SourceLocation::current(), fmt "\n", __VA_ARGS__);                                                                     \
             assertion_failed__();                                                                                      \
         }                                                                                                              \
-        unreachable                                                                                                    \
+        arlib_unreachable                                                                                                    \
     }
 
 #define TODO_CLS(cls)                                                                                                  \

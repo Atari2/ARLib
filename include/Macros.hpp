@@ -18,14 +18,14 @@
     #define DEBUGMSG(msg)         ARLib::puts(msg);
     #define DEBUGFMTMSG(msg, ...) ARLib::printf(msg, __VA_ARGS__);
 #else
-    #define DEBUGMSG(msg)         noop;
-    #define DEBUGFMTMSG(msg, ...) noop;
+    #define DEBUGMSG(msg)         arlib_noop;
+    #define DEBUGFMTMSG(msg, ...) arlib_noop;
 #endif
 
 #define COMPTIME_ASSERT(msg)                                                                                           \
     []<bool flag = false>() { static_assert(flag, msg); }                                                              \
     ();                                                                                                                \
-    unreachable
+    arlib_unreachable
 
 #define CONSTEVAL_STATIC_ASSERT(c, msg)                                                                                \
     static_assert(                                                                                                     \

@@ -38,7 +38,7 @@ operator new(ARLib::size_t count) {
     }
     ::printf("global op new failed for size %zu", count);
     abort_arlib();
-    unreachable
+    arlib_unreachable
 }
     #ifdef ON_WINDOWS
 [[nodiscard]] _Ret_notnull_ _Post_writable_byte_size_(count) __declspec(allocator) void* __cdecl
@@ -56,7 +56,7 @@ operator new[](ARLib::size_t count) {
     }
     ::printf("global op new[] failed for size %zu", count);
     abort_arlib();
-    unreachable
+    arlib_unreachable
 }
 void operator delete(void* ptr) {
     if (ptr == nullptr) return;

@@ -175,7 +175,7 @@ ThreadId ThreadNative::id() {
 void ThreadNative::exit(RetVal val) {
     cond_do_broadcast_at_thread_exit();
     endthreadex(val);
-    unreachable
+    arlib_unreachable
 }
 RetVal ThreadNative::retval_none() {
     return 0;

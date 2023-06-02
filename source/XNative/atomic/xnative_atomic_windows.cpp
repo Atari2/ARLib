@@ -222,7 +222,7 @@ char atomic_integral_op_nolock(volatile char* addr, char value, AtomicIntegralOp
         case AtomicIntegralOp::Dec:
             return _InterlockedExchangeAdd8(addr, -1);
     }
-    unreachable;
+    arlib_unreachable;
 }
 short atomic_integral_op_nolock(volatile short* addr, short value, AtomicIntegralOp op_type) {
     switch (op_type) {
@@ -239,7 +239,7 @@ short atomic_integral_op_nolock(volatile short* addr, short value, AtomicIntegra
         case AtomicIntegralOp::Dec:
             return _InterlockedDecrement16(addr);
     }
-    unreachable;
+    arlib_unreachable;
 }
 int atomic_integral_op_nolock(volatile int* addr, int value, AtomicIntegralOp op_type) {
     switch (op_type) {
@@ -256,7 +256,7 @@ int atomic_integral_op_nolock(volatile int* addr, int value, AtomicIntegralOp op
         case AtomicIntegralOp::Dec:
             return _InterlockedDecrement(reinterpret_cast<volatile long*>(addr));
     }
-    unreachable;
+    arlib_unreachable;
 }
 long long atomic_integral_op_nolock(volatile long long* addr, long long value, AtomicIntegralOp op_type) {
     switch (op_type) {
@@ -273,7 +273,7 @@ long long atomic_integral_op_nolock(volatile long long* addr, long long value, A
         case AtomicIntegralOp::Dec:
             return _InterlockedDecrement64(addr);
     }
-    unreachable;
+    arlib_unreachable;
 }
 }    // namespace ARLib
 #endif

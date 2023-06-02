@@ -10,7 +10,7 @@ constexpr auto wsize                  = sizeof(word);
 [[maybe_unused]] constexpr auto wmask = (wsize - 1);
 
 #ifdef COMPILER_MSVC
-forceinline uint32_t ctz_msvc(uint32_t value) {
+arlib_forceinline uint32_t ctz_msvc(uint32_t value) {
     unsigned long trailing_zero = 0;
     if (_BitScanForward(&trailing_zero, value)) {
         return trailing_zero;

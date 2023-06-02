@@ -10,7 +10,7 @@
 namespace ARLib {
 template <typename T>
 struct DefaultOrdering {
-    forceinline Ordering operator()(const T& first, const T& second) { return first <=> second; }
+    arlib_forceinline Ordering operator()(const T& first, const T& second) { return first <=> second; }
 };
 template <typename T, class Ordering = DefaultOrdering<T>>
 class SortedVector {

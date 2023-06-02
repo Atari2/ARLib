@@ -50,7 +50,7 @@ class PriorityQueue {
     using PriorityFunc = Function<Ordering(const QueueItem&, const QueueItem&)>;
     struct PriorityFuncWrap {
         mutable PriorityFunc func{ s_default_function };
-        forceinline Ordering operator()(const QueueItem& left, const QueueItem& right) const {
+        arlib_forceinline Ordering operator()(const QueueItem& left, const QueueItem& right) const {
             return func(left, right);
         }
     };

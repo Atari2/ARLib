@@ -93,7 +93,7 @@ namespace internal {
             case TimeConversionAction::Div:
                 return To{ unit.value / num };
         }
-        unreachable;
+        arlib_unreachable;
     }
     using BetweenTimesOp = int64_t (*)(int64_t, int64_t);
     constexpr int64_t op_sum(int64_t lhs, int64_t rhs) {
@@ -121,7 +121,7 @@ namespace internal {
             case BetweenTimesOpType::Div:
                 return op_div;
         }
-        unreachable;
+        arlib_unreachable;
     }
     template <TimeUnitType Lhs, TimeUnitType Rhs, BetweenTimesOpType OpType>
     constexpr auto op_time_unit(Lhs lhs, Rhs rhs) {
@@ -258,7 +258,7 @@ class CommonTime {
             case Type::Nanos:
                 return compare_self_with_other(other.m_time.get<Nanos>());
         }
-        unreachable;
+        arlib_unreachable;
     }
 };
 // A nanosecond precision instant timestamp

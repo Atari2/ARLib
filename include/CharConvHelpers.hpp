@@ -518,28 +518,28 @@ namespace cxpr {
         else
             return result;
     }
-    forceinline constexpr auto StrViewToI64Decimal(const StringView str) {
+    arlib_forceinline constexpr auto StrViewToI64Decimal(const StringView str) {
         return cxpr::StrViewTo64Decimal<true>(str);
     }
-    forceinline constexpr auto StrViewToI64Binary(const StringView str) {
+    arlib_forceinline constexpr auto StrViewToI64Binary(const StringView str) {
         return cxpr::StrViewTo64Binary<true>(str);
     }
-    forceinline constexpr auto StrViewToI64Octal(const StringView str) {
+    arlib_forceinline constexpr auto StrViewToI64Octal(const StringView str) {
         return cxpr::StrViewTo64Octal<true>(str);
     }
-    forceinline constexpr auto StrViewToI64Hexadecimal(const StringView str) {
+    arlib_forceinline constexpr auto StrViewToI64Hexadecimal(const StringView str) {
         return cxpr::StrViewTo64Hexadecimal<true>(str);
     }
-    forceinline constexpr auto StrViewToU64Decimal(const StringView str) {
+    arlib_forceinline constexpr auto StrViewToU64Decimal(const StringView str) {
         return cxpr::StrViewTo64Decimal<false>(str);
     }
-    forceinline constexpr auto StrViewToU64Binary(const StringView str) {
+    arlib_forceinline constexpr auto StrViewToU64Binary(const StringView str) {
         return cxpr::StrViewTo64Binary<false>(str);
     }
-    forceinline constexpr auto StrViewToU64Octal(const StringView str) {
+    arlib_forceinline constexpr auto StrViewToU64Octal(const StringView str) {
         return cxpr::StrViewTo64Octal<false>(str);
     }
-    forceinline constexpr auto StrViewToU64Hexadecimal(const StringView str) {
+    arlib_forceinline constexpr auto StrViewToU64Hexadecimal(const StringView str) {
         return cxpr::StrViewTo64Hexadecimal<false>(str);
     }
 }

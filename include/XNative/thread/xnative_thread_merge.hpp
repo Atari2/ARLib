@@ -16,7 +16,7 @@
 namespace ARLib {
 [[noreturn]] inline void arlib_terminate() {
     abort_arlib();
-    unreachable
+    arlib_unreachable
 }
     #ifdef UNIX_OR_MINGW
 /* THREADS */

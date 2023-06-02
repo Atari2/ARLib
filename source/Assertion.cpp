@@ -18,7 +18,7 @@
 #else
     __asm__ volatile("call abort");
 #endif
-    unreachable
+    arlib_unreachable
 }
 void abort_arlib() {
     abort__();

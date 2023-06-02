@@ -128,7 +128,7 @@ namespace detail {
             a = static_cast<size_t>(s) - a;
             return is_lucas_prp(n, a);
         }
-        unreachable
+        arlib_unreachable
     }
     size_t generate_next_prime(size_t n) {
         if (n < 2) return 2;

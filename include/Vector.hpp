@@ -74,7 +74,7 @@ class Vector {
         m_storage        = new_storage;
         m_end_of_storage = m_storage + m_capacity;
     }
-    forceinline constexpr bool assert_size_(size_t index) const { return index < m_size; }
+    arlib_forceinline constexpr bool assert_size_(size_t index) const { return index < m_size; }
 
     public:
     Vector() = default;
