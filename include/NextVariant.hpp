@@ -130,6 +130,7 @@ namespace v2 {
         void destroy_current() {
             if (m_current_type == no_type) return;
             functions[m_current_type].destructor(m_storage.raw_memory());
+            m_current_type = no_type;
         }
         template <typename Callable, typename Type>
         bool visit_if(Callable&& callable) const {
@@ -156,21 +157,24 @@ namespace v2 {
         requires(CopyConstructible<Types> && ...)
         {
             m_current_type = other.m_current_type;
-            functions[m_current_type].copy_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
+            if (m_current_type != no_type)
+                functions[m_current_type].copy_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
         }
         Variant(Variant&& other)
         requires(MoveConstructible<Types> && ...)
         {
             m_current_type       = other.m_current_type;
             other.m_current_type = no_type;
-            functions[m_current_type].move_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
+            if (m_current_type != no_type)
+                functions[m_current_type].move_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
         }
         Variant& operator=(const Variant& other)
         requires(CopyConstructible<Types> && ...)
         {
             destroy_current();
             m_current_type = other.m_current_type;
-            functions[m_current_type].copy_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
+            if (m_current_type != no_type)
+                functions[m_current_type].copy_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
             return *this;
         }
         Variant& operator=(Variant&& other)
@@ -178,7 +182,8 @@ namespace v2 {
         {
             destroy_current();
             m_current_type = other.m_current_type;
-            functions[m_current_type].move_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
+            if (m_current_type != no_type)
+                functions[m_current_type].move_ctor(m_storage.raw_memory(), other.m_storage.raw_memory());
             return *this;
         }
         template <typename... Args>
@@ -269,6 +274,7 @@ namespace v2 {
         requires(... && Orderable<Types>)
         {
             if (other.m_current_type != m_current_type) return unordered;
+            if (m_current_type == no_type) return equal;
             return functions[m_current_type].cmp_func(m_storage.raw_memory(), other.m_storage.raw_memory());
         }
         template <typename Callable>
@@ -279,6 +285,7 @@ namespace v2 {
         String get_printinfo_string() const {
             String repr{};
             visit([&](const auto& value) { repr = print_conditional(value); });
+            if (repr.is_empty()) return "Empty variant"_s;
             return repr;
         }
         ~Variant() { destroy_current(); }
@@ -323,8 +330,8 @@ namespace v2 {
             return m_storage;
         }
         template <class T>
-        requires SameAs<T, Monostate>
-        bool contains_type() const {
+        requires SameAs<T, Monostate> bool
+        contains_type() const {
             return m_initialized;
         }
         bool is_active() const { return m_initialized; }
