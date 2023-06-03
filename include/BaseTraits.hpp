@@ -41,7 +41,10 @@ using IsUnion = std::is_union<T>;
 
 template <class T>
 using IsEnum = std::is_enum<T>;
-
+template <typename T>
+constexpr inline bool IsEmptyV = __is_empty(T);
+template <typename T>
+constexpr inline bool IsFinalV = __is_final(T);
 template <class T>
 constexpr inline bool IsEnumV = IsEnum<T>::value;
 
