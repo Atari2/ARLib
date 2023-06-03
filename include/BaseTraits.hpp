@@ -1,6 +1,5 @@
 #pragma once
 #include "Types.hpp"
-#include <type_traits>
 /*
     the very basic type traits and some of the more complex ones (such as std::invoke_result)
     are derived from MSVC's STL implementation https://github.com/microsoft/STL
@@ -11,47 +10,6 @@
 */
 
 namespace ARLib {
-
-// aliases to std:: members that I have no clue how to implement
-template <class T, class... Args>
-using ConstructibleImpl = std::is_constructible<T, Args...>;
-template <class T, class... Args>
-using TriviallyConstructibleImpl = std::is_trivially_constructible<T, Args...>;
-template <class T, class... Args>
-using NothrowConstructibleImpl = std::is_nothrow_constructible<T, Args...>;
-
-template <class T, class U>
-using AssignableImpl = std::is_assignable<T, U>;
-template <class T, class U>
-using TriviallyAssignableImpl = std::is_trivially_assignable<T, U>;
-template <class T, class U>
-using NothrowAssignableImpl = std::is_nothrow_assignable<T, U>;
-
-#ifdef COMPILER_GCC
-template <class T>
-using IsDestructibleSafe = std::__is_destructible_safe<T>;
-#endif
-template <typename T>
-struct Identity {
-    using type = T;
-};
-
-template <class T>
-using IsUnion = std::is_union<T>;
-
-template <class T>
-using IsEnum = std::is_enum<T>;
-template <typename T>
-constexpr inline bool IsEmptyV = __is_empty(T);
-template <typename T>
-constexpr inline bool IsFinalV = __is_final(T);
-template <class T>
-constexpr inline bool IsEnumV = IsEnum<T>::value;
-
-template <typename...>
-using VoidT = void;
-// type traits
-
 // integral constant
 template <class T, T Val>
 struct IntegralConstant {
@@ -67,6 +25,38 @@ using BoolConstant = IntegralConstant<bool, V>;
 
 using TrueType  = BoolConstant<true>;
 using FalseType = BoolConstant<false>;
+// aliases to std:: members that I have no clue how to implement
+template <class T, class... Args>
+struct ConstructibleImpl : BoolConstant<__is_constructible(T, Args...)> {};
+template <class T, class... Args>
+struct TriviallyConstructibleImpl : BoolConstant<__is_trivially_constructible(T, Args...)> {};
+template <class T, class... Args>
+struct NothrowConstructibleImpl : BoolConstant<__is_nothrow_constructible(T, Args...)> {};
+template <class T, class U>
+struct AssignableImpl : BoolConstant<__is_assignable(T, U)> {};
+template <class T, class U>
+struct TriviallyAssignableImpl : BoolConstant<__is_trivially_assignable(T, U)> {};
+template <class T, class U>
+struct NothrowAssignableImpl : BoolConstant<__is_nothrow_assignable(T, U)> {};
+template <typename T>
+struct Identity {
+    using type = T;
+};
+template <class T>
+struct IsUnion : BoolConstant<__is_union(T)> {};
+template <class T>
+struct IsEnum : BoolConstant<__is_enum(T)> {};
+template <typename T>
+constexpr inline bool IsEmptyV = __is_empty(T);
+template <typename T>
+constexpr inline bool IsFinalV = __is_final(T);
+template <class T>
+constexpr inline bool IsEnumV = IsEnum<T>::value;
+
+template <typename...>
+using VoidT = void;
+// type traits
+
 // conditional
 template <bool cond, class TrueT, class FalseT>
 struct Conditional {
@@ -93,21 +83,6 @@ namespace detail {
 }    // namespace detail
 template <class T>
 struct IsTriviallyCopiable : BoolConstant<__is_trivially_copyable(T)> {};
-#if defined(COMPILER_MSVC) || defined(COMPILER_CLANG)
-template <class T>
-struct IsTriviallyDestructible : BoolConstant<__is_trivially_destructible(T)> {};
-
-template <class T>
-constexpr inline bool IsTriviallyDestructibleV = __is_trivially_destructible(T);
-
-#else
-template <class T>
-struct IsTriviallyDestructible : detail::And<IsDestructibleSafe<T>, BoolConstant<__has_trivial_destructor(T)>> {};
-
-template <class T>
-constexpr inline bool IsTriviallyDestructibleV = IsTriviallyDestructible<T>::value;
-
-#endif
 
 template <class T>
 constexpr inline bool IsTriviallyCopiableV = __is_trivially_copyable(T);
@@ -127,6 +102,8 @@ struct IsReference<T&> : TrueType {};
 template <class T>
 struct IsReference<T&&> : TrueType {};
 template <class T>
+constexpr inline bool IsReferenceV = IsReference<T>::value;
+template <class T>
 struct IsArray : FalseType {};
 template <class T>
 struct IsArray<T[]> : TrueType {};
@@ -140,6 +117,10 @@ template <class T>
 constexpr inline bool IsArrayV = IsArray<T>::value;
 template <class T>
 struct IsFunction : IntegralConstant<bool, !IsConst<const T>::value && !IsReference<T>::value> {};
+
+template <class T>
+constexpr inline bool IsFunctionV = IsFunction<T>::value;
+
 #ifdef COMPILER_MSVC
     #pragma warning(pop)
 #endif
@@ -155,6 +136,9 @@ template <class T>
 struct RemoveReference<T&&> {
     typedef T type;
 };
+
+template <class T>
+using RemoveReferenceT = typename RemoveReference<T>::type;
 template <class T, class = void>
 struct AddReference {
     using LValue = T;
@@ -293,6 +277,22 @@ struct RemoveExtent<T[N]> {
     typedef T type;
 };
 
+template <typename T>
+struct RemoveAllExtents {
+    typedef T type;
+};
+template <typename T, size_t Size>
+struct RemoveAllExtents<T[Size]> {
+    typedef typename RemoveAllExtents<T>::type type;
+};
+template <typename T>
+struct RemoveAllExtents<T[]> {
+    typedef typename RemoveAllExtents<T>::type type;
+};
+
+template <typename T>
+using RemoveAllExtentsT = typename RemoveAllExtents<T>::type;
+
 template <class T>
 using RemoveReferenceT = typename RemoveReference<T>::type;
 template <class T>
@@ -346,6 +346,8 @@ struct IsSameCvRef :
 // isvoid
 template <class T>
 struct IsVoid : IsSame<void, typename RemoveCv<T>::type> {};
+template <class T>
+constexpr inline bool IsVoidV = IsVoid<T>::value;
 // is lvalue reference
 template <class T>
 struct IsLvalueReference : FalseType {};
@@ -484,4 +486,93 @@ using DetectedOr = Detector<Default, void, Op, Args...>;
 
 template <typename Default, template <typename...> class Op, typename... Args>
 using DetectedOrT = typename DetectedOr<Default, Op, Args...>::type;
+template <typename, unsigned Uint>
+struct Extent : public IntegralConstant<size_t, 0> {};
+template <typename T, unsigned Uint, size_t Size>
+struct Extent<T[Size], Uint> : public IntegralConstant<size_t, Uint == 0 ? Size : Extent<T, Uint - 1>::value> {};
+template <typename T, unsigned Uint>
+struct Extent<T[], Uint> : public IntegralConstant<size_t, Uint == 0 ? 0 : Extent<T, Uint - 1>::value> {};
+template <typename T, unsigned Idx = 0>
+constexpr size_t ExtentV = Extent<T, Idx>::value;
+template <typename T>
+struct IsNullPointer : FalseType {};
+template <>
+struct IsNullPointer<decltype(nullptr)> : TrueType {};
+template <typename T>
+constexpr inline bool IsNullPointerV = IsNullPointer<T>::value;
+
+template <typename T>
+constexpr inline bool IsArithmeticV = IsIntegralV<T> || IsFloatingPointV<T>;
+
+template <class>
+constexpr inline bool IsPointerV = false;
+
+template <class T>
+constexpr inline bool IsPointerV<T*> = true;
+
+template <class T>
+constexpr inline bool IsPointerV<T* const> = true;
+
+template <class T>
+constexpr inline bool IsPointerV<T* volatile> = true;
+
+template <class T>
+constexpr inline bool IsPointerV<T* const volatile> = true;
+template <class T>
+struct IsPointer : BoolConstant<IsPointerV<T>> {};
+
+template <typename>
+struct IsMemberFunctionPointerHelper : public FalseType {};
+template <typename T, typename C>
+struct IsMemberFunctionPointerHelper<T C::*> : public IsFunction<T>::type {};
+template <typename T>
+struct IsMemberFunctionPointer : public IsMemberFunctionPointerHelper<typename RemoveCv<T>::type>::type {};
+template <typename T>
+constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<T>::value;
+
+template <typename T>
+constexpr inline bool IsScalarV =
+IsArithmeticV<T> || IsEnumV<T> || IsPointerV<T> || IsMemberFunctionPointerV<T> || IsNullPointerV<T>;
+
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
+struct IsDestructibleSafeImplBase {
+    template <typename T, typename = decltype(declval<T&>().~T())>
+    static TrueType test(int);
+
+    template <typename>
+    static FalseType test(...);
+};
+template <typename T>
+struct IsDestructibleSafeImpl : public IsDestructibleSafeImplBase {
+    typedef decltype(test<T>(0)) type;
+};
+template <typename T>
+constexpr inline bool IsArrayUknownBounds = IsArrayV<T> && !ExtentV<T>;
+template <
+typename T, bool = IsVoidV<T> || IsArrayUknownBounds<T> || IsFunctionV<T>, bool = IsReferenceV<T> || IsScalarV<T>>
+struct IsDestructibleSafe;
+template <typename T>
+struct IsDestructibleSafe<T, false, false> : public IsDestructibleSafeImpl<RemoveAllExtentsT<T>>::type {};
+template <typename T>
+struct IsDestructibleSafe<T, true, false> : public FalseType {};
+template <typename T>
+struct IsDestructibleSafe<T, false, true> : public TrueType {};
+#endif
+
+#if defined(COMPILER_MSVC)
+template <class T>
+struct IsTriviallyDestructible : BoolConstant<__is_trivially_destructible(T)> {};
+
+template <class T>
+constexpr inline bool IsTriviallyDestructibleV = __is_trivially_destructible(T);
+
+#else
+template <class T>
+struct IsTriviallyDestructible : detail::And<IsDestructibleSafe<T>, BoolConstant<__has_trivial_destructor(T)>> {};
+
+template <class T>
+constexpr inline bool IsTriviallyDestructibleV = IsTriviallyDestructible<T>::value;
+
+#endif
+
 }    // namespace ARLib

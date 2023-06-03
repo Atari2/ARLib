@@ -79,14 +79,6 @@ template <typename T, typename C>
 struct IsMemberObjectPointerHelper<T C::*> : public Not<IsFunction<T>>::type {};
 template <typename T>
 struct IsMemberObjectPointer : public IsMemberObjectPointerHelper<typename RemoveCv<T>::type>::type {};
-template <typename>
-struct IsMemberFunctionPointerHelper : public FalseType {};
-template <typename T, typename C>
-struct IsMemberFunctionPointerHelper<T C::*> : public IsFunction<T>::type {};
-template <typename T>
-struct IsMemberFunctionPointer : public IsMemberFunctionPointerHelper<typename RemoveCv<T>::type>::type {};
-template <typename T>
-constexpr bool IsMemberFunctionPointerV = IsMemberFunctionPointer<T>::value;
 template <typename C>
 struct MembFnUnwrap {};
 template <typename T, typename C>
@@ -387,7 +379,7 @@ namespace detail {
         public ResultOfMemFun<typename Decay<MemPtr>::type, typename InvUnwrap<Arg>::type, Args...> {};
     struct ResultOfOtherImpl {
         template <typename F, typename... Args>
-        static ResultOfSuccess<decltype(declval<F>()(std::declval<Args>()...)), InvokeOther> s_test(int);
+        static ResultOfSuccess<decltype(declval<F>()(declval<Args>()...)), InvokeOther> s_test(int);
 
         template <typename...>
         static FailureType s_test(...);
@@ -572,23 +564,6 @@ template <class T>
 constexpr inline bool IsVolatileV<volatile T> = true;
 template <class T>
 struct IsVolatile : BoolConstant<IsVolatileV<T>> {};
-
-template <class>
-constexpr inline bool IsPointerV = false;
-
-template <class T>
-constexpr inline bool IsPointerV<T*> = true;
-
-template <class T>
-constexpr inline bool IsPointerV<T* const> = true;
-
-template <class T>
-constexpr inline bool IsPointerV<T* volatile> = true;
-
-template <class T>
-constexpr inline bool IsPointerV<T* const volatile> = true;
-template <class T>
-struct IsPointer : BoolConstant<IsPointerV<T>> {};
 
 template <class From, class To>
 constexpr inline bool ConvertibleV = Convertible<From, To>::value;

@@ -5,8 +5,8 @@
 #include "Printer.hpp"
 #include "CharConv.hpp"
 #include "JSONObject.hpp"
-
 using namespace ARLib;
+
 int main() {
     /*
     auto oldest_date = Date{ Instant::from_nanos(0_ns), Date::Timezone::No };
@@ -35,8 +35,9 @@ int main() {
     v2::Variant<int, double, Vector<int>, String, Pair<int, double>> t1{
         "Hello world this is a long string that should be freed"
     };
-    auto t2       = t1;
-    const auto& v = t1.get<String>();
+    constexpr size_t s = sizeof(t1);
+    auto t2            = t1;
+    const auto& v      = t1.get<String>();
     Printer::print("{}", v);
     t1 = 1;
     t1.set(Vector{ 1, 2, 3 });
