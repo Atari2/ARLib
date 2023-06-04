@@ -35,19 +35,18 @@ namespace v2 {
     template <typename... Args>
     struct PackCarrier {};
     struct InvalidConstructionType {};
-    template <typename T, typename... Args, template <typename...> typename Carrier>
-    constexpr const auto& first_constructible_of(Carrier<Args...>) {
-        using Type = ConditionalT<Constructible<T, Args...>, T, InvalidConstructionType>;
-        Type* ptr{ nullptr };
-        return *ptr;
-    }
     template <typename T, typename... Rest, typename... Args, template <typename...> typename Carrier>
-    requires(sizeof...(Rest) > 0)
     constexpr const auto& first_constructible_of(Carrier<Args...> carrier) {
-        using Type =
-        ConditionalT<Constructible<T, Args...>, T, RemoveCvRefT<decltype(first_constructible_of<Rest...>(carrier))>>;
-        Type* ptr{ nullptr };
-        return *ptr;
+        if constexpr (sizeof...(Rest) == 0) {
+            using Type = ConditionalT<Constructible<T, Args...>, T, InvalidConstructionType>;
+            Type* ptr{ nullptr };
+            return *ptr;
+        } else {
+            using Type = ConditionalT<
+            Constructible<T, Args...>, T, RemoveCvRefT<decltype(first_constructible_of<Rest...>(carrier))>>;
+            Type* ptr{ nullptr };
+            return *ptr;
+        }
     }
     template <typename... Types, typename... Args>
     constexpr bool variant_constructible(PackCarrier<Types...>, PackCarrier<Args...>) {

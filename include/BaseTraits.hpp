@@ -534,7 +534,7 @@ template <typename T>
 constexpr inline bool IsScalarV =
 IsArithmeticV<T> || IsEnumV<T> || IsPointerV<T> || IsMemberFunctionPointerV<T> || IsNullPointerV<T>;
 
-#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
+#ifdef COMPILER_GCC
 struct IsDestructibleSafeImplBase {
     template <typename T, typename = decltype(declval<T&>().~T())>
     static TrueType test(int);
@@ -559,7 +559,7 @@ template <typename T>
 struct IsDestructibleSafe<T, false, true> : public TrueType {};
 #endif
 
-#if defined(COMPILER_MSVC)
+#if defined(COMPILER_MSVC) || defined(COMPILER_CLANG)
 template <class T>
 struct IsTriviallyDestructible : BoolConstant<__is_trivially_destructible(T)> {};
 

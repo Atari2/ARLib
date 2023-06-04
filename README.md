@@ -17,13 +17,12 @@ For now it relies on:
 
 This library has been compiled and tested with:
 
-- MSVC 19.29.30037.0
-- GCC 12
-- Clang 12
-- Mingw x64 with GCC 12
-- clang-cl 12
+- MSVC 19.36.32532
+- GCC 13
+- Clang 16
+- Mingw x64 with GCC 13
 
-To build on Windows the minimum version of Visual Studio required to build is VS 2019 v16.11.
+To build on Windows the minimum version of Visual Studio required to build is VS 2022 v17.6.
 
 ## How to build
 
@@ -35,7 +34,7 @@ git clone https://github.com/Atari2/ARLib
 cd ARLib
 mkdir build
 cd build
-cmake -DCMAKE_C_COMPILER=clang-12 -DCMAKE_CXX_COMPILER=clang++-12 -DCMAKE_BUILD_TYPE=Release -G "Ninja" ..
+cmake -DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16 -DCMAKE_BUILD_TYPE=Release -G "Ninja" ..
 ninja
 ```
 
