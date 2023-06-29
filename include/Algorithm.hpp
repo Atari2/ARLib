@@ -82,7 +82,7 @@ template <ForwardIterator Iter, typename Functor>
 requires CallableWithRes<Functor, bool, decltype(*declval<Iter>())>
 constexpr auto all_of(Iter begin, Iter end, Functor func) {
     for (; begin != end; ++begin) {
-        if (!func(*begin)) return false;
+        if (!invoke(func, *begin)) return false;
     }
     return true;
 }
