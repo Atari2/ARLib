@@ -36,7 +36,7 @@ class WString {
         if (is_local()) {
             // grow outside of locality, copy buffer and change active member of union
             requested_capacity = basic_growth(requested_capacity);
-            m_data_buf         = allocate_initialized<wchar_t>(requested_capacity);
+            m_data_buf         = allocate_uninitialized<wchar_t>(requested_capacity);
             ConditionalBitCopy(m_data_buf, m_local_buf, SMALL_STRING_CAP + 1);
             m_allocated_capacity = requested_capacity;
         } else {
@@ -44,7 +44,7 @@ class WString {
             HARD_ASSERT(
             m_allocated_capacity >= requested_capacity && m_allocated_capacity > m_size, "Allocated capacity failure"
             )
-            wchar_t* new_buf = allocate_initialized<wchar_t>(m_allocated_capacity);
+            wchar_t* new_buf = allocate_uninitialized<wchar_t>(m_allocated_capacity);
             new_buf[m_size]  = L'\0';
             if (m_size != 0) ConditionalBitCopy(new_buf, m_data_buf, m_size + 1);
             deallocate<wchar_t, DeallocType::Multiple>(m_data_buf);
@@ -158,7 +158,7 @@ class WString {
     wchar_t* release() {
         if (m_size == 0) return nullptr;
         if (is_local()) {
-            wchar_t* buffer = allocate_initialized<wchar_t>(SMALL_STRING_CAP + 1);
+            wchar_t* buffer = allocate_uninitialized<wchar_t>(SMALL_STRING_CAP + 1);
             ConditionalBitCopy(buffer, local_data_internal(), m_size);
             return buffer;
         } else {

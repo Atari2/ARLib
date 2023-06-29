@@ -30,7 +30,7 @@ class String {
         if (is_local()) {
             // grow outside of locality, copy buffer and change active member of union
             requested_capacity = basic_growth(requested_capacity);
-            m_data_buf         = allocate_initialized<char>(requested_capacity);
+            m_data_buf         = allocate_uninitialized<char>(requested_capacity);
             memmove(m_data_buf, m_local_buf, SMALL_STRING_CAP + 1);
             m_allocated_capacity = requested_capacity;
         } else {
@@ -38,7 +38,7 @@ class String {
             HARD_ASSERT(
             m_allocated_capacity >= requested_capacity && m_allocated_capacity > m_size, "Allocated capacity failure"
             )
-            char* new_buf   = allocate_initialized<char>(m_allocated_capacity);
+            char* new_buf   = allocate_uninitialized<char>(m_allocated_capacity);
             new_buf[m_size] = '\0';
             if (m_size != 0) memmove(new_buf, m_data_buf, m_size + 1);
             deallocate<char, DeallocType::Multiple>(m_data_buf);
@@ -157,7 +157,7 @@ class String {
     char* release() {
         if (m_size == 0) return nullptr;
         if (is_local()) {
-            char* buffer = allocate_initialized<char>(SMALL_STRING_CAP + 1);
+            char* buffer = allocate_uninitialized<char>(SMALL_STRING_CAP + 1);
             strcpy(buffer, local_data_internal());
             return buffer;
         } else {

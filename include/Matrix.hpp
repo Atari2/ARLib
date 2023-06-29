@@ -66,7 +66,7 @@ class MatrixIterator;
             if (idx >= size)
                 m_column = nullptr;
             else {
-                m_column = allocate_initialized<Tp>(m_size);
+                m_column = allocate_uninitialized<Tp>(m_size);
                 for (size_t i = 0; i < m_size; i++) {
                     m_column[i] = &matrix[i][idx];
                 };
@@ -76,7 +76,7 @@ class MatrixIterator;
             if (idx >= size)
                 m_column = nullptr;
             else {
-                m_column = allocate_initialized<Tp>(m_size);
+                m_column = allocate_uninitialized<Tp>(m_size);
                 for (size_t i = 0; i < m_size; i++) {
                     m_column[i] = &matrix[i][idx];
                 };
@@ -256,9 +256,9 @@ class Matrix2D {
     static int rank_internal(double** const og_matrix, size_t N, size_t M);
     static double det_internal(double** const og_matrix, size_t N, size_t M);
     void allocate_memory(bool zeroinit = false) {
-        m_matrix = allocate_initialized<double*>(m_rows);
+        m_matrix = allocate_uninitialized<double*>(m_rows);
         for (size_t i = 0; i < m_rows; i++) {
-            m_matrix[i] = allocate_initialized<double>(m_columns);
+            m_matrix[i] = allocate_uninitialized<double>(m_columns);
             if (zeroinit) memset(m_matrix[i], 0, m_columns * sizeof(double));
         }
     }

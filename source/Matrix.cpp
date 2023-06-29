@@ -72,9 +72,9 @@ void Matrix2D::row_echelon_transform(double** matrix, size_t N, size_t M) {
 }
 int Matrix2D::rank_internal(double** const og_matrix, size_t N, size_t M) {
     double** matrix{};
-    matrix = allocate_initialized<double*>(N);
+    matrix = allocate_uninitialized<double*>(N);
     for (size_t i = 0; i < N; i++) {
-        matrix[i] = allocate_initialized<double>(N);
+        matrix[i] = allocate_uninitialized<double>(N);
         ConditionalBitCopy(matrix[i], og_matrix[i], N);
     }
     gauss_reduce(matrix, N, M);
@@ -94,9 +94,9 @@ int Matrix2D::rank_internal(double** const og_matrix, size_t N, size_t M) {
 double Matrix2D::det_internal(double** const og_matrix, size_t N, size_t M) {
     HARD_ASSERT(N == M, "Matrix has to be square to calculate determinant");
     double** matrix{};
-    matrix = allocate_initialized<double*>(N);
+    matrix = allocate_uninitialized<double*>(N);
     for (size_t i = 0; i < N; i++) {
-        matrix[i] = allocate_initialized<double>(N);
+        matrix[i] = allocate_uninitialized<double>(N);
         ConditionalBitCopy(matrix[i], og_matrix[i], N);
     }
     gauss_reduce(matrix, N, M);

@@ -127,7 +127,7 @@ String::String(StringView other) : m_size(other.length()) {
         strncpy(m_local_buf, other.data(), m_size);
         m_data_buf = local_data_internal();
     } else {
-        m_data_buf = allocate_initialized<char>(m_size + 1);
+        m_data_buf = allocate_uninitialized<char>(m_size + 1);
         strncpy(m_data_buf, other.data(), m_size);
         m_data_buf[m_size] = '\0';
     }
