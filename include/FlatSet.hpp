@@ -77,15 +77,27 @@ struct FlatSetStorage {
     // since we call new (mem) T on it and that doesn't need memory to be zerod.
     alignas(T) uint8_t storage[StorageSize];
     uint16_t initialized_mask{ 0 };
-    FlatSetStorage()                            = default;
-    FlatSetStorage(const FlatSetStorage& other) = delete;
+    FlatSetStorage() = default;
+    FlatSetStorage(const FlatSetStorage& other) {
+        for (auto bit : BitMask{ other.initialized_mask }) {
+            T copy = other.at(bit);
+            initialize_at(bit, move(copy));
+        }
+    }
     FlatSetStorage(FlatSetStorage&& other) noexcept {
         for (auto bit : BitMask{ other.initialized_mask }) {
             initialize_at(bit, move(other.at(bit)));
             other.destroy_at(bit);
         }
     }
-    FlatSetStorage& operator=(const FlatSetStorage& other) = delete;
+    FlatSetStorage& operator=(const FlatSetStorage& other) {
+        for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
+        for (auto bit : BitMask{ other.initialized_mask }) {
+            T copy = other.at(bit);
+            initialize_at(bit, move(copy));
+        }
+        return *this;
+    }
     FlatSetStorage& operator=(FlatSetStorage&& other) noexcept {
         for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
         for (auto bit : BitMask{ other.initialized_mask }) {
@@ -136,7 +148,9 @@ class FlatSet {
                                     Control::Empty, Control::Empty, Control::Empty, Control::Empty,
                                     Control::Empty, Control::Empty, Control::Empty, Control::Empty };
         FlatSetStorage<T> m_bucket{};
-        Bucket() = default;
+        Bucket()                               = default;
+        Bucket(const Bucket& other)            = default;
+        Bucket& operator=(const Bucket& other) = default;
         Bucket(Bucket&& other) noexcept : m_ctrl_block{ move(other.m_ctrl_block) }, m_bucket{ move(other.m_bucket) } {
             for (size_t i = 0; i < m_ctrl_block.size(); ++i) { other.m_ctrl_block[i] = Control::Empty; }
         }
