@@ -8,7 +8,6 @@
 #include "UniquePtr.hpp"
 #include "Variant.hpp"
 #include "Result.hpp"
-
 namespace ARLib {
 namespace JSON {
 
@@ -17,7 +16,14 @@ namespace JSON {
 
     // types
     class ValueObj;
-    using Value = UniquePtr<ValueObj>;
+    struct Value : public UniquePtr<ValueObj> {
+        Value(ValueObj&& obj);
+        Value(const Value& other);
+        Value& operator=(const Value& other);
+        Value(Value&& other) noexcept            = default;
+        Value& operator=(Value&& other) noexcept = default;
+        Value deepcopy() const;
+    };
     struct Object : public FlatMap<String, Value> {
         using Parent = FlatMap<String, Value>;
 
@@ -30,6 +36,12 @@ namespace JSON {
     struct Array : public Vector<Value> {
         using Parent = Vector<Value>;
 
+        Array()                       = default;
+        Array(Array&& other) noexcept = default;
+        Array(const Array& other);
+        Array& operator=(const Array& other);
+        Array& operator=(Array&& other) noexcept = default;
+
         operator Value() &&;
         ValueObj& operator[](size_t index) { return *(static_cast<Parent*>(this)->operator[](index)); }
         const ValueObj& operator[](size_t index) const {
@@ -38,9 +50,7 @@ namespace JSON {
     };
     struct JString : public String {
         JString() = default;
-        JString(String&& other) noexcept : String(Forward<String>(other)) {
-
-        }
+        JString(String&& other) noexcept : String(Forward<String>(other)) {}
         JString(const String& other) : String(other) {}
         operator Value() &&;
     };
@@ -57,6 +67,7 @@ namespace JSON {
         constexpr Null(detail::NullTag) {}
         constexpr Null(nullptr_t) {}
         operator Value() &&;
+        operator nullptr_t() const;
     };
     class Bool {
         bool m_value;
@@ -188,6 +199,10 @@ namespace JSON {
         }
 
         public:
+        ValueObj(const ValueObj&)                = default;
+        ValueObj(ValueObj&&) noexcept            = default;
+        ValueObj& operator=(const ValueObj&)     = default;
+        ValueObj& operator=(ValueObj&&) noexcept = default;
         template <JSONType T>
         static Value construct(T&& value) {
             return Value{
@@ -259,14 +274,16 @@ namespace JSON {
         }
     };
     class Document {
-        Object m_object;
+        Value m_value;
 
         public:
-        Document(Object&& obj) : m_object(move(obj)) {}
-        const Object& object() const { return m_object; }
-        Object& object() { return m_object; }
-        ValueObj& operator[](const String& key) { return m_object[key]; }
-        const ValueObj& operator[](const String& key) const { return m_object[key]; }
+        Document(Value&& v) : m_value(move(v)) {}
+        Document(const Document& other)                = default;
+        Document& operator=(const Document& other)     = default;
+        Document& operator=(Document&& other) noexcept = default;
+        Document(Document&& other) noexcept            = default;
+        const ValueObj& value() const { return *m_value; }
+        ValueObj& value() { return *m_value; }
     };
     struct ErrorInfo {
         String error_string{};
@@ -285,6 +302,12 @@ namespace JSON {
         size_t offset() const { return m_info.error_offset; }
     };
 }    // namespace JSON
+template <>
+struct PrintInfo<JSON::Value> {
+    const JSON::Value& m_value;
+    PrintInfo(const JSON::Value& value) : m_value(value) {}
+    String repr() const { return PrintInfo<UniquePtr<JSON::ValueObj>>{ m_value }.repr(); }
+};
 template <>
 struct PrintInfo<JSON::Null> {
     const JSON::Null& m_null;

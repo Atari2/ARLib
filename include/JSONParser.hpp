@@ -32,6 +32,7 @@ namespace JSON {
         constexpr bool invalid_index() const { return current_index >= view.size(); }
         constexpr void advance(size_t off = 1) { current_index += off; }
         constexpr size_t index() const { return current_index; }
+        constexpr bool at_end() const { return current_index == view.size(); }
     };
     Parsed<Object> parse_object(ParseState& state);
     void skip_whitespace(ParseState& state);
@@ -41,9 +42,11 @@ namespace JSON {
     Parsed<Number> parse_number(const String& raw_value);
     Parsed<Array> parse_array(ParseState& state);
     String dump_array(const Array& arr, size_t indent = 1);
-    String dump_json(const Object& obj, size_t indent = 1);
+    String dump_object(const Object& obj, size_t indent = 1);
     String dump_array_compact(const Array& arr);
-    String dump_json_compact(const Object& obj);
+    String dump_object_compact(const Object& obj);
+    String dump_json(const ValueObj& val, size_t index = 1);
+    String dump_json_compact(const ValueObj& val);
     using ParseResult = Result<Document, ParseError>;
 
     class Parser {
@@ -55,7 +58,7 @@ namespace JSON {
 
         public:
         static ParseResult parse(StringView);
-        static ParseResult from_file(StringView);
+        static ParseResult from_file(const Path&);
     };
     template <typename T>
     concept Serializable = requires(const T& t) {
@@ -65,8 +68,8 @@ namespace JSON {
     template <Serializable T>
     class Serializer {
         public:
-        static Parsed<T> deserialize_from_file(StringView filename) {
-            File f{ filename.extract_string() };
+        static Parsed<T> deserialize_from_file(const Path& filename) {
+            File f{ filename };
             auto maybe_error = f.open(OpenFileMode::Read);
             if (maybe_error.is_error()) { return maybe_error.to_error(); }
             auto read_res = f.read_all();
@@ -76,9 +79,9 @@ namespace JSON {
             if (deserialize_res.is_error()) { return deserialize_res.to_error(); }
             return deserialize_res.to_ok();
         }
-        static Parsed<size_t> serialize_to_file(const T& object, StringView filename) {
+        static Parsed<size_t> serialize_to_file(const T& object, const Path& filename) {
             auto result = object.serialize();
-            File f{ filename.extract_string() };
+            File f{ filename };
             auto maybe_error = f.open(OpenFileMode::Write);
             if (maybe_error.is_error()) { return maybe_error.to_error(); }
             auto write_res = f.write(result);
@@ -97,6 +100,6 @@ template <>
 struct PrintInfo<JSON::Document> {
     const JSON::Document& m_document;
     PrintInfo(const JSON::Document& document) : m_document(document) {}
-    String repr() const { return JSON::dump_json(m_document.object()); }
+    String repr() const { return JSON::dump_json(m_document.value()); }
 };
 }    // namespace ARLib

@@ -240,6 +240,7 @@ namespace JSON {
     }
     // FIXME: fix indentation
     String dump_array(const Array& arr, size_t indent) {
+        if (arr.size() == 0) return "[]"_s;
         String repr{ "[\n" };
         String indent_string{ indent, '\t' };
         size_t i = 0;
@@ -250,7 +251,7 @@ namespace JSON {
                     repr.append(dump_array(val.get<Type::JArray>(), indent + 1));
                     break;
                 case Type::JObject:
-                    repr.append(dump_json(val.get<Type::JObject>(), indent + 1));
+                    repr.append(dump_object(val.get<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
                     repr.append(indent_string + val.get<Type::JNumber>().to_string());
@@ -287,7 +288,7 @@ namespace JSON {
                     repr.append(dump_array_compact(val.get<Type::JArray>()));
                     break;
                 case Type::JObject:
-                    repr.append(dump_json_compact(val.get<Type::JObject>()));
+                    repr.append(dump_object_compact(val.get<Type::JObject>()));
                     break;
                 case Type::JNumber:
                     repr.append(val.get<Type::JNumber>().to_string());
@@ -310,7 +311,7 @@ namespace JSON {
         repr.append(']');
         return repr;
     }
-    String dump_json_compact(const Object& obj) {
+    String dump_object_compact(const Object& obj) {
         String repr{ "{" };
         for (const auto& entry : obj) {
             const auto& val = *entry.val();
@@ -322,7 +323,7 @@ namespace JSON {
                     repr.append(dump_array_compact(val.get<Type::JArray>()));
                     break;
                 case Type::JObject:
-                    repr.append(dump_json_compact(val.get<Type::JObject>()));
+                    repr.append(dump_object_compact(val.get<Type::JObject>()));
                     break;
                 case Type::JNumber:
                     repr.append(val.get<Type::JNumber>().to_string());
@@ -344,7 +345,8 @@ namespace JSON {
         repr.append("}");
         return repr;
     }
-    String dump_json(const Object& obj, size_t indent) {
+    String dump_object(const Object& obj, size_t indent) {
+        if (obj.size() == 0) return "{}"_s;
         String indent_string{ indent, '\t' };
         String prev_indent_string{ indent - 1, '\t' };
         String repr{ prev_indent_string + "{\n"_s };
@@ -360,7 +362,7 @@ namespace JSON {
                     repr.append(dump_array(val.get<Type::JArray>(), indent + 1));
                     break;
                 case Type::JObject:
-                    repr.append(dump_json(val.get<Type::JObject>(), indent + 1));
+                    repr.append(dump_object(val.get<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
                     repr.append(val.get<Type::JNumber>().to_string());
@@ -387,19 +389,104 @@ namespace JSON {
         repr.append(prev_indent_string + "}"_s);
         return repr;
     }
+    String dump_json(const ValueObj& val, size_t index) {
+        switch (val.type()) {
+            case JSON::Type::JArray:
+                return dump_array(val.get<Type::JArray>(), index);
+            case JSON::Type::JBool:
+                return BoolToStr(val.get<Type::JBool>().value());
+            case JSON::Type::JNull:
+                return "null"_s;
+            case JSON::Type::JNumber:
+                return val.get<Type::JNumber>().to_string();
+            case JSON::Type::JObject:
+                return dump_object(val.get<Type::JObject>(), index);
+            case JSON::Type::JString:
+                return "\""_s + val.get<Type::JString>() + "\""_s;
+        }
+        return "{}"_s;
+    }
+    String dump_json_compact(const ValueObj& val) {
+        switch (val.type()) {
+            case JSON::Type::JArray:
+                return dump_array_compact(val.get<Type::JArray>());
+            case JSON::Type::JBool:
+                return BoolToStr(val.get<Type::JBool>().value());
+            case JSON::Type::JNull:
+                return "null"_s;
+            case JSON::Type::JNumber:
+                return val.get<Type::JNumber>().to_string();
+            case JSON::Type::JObject:
+                return dump_object_compact(val.get<Type::JObject>());
+            case JSON::Type::JString:
+                return "\""_s + val.get<Type::JString>() + "\""_s;
+        }
+        return "{}"_s;
+    }
+#define CHECK_STATE_AT_END()                                                                                           \
+    skip_whitespace(state);                                                                                            \
+    if (!state.at_end()) { return ParseError{ "End of json reached but end of buffer not reached "_s, state.index() }; }
     Parser::Parser(StringView view) : m_view(view) {}
     ParseResult Parser::parse_internal() {
         ParseState state{ m_view };
         skip_whitespace(state);
-        TRY_SET(obj, parse_object(state));
-        return ParseResult{ Document{ move(obj) } };
+        auto c = state.current();
+        switch (c) {
+            case '{':
+                {
+                    TRY_SET(obj, parse_object(state));
+                    CHECK_STATE_AT_END();
+                    return ParseResult{ Document{ move(obj) } };
+                }
+            case '[':
+                {
+                    TRY_SET(arr, parse_array(state));
+                    CHECK_STATE_AT_END();
+                    return ParseResult{ Document{ move(arr) } };
+                }
+            case '"':
+                {
+                    TRY_SET(str, parse_quoted_string(state));
+                    CHECK_STATE_AT_END();
+                    return ParseResult{ Document{ move(str) } };
+                }
+            default:
+                {
+                    const ARLib::Array valid_values_for_number{ '0', '1', '2', '3', '4', '5', '6', '7',
+                                                                '8', '9', '-', '+', 'E', 'e', '.' };
+                    auto check_if_valid_number = [&](const String& str) {
+                        // this is not real validation, it lets invalid values slip throught, but it's good enough for now
+                        for (const char ch : str) {
+                            if (find(valid_values_for_number, ch) == npos_) { return false; }
+                        }
+                        return true;
+                    };
+                    auto result = parse_non_delimited(state);
+                    CHECK_STATE_AT_END();
+                    if (result.is_error()) return result.to_error();
+                    auto raw_value = result.to_ok();
+                    if (raw_value == "null"_s) {
+                        return ParseResult{ Document{ Null{ null_tag } } };
+                    } else if (raw_value == "true"_s) {
+                        return ParseResult{ Document{ Bool{ bool_tag, true } } };
+                    } else if (raw_value == "false"_s) {
+                        return ParseResult{ Document{ Bool{ bool_tag, false } } };
+                    } else if (check_if_valid_number(raw_value)) {
+                        TRY_SET(value, parse_number(raw_value));
+                        return ParseResult{ Document{ ValueObj::construct(move(value)) } };
+                    } else {
+                        return ParseError{ "Expected a valid json type but got "_s + raw_value, state.index() };
+                    }
+                }
+        }
+        return ParseError{ "Expected a valid json type but got "_s + c, state.index() };
     }
     ParseResult Parser::parse(StringView data) {
         Parser p{ data };
         return p.parse_internal();
     }
-    ParseResult Parser::from_file(StringView filename) {
-        File f{ filename.extract_string() };
+    ParseResult Parser::from_file(const Path& filename) {
+        File f{ filename };
         TRY(f.open(OpenFileMode::Read));
         TRY_SET(val, f.read_all());
         TRY_RET(Parser::parse(val.view()));
