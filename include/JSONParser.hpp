@@ -100,6 +100,6 @@ template <>
 struct PrintInfo<JSON::Document> {
     const JSON::Document& m_document;
     PrintInfo(const JSON::Document& document) : m_document(document) {}
-    String repr() const { return JSON::dump_json(m_document.value()); }
+    String repr() const { return JSON::dump_json(m_document.root()); }
 };
 }    // namespace ARLib

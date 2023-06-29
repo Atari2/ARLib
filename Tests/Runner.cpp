@@ -569,18 +569,52 @@ TEST(ARLibTests, JSONTest) {
     EXPECT_TRUE(maybe_obj.is_ok());
     auto obj = maybe_obj.to_ok();
     Vector vec{ 1, 2, 3, 4 };
-    auto& ptr_vec = obj.value().get<JSON::Type::JObject>()["array"_s].get<JSON::Type::JArray>();
+    auto& ptr_vec = obj.root().get<JSON::Type::JObject>()["array"_s].get<JSON::Type::JArray>();
     EXPECT_EQ(vec.size(), ptr_vec.size());
     for (size_t i = 0; i < vec.size(); i++) {
         EXPECT_EQ(vec[i], ptr_vec[i]);
         ptr_vec[i] = 10.0;
     }
-    EXPECT_EQ(obj.value().get<JSON::Type::JObject>()["hello world"_s], 10);
+    EXPECT_EQ(obj.root().get<JSON::Type::JObject>()["hello world"_s], 10);
     auto maybe_obj_2 = JSON::Parser::parse(R"({"hello world": 10, "array: [1, 2, 3, 4]})"_sv);
     EXPECT_FALSE(maybe_obj_2.is_ok());
     auto err = maybe_obj_2.to_error();
     EXPECT_EQ(err.message(), "Missing end of quotation on string"_s);
     EXPECT_EQ(err.offset(), 41);
+
+    auto solo_array = JSON::Parser::parse(R"([1, 2, 3])"_sv);
+    EXPECT_TRUE(solo_array.is_ok());
+    auto val  = solo_array.to_ok();
+    auto& arr = val.root().get<JSON::Type::JArray>();
+    EXPECT_EQ(arr.size(), 3);
+    EXPECT_EQ(arr[0], 1);
+    EXPECT_EQ(arr[1], 2);
+    EXPECT_EQ(arr[2], 3);
+
+    auto solo_bool = JSON::Parser::parse(R"(true)"_sv);
+    EXPECT_TRUE(solo_bool.is_ok());
+    auto val2 = solo_bool.to_ok();
+    EXPECT_EQ(val2.root().get<JSON::Type::JBool>(), true);
+
+    auto solo_string = JSON::Parser::parse(R"("hello world")"_sv);
+    EXPECT_TRUE(solo_string.is_ok());
+    auto val3 = solo_string.to_ok();
+    EXPECT_EQ(val3.root().get<JSON::Type::JString>(), "hello world"_s);
+
+    auto solo_int = JSON::Parser::parse(R"(10)"_sv);
+    EXPECT_TRUE(solo_int.is_ok());
+    auto val4 = solo_int.to_ok();
+    EXPECT_EQ(val4.root().get<JSON::Type::JNumber>(), 10);
+
+    auto solo_null = JSON::Parser::parse(R"(null)"_sv);
+    EXPECT_TRUE(solo_null.is_ok());
+    auto val5 = solo_null.to_ok();
+    EXPECT_EQ(val5.root().get<JSON::Type::JNull>(), nullptr);
+
+    auto error_double_obj = JSON::Parser::parse(R"({} {})");
+    EXPECT_TRUE(error_double_obj.is_error());
+    auto err2 = error_double_obj.to_error();
+    EXPECT_EQ(err2.message(), "End of json reached but end of buffer not reached"_s);
 }
 TEST(ARLibTests, RandomTest) {
     EXPECT_EQ(Random::PCG::random_s(), 355248013);

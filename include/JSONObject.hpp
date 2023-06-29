@@ -68,6 +68,7 @@ namespace JSON {
         constexpr Null(nullptr_t) {}
         operator Value() &&;
         operator nullptr_t() const;
+        constexpr bool operator==(nullptr_t) const { return true; }
     };
     class Bool {
         bool m_value;
@@ -282,8 +283,8 @@ namespace JSON {
         Document& operator=(const Document& other)     = default;
         Document& operator=(Document&& other) noexcept = default;
         Document(Document&& other) noexcept            = default;
-        const ValueObj& value() const { return *m_value; }
-        ValueObj& value() { return *m_value; }
+        const ValueObj& root() const { return *m_value; }
+        ValueObj& root() { return *m_value; }
     };
     struct ErrorInfo {
         String error_string{};

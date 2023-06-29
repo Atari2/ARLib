@@ -425,7 +425,7 @@ namespace JSON {
     }
 #define CHECK_STATE_AT_END()                                                                                           \
     skip_whitespace(state);                                                                                            \
-    if (!state.at_end()) { return ParseError{ "End of json reached but end of buffer not reached "_s, state.index() }; }
+    if (!state.at_end()) { return ParseError{ "End of json reached but end of buffer not reached"_s, state.index() }; }
     Parser::Parser(StringView view) : m_view(view) {}
     ParseResult Parser::parse_internal() {
         ParseState state{ m_view };
