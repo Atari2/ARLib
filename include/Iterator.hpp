@@ -278,7 +278,9 @@ class IfIterator {
     bool operator!=(const IfIterator& other) const { return m_current_iter != other.m_current_iter; }
     bool operator<(const IfIterator& other) { return m_current_iter < other.m_current_iter; }
     bool operator>(const IfIterator& other) { return m_current_iter > other.m_current_iter; }
-    size_t operator-(const IfIterator& other) const {
+    size_t operator-(const IfIterator& other) const
+    requires IterCanSubtractForSize<IterUnit>
+    {
         if (other.m_end != m_end) return it_npos;
         return m_current_iter - other.m_current_iter;
     }
@@ -294,12 +296,15 @@ class MapIterator {
     IterUnit m_end;
     Functor m_func;
 
+    using OVTImpl = MapType<IteratorOutputType<IterUnit>, Functor>;
     public:
     using InputValueType  = IteratorInputType<IterUnit>;
-    using OutputValueType = MapType<IteratorOutputType<IterUnit>, Functor>;
+    // this is necessary so that if we have a map iterator of an iterator that returns an lvalue we can return a copy of the output
+    // instead of a reference to something that may be dead
+    using OutputValueType = ConditionalT<IsLvalueReferenceV<InputValueType>, OVTImpl, RemoveReferenceT<OVTImpl>>;
     MapIterator(IterUnit unit, IterUnit end, Functor func) : m_current_iter(unit), m_end(end), m_func(func) {}
     OutputValueType operator*() { return invoke(m_func, *m_current_iter); }
-    const OutputValueType operator*() const { return invoke(m_func, *m_current_iter); }
+    OutputValueType operator*() const { return invoke(m_func, *m_current_iter); }
     MapIterator& operator++() {
         if (m_current_iter == m_end) return *this;
         ++m_current_iter;

@@ -128,11 +128,11 @@ class IteratorView {
             return copy;
         }
     }
-    template <template <typename> typename NewCont>
-    NewCont<IteratorOutputType<Iter>> collect()
-    requires Pushable<NewCont<IteratorOutputType<Iter>>, IteratorOutputType<Iter>>
+    template <template <typename> typename NewCont, typename ItemT = RemoveCvRefT<IteratorOutputType<Iter>>>
+    NewCont<ItemT> collect()
+    requires Pushable<NewCont<ItemT>, ItemT>
     {
-        using RealCont = NewCont<IteratorOutputType<Iter>>;
+        using RealCont = NewCont<ItemT>;
         if (m_stolen_storage != nullptr) {
             if constexpr (SameAs<RealCont, Cont> && IterCanSubtractForSize<Iter>) {
                 return RealCont{ m_stolen_storage, size() };
