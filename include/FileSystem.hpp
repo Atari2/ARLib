@@ -10,9 +10,9 @@ class FileInfo {
     FileInfo(NativeFileInfo&& info) : m_info(move(info)) {}
     FileInfo(const NativeFileInfo& info) : m_info(info) {}
     FileInfo(const FileInfo& other) = default;
-    FileInfo(FileInfo&& other)  noexcept : m_info(move(other.m_info)) {}
+    FileInfo(FileInfo&& other) noexcept : m_info(move(other.m_info)) {}
     FileInfo& operator=(const FileInfo& other) = default;
-    FileInfo& operator=(FileInfo&& other)  noexcept {
+    FileInfo& operator=(FileInfo&& other) noexcept {
         m_info = move(other.m_info);
         return *this;
     }
@@ -43,11 +43,19 @@ class DirectoryIterator {
     }
     ~DirectoryIterator() = default;
 };
+enum class DirIterType {
+    Normal, 
+    Recursive
+};
 class DirectoryIterate {
     NativeDirectoryIterate m_native;
     public:
-    DirectoryIterate(Path path, bool recurse = false) : m_native(move(path), recurse){};
+    DirectoryIterate(Path path, DirIterType type) : m_native(move(path), type == DirIterType::Recursive){};
     auto begin() const { return DirectoryIterator{ m_native.begin() }; }
     auto end() const { return DirectoryIterator{ m_native.end() }; }
+    auto iter() const { return IteratorView{ *this }; }
 };
+inline DirectoryIterate iterate_directory(Path path, DirIterType type = DirIterType::Normal) {
+    return DirectoryIterate{ move(path), type };
+}
 }    // namespace ARLib

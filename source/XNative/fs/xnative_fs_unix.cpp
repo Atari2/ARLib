@@ -195,9 +195,26 @@ void UnixDirectoryIterator::load_next_file() {
     } else if (m_state == State::Directory && m_recurse) {
         // we found a directory and we're recursing
         m_recursive_iterate = UnixDirectoryIterate{ combine_paths(*m_path, m_info.fileName), m_recurse };
-        m_inner_curr        = UniquePtr{ m_recursive_iterate.begin() };
-        m_inner_end         = UniquePtr{ m_recursive_iterate.end() };
-        m_state             = State::Recursing;
+        auto rbeg = m_recursive_iterate.begin();
+        auto rend = m_recursive_iterate.end();
+        if (rbeg == rend) {
+            // directory is empty, load next
+            m_index++;
+            if (!find_next_not_dot_or_dot_dot()) {
+                globfree(hdl);
+                m_hdl   = NULL;
+                m_state = State::Finished;
+                m_index = 0;
+            } else {
+                set_entry_info();
+                bool isDir = S_ISDIR(m_info.statHandle->st_mode);
+                m_state    = isDir ? State::Directory : State::File;
+            }
+        } else {
+            m_inner_curr = UniquePtr{ move(rbeg) };
+            m_inner_end  = UniquePtr{ move(rend) };
+            m_state      = State::Recursing;
+        }
     } else {
         HARD_ASSERT(false, "Unreachable");
     }
