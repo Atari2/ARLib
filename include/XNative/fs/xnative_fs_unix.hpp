@@ -31,15 +31,13 @@ class UnixFileInfo {
     UnixFileInfo(const UnixFileInfo& other) noexcept : fileName(), fullPath(other.fullPath) {
         auto idx_last_slash = fullPath.string().last_index_of('/');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
-        if (other.statHandle)
-            copy_from_stathandle(*other.statHandle);
+        if (other.statHandle) copy_from_stathandle(*other.statHandle);
     }
     UnixFileInfo& operator=(const UnixFileInfo& other) noexcept {
         fullPath            = other.fullPath;
         auto idx_last_slash = fullPath.string().last_index_of('/');
         fileName            = fullPath.string().substringview(idx_last_slash != WString::npos ? idx_last_slash + 1 : 0);
-        if (other.statHandle)
-            copy_from_stathandle(*other.statHandle);
+        if (other.statHandle) copy_from_stathandle(*other.statHandle);
         return *this;
     }
     UnixFileInfo& operator=(UnixFileInfo&& other) noexcept {
@@ -85,13 +83,7 @@ class UnixDirectoryIterate {
     ~UnixDirectoryIterate();
 };
 class UnixDirectoryIterator {
-    enum class State {
-        Uninitialized,
-        Directory,
-        File,
-        Recursing,
-        Finished
-    };
+    enum class State { Uninitialized, Directory, File, Recursing, Finished };
     friend class UnixDirectoryIterate;
     UnixDirIterHandle m_hdl;
     const Path* m_path;
