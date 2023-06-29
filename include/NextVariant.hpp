@@ -217,14 +217,14 @@ namespace v2 {
         template <typename T>
         requires VariantAnyOf<T, Types...>
         const T& get() const {
-            constexpr size_t index = VariantArray::template IndexOf<T>;
+            [[maybe_unused]] constexpr size_t index = VariantArray::template IndexOf<T>;
             HARD_ASSERT(index == m_current_type, "get<>() in variant was trying to access not current type");
             return m_storage.template as<T>();
         }
         template <typename T>
         requires VariantAnyOf<T, Types...>
         T& get() {
-            constexpr size_t index = VariantArray::template IndexOf<T>;
+            [[maybe_unused]] constexpr size_t index = VariantArray::template IndexOf<T>;
             HARD_ASSERT(index == m_current_type, "get<>() in variant was trying to access not current type");
             return m_storage.template as<T>();
         }
