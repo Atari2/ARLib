@@ -144,9 +144,10 @@ namespace JSON {
             }
         }
     };
-
-    enum class Type { JObject, JString, JNumber, JArray, JBool, JNull };
-
+    enum class Type : uint8_t;
+}    // namespace JSON
+MAKE_FANCY_ENUM(JSON::Type, uint8_t, JObject, JString, JNumber, JArray, JBool, JNull);
+namespace JSON {
     template <typename Tp>
     concept JSONType = IsAnyOfV<Tp, Object, JString, Number, Array, Bool, Null>;
 
@@ -171,11 +172,25 @@ namespace JSON {
             COMPTIME_ASSERT("Invalid type to construct a JSON Value from")
         }
     }
+    class ConversionError : public ErrorBase {
+        String m_info;
+
+        public:
+        ConversionError() = default;
+        ConversionError(Type to, Type actual) :
+            m_info{ "Invalid JSON conversion attempted, tried to convert a "_s + enum_to_str(actual) + " to a " +
+                    enum_to_str(to) } {};
+        const String& message() const { return m_info; }
+        const String& error_string() const { return m_info; }
+    };
     class ValueObj {
         friend Parser;
         friend PrintInfo<ValueObj>;
 
         using JSONVariant = Variant<Object, JString, Number, Array, Bool, Null>;
+
+        using JSONTypeArray = TypeArray<Object, JString, Number, Array, Bool, Null>;
+
         JSONVariant m_internal_value{ null_tag };
         Type m_type{ Type::JNull };
         template <JSONType T>
@@ -227,16 +242,36 @@ namespace JSON {
         bool operator==(const T& value) const {
             constexpr auto val = map_t_to_enum<T>();
             if (val != m_type) return false;
-            return get<val>() == value;
+            return as<val>() == value;
         }
         template <JSONTypeExt T>
         operator T() const {
             constexpr auto val = map_t_to_enum<T>();
             if (val != m_type) ASSERT_NOT_REACHED("Invalid type requested");
-            return get<val>();
+            return as<val>();
+        }
+        template <JSONTypeExt T>
+        const auto& as() const {
+            constexpr auto val = map_t_to_enum<T>();
+            return static_cast<const T&>(as<val>());
+        }
+        template <JSONTypeExt T>
+        auto& as() {
+            constexpr auto val = map_t_to_enum<T>();
+            return static_cast<T&>(as<val>());
+        }
+        template <JSONTypeExt T>
+        auto try_as() const {
+            constexpr auto val = map_t_to_enum<T>();
+            return try_as<val>();
+        }
+        template <JSONTypeExt T>
+        auto try_as() {
+            constexpr auto val = map_t_to_enum<T>();
+            return try_as<val>();
         }
         template <Type T>
-        const auto& get() const {
+        const auto& as() const {
             // Value, Object, String, Number, Array, Bool, Null
             if constexpr (T == Type::JObject) {
                 return ARLib::get<Object>(m_internal_value);
@@ -255,7 +290,7 @@ namespace JSON {
             }
         }
         template <Type T>
-        auto& get() {
+        auto& as() {
             // Value, Object, String, Number, Array, Bool, Null
             if constexpr (T == Type::JObject) {
                 return ARLib::get<Object>(m_internal_value);
@@ -273,6 +308,32 @@ namespace JSON {
                 COMPTIME_ASSERT("Invalid enum value passed to JSON:Value::get<T>");
             }
         }
+        template <Type T>
+        auto try_as() {
+            constexpr size_t index = static_cast<size_t>(from_enum(T));
+            using JType            = typename JSONTypeArray::At<index>;
+            using Ret              = Result<AddLvalueReferenceT<JType>, ConversionError>;
+            if (m_type != T)
+                return Ret{
+                    ConversionError{T, m_type}
+                };
+            return Ret{ as<T>() };
+        }
+        template <Type T>
+        auto try_as() const {
+            constexpr size_t index = static_cast<size_t>(from_enum(T));
+            using JType            = typename JSONTypeArray::At<index>;
+            using Ret              = Result<AddConstT<AddLvalueReferenceT<JType>>, ConversionError>;
+            if (m_type != T)
+                return Ret{
+                    ConversionError{T, m_type}
+                };
+            return Ret{ as<T>() };
+        }
+        const auto& operator[](const String& s) const { return as<Type::JObject>()[s]; }
+        auto& operator[](const String& s) { return as<Type::JObject>()[s]; }
+        const auto& operator[](size_t i) const { return as<Type::JArray>()[i]; }
+        auto& operator[](size_t i) { return as<Type::JArray>()[i]; }
     };
     class Document {
         Value m_value;
@@ -352,22 +413,28 @@ struct PrintInfo<JSON::ValueObj> {
     String repr() const {
         switch (m_value.type()) {
             case JSON::Type::JArray:
-                return PrintInfo<JSON::Array>{ m_value.get<JSON::Type::JArray>() }.repr();
+                return PrintInfo<JSON::Array>{ m_value.as<JSON::Type::JArray>() }.repr();
             case JSON::Type::JString:
-                return PrintInfo<JSON::JString>{ m_value.get<JSON::Type::JString>() }.repr();
+                return PrintInfo<JSON::JString>{ m_value.as<JSON::Type::JString>() }.repr();
             case JSON::Type::JObject:
-                return PrintInfo<JSON::Object>{ m_value.get<JSON::Type::JObject>() }.repr();
+                return PrintInfo<JSON::Object>{ m_value.as<JSON::Type::JObject>() }.repr();
             case JSON::Type::JBool:
-                return PrintInfo<JSON::Bool>{ m_value.get<JSON::Type::JBool>() }.repr();
+                return PrintInfo<JSON::Bool>{ m_value.as<JSON::Type::JBool>() }.repr();
             case JSON::Type::JNull:
-                return PrintInfo<JSON::Null>{ m_value.get<JSON::Type::JNull>() }.repr();
+                return PrintInfo<JSON::Null>{ m_value.as<JSON::Type::JNull>() }.repr();
             case JSON::Type::JNumber:
-                return PrintInfo<JSON::Number>{ m_value.get<JSON::Type::JNumber>() }.repr();
+                return PrintInfo<JSON::Number>{ m_value.as<JSON::Type::JNumber>() }.repr();
             default:
                 ASSERT_NOT_REACHED("Invalid JSON type.");
         }
         return "Invalid JSON Value"_s;
     }
+};
+template <>
+struct PrintInfo<JSON::ConversionError> {
+    const JSON::ConversionError& m_error;
+    PrintInfo(const JSON::ConversionError& error) : m_error(error) {}
+    String repr() const { return m_error.message(); }
 };
 template <>
 struct PrintInfo<JSON::ParseError> {

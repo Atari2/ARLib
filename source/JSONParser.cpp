@@ -248,22 +248,22 @@ namespace JSON {
             const auto& val = *val_ptr;
             switch (val.type()) {
                 case Type::JArray:
-                    repr.append(dump_array(val.get<Type::JArray>(), indent + 1));
+                    repr.append(dump_array(val.as<Type::JArray>(), indent + 1));
                     break;
                 case Type::JObject:
-                    repr.append(dump_object(val.get<Type::JObject>(), indent + 1));
+                    repr.append(dump_object(val.as<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
-                    repr.append(indent_string + val.get<Type::JNumber>().to_string());
+                    repr.append(indent_string + val.as<Type::JNumber>().to_string());
                     break;
                 case Type::JNull:
                     repr.append(indent_string + "null"_s);
                     break;
                 case Type::JBool:
-                    repr.append(indent_string + BoolToStr(val.get<Type::JBool>().value()));
+                    repr.append(indent_string + BoolToStr(val.as<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append(indent_string + "\""_s + val.get<Type::JString>() + '"');
+                    repr.append(indent_string + "\""_s + val.as<Type::JString>() + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -285,22 +285,22 @@ namespace JSON {
             const auto& val = *val_ptr;
             switch (val.type()) {
                 case Type::JArray:
-                    repr.append(dump_array_compact(val.get<Type::JArray>()));
+                    repr.append(dump_array_compact(val.as<Type::JArray>()));
                     break;
                 case Type::JObject:
-                    repr.append(dump_object_compact(val.get<Type::JObject>()));
+                    repr.append(dump_object_compact(val.as<Type::JObject>()));
                     break;
                 case Type::JNumber:
-                    repr.append(val.get<Type::JNumber>().to_string());
+                    repr.append(val.as<Type::JNumber>().to_string());
                     break;
                 case Type::JNull:
                     repr.append("null"_s);
                     break;
                 case Type::JBool:
-                    repr.append(BoolToStr(val.get<Type::JBool>().value()));
+                    repr.append(BoolToStr(val.as<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append("\""_s + val.get<Type::JString>() + '"');
+                    repr.append("\""_s + val.as<Type::JString>() + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -320,22 +320,22 @@ namespace JSON {
             repr.append(":"_s);
             switch (val.type()) {
                 case Type::JArray:
-                    repr.append(dump_array_compact(val.get<Type::JArray>()));
+                    repr.append(dump_array_compact(val.as<Type::JArray>()));
                     break;
                 case Type::JObject:
-                    repr.append(dump_object_compact(val.get<Type::JObject>()));
+                    repr.append(dump_object_compact(val.as<Type::JObject>()));
                     break;
                 case Type::JNumber:
-                    repr.append(val.get<Type::JNumber>().to_string());
+                    repr.append(val.as<Type::JNumber>().to_string());
                     break;
                 case Type::JNull:
                     repr.append("null"_s);
                     break;
                 case Type::JBool:
-                    repr.append(BoolToStr(val.get<Type::JBool>().value()));
+                    repr.append(BoolToStr(val.as<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append("\""_s + val.get<Type::JString>() + '"');
+                    repr.append("\""_s + val.as<Type::JString>() + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -359,22 +359,22 @@ namespace JSON {
             repr.append(": "_s);
             switch (val.type()) {
                 case Type::JArray:
-                    repr.append(dump_array(val.get<Type::JArray>(), indent + 1));
+                    repr.append(dump_array(val.as<Type::JArray>(), indent + 1));
                     break;
                 case Type::JObject:
-                    repr.append(dump_object(val.get<Type::JObject>(), indent + 1));
+                    repr.append(dump_object(val.as<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
-                    repr.append(val.get<Type::JNumber>().to_string());
+                    repr.append(val.as<Type::JNumber>().to_string());
                     break;
                 case Type::JNull:
                     repr.append("null"_s);
                     break;
                 case Type::JBool:
-                    repr.append(BoolToStr(val.get<Type::JBool>().value()));
+                    repr.append(BoolToStr(val.as<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append("\""_s + val.get<Type::JString>() + '"');
+                    repr.append("\""_s + val.as<Type::JString>() + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -392,34 +392,34 @@ namespace JSON {
     String dump_json(const ValueObj& val, size_t index) {
         switch (val.type()) {
             case JSON::Type::JArray:
-                return dump_array(val.get<Type::JArray>(), index);
+                return dump_array(val.as<Type::JArray>(), index);
             case JSON::Type::JBool:
-                return BoolToStr(val.get<Type::JBool>().value());
+                return BoolToStr(val.as<Type::JBool>().value());
             case JSON::Type::JNull:
                 return "null"_s;
             case JSON::Type::JNumber:
-                return val.get<Type::JNumber>().to_string();
+                return val.as<Type::JNumber>().to_string();
             case JSON::Type::JObject:
-                return dump_object(val.get<Type::JObject>(), index);
+                return dump_object(val.as<Type::JObject>(), index);
             case JSON::Type::JString:
-                return "\""_s + val.get<Type::JString>() + "\""_s;
+                return "\""_s + val.as<Type::JString>() + "\""_s;
         }
         return "{}"_s;
     }
     String dump_json_compact(const ValueObj& val) {
         switch (val.type()) {
             case JSON::Type::JArray:
-                return dump_array_compact(val.get<Type::JArray>());
+                return dump_array_compact(val.as<Type::JArray>());
             case JSON::Type::JBool:
-                return BoolToStr(val.get<Type::JBool>().value());
+                return BoolToStr(val.as<Type::JBool>().value());
             case JSON::Type::JNull:
                 return "null"_s;
             case JSON::Type::JNumber:
-                return val.get<Type::JNumber>().to_string();
+                return val.as<Type::JNumber>().to_string();
             case JSON::Type::JObject:
-                return dump_object_compact(val.get<Type::JObject>());
+                return dump_object_compact(val.as<Type::JObject>());
             case JSON::Type::JString:
-                return "\""_s + val.get<Type::JString>() + "\""_s;
+                return "\""_s + val.as<Type::JString>() + "\""_s;
         }
         return "{}"_s;
     }
