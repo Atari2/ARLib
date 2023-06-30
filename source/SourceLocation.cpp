@@ -16,13 +16,13 @@ namespace ARLib {
 }
 void __print_debug_source_location(const SourceLocation& loc_, [[maybe_unused]] const char* message) {
 #ifdef DEBUG_NEW_DELETE
-    _assert_printf("%s", message);
+    _assert_printf("%s\n", message);
     _assert_printf(
     "Function `%s` in file %s, at line %u and column %u\n", loc_.function_name(), loc_.file_name(), loc_.line(),
     loc_.column()
     );
 #else
-    ARLib::printf("%s", message);
+    ARLib::printf("%s\n", message);
     ARLib::printf(
     "Function `%s` in file %s, at line %u and column %u\n", loc_.function_name(), loc_.file_name(), loc_.line(),
     loc_.column()
