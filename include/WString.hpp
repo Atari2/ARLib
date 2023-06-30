@@ -35,12 +35,12 @@ class WString {
     void grow_internal(size_t requested_capacity) {
         if (is_local()) {
             // grow outside of locality, copy buffer and change active member of union
-            requested_capacity = basic_growth(requested_capacity);
+            requested_capacity = bit_round_growth(requested_capacity);
             m_data_buf         = allocate_uninitialized<wchar_t>(requested_capacity);
             ConditionalBitCopy(m_data_buf, m_local_buf, SMALL_STRING_CAP + 1);
             m_allocated_capacity = requested_capacity;
         } else {
-            m_allocated_capacity = basic_growth(requested_capacity);
+            m_allocated_capacity = bit_round_growth(requested_capacity);
             HARD_ASSERT(
             m_allocated_capacity >= requested_capacity && m_allocated_capacity > m_size, "Allocated capacity failure"
             )

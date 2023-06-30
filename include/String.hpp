@@ -29,12 +29,12 @@ class String {
     void grow_internal(size_t requested_capacity) {
         if (is_local()) {
             // grow outside of locality, copy buffer and change active member of union
-            requested_capacity = basic_growth(requested_capacity);
+            requested_capacity = bit_round_growth(requested_capacity);
             m_data_buf         = allocate_uninitialized<char>(requested_capacity);
             memmove(m_data_buf, m_local_buf, SMALL_STRING_CAP + 1);
             m_allocated_capacity = requested_capacity;
         } else {
-            m_allocated_capacity = basic_growth(requested_capacity);
+            m_allocated_capacity = bit_round_growth(requested_capacity);
             HARD_ASSERT(
             m_allocated_capacity >= requested_capacity && m_allocated_capacity > m_size, "Allocated capacity failure"
             )
@@ -368,7 +368,7 @@ class String {
     // indexes
     [[nodiscard]] Vector<size_t> all_indexes_of(StringView c, size_t start_idx = 0) const;
     // trim
-    void irtrim() {
+    void iltrim() {
         if (m_size == 0) return;
         if (!isspace(m_data_buf[0])) return;
         if (is_local()) {
@@ -398,7 +398,7 @@ class String {
             }
         }
     }
-    void iltrim() {
+    void irtrim() {
         if (m_size == 0) return;
         if (!isspace(m_data_buf[m_size - 1])) return;
         if (is_local()) {
