@@ -130,6 +130,13 @@ class File {
         TRY(f.open(OpenFileMode::Read));
         TRY_RET(f.read_all());
     }
+    template <typename T>
+    requires IsAnyOfV<T, FsString, NonFsString, Path>
+    static WriteResult write_all(const T& filename, const String& str) {
+        File f{ filename };
+        TRY(f.open(OpenFileMode::Write));
+        TRY_RET(f.write(str));
+    }
     size_t size() const {
         HARD_ASSERT(m_ptr != nullptr, "File has to be open to ask for the size");
         return filesize(m_ptr);
