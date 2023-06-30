@@ -241,8 +241,9 @@ namespace JSON {
     // FIXME: fix indentation
     String dump_array(const Array& arr, size_t indent) {
         if (arr.size() == 0) return "[]"_s;
-        String repr{ "[\n" };
+        String prev_indent_string{ indent - 1, '\t' };
         String indent_string{ indent, '\t' };
+        String repr{ prev_indent_string + "[\n" };
         size_t i = 0;
         for (const auto& val_ptr : arr) {
             const auto& val = *val_ptr;
@@ -275,7 +276,7 @@ namespace JSON {
                 repr.append('\n');
             }
         }
-        repr.append(indent_string + "]"_s);
+        repr.append(prev_indent_string + "]"_s);
         return repr;
     }
     String dump_array_compact(const Array& arr) {
@@ -362,7 +363,11 @@ namespace JSON {
                     repr.append(dump_array(val.as<Type::JArray>(), indent + 1));
                     break;
                 case Type::JObject:
-                    repr.append(dump_object(val.as<Type::JObject>(), indent + 1));
+                    {
+                        String objrepr = dump_object(val.as<Type::JObject>(), indent + 1);
+                        objrepr.iltrim();
+                        repr.append(move(objrepr));
+                    }
                     break;
                 case Type::JNumber:
                     repr.append(val.as<Type::JNumber>().to_string());
