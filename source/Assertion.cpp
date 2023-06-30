@@ -42,9 +42,4 @@ void _assert_printf(const ARLib::SourceLocation& loc, const char* fmt, ...) {
 }
 void _assert_puts(const ARLib::SourceLocation& loc, const char* str) {
     PRINT_SOURCE_LOCATION(str, loc);
-#ifdef DEBUG_NEW_DELETE
-    ::puts(str);
-#else
-    ARLib::puts(str);
-#endif
 }

@@ -54,7 +54,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
                 _assert_puts(ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);       \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
-            arlib_unreachable                                                                                                \
+            arlib_unreachable                                                                                          \
         }
     #define HARD_ASSERT_FMT(val, fmt, ...)                                                                             \
         if (!(val)) {                                                                                                  \
@@ -63,10 +63,10 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             } else {                                                                                                   \
                 _assert_printf(                                                                                        \
                 ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__    \
-                );                     \
+                );                                                                                                     \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
-            arlib_unreachable                                                                                                \
+            arlib_unreachable                                                                                          \
         }
 
     #define SOFT_ASSERT(val, msg)                                                                                      \
@@ -74,7 +74,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, msg);                                                                     \
             } else {                                                                                                   \
-                _assert_puts(ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);                                         \
+                _assert_puts(ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);       \
             }                                                                                                          \
         }
     #define SOFT_ASSERT_FMT(val, fmt, ...)                                                                             \
@@ -84,7 +84,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             } else {                                                                                                   \
                 _assert_printf(                                                                                        \
                 ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__    \
-                );                     \
+                );                                                                                                     \
             }                                                                                                          \
         }
 #else
@@ -99,20 +99,20 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
         if (is_constant_evaluated()) {                                                                                 \
             CONSTEVAL_STATIC_ASSERT(false, msg);                                                                       \
         } else {                                                                                                       \
-            _assert_puts(ARLib::SourceLocation::current(), msg);                                                                                         \
+            _assert_puts(ARLib::SourceLocation::current(), msg);                                                       \
             assertion_failed__();                                                                                      \
         }                                                                                                              \
-        arlib_unreachable                                                                                                    \
+        arlib_unreachable                                                                                              \
     }
 #define ASSERT_NOT_REACHED_FMT(fmt, ...)                                                                               \
     {                                                                                                                  \
         if (is_constant_evaluated()) {                                                                                 \
             CONSTEVAL_STATIC_ASSERT(false, fmt);                                                                       \
         } else {                                                                                                       \
-            _assert_printf(ARLib::SourceLocation::current(), fmt "\n", __VA_ARGS__);                                                                     \
+            _assert_printf(ARLib::SourceLocation::current(), fmt "\n", __VA_ARGS__);                                   \
             assertion_failed__();                                                                                      \
         }                                                                                                              \
-        arlib_unreachable                                                                                                    \
+        arlib_unreachable                                                                                              \
     }
 
 #define TODO_CLS(cls)                                                                                                  \
