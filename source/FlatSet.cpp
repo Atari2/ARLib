@@ -14,6 +14,13 @@ namespace internal {
         return static_cast<uint32_t>(__builtin_ctz(val));
 #endif
     }
+    uint32_t popcount(uint16_t val) {
+#ifdef COMPILER_MSVC
+        return static_cast<uint32_t>(__popcnt16(val));
+#else
+        return static_cast<uint32_t>(__builtin_popcount(val));
+#endif
+    }
     BitMask<uint32_t> match(int8_t hash, const MetadataBlock& block) {
         auto ctrl  = _mm_loadu_si128(reinterpret_cast<const __m128i*>(block.data()));
         auto match = _mm_set1_epi8(static_cast<char>(hash));

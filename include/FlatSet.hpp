@@ -46,6 +46,7 @@ namespace internal {
     BitMask<uint32_t> match(int8_t hash, const MetadataBlock& block);
     BitMask<uint32_t> match_empty(const MetadataBlock& block);
     BitMask<uint32_t> match_non_empty(const MetadataBlock& block);
+    uint32_t popcount(uint16_t mask);
 }    // namespace internal
 template <typename T, typename HashCls>
 requires Hashable<T, HashCls>
@@ -70,27 +71,27 @@ class FlatSetIterator {
     FlatSetIterator& operator++();
 };
 template <typename T>
-struct FlatSetStorage {
+struct FlatSetStorageStack {
     constexpr static inline size_t ObjectSize  = sizeof(T) + (sizeof(T) % alignof(T));
     constexpr static inline size_t StorageSize = ObjectSize * internal::flatset_bucket_size;
     // we do not need to value initialize the storage
     // since we call new (mem) T on it and that doesn't need memory to be zerod.
     alignas(T) uint8_t storage[StorageSize];
     uint16_t initialized_mask{ 0 };
-    FlatSetStorage() = default;
-    FlatSetStorage(const FlatSetStorage& other) {
+    FlatSetStorageStack() = default;
+    FlatSetStorageStack(const FlatSetStorageStack& other) {
         for (auto bit : BitMask{ other.initialized_mask }) {
             T copy = other.at(bit);
             initialize_at(bit, move(copy));
         }
     }
-    FlatSetStorage(FlatSetStorage&& other) noexcept {
+    FlatSetStorageStack(FlatSetStorageStack&& other) noexcept {
         for (auto bit : BitMask{ other.initialized_mask }) {
             initialize_at(bit, move(other.at(bit)));
             other.destroy_at(bit);
         }
     }
-    FlatSetStorage& operator=(const FlatSetStorage& other) {
+    FlatSetStorageStack& operator=(const FlatSetStorageStack& other) {
         for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
         for (auto bit : BitMask{ other.initialized_mask }) {
             T copy = other.at(bit);
@@ -98,7 +99,7 @@ struct FlatSetStorage {
         }
         return *this;
     }
-    FlatSetStorage& operator=(FlatSetStorage&& other) noexcept {
+    FlatSetStorageStack& operator=(FlatSetStorageStack&& other) noexcept {
         for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
         for (auto bit : BitMask{ other.initialized_mask }) {
             initialize_at(bit, move(other.at(bit)));
@@ -112,13 +113,58 @@ struct FlatSetStorage {
         T* obj           = new (obj_ptr) T{ move(value) };
         return *obj;
     }
-    ConstIterator<T> begin() const { return ConstIterator<T>{ reinterpret_cast<const T*>(storage) }; }
-    ConstIterator<T> end() const {
-        return ConstIterator<T>{ reinterpret_cast<const T*>(storage) + (sizeof(T) * internal::flatset_bucket_size) };
+    void destroy_at(size_t index) {
+        initialized_mask &= static_cast<uint16_t>(~(1 << index));
+        T& obj = *reinterpret_cast<T*>(&storage[ObjectSize * index]);
+        obj.~T();
     }
-    Iterator<T> begin() { return Iterator{ reinterpret_cast<T*>(storage) }; }
-    Iterator<T> end() {
-        return Iterator{ reinterpret_cast<T*>(storage) + (sizeof(T) * internal::flatset_bucket_size) };
+    T& at(size_t index) { return *reinterpret_cast<T*>(&storage[ObjectSize * index]); }
+    const T& at(size_t index) const { return *reinterpret_cast<const T*>(&storage[ObjectSize * index]); }
+    ~FlatSetStorageStack() {
+        for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
+    }
+};
+template <typename T>
+struct FlatSetStorageHeap {
+    constexpr static inline size_t ObjectSize  = sizeof(T) + (sizeof(T) % alignof(T));
+    constexpr static inline size_t StorageSize = ObjectSize * internal::flatset_bucket_size;
+    uint8_t* storage{ nullptr };
+    uint16_t initialized_mask{ 0 };
+    FlatSetStorageHeap() = default;
+    FlatSetStorageHeap(const FlatSetStorageHeap& other) {
+        for (auto bit : BitMask{ other.initialized_mask }) {
+            T copy = other.at(bit);
+            initialize_at(bit, move(copy));
+        }
+    }
+    FlatSetStorageHeap(FlatSetStorageHeap&& other) noexcept :
+        storage{ other.storage }, initialized_mask{ other.initialized_mask } {
+        other.initialized_mask = 0;
+        other.storage          = nullptr;
+    }
+    FlatSetStorageHeap& operator=(const FlatSetStorageHeap& other) {
+        for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
+        for (auto bit : BitMask{ other.initialized_mask }) {
+            T copy = other.at(bit);
+            initialize_at(bit, move(copy));
+        }
+        return *this;
+    }
+    FlatSetStorageHeap& operator=(FlatSetStorageHeap&& other) noexcept {
+        for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
+        deallocate<uint8_t, DeallocType::Multiple>(storage);
+        initialized_mask       = other.initialized_mask;
+        storage                = other.storage;
+        other.initialized_mask = 0;
+        other.storage          = nullptr;
+        return *this;
+    }
+    T& initialize_at(size_t index, T&& value) {
+        if (storage == nullptr) { storage = allocate_uninitialized<uint8_t>(StorageSize); }
+        initialized_mask |= static_cast<uint16_t>(1 << index);
+        uint8_t* obj_ptr = &storage[ObjectSize * index];
+        T* obj           = new (obj_ptr) T{ move(value) };
+        return *obj;
     }
     void destroy_at(size_t index) {
         initialized_mask &= static_cast<uint16_t>(~(1 << index));
@@ -127,10 +173,19 @@ struct FlatSetStorage {
     }
     T& at(size_t index) { return *reinterpret_cast<T*>(&storage[ObjectSize * index]); }
     const T& at(size_t index) const { return *reinterpret_cast<const T*>(&storage[ObjectSize * index]); }
-    ~FlatSetStorage() {
+    ~FlatSetStorageHeap() {
         for (auto bit : BitMask{ initialized_mask }) { destroy_at(bit); }
+        if (storage != nullptr) { deallocate<uint8_t, DeallocType::Multiple>(storage); }
+        storage          = nullptr;
+        initialized_mask = 0;
     }
 };
+template <typename T>
+struct FlatSetStoragePicker {
+    using type = ConditionalT<sizeof(T) <= 8, FlatSetStorageStack<T>, FlatSetStorageHeap<T>>;
+};
+template <typename T>
+using FlatSetStorage = typename FlatSetStoragePicker<T>::type;
 template <typename T, typename HashCls = Hash<T>>
 requires Hashable<T, HashCls>
 class FlatSet {
