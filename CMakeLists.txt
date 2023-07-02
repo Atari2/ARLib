@@ -14,6 +14,7 @@ set(ARLIB_LINK_OPTIONS "")
 option(ARLIB_FORCE_SANITIZERS "Always enable sanitizers, even in release builds" OFF)
 option(ARLIB_DISABLE_SANITIZERS "Always disable sanitizers, this takes precendence over ARLIB_FORCE_SANITIZERS" OFF)
 option(ARLIB_USE_LIBCXX "Use libc++ as standard library (only available when compiling with clang, will be ignored otherwise)" OFF)
+option(ARLIB_USE_MOLD "Use the mold linker instead of the standard linker (requires mold to be installed, available only on GCC and Clang)" OFF)
 if (MSVC)
     option(MSVC_STATIC_STL "Use the static version of the MSVC STL to link" OFF)
     if (NOT MSVC_STATIC_STL)
@@ -469,9 +470,6 @@ else()
             -lc++abi
             -lc++
         )
-        list(APPEND ARLIB_LINK_OPTIONS
-            -fuse-ld=lld
-        )
         list(APPEND ARLIB_COMPILE_WARNINGS
 			-Wno-gnu-zero-variadic-macro-arguments
 			-Wno-nested-anon-types
@@ -482,6 +480,15 @@ else()
 			-Wno-nested-anon-types
 		)
 	endif()
+    if (ARLIB_USE_MOLD)
+        list(APPEND ARLIB_LINK_OPTIONS
+            -fuse-ld=mold
+        )
+    elseif(ON_CLANG AND ARLIB_USE_LIBCXX)
+        list(APPEND ARLIB_LINK_OPTIONS
+            -fuse-ld=lld
+        )
+    endif()
 	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 endif()
 

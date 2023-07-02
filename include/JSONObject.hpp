@@ -8,6 +8,8 @@
 #include "UniquePtr.hpp"
 #include "Variant.hpp"
 #include "Result.hpp"
+#include <Path.hpp>
+#include <File.hpp>
 namespace ARLib {
 namespace JSON {
 
@@ -225,6 +227,7 @@ namespace JSON {
                 ValueObj{Forward<T>(value), enum_from_type<T>()}
             };
         }
+        void serialize_to_file(File& f) const;
         Type type() const { return m_type; }
         template <JSONTypeExt T>
         ValueObj& operator=(const T& value) {
@@ -346,6 +349,7 @@ namespace JSON {
         Document(Document&& other) noexcept            = default;
         const ValueObj& root() const { return *m_value; }
         ValueObj& root() { return *m_value; }
+        void serialize_to_file(const Path& filename) const;
     };
     struct ErrorInfo {
         String error_string{};

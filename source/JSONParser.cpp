@@ -360,7 +360,11 @@ namespace JSON {
             repr.append(": "_s);
             switch (val.type()) {
                 case Type::JArray:
-                    repr.append(dump_array(val.as<Type::JArray>(), indent + 1));
+                    {
+                        String arrrepr = dump_array(val.as<Type::JArray>(), indent + 1);
+                        arrrepr.iltrim();
+                        repr.append(move(arrrepr));
+                    }
                     break;
                 case Type::JObject:
                     {

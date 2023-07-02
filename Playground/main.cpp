@@ -8,7 +8,7 @@
 #include "FileSystem.hpp"
 using namespace ARLib;
 int main() {
-    auto path = windows_build ? R"(C:\Users\aless\Downloads\test.json)"_p : R"(/home/alessio/test.json)"_p;
-    auto p = MUST(JSON::Parser::from_file(path));
+    auto j = MUST(JSON::Parser::parse(R"({"hello": [1, { "a": true }, "hello"]})"_sv));
+    j.serialize_to_file("test.json"_p);
     return 0;
 }
