@@ -1187,7 +1187,7 @@ TEST(ARLibTests, ProcessTests) {
 }
 TEST(ARLibTests, AsyncTest) {
     auto long_running_task = [](StringView str, Pair<int, int> pair) {
-        ThisThread::sleep(2'000'000);
+        ThisThread::sleep(2_sec);
         return str.extract_string() + IntToStr(pair.first()) + IntToStr(pair.second());
     };
     auto fut  = create_async_task(long_running_task, "Hello World"_sv, Pair{ 10, 20 });
