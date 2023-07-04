@@ -185,6 +185,8 @@ namespace JSON {
         const String& message() const { return m_info; }
         const String& error_string() const { return m_info; }
     };
+    using SerializeResult = DiscardResult<FileError>;
+
     class ValueObj {
         friend Parser;
         friend PrintInfo<ValueObj>;
@@ -227,7 +229,7 @@ namespace JSON {
                 ValueObj{Forward<T>(value), enum_from_type<T>()}
             };
         }
-        void serialize_to_file(File& f) const;
+        SerializeResult serialize_to_file(File& f) const;
         Type type() const { return m_type; }
         template <JSONTypeExt T>
         ValueObj& operator=(const T& value) {
@@ -349,7 +351,7 @@ namespace JSON {
         Document(Document&& other) noexcept            = default;
         const ValueObj& root() const { return *m_value; }
         ValueObj& root() { return *m_value; }
-        void serialize_to_file(const Path& filename) const;
+        SerializeResult serialize_to_file(const Path& filename) const;
     };
     struct ErrorInfo {
         String error_string{};

@@ -41,127 +41,130 @@ namespace JSON {
         for (const auto& item : other) { append(move(item.deepcopy())); }
         return *this;
     }
-    void Document::serialize_to_file(const Path& filename) const {
+    SerializeResult Document::serialize_to_file(const Path& filename) const {
         File f{ filename };
-        f.open(OpenFileMode::Write);
-        m_value->serialize_to_file(f);
+        TRY(f.open(OpenFileMode::Write));
+        TRY(m_value->serialize_to_file(f));
+        return {};
     }
-    void serialize_array_to_file(File& f, const Array& arr, size_t indent);
-    void serialize_object_to_file(File& f, const Object& obj, size_t indent);
-
-    void serialize_object_to_file(File& f, const Object& obj, size_t indent) {
+    SerializeResult serialize_array_to_file(File& f, const Array& arr, size_t indent);
+    SerializeResult serialize_object_to_file(File& f, const Object& obj, size_t indent);
+    SerializeResult serialize_object_to_file(File& f, const Object& obj, size_t indent) {
         if (obj.size() == 0) {
-            f.write("{}"_s);
-            return;
+            TRY(f.write("{}"_s));
+            return {};
         }
         String indent_string{ indent, '\t' };
         String prev_indent_string{ indent - 1, '\t' };
-        f.write(prev_indent_string + "{\n"_s);
+        TRY(f.write(prev_indent_string + "{\n"_s));
         size_t i = 0;
         for (const auto& entry : obj) {
             const auto& val = *entry.val();
             const auto& key = entry.key();
-            f.write(indent_string);
-            f.write("\""_s + key + '"');
-            f.write(": "_s);
+            TRY(f.write(indent_string));
+            TRY(f.write("\""_s + key + '"'));
+            TRY(f.write(": "_s));
             switch (val.type()) {
                 case Type::JArray:
-                    serialize_array_to_file(f, val.as<Type::JArray>(), indent + 1);
+                    TRY(serialize_array_to_file(f, val.as<Type::JArray>(), indent + 1));
                     break;
                 case Type::JObject:
-                    serialize_object_to_file(f, val.as<Type::JObject>(), indent + 1);
+                    TRY(serialize_object_to_file(f, val.as<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
-                    f.write(val.as<Type::JNumber>().to_string());
+                    TRY(f.write(val.as<Type::JNumber>().to_string()));
                     break;
                 case Type::JNull:
-                    f.write("null"_s);
+                    TRY(f.write("null"_s));
                     break;
                 case Type::JBool:
-                    f.write(BoolToStr(val.as<Type::JBool>().value()));
+                    TRY(f.write(BoolToStr(val.as<Type::JBool>().value())));
                     break;
                 case Type::JString:
-                    f.write("\""_s + val.as<Type::JString>() + '"');
+                    TRY(f.write("\""_s + val.as<Type::JString>() + '"'));
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
                     break;
             }
             if (++i < obj.size()) {
-                f.write(",\n"_s);
+                TRY(f.write(",\n"_s));
             } else {
-                f.write("\n"_s);
+                TRY(f.write("\n"_s));
             }
         }
-        f.write(prev_indent_string + "}"_s);
+        TRY(f.write(prev_indent_string + "}"_s));
+        return {};
     }
-    void serialize_array_to_file(File& f, const Array& arr, size_t indent) {
+    SerializeResult serialize_array_to_file(File& f, const Array& arr, size_t indent) {
         if (arr.size() == 0) {
-            f.write("[]"_s);
-            return;
+            TRY(f.write("[]"_s));
+            return {};
         }
         String prev_indent_string{ indent - 1, '\t' };
         String indent_string{ indent, '\t' };
-        f.write(prev_indent_string + "[\n");
+        TRY(f.write(prev_indent_string + "[\n"));
         size_t i = 0;
         for (const auto& val_ptr : arr) {
             const auto& val = *val_ptr;
             switch (val.type()) {
                 case Type::JArray:
-                    serialize_array_to_file(f, val.as<Type::JArray>(), indent + 1);
+                    TRY(serialize_array_to_file(f, val.as<Type::JArray>(), indent + 1));
                     break;
                 case Type::JObject:
-                    serialize_object_to_file(f, val.as<Type::JObject>(), indent + 1);
+                    TRY(serialize_object_to_file(f, val.as<Type::JObject>(), indent + 1));
                     break;
                 case Type::JNumber:
-                    f.write(indent_string);
-                    f.write(val.as<Type::JNumber>().to_string());
+                    TRY(f.write(indent_string));
+                    TRY(f.write(val.as<Type::JNumber>().to_string()));
                     break;
                 case Type::JNull:
-                    f.write(indent_string);
-                    f.write("null"_s);
+                    TRY(f.write(indent_string));
+                    TRY(f.write("null"_s));
                     break;
                 case Type::JBool:
-                    f.write(indent_string);
-                    f.write(BoolToStr(val.as<Type::JBool>().value()));
+                    TRY(f.write(indent_string));
+                    TRY(f.write(BoolToStr(val.as<Type::JBool>().value())));
                     break;
                 case Type::JString:
-                    f.write(indent_string);
-                    f.write("\""_s + val.as<Type::JString>() + '"');
+                    TRY(f.write(indent_string));
+                    TRY(f.write("\""_s + val.as<Type::JString>() + '"'));
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
                     break;
             }
             if (++i < arr.size()) {
-                f.write(",\n"_s);
+                TRY(f.write(",\n"_s));
             } else {
-                f.write("\n"_s);
+                TRY(f.write("\n"_s));
             }
         }
-        f.write(prev_indent_string + "]"_s);
+        TRY(f.write(prev_indent_string + "]"_s));
+        return {};
     }
-    void ValueObj::serialize_to_file(File& f) const {
+    SerializeResult ValueObj::serialize_to_file(File& f) const {
         switch (m_type) {
             case Type::JArray:
-                serialize_array_to_file(f, as<Array>(), 1);
+                TRY(serialize_array_to_file(f, as<Array>(), 1));
                 break;
             case Type::JObject:
-                serialize_object_to_file(f, as<Object>(), 1);
+                TRY(serialize_object_to_file(f, as<Object>(), 1));
                 break;
             case Type::JBool:
-                f.write(BoolToStr(as<Bool>().value()));
+                TRY(f.write(BoolToStr(as<Bool>().value())));
                 break;
             case Type::JNull:
-                f.write("null"_s);
+                TRY(f.write("null"_s));
                 break;
             case Type::JNumber:
-                f.write(as<Type::JNumber>().to_string());
+                TRY(f.write(as<Type::JNumber>().to_string()));
                 break;
             case Type::JString:
-                f.write("\""_s + as<Type::JString>() + '"');
+                TRY(f.write("\""_s + as<Type::JString>() + '"'));
                 break;
         }
+        return {};
     }
 }    // namespace JSON
 }    // namespace ARLib

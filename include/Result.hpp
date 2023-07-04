@@ -205,7 +205,6 @@ struct PrintInfo<Result<T>> {
 
 #define TRY_IMPL(temp_name, expression)                                                                                \
     auto temp_name = (expression);                                                                                     \
-    static_assert(SameAsCvRef<decltype(temp_name.to_ok()), DefaultOk>, "Only use TRY with DiscardResult");             \
     if (temp_name.is_error()) { return { temp_name.to_error() }; }
 
 #define CONCAT_TOKENS_IMPL(x, y) x##y
@@ -213,9 +212,9 @@ struct PrintInfo<Result<T>> {
 
 #define TRY_SET(val, expression) TRY_SET_IMPL(val, CONCAT_TOKENS(__tr_, __COUNTER__), expression)
 
-#define TRY_RET(expression) TRY_RET_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression)
+#define TRY_RET(expression) { TRY_RET_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
 
-#define TRY(expression) TRY_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression)
+#define TRY(expression) { TRY_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
 
 #define MUST(expression)                                                                                               \
     [](auto&& tr) {                                                                                                    \
