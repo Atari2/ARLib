@@ -113,6 +113,17 @@ namespace v2 {
                                .move_ctor  = generic_type_move_ctor<T>,
                                .cmp_func   = generic_cmp_func<T> };
     }
+    template <size_t Count>
+    struct TypeSelectorByCountImpl {
+        using type = ConditionalT<
+        (Count > NumberTraits<uint8_t>::max),
+        ConditionalT<
+        (Count > NumberTraits<uint16_t>::max), ConditionalT<(Count > NumberTraits<uint32_t>::max), uint64_t, uint32_t>,
+        uint16_t>,
+        uint8_t>;
+    };
+    template <size_t Count>
+    using TypeSelectorByCount = typename TypeSelectorByCountImpl<Count>::type;
     template <typename... Types>
     requires(sizeof...(Types) >= 0)
     class Variant {
@@ -122,9 +133,10 @@ namespace v2 {
         constexpr static size_t max_size  = *max(Array{ sizeof(Types)... });
         constexpr static size_t max_align = *max(Array{ alignof(Types)... });
         VariantStorage<max_size, max_align> m_storage{};
-        constexpr static size_t no_type           = static_cast<size_t>(-1);
+        using index_type                          = TypeSelectorByCount<ntypes>;
+        constexpr static size_t no_type           = static_cast<index_type>(-1);
         constexpr static PackCarrier type_carrier = PackCarrier<Types...>{};
-        size_t m_current_type{ no_type };
+        index_type m_current_type{ no_type };
         template <size_t... Vals>
         void destroy_current() {
             if (m_current_type == no_type) return;
