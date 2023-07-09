@@ -30,8 +30,8 @@
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system compiling with GCC.",
       "inherits": "linux-base",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc-12",
-        "CMAKE_CXX_COMPILER": "g++-12",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
@@ -41,8 +41,8 @@
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system compiling with GCC.",
       "inherits": "linux-base",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc-12",
-        "CMAKE_CXX_COMPILER": "g++-12",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
@@ -52,8 +52,8 @@
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system compiling with Clang.",
       "inherits": "linux-base",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-15",
-        "CMAKE_CXX_COMPILER": "clang++-15",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
@@ -63,8 +63,8 @@
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system compiling with Clang.",
       "inherits": "linux-base",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-15",
-        "CMAKE_CXX_COMPILER": "clang++-15",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
