@@ -33,7 +33,7 @@ namespace JSON {
     Value Value::deepcopy() const {
         return Value{ *this };
     }
-    Array::Array(const Array& other) {
+    Array::Array(const Array& other) : Vector{ } {
         for (const auto& item : other) { append(move(item.deepcopy())); }
     }
     Array& Array::operator=(const Array& other) {

@@ -16,22 +16,22 @@ class FlatMapEntry {
     bool operator==(const FlatMapEntry& other) const { return m_key == other.m_key; }
     bool operator==(const Key& key) const { return m_key == key; }
     template <typename O>
-    requires(EqualityComparableWith<O, Key> && !SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
+    requires(!SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
     friend bool operator==(const FlatMapEntry<Key, Val, HashCls>& lhs, O&& rhs) {
         return lhs.m_key == rhs;
     }
     template <typename O>
-    requires(EqualityComparableWith<O, Key> && !SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
+    requires(!SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
     friend bool operator!=(const FlatMapEntry<Key, Val, HashCls>& lhs, O&& rhs) {
         return lhs.m_key != rhs;
     }
     template <typename O>
-    requires(EqualityComparableWith<O, Key> && !SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
+    requires(!SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
     friend bool operator==(O&& lhs, const FlatMapEntry<Key, Val, HashCls>& rhs) {
         return lhs == rhs.m_key;
     }
     template <typename O>
-    requires(EqualityComparableWith<O, Key> && !SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
+    requires(!SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
     friend bool operator!=(O&& lhs, const FlatMapEntry<Key, Val, HashCls>& rhs) {
         return lhs != rhs.m_key;
     }

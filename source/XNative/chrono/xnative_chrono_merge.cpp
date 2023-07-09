@@ -44,7 +44,7 @@ uint16_t Date::yearday() const {
             is_leap_year = true;
         }
     }
-    for (uint8_t i = 0; i < m_month; ++i) { daynum += days_in_month[i] + (i == 1 && is_leap_year); }
+    for (uint8_t i = 0; i < m_month; ++i) { daynum += static_cast<uint16_t>(days_in_month[i] + (i == 1 && is_leap_year)); }
 #else
     if (m_year % 4 == 0) {
         if (m_year % 100 == 0) {
