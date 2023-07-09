@@ -129,7 +129,7 @@ concept EqualityComparableWith = requires(T a, C b) {
                                      { a != b } -> ConvertibleTo<bool>;
                                  };
 
-template <typename T, typename HashCls = Hash<T>>
+template <typename T, typename HashCls = Hash<RemoveCvRefT<T>>>
 concept Hashable = requires(const T& a) {
                        { HashCls{}(a) } -> SameAs<size_t>;
                    } && EqualityComparable<T>;

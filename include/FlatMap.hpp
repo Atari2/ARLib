@@ -15,6 +15,26 @@ class FlatMapEntry {
     FlatMapEntry(KH&& k, VH&& val) : m_key{ Forward<KH>(k) }, m_val{ Forward<VH>(val) } {}
     bool operator==(const FlatMapEntry& other) const { return m_key == other.m_key; }
     bool operator==(const Key& key) const { return m_key == key; }
+    template <typename O>
+    requires(EqualityComparableWith<O, Key> && !SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
+    friend bool operator==(const FlatMapEntry<Key, Val, HashCls>& lhs, O&& rhs) {
+        return lhs.m_key == rhs;
+    }
+    template <typename O>
+    requires(EqualityComparableWith<O, Key> && !SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
+    friend bool operator!=(const FlatMapEntry<Key, Val, HashCls>& lhs, O&& rhs) {
+        return lhs.m_key != rhs;
+    }
+    template <typename O>
+    requires(EqualityComparableWith<O, Key> && !SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
+    friend bool operator==(O&& lhs, const FlatMapEntry<Key, Val, HashCls>& rhs) {
+        return lhs == rhs.m_key;
+    }
+    template <typename O>
+    requires(EqualityComparableWith<O, Key> && !SameAs<RemoveCvRefT<O>, FlatMapEntry<Key, Val, HashCls>>)
+    friend bool operator!=(O&& lhs, const FlatMapEntry<Key, Val, HashCls>& rhs) {
+        return lhs != rhs.m_key;
+    }
     const Key& key() const { return m_key; }
     const Val& val() const { return m_val; }
     Val& val() { return m_val; }
@@ -49,7 +69,7 @@ class FlatMap {
     auto find(const Key& value) const { return m_table.find(value); }
     // support heterogeneous lookup
     template <typename O>
-    requires(EqualityComparableWith<O, Key> && Hashable<O, HashCls>)
+    requires(EqualityComparableWith<O, Key> && Hashable<O>)
     auto find(O&& value) const {
         return m_table.find(Forward<O>(value));
     }
@@ -57,8 +77,8 @@ class FlatMap {
     auto end() const { return m_table.end(); }
     bool contains(const Key& value) const { return find(value) != end(); }
     bool remove(const Key& value) { return m_table.remove(value); }
-    bool insert(Entry&& entry) { return m_table.insert(Forward<Entry>(entry)); }
-    bool insert(Key&& key, Val&& value) { return insert(Entry{ Forward<Key>(key), Forward<Val>(value) }); }
+    auto insert(Entry&& entry) { return m_table.insert(Forward<Entry>(entry)); }
+    auto insert(Key&& key, Val&& value) { return insert(Entry{ Forward<Key>(key), Forward<Val>(value) }); }
     template <typename... Args>
     requires Constructible<Entry, Args...>
     auto insert(Args&&... args) {

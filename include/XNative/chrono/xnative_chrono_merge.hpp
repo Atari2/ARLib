@@ -273,6 +273,10 @@ class Instant {
     Nanos raw_value() const { return m_instant; }
     CommonTime to_common() const { return CommonTime{ m_instant }; }
     Ordering operator<=>(const Instant& other) const { return m_instant <=> other.m_instant; }
+    template <TimeUnitType T>
+    T to() {
+        return m_instant.template to<T>();
+    }
 };
 class Duration {
     Nanos m_duration;
@@ -282,6 +286,10 @@ class Duration {
     Nanos raw_value() const { return m_duration; }
     CommonTime to_common() const { return CommonTime{ m_duration }; }
     Ordering operator<=>(const Duration& other) const { return m_duration <=> other.m_duration; }
+    template <TimeUnitType T>
+    T to() {
+        return m_duration.template to<T>();
+    }
 };
 // date with second precision
 class Date {

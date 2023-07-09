@@ -1204,12 +1204,12 @@ TEST(ARLibTests, FlatMapTest) {
     FlatMap<String, int> map{};
     auto val = map.insert("hello"_s, 10);
     auto ex  = map.insert("world"_s, 20);
-    EXPECT_EQ(val, true);
-    EXPECT_EQ(ex, true);
+    EXPECT_EQ(val.first(), true);
+    EXPECT_EQ(ex.first(), true);
     auto r = map["hello"_s];
     EXPECT_EQ(r, 10);
-    val = map.insert("hello"_s, 30);
-    EXPECT_EQ(val, false);
+    auto nval = map.insert("hello"_s, 30);
+    EXPECT_EQ(nval.first(), false);
     r = map["hello"_s];
     EXPECT_EQ(r, 30);
     EXPECT_EQ(map.size(), 2ull);
@@ -1238,7 +1238,7 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
         return s;
     };
     auto fill_set = [&strings, &set]() {
-        for (const auto& s : strings) { EXPECT_TRUE(set.insert(String{ s })); }
+        for (const auto& s : strings) { EXPECT_TRUE(set.insert(String{ s }).first()); }
         EXPECT_EQ(set.size(), strings.size());
     };
     auto search_set = [&strings, &set]() {
@@ -1249,7 +1249,7 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
         EXPECT_EQ(set.size(), 0);
     };
     auto fill_map = [&strings, &map]() {
-        for (const auto& [i, s] : enumerate(strings)) { EXPECT_TRUE(map.insert(String{ s }, static_cast<int>(i))); }
+        for (const auto& [i, s] : enumerate(strings)) { EXPECT_TRUE(map.insert(String{ s }, static_cast<int>(i)).first()); }
         EXPECT_EQ(map.size(), strings.size());
     };
     auto search_map = [&strings, &map]() {
