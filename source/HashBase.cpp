@@ -15,7 +15,7 @@ uint32_t hash_bswap(uint32_t value) {
 #ifdef COMPILER_GCC
 #define FORCEINLINE_EXCEPT_GCC 
 #else
-#define FORCEINLINE_EXCEPT_GCC forceinline
+#define FORCEINLINE_EXCEPT_GCC arlib_forceinline
 #endif
 
 static FORCEINLINE_EXCEPT_GCC size_t bitcast_copy(const char* p) {
