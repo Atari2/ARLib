@@ -245,8 +245,8 @@ TEST(ARLibTests, UniqueStr) {
     EXPECT_NE(s1, s2);
     EXPECT_EQ(s1, "hello"_s);
     EXPECT_EQ(s2, "other"_s);
-    s2->append("help");
-    EXPECT_EQ(s2, "otherhelp"_s);
+    String s3 = s2->concat("help");
+    EXPECT_EQ(s3, "otherhelp"_s);
 }
 TEST(ARLibTests, StringTest) {
     String str{};

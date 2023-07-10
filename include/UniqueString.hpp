@@ -31,7 +31,7 @@ class UniqueString {
     bool operator!=(const String& other) const { return *m_ref != other; }
     friend bool operator==(const String& lhs, const UniqueString& rhs) { return rhs == lhs; }
     friend bool operator!=(const String& lhs, const UniqueString& rhs) { return rhs != lhs; }
-    SharedPtr<String>& operator->() { return m_ref; }
+    const SharedPtr<String>& operator->() { return m_ref; }
     const SharedPtr<String>& operator->() const { return m_ref; }
     explicit operator String() const { return String{ *m_ref.get() }; }
     ~UniqueString();

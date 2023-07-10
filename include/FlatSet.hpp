@@ -311,13 +311,13 @@ class FlatSet {
             group = (group + 1) % num_groups;
         }
     }
-    template <Hashable O>
+    template <typename O, typename OHashCls = Hash<O>>
     requires(
-    EqualityComparableWith<O, T> || CanBeCompared<O>
-
+    Hashable<O, OHashCls> &&
+    (EqualityComparableWith<O, T> || CanBeCompared<O>)
     )
     auto find(const O& value) const {
-        const auto hasher       = Hash<O>{};
+        const auto hasher       = OHashCls{};
         const size_t num_groups = m_buckets.size();
         const size_t hash       = hasher(value);
         size_t group            = h1(hash) % num_groups;
@@ -343,8 +343,8 @@ class FlatSet {
     }
     auto end() const { return FlatSetIterator<T, HashCls, KeyComparer>{ this, m_buckets.size(), BitMask{ 0_u32 } }; }
     bool contains(const T& value) const { return find(value) != end(); }
-    template <Hashable O>
-    requires EqualityComparableWith<O, T>
+    template <typename O, typename OHashCls = Hash<O>>
+    requires (EqualityComparableWith<O, T> && Hashable<O, OHashCls>)
     auto remove(const O& value) {
         const auto hasher       = Hash<O>{};
         const size_t num_groups = m_buckets.size();
