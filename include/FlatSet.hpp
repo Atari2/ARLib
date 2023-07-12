@@ -346,7 +346,7 @@ class FlatSet {
     template <typename O, typename OHashCls = Hash<O>>
     requires (EqualityComparableWith<O, T> && Hashable<O, OHashCls>)
     auto remove(const O& value) {
-        const auto hasher       = Hash<O>{};
+        const auto hasher       = OHashCls{};
         const size_t num_groups = m_buckets.size();
         const size_t hash       = hasher(value);
         size_t group            = h1(hash) % num_groups;

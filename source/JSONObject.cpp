@@ -24,6 +24,14 @@ namespace JSON {
     Null::operator nullptr_t() const {
         return nullptr;
     }
+    ValueObj& Object::operator[](const String& key) {
+        if (auto it = find(key); it != end()) {
+            return const_cast<ValueObj&>(*(*it).val());
+        } else {
+            auto [_, insit] = insert(key, make(nullptr));
+            return const_cast<ValueObj&>(*insit.val());
+        }
+    }
     Value::Value(ValueObj&& obj) : UniquePtr{ Forward<ValueObj>(obj) } {}
     Value::Value(const Value& other) : UniquePtr{ ValueObj{ *other.get() } } {}
     Value& Value::operator=(const Value& other) {

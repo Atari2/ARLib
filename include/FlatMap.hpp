@@ -68,10 +68,10 @@ class FlatMap {
     }
     auto find(const Key& value) const { return m_table.find(value); }
     // support heterogeneous lookup
-    template <typename O>
-    requires(EqualityComparableWith<O, Key> && Hashable<O>)
+    template <typename O, typename OHashCls = Hash<RemoveCvRefT<O>>>
+    requires(EqualityComparableWith<O, Key> && Hashable<O, OHashCls>)
     auto find(O&& value) const {
-        return m_table.find(Forward<O>(value));
+        return m_table.template find<O, OHashCls>(Forward<O>(value));
     }
     auto begin() const { return m_table.begin(); }
     auto end() const { return m_table.end(); }
@@ -92,6 +92,20 @@ class FlatMap {
     }
     const Val& operator[](const Key& key) const {
         auto it = m_table.find(key);
+        HARD_ASSERT(it != m_table.end(), "FlatMap::operator[] failed to find key");
+        return (*it).val();
+    }
+    template <typename O, typename OHashCls = Hash<RemoveCvRefT<O>>>
+    requires(EqualityComparableWith<O, Key> && Hashable<O, OHashCls> && !SameAsCvRef<O, Key>)
+    Val& operator[](O&& value) {
+        auto it = m_table.template find<O, OHashCls>(Forward<O>(value));
+        HARD_ASSERT(it != m_table.end(), "FlatMap::operator[] failed to find key");
+        return const_cast<Entry&>((*it)).val();
+    }
+    template <typename O, typename OHashCls = Hash<RemoveCvRefT<O>>>
+    requires(EqualityComparableWith<O, Key> && Hashable<O, OHashCls> && !SameAsCvRef<O, Key>)
+    const Val& operator[](O&& value) const {
+        auto it = m_table.template find<O, OHashCls>(Forward<O>(value));
         HARD_ASSERT(it != m_table.end(), "FlatMap::operator[] failed to find key");
         return (*it).val();
     }

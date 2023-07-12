@@ -31,10 +31,8 @@ namespace JSON {
         using Parent = FlatMap<String, Value>;
 
         operator Value() &&;
-        ValueObj& operator[](const String& key) { return *(static_cast<Parent*>(this)->operator[](key)); }
-        const ValueObj& operator[](const String& key) const {
-            return *(static_cast<const Parent*>(this)->operator[](key));
-        }
+        ValueObj& operator[](const String& key);
+        const ValueObj& operator[](const String& key) const { return *(static_cast<const Parent&>(*this))[key]; }
     };
     struct Array : public Vector<Value> {
         using Parent = Vector<Value>;
@@ -187,7 +185,6 @@ namespace JSON {
         const String& error_string() const { return m_info; }
     };
     using SerializeResult = DiscardResult<FileError>;
-
     class ValueObj {
         friend Parser;
         friend PrintInfo<ValueObj>;
@@ -218,17 +215,42 @@ namespace JSON {
                 COMPTIME_ASSERT("Invalid enum value passed to JSON operator=");
             }
         }
+        template <JSONTypeExt T>
+        constexpr static auto map_type_to_json_type() {
+            if constexpr (SameAs<T, String>) {
+                JString* ptr{ nullptr };
+                return *ptr;
+            } else if constexpr (IsAnyOfV<T, double, int, int64_t>) {
+                Number* ptr{ nullptr };
+                return *ptr;
+            } else if constexpr (SameAs<T, bool>) {
+                Bool* ptr{ nullptr };
+                return *ptr;
+            } else if constexpr (SameAs<T, nullptr_t>) {
+                Null* ptr{ nullptr };
+                return *ptr;
+            } else {
+                COMPTIME_ASSERT("Invalid value passed to map_type_to_json_type");
+            }
+        }
 
         public:
         ValueObj(const ValueObj&)                = default;
         ValueObj(ValueObj&&) noexcept            = default;
         ValueObj& operator=(const ValueObj&)     = default;
         ValueObj& operator=(ValueObj&&) noexcept = default;
-        template <JSONType T>
+        template <JSONTypeExt T>
         static Value construct(T&& value) {
-            return Value{
-                ValueObj{Forward<T>(value), enum_from_type<T>()}
-            };
+            if constexpr (IsAnyOfV<T, Object, JString, Number, Array, Bool, Null>) {
+                return Value{
+                    ValueObj{Forward<T>(value), enum_from_type<T>()}
+                };
+            } else {
+                using ActualJSONT = RemoveCvRefT<decltype(map_type_to_json_type<T>())>;
+                return Value{
+                    ValueObj{ActualJSONT{ Forward<T>(value) }, map_t_to_enum<T>()}
+                };
+            }
         }
         SerializeResult serialize_to_file(File& f) const;
         Type type() const { return m_type; }
@@ -341,6 +363,10 @@ namespace JSON {
         const auto& operator[](size_t i) const { return as<Type::JArray>()[i]; }
         auto& operator[](size_t i) { return as<Type::JArray>()[i]; }
     };
+    template <JSONTypeExt T>
+    Value make(T&& val) {
+        return ValueObj::construct(Forward<T>(val));
+    }
     class Document {
         Value m_value;
 
