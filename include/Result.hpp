@@ -157,6 +157,14 @@ class Result {
     void ignore_error() {
         if (m_type == CurrType::Err) m_err.reset();
     }
+    auto must() {
+        if (is_error()) {
+            ASSERT_NOT_REACHED_FMT(
+            "must(%s) failed \"%s\"", TYPENAME_TO_STRING(this), print_conditional(to_error()).data()
+            );
+        }
+        return to_ok();
+    }
     explicit operator bool() const { return is_ok(); }
     ~Result() {
         if (m_type == CurrType::Ok) {
@@ -212,9 +220,11 @@ struct PrintInfo<Result<T>> {
 
 #define TRY_SET(val, expression) TRY_SET_IMPL(val, CONCAT_TOKENS(__tr_, __COUNTER__), expression)
 
-#define TRY_RET(expression) { TRY_RET_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
+#define TRY_RET(expression)                                                                                            \
+    { TRY_RET_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
 
-#define TRY(expression) { TRY_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
+#define TRY(expression)                                                                                                \
+    { TRY_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
 
 #define MUST(expression)                                                                                               \
     [](auto&& tr) {                                                                                                    \
