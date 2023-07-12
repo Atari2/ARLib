@@ -18,18 +18,9 @@ namespace detail {
         return s_interned_strings;
     }
 }    // namespace detail
-SharedPtr<String> UniqueString::construct(String s) {
+SharedPtr<String> UniqueString::construct(const String& s) {
     auto it = detail::get_interned_strings().find(s);
     if (it != detail::get_interned_strings().end()) return *it;
-    SharedPtr<String> ptr{ move(s) };
-    return detail::get_interned_strings().insert(move(ptr)).second();
-}
-UniqueString::~UniqueString() {
-    if (!m_ref.exists()) return;
-    auto& tbl = detail::get_interned_strings();
-    auto it   = tbl.find(m_ref);
-    HARD_ASSERT(it != tbl.end(), "UniqueString is not in table, this shouldn't happen");
-    m_ref.reset();
-    if ((*it).refcount() == 1) tbl.remove(*it);
+    return detail::get_interned_strings().insert(SharedPtr{ String{ s } }).second();
 }
 }    // namespace ARLib

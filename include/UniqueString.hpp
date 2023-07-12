@@ -8,7 +8,7 @@ namespace ARLib {
 class UniqueString {
     SharedPtr<String> m_ref;
 
-    static SharedPtr<String> construct(String s);
+    static SharedPtr<String> construct(const String& s);
     friend Hash<UniqueString>;
     public:
     explicit UniqueString(const String& str) : m_ref(construct(str)) {}
@@ -31,21 +31,22 @@ class UniqueString {
     bool operator!=(const String& other) const { return *m_ref != other; }
     friend bool operator==(const String& lhs, const UniqueString& rhs) { return rhs == lhs; }
     friend bool operator!=(const String& lhs, const UniqueString& rhs) { return rhs != lhs; }
-    const SharedPtr<String>& operator->() { return m_ref; }
-    const SharedPtr<String>& operator->() const { return m_ref; }
+    const String* operator->() { return m_ref.get(); }
+    const String* operator->() const { return m_ref.get(); }
+    const String& operator*() { return *m_ref; }
+    const String& operator*() const { return *m_ref; }
     explicit operator String() const { return String{ *m_ref.get() }; }
-    ~UniqueString();
 };
 template <>
 struct Hash<UniqueString> {
     [[nodiscard]] size_t operator()(const UniqueString& str) const noexcept {
-        return Hash<SharedPtr<String>>{}(str.m_ref);
+        return Hash<String>{}(*str.m_ref);
     }
 };
 template <>
 struct PrintInfo<UniqueString> {
     const UniqueString& m_string;
     PrintInfo(const UniqueString& string) : m_string(string) {}
-    String repr() const { return *m_string.operator->().get(); }
+    String repr() const { return *m_string; }
 };
 }    // namespace ARLib
