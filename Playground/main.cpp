@@ -6,15 +6,16 @@
 #include "CharConv.hpp"
 #include "JSONParser.hpp"
 #include "FileSystem.hpp"
+#include "Console.hpp"
 using namespace ARLib;
 int main() {
-    const auto json_path = windows_build ? R"(C:\Users\aless\Downloads\test.json)"_p : R"(/home/alessio/test.json)"_p;
-    Timer tmr{};
-    auto j = MUST(JSON::Parser::from_file(json_path));
-    Printer::print("Parsed json file in {}", tmr.elapsed_since_last().to<Millis>());
-    auto s = JSON::dump_json(j.root());
-    Printer::print("Serialized json to string in {}", tmr.elapsed_since_last().to<Millis>());
-    MUST(File::write_all("out.json"_p, s));
-    Printer::print("Written string of length {} to file in {}", s.size(), tmr.elapsed_since_last().to<Millis>());
+    auto j      = JSON::Parser::parse(R"([1, 2, 3])"_sv).must();
+    auto o      = JSON::Object{};
+    auto str    = Console::getline();
+    o[str]      = 1;
+    auto& arr   = j.root();
+    arr[0]      = o;
+    arr[0][str] = Console::getnumber<int64_t>().must();
+    j.serialize_to_file("test.json"_p);
     return 0;
 }
