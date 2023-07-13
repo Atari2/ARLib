@@ -160,7 +160,7 @@ class Result {
     auto must() {
         if (is_error()) {
             ASSERT_NOT_REACHED_FMT(
-            "must(%s) failed \"%s\"", TYPENAME_TO_STRING(this), print_conditional(to_error()).data()
+            "%s::must() failed \"%s\"", TYPENAME_TO_STRING(*this), print_conditional(to_error()).data()
             );
         }
         return to_ok();
