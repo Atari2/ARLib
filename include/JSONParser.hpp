@@ -31,6 +31,7 @@ namespace JSON {
         constexpr char peek(size_t off) const { return view[current_index + off]; }
         constexpr bool invalid_index() const { return current_index >= view.size(); }
         constexpr void advance(size_t off = 1) { current_index += off; }
+        constexpr bool advance_check(size_t off = 1) { return (current_index += off) < view.size(); }
         constexpr size_t index() const { return current_index; }
         constexpr bool at_end() const { return current_index == view.size(); }
     };

@@ -23,15 +23,17 @@ namespace JSON {
 #define CHK_CURR(c)                                                                                                    \
     CHK_SIZE(c)                                                                                                        \
     if (state.current() != c) {                                                                                        \
-        return ParseError{ String::formatted("Invalid character, expected '%c' but got '%c'", c, state.current()),     \
+        return ParseError{ String::formatted("Invalid character, expected " #c " but got '%c'", state.current()),      \
                            state.index() };                                                                            \
     }
 
 #define VERIFY_COMMA(c)                                                                                                \
     skip_whitespace(state);                                                                                            \
-    if (state.current() != ',') {                                                                                      \
-        if (state.current() != c) {                                                                                    \
-            return ParseError{ "Invalid character, expected a comma but got "_s + state.current(), state.index() };    \
+    CHK_SIZE(c)                                                                                                        \
+    if (auto cur = state.current(); cur != ',') {                                                                      \
+        if (cur != c) {                                                                                                \
+            return ParseError{ String::formatted("Invalid character, expected ',' or " #c " but got '%c'", cur),       \
+                               state.index() };                                                                        \
         }                                                                                                              \
     } else {                                                                                                           \
         state.advance();                                                                                               \
@@ -51,7 +53,9 @@ namespace JSON {
     skip_whitespace(state);                                                                                            \
     arr.append(ValueObj::construct(move(value)));
     void skip_whitespace(ParseState& state) {
-        while (isspace(state.current())) { state.advance(); }
+        while (isspace(state.current())) {
+            if (!state.advance_check()) { break; };
+        }
     }
     // delimeters are comma, close square parens and close curly.
     Parsed<String> eat_until_space_or_delim(ParseState& state) {
