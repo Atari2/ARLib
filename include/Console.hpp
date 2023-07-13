@@ -33,10 +33,10 @@ struct Console {
         constexpr size_t SSOCAP = /* String::SMALL_STRING_CAP */ 15;
 
         constexpr size_t size_matrix[4][10] = {
-            { 3, 3, 5, 5, 10, 10, 19, 20, 46, 316 }, // base 10
-            { 8, 8, 16, 16, 32, 32, 64, 64, 32, 64 }, // base 2
-            { 3, 3, 5, 6, 11, 11, 21, 22, SSOCAP, SSOCAP }, // base 8
-            { 2, 2, 4, 4, 8, 8, 16, 16, SSOCAP, SSOCAP }  // base 16
+            {3,  3, 5,  5,  10, 10, 19, 20, 46,     316   }, // base 10
+            { 8, 8, 16, 16, 32, 32, 64, 64, 32,     64    }, // base 2
+            { 3, 3, 5,  6,  11, 11, 21, 22, SSOCAP, SSOCAP}, // base 8
+            { 2, 2, 4,  4,  8,  8,  16, 16, SSOCAP, SSOCAP}  // base 16
         };
 
         switch (base) {
@@ -85,7 +85,7 @@ struct Console {
     template <typename T, typename... Args, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
     static void print(T fmt, Args... args) {
         if constexpr (sizeof...(args) == 0) {
-            ARLib::puts(fmt);
+            ARLib::printf("%s", fmt);
         } else {
             ARLib::printf(fmt, args...);
         }
@@ -93,20 +93,20 @@ struct Console {
     template <size_t N, typename... Args>
     static void println(const char (&fmt)[N], const Args&... args) {
         if constexpr (sizeof...(args) == 0) {
-            ARLib::puts(fmt);
+            ARLib::printf("%s", fmt);
         } else {
             ARLib::printf(fmt, args...);
+            ARLib::puts("\n");
         }
-        ARLib::puts("\n");
     }
     template <typename T, typename... Args, typename = EnableIfT<IsAnyOfV<T, const char*, char*>>>
     static void println(T fmt, Args... args) {
         if constexpr (sizeof...(args) == 0) {
-            ARLib::puts(fmt);
+            ARLib::printf("%s", fmt);
         } else {
             ARLib::printf(fmt, args...);
+            ARLib::puts("\n");
         }
-        ARLib::puts("\n");
     }
 };
 }    // namespace ARLib
