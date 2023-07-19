@@ -83,7 +83,7 @@ class File {
             return {};
         }
     }
-    WriteResult write(const String& str) {
+    WriteResult write(StringView str) {
         if (m_mode != OpenFileMode::Write && m_mode != OpenFileMode::Append) {
             return FileError{ "Can't write to a file opened in read-only mode"_s, m_filename };
         }
@@ -91,6 +91,8 @@ class File {
         if (len != str.size()) { return FileError{ "Failed to write the whole string into the file"_s, m_filename }; }
         return len;
     }
+    WriteResult write(char c) { return write(StringView{ &c, 1 }); }
+    WriteResult write(const String& str) { return write(str.view()); }
     ReadResult read_n(size_t count) {
         if (m_mode != OpenFileMode::Read) {
             return FileError{ "Can't read from a file not open in read mode"_s, m_filename };

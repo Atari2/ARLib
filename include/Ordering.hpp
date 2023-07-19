@@ -54,21 +54,25 @@ class Ordering {
     friend inline Ordering operator<=>(const Ordering v, std::partial_ordering w) noexcept {
         return v <=> Ordering{ w };
     }
-
-
-    friend arlib_forceinline bool operator==(const Ordering v, const Ordering w) noexcept { return v.type() == w.type(); }
+    friend arlib_forceinline bool operator==(const Ordering v, const Ordering w) noexcept {
+        return v.type() == w.type();
+    }
     friend arlib_forceinline bool operator==(const Ordering v, ZeroValue) noexcept { return from_enum(v.type()) == 0; }
     friend arlib_forceinline bool operator==(ZeroValue, const Ordering v) noexcept { return from_enum(v.type()) == 0; }
     friend arlib_forceinline bool operator<(const Ordering v, const Ordering w) noexcept { return v.type() < w.type(); }
     friend arlib_forceinline bool operator<(const Ordering v, ZeroValue) noexcept { return from_enum(v.type()) < 0; }
     friend arlib_forceinline bool operator<(ZeroValue, const Ordering v) noexcept { return from_enum(v.type()) < 0; }
-    friend arlib_forceinline bool operator<=(const Ordering v, const Ordering w) noexcept { return v.type() <= w.type(); }
+    friend arlib_forceinline bool operator<=(const Ordering v, const Ordering w) noexcept {
+        return v.type() <= w.type();
+    }
     friend arlib_forceinline bool operator<=(const Ordering v, ZeroValue) noexcept { return from_enum(v.type()) <= 0; }
     friend arlib_forceinline bool operator<=(ZeroValue, const Ordering v) noexcept { return from_enum(v.type()) <= 0; }
     friend arlib_forceinline bool operator>(const Ordering v, const Ordering w) noexcept { return v.type() > w.type(); }
     friend arlib_forceinline bool operator>(const Ordering v, ZeroValue) noexcept { return from_enum(v.type()) > 0; }
     friend arlib_forceinline bool operator>(ZeroValue, const Ordering v) noexcept { return from_enum(v.type()) > 0; }
-    friend arlib_forceinline bool operator>=(const Ordering v, const Ordering w) noexcept { return v.type() >= w.type(); }
+    friend arlib_forceinline bool operator>=(const Ordering v, const Ordering w) noexcept {
+        return v.type() >= w.type();
+    }
     friend arlib_forceinline bool operator>=(const Ordering v, ZeroValue) noexcept { return from_enum(v.type()) >= 0; }
     friend arlib_forceinline bool operator>=(ZeroValue, const Ordering v) noexcept { return from_enum(v.type()) >= 0; }
     friend arlib_forceinline Ordering operator<=>(const Ordering v, const Ordering w) noexcept {
