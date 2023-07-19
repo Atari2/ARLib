@@ -16,7 +16,7 @@ template <CopyAssignable T>
 constexpr void ConditionalBitCopy(T* dst, const T* src, size_t count) {
     if (!dst || !src || count == 0) return;
     if constexpr (IsTriviallyCopiableV<T>) {
-        memcpy(dst, src, count * sizeof(T));
+        ARLib::memcpy(dst, src, count * sizeof(T));
     } else {
         for (size_t i = 0; i < count; i++) { dst[i] = src[i]; }
     }
@@ -26,7 +26,7 @@ template <MoveAssignable T>
 constexpr void ConditionalBitMove(T* dst, T* src, size_t count) {
     if (!dst || !src || count == 0) return;
     if constexpr (IsTriviallyCopiableV<T>) {
-        memcpy(dst, src, count * sizeof(T));
+        ARLib::memcpy(dst, src, count * sizeof(T));
     } else {
         for (size_t i = 0; i < count; i++) { dst[i] = ARLib::move(src[i]); }
     }
@@ -37,7 +37,7 @@ template <MoveConstructible T>
 constexpr void UninitializedMoveConstruct(T* dst, T* src, size_t count) {
     if (!dst || !src || count == 0) return;
     if constexpr (IsTriviallyCopiableV<T>) {
-        memcpy(dst, src, count * sizeof(T));
+        ARLib::memcpy(dst, src, count * sizeof(T));
     } else {
         for (size_t i = 0; i < count; i++) { new (&dst[i]) T{ ARLib::move(src[i]) }; }
     }
@@ -46,7 +46,7 @@ template <CopyConstructible T>
 constexpr void UninitializedCopyConstruct(T* dst, T* src, size_t count) {
     if (!dst || !src || count == 0) return;
     if constexpr (IsTriviallyCopiableV<T>) {
-        memcpy(dst, src, count * sizeof(T));
+        ARLib::memcpy(dst, src, count * sizeof(T));
     } else {
         for (size_t i = 0; i < count; i++) { new (&dst[i]) T{ src[i] }; }
     }
