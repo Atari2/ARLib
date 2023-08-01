@@ -76,25 +76,60 @@ ArgParser::ParseResult ArgParser::parse() {
                     }
                 } else if (opt.type == Option::Type::IntVector) {
                     const auto& strval = *it;
-                    Vector<int>
-                    vec = strval.split(",").iter().map([](const auto& v) { return StrViewToInt(v).value_or(0); }
-                    ).collect<Vector>();
+                    bool has_error     = false;
+                    String error{};
+                    Vector<int> vec = strval.split(",")
+                                      .iter()
+                                      .map([&has_error, &error](const auto& v) {
+                                          auto res = StrViewToInt(v);
+                                          if (res.is_error()) {
+                                              has_error = true;
+                                              error     = res.to_error().error_string();
+                                              return 0;
+                                          }
+                                          return res.to_ok();
+                                      })
+                                      .collect<Vector>();
+                    if (has_error) { return error; }
                     if (!opt.assign(move(vec))) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
                 } else if (opt.type == Option::Type::UintVector) {
                     const auto& strval = *it;
-                    Vector<unsigned int>
-                    vec = strval.split(",").iter().map([](const auto& v) { return StrViewToUInt(v).value_or(0u); }
-                    ).collect<Vector>();
+                    bool has_error     = false;
+                    String error{};
+                    Vector<unsigned int> vec = strval.split(",")
+                                               .iter()
+                                               .map([&has_error, &error](const auto& v) {
+                                                   auto res = StrViewToUInt(v);
+                                                   if (res.is_error()) {
+                                                       has_error = true;
+                                                       error     = res.to_error().error_string();
+                                                       return 0u;
+                                                   }
+                                                   return res.to_ok();
+                                               })
+                                               .collect<Vector>();
+                    if (has_error) { return error; }
                     if (!opt.assign(move(vec))) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
                 } else if (opt.type == Option::Type::RealVector) {
                     const auto& strval = *it;
-                    Vector<double>
-                    vec = strval.split(",").iter().map([](const auto& v) { return StrViewToDouble(v).value_or(0.0); }
-                    ).collect<Vector>();
+                    bool has_error     = false;
+                    String error{};
+                    Vector<double> vec = strval.split(",")
+                                         .iter()
+                                         .map([&has_error, &error](const auto& v) {
+                                             auto res = StrViewToDouble(v);
+                                             if (res.is_error()) {
+                                                 has_error = true;
+                                                 error     = res.to_error().error_string();
+                                                 return 0.0;
+                                             }
+                                             return res.to_ok();
+                                         })
+                                         .collect<Vector>();
                     if (!opt.assign(move(vec))) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
@@ -262,7 +297,7 @@ void ArgParser::print_help() const {
     Printer::print("{}", help_string());
 }
 bool ArgParser::Option::requires_value() const {
-    return type != Type::Bool;
+    return type != Type::Bool && type != Type::NoValue;
 }
 bool ArgParser::Option::assign(StringView arg_value) {
     if (type == Type::String) {
@@ -275,6 +310,38 @@ bool ArgParser::Option::assign(StringView arg_value) {
 bool ArgParser::Option::assign(bool arg_value) {
     if (type == Type::Bool) {
         value.get<BoolRef>().get() = arg_value;
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Vector<String>&& arg_value) {
+    if (type == Type::StringVector) {
+        value.get<StringVecRef>().get() = move(arg_value);
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Vector<int>&& arg_value) {
+    if (type == Type::IntVector) {
+        value.get<IntVecRef>().get() = move(arg_value);
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Vector<unsigned int>&& arg_value) {
+    if (type == Type::UintVector) {
+        value.get<UintVecRef>().get() = move(arg_value);
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Vector<double>&& arg_value) {
+    if (type == Type::RealVector) {
+        value.get<RealVecRef>().get() = move(arg_value);
     } else {
         return false;
     }

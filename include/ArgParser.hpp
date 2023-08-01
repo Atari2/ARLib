@@ -84,38 +84,10 @@ class ArgParser {
         bool requires_value() const;
         bool assign(StringView arg_value);
         bool assign(bool arg_value);
-        bool assign(Vector<String> arg_value) {
-            if (type == Type::StringVector) {
-                value.get<StringVecRef>().get() = move(arg_value);
-            } else {
-                return false;
-            }
-            return true;
-        }
-        bool assign(Vector<int> arg_value) {
-            if (type == Type::IntVector) {
-                value.get<IntVecRef>().get() = move(arg_value);
-            } else {
-                return false;
-            }
-            return true;
-        }
-        bool assign(Vector<unsigned int> arg_value) {
-            if (type == Type::UintVector) {
-                value.get<UintVecRef>().get() = move(arg_value);
-            } else {
-                return false;
-            }
-            return true;
-        }
-        bool assign(Vector<double> arg_value) {
-            if (type == Type::RealVector) {
-                value.get<RealVecRef>().get() = move(arg_value);
-            } else {
-                return false;
-            }
-            return true;
-        }
+        bool assign(Vector<String>&& arg_value);
+        bool assign(Vector<int>&& arg_value);
+        bool assign(Vector<unsigned int>&& arg_value);
+        bool assign(Vector<double>&& arg_value);
         bool assign(SignedIntegral auto arg_value) {
             if (type == Type::Int) {
                 value.get<IntRef>().get() = static_cast<int>(arg_value);

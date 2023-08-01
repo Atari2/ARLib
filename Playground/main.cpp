@@ -20,14 +20,5 @@ int main(int argc, char** argv) {
         Printer::print("{}", vec);
         Printer::print("{}", parser.get<Vector<int>>("--nums"));
     }
-    Printer::print("{}", parser.help_string());
-    auto j      = JSON::Parser::parse(R"([1, 2, 3])"_sv).must();
-    auto o      = JSON::Object{};
-    auto str    = Console::getline();
-    o[str]      = 1;
-    auto& arr   = j.root();
-    arr[0]      = o;
-    arr[0][str] = Console::getnumber<int64_t>().must();
-    j.serialize_to_file("test.json"_p);
     return 0;
 }
