@@ -7,8 +7,20 @@
 #include "JSONParser.hpp"
 #include "FileSystem.hpp"
 #include "Console.hpp"
+#include "ArgParser.hpp"
 using namespace ARLib;
-int main() {
+int main(int argc, char** argv) {
+    auto parser = ArgParser{ argc, argv };
+    Vector<int> vec{};
+    parser.add_option("--nums", "NUMBER LIST", "A list of numbers", vec);
+    auto ok = parser.parse();
+    if (ok.is_error()) {
+        Printer::print("{}", ok.to_error());
+    } else {
+        Printer::print("{}", vec);
+        Printer::print("{}", parser.get<Vector<int>>("--nums"));
+    }
+    Printer::print("{}", parser.help_string());
     auto j      = JSON::Parser::parse(R"([1, 2, 3])"_sv).must();
     auto o      = JSON::Object{};
     auto str    = Console::getline();
