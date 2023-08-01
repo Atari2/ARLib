@@ -255,7 +255,7 @@ class String {
     }
     void append(StringView other);
     void append(const char* other);
-    [[nodiscard]] String concat(char c) const {
+    [[nodiscard]] String concat(char c) const& {
         String copy{ *this };
         auto new_size = m_size + 1;
         copy.grow_if_needed(new_size);
@@ -263,7 +263,7 @@ class String {
         copy.set_size(m_size + 1);
         return copy;
     }
-    [[nodiscard]] String concat(const String& other) const {
+    [[nodiscard]] String concat(const String& other) const& {
         String copy{ *this };
         auto new_size = m_size + other.m_size;
         copy.grow_if_needed(new_size);
@@ -271,11 +271,36 @@ class String {
         copy.set_size(new_size);
         return copy;
     }
-    [[nodiscard]] String concat(StringView other) const;
-    [[nodiscard]] String concat(const char* other) const;
-    String operator+(const String& other) const { return concat(other); }
-    String operator+(const char* other) const { return concat(other); }
-    String operator+(char c) const { return concat(c); }
+    [[nodiscard]] String concat(StringView other) const&;
+    [[nodiscard]] String concat(const char* other) const&;
+
+    [[nodiscard]] String concat(char c) && {
+        String moved{ move(*this) };
+        auto new_size = moved.m_size + 1;
+        moved.grow_if_needed(new_size);
+        moved.get_buf_internal()[m_size] = c;
+        moved.set_size(m_size + 1);
+        return moved;
+    }
+    [[nodiscard]] String concat(const String& other) && {
+        String moved{ move(*this) };
+        auto new_size = moved.m_size + other.m_size;
+        moved.grow_if_needed(new_size);
+        strcat_eff(moved.get_buf_internal() + moved.m_size, other.get_buf_internal());
+        moved.set_size(new_size);
+        return moved;
+    }
+    [[nodiscard]] String concat(StringView other) &&;
+    [[nodiscard]] String concat(const char* other) &&;
+
+    String operator+(const String& other) && { return move(*this).concat(other); }
+    String operator+(const char* other) && { return move(*this).concat(other); }
+    String operator+(char c) && { return move(*this).concat(c); }
+
+    String operator+(const String& other) const& { return concat(other); }
+    String operator+(const char* other) const& { return concat(other); }
+    String operator+(char c) const& { return concat(c); }
+
     String& operator+=(const String& other) {
         append(other);
         return *this;

@@ -304,7 +304,7 @@ void String::append(const char* other) {
     StringView view{ other };
     append(view);
 }
-String String::concat(StringView other) const {
+String String::concat(StringView other) const& {
     auto other_size = other.size();
     String copy{ *this };
     if (other_size == 0) return copy;
@@ -314,10 +314,26 @@ String String::concat(StringView other) const {
     copy.set_size(new_size);
     return copy;
 }
-String String::concat(const char* other) const {
+String String::concat(const char* other) const& {
     String copy{ *this };
     StringView sother{ other };
     copy.append(sother);
     return copy;
+}
+String String::concat(StringView other)&& {
+    auto other_size = other.size();
+    String moved{ move(*this) };
+    if (other_size == 0) return moved;
+    auto new_size = moved.m_size + other_size;
+    moved.grow_if_needed(new_size);
+    memcpy(moved.get_buf_internal() + moved.m_size, other.data(), other_size);
+    moved.set_size(new_size);
+    return moved;
+}
+String String::concat(const char* other)&& {
+    String moved{ move(*this) };
+    StringView sother{ other };
+    moved.append(sother);
+    return moved;
 }
 }    // namespace ARLib
