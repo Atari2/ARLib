@@ -118,7 +118,7 @@ class Result {
         HARD_ASSERT(is_error(), "Tried to take error type from result with value.");
         return *static_cast<ErrorType*>(m_err.get());
     }
-    ResT& ok_value() {
+    auto& ok_value() {
         HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
         if constexpr (IsReference) {
             return m_ok.get();
@@ -130,9 +130,13 @@ class Result {
         HARD_ASSERT(is_error(), "Tried to take error type from result with value.");
         return *static_cast<const ErrorType*>(m_err.get());
     }
-    const ResT& ok_value() const {
+    auto& ok_value() const {
         HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
-        return m_ok;
+        if constexpr (IsReference) {
+            return m_ok.get();
+        } else {
+            return m_ok;
+        }
     }
     auto to_error() {
         HARD_ASSERT(is_error(), "Tried to take error type from result with value.");
@@ -143,6 +147,14 @@ class Result {
     auto to_ok() {
         HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
         return move(m_ok);
+    }
+    auto value_or(ResT&& default_value) {
+        if (is_error()) {
+            ignore_error();
+            return default_value;
+        } else {
+            return move(m_ok);
+        }
     }
     bool operator==(const Result& other) const {
         if (m_type == other.m_type) {
