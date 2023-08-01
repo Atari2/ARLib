@@ -1311,3 +1311,21 @@ TEST(ARLibTests, IteratorChainingTest) {
     EXPECT_TRUE(l.has_value());
     EXPECT_EQ(*l, "8"_s);
 }
+TEST(ARLibTests, CharConvFailTest) {
+    String a{ "0102" };
+    String b{ "08a" };
+    String c{ "1230a" };
+    String d{ "abcdfg" };
+    auto res1 = StrViewToInt(a.view(), 2);
+    auto res2 = StrViewToInt(b.view(), 8);
+    auto res3 = StrViewToInt(c.view(), 10);
+    auto res4 = StrViewToInt(d.view(), 16);
+    EXPECT_TRUE(res1.is_error());
+    res1.ignore_error();
+    EXPECT_TRUE(res2.is_error());
+    res2.ignore_error();
+    EXPECT_TRUE(res3.is_error());
+    res3.ignore_error();
+    EXPECT_TRUE(res4.is_error());
+    res4.ignore_error();
+}
