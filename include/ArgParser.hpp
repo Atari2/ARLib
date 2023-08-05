@@ -11,15 +11,20 @@
 #include "Vector.hpp"
 namespace ARLib {
 struct NoValueTag {};
-using StringRef = RefBox<String>;
-using BoolRef   = RefBox<bool>;
-using IntRef    = RefBox<int>;
-using UintRef   = RefBox<unsigned int>;
-using RealRef   = RefBox<double>;
+using StringRef    = RefBox<String>;
+using BoolRef      = RefBox<bool>;
+using IntRef       = RefBox<int>;
+using UintRef      = RefBox<unsigned int>;
+using RealRef      = RefBox<double>;
+using StringVecRef = RefBox<Vector<String>>;
+using IntVecRef    = RefBox<Vector<int>>;
+using UintVecRef   = RefBox<Vector<unsigned int>>;
+using RealVecRef   = RefBox<Vector<double>>;
 
 template <typename T>
-concept OptionType = SameAs<T, IntRef> || SameAs<T, UintRef> || SameAs<T, RealRef> || SameAs<T, StringRef> ||
-                     SameAs<T, NoValueTag> || SameAs<T, BoolRef>;
+concept OptionType =
+SameAs<T, IntRef> || SameAs<T, UintRef> || SameAs<T, RealRef> || SameAs<T, StringRef> || SameAs<T, NoValueTag> ||
+SameAs<T, BoolRef> || SameAs<T, StringVecRef> || SameAs<T, IntVecRef> || SameAs<T, UintVecRef> || SameAs<T, RealVecRef>;
 class ArgParser {
     Vector<String> m_unmatched_arguments{};
     String m_program_name;
@@ -27,11 +32,24 @@ class ArgParser {
 
     using ArgIter = decltype(m_arguments.begin());
     struct Option {
-        enum class Type { String, Bool, Int, Uint, Real, NoValue } type;
+        enum class Type {
+            String,
+            Bool,
+            Int,
+            Uint,
+            Real,
+            StringVector,
+            IntVector,
+            UintVector,
+            RealVector,
+            NoValue
+        } type;
         StringView description;
         StringView value_name;
 
-        Variant<NoValueTag, BoolRef, StringRef, IntRef, UintRef, RealRef> value;
+        Variant<
+        NoValueTag, BoolRef, StringRef, IntRef, UintRef, RealRef, StringVecRef, IntVecRef, UintVecRef, RealVecRef>
+        value;
         bool found;
         constexpr static inline size_t npos = static_cast<size_t>(-1);
         constexpr static inline Type map_t_to_type(const OptionType auto& val) {
@@ -46,6 +64,14 @@ class ArgParser {
                 return Type::Uint;
             } else if constexpr (SameAs<T, RealRef>) {
                 return Type::Real;
+            } else if constexpr (SameAs<T, StringVecRef>) {
+                return Type::StringVector;
+            } else if constexpr (SameAs<T, IntVecRef>) {
+                return Type::IntVector;
+            } else if constexpr (SameAs<T, UintVecRef>) {
+                return Type::UintVector;
+            } else if constexpr (SameAs<T, RealVecRef>) {
+                return Type::RealVector;
             } else if constexpr (SameAs<T, NoValueTag>) {
                 return Type::NoValue;
             }
@@ -58,6 +84,10 @@ class ArgParser {
         bool requires_value() const;
         bool assign(StringView arg_value);
         bool assign(bool arg_value);
+        bool assign(Vector<String>&& arg_value);
+        bool assign(Vector<int>&& arg_value);
+        bool assign(Vector<unsigned int>&& arg_value);
+        bool assign(Vector<double>&& arg_value);
         bool assign(SignedIntegral auto arg_value) {
             if (type == Type::Int) {
                 value.get<IntRef>().get() = static_cast<int>(arg_value);
@@ -116,6 +146,13 @@ class ArgParser {
     ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, int& value_ref);
     ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, unsigned int& value_ref);
     ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, double& value_ref);
+    ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, Vector<int>& value_ref);
+    ArgParser&
+    add_option(StringView opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref);
+    ArgParser&
+    add_option(StringView opt_name, StringView value_name, StringView description, Vector<String>& value_ref);
+    ArgParser&
+    add_option(StringView opt_name, StringView value_name, StringView description, Vector<double>& value_ref);
     ArgParser& add_option(StringView opt_name, StringView description, bool& value_ref);
     ArgParser& add_option(StringView opt_name, StringView description, NoValueTag);
     void print_help() const;
@@ -164,6 +201,30 @@ class ArgParser {
                 return GetResult<Tp>{ value.value.template get<RealRef>().get() };
             } else {
                 return GetResult<Tp>{ "Requested type `real` for option containing bool, string or none"_s };
+            }
+        } else if constexpr (SameAs<Vector<int>, Tp>) {
+            if (value.type == Option::Type::IntVector) {
+                return GetResult<Tp>{ value.value.template get<IntVecRef>().get() };
+            } else {
+                return GetResult<Tp>{ "Requested type `vector<int>` for option containing bool, string or none"_s };
+            }
+        } else if constexpr (SameAs<Vector<unsigned int>, Tp>) {
+            if (value.type == Option::Type::UintVector) {
+                return GetResult<Tp>{ value.value.template get<UintVecRef>().get() };
+            } else {
+                return GetResult<Tp>{ "Requested type `vector<unsigned int>` for option containing bool, string or none"_s };
+            }
+        } else if constexpr (SameAs<Vector<double>, Tp>) {
+            if (value.type == Option::Type::RealVector) {
+                return GetResult<Tp>{ value.value.template get<RealVecRef>().get() };
+            } else {
+                return GetResult<Tp>{ "Requested type `vector<double>` for option containing bool, string or none"_s };
+            }
+        } else if constexpr (SameAs<Vector<String>, Tp>) {
+            if (value.type == Option::Type::StringVector) {
+                return GetResult<Tp>{ value.value.template get<StringVecRef>().get() };
+            } else {
+                return GetResult<Tp>{ "Requested type `vector<string>` for option containing bool, string or none"_s };
             }
         } else {
             static_assert(dependant_false<T>, "Invalid get() call");

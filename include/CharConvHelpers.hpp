@@ -103,7 +103,9 @@ Result<RetType> StrViewTo64Decimal(const StringView str) {
 
     // 0-9 => 48-57
     for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
-        result += static_cast<RetType>(str[idx] - '0') * values_table[tbl_idx];
+        auto c = str[idx];
+        if (c < '0' || c > '9') { return "Failed to convert string to integer, invalid decimal character"_s; }
+        result += static_cast<RetType>(c - '0') * values_table[tbl_idx];
         if (idx == 0) break;
     }
     if constexpr (Signed)
@@ -150,7 +152,9 @@ Result<RetType> StrViewTo64Binary(const StringView str) {
     if (end_idx - start_idx > max_size) return "Failed to convert string to integer, out of range"_s;
     // 0-1 => 48-49
     for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
-        result |= static_cast<RetType>(str[idx] - '0') << tbl_idx;
+        auto c = str[idx];
+        if (c != '0' && c != '1') { return "Failed to convert string to integer, invalid binary character"_s; }
+        result |= static_cast<RetType>(c - '0') << tbl_idx;
         if (idx == 0) break;
     }
     if constexpr (Signed)
@@ -198,7 +202,9 @@ Result<RetType> StrViewTo64Octal(const StringView str) {
     if (end_idx - start_idx > max_size) return "Failed to convert string to integer, out of range"_s;
     // 0-1 => 48-49
     for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
-        result |= static_cast<RetType>(str[idx] - '0') << (tbl_idx * 3);
+        auto c = str[idx];
+        if (c < '0' || c > '7') { return "Failed to convert string to integer, invalid octal character"_s; }
+        result |= static_cast<RetType>(c - '0') << (tbl_idx * 3);
         if (idx == 0) break;
     }
     if constexpr (Signed)
@@ -246,6 +252,7 @@ Result<RetType> StrViewTo64Hexadecimal(const StringView str) {
     for (size_t idx = end_idx - 1, tbl_idx = 0; idx >= start_idx; idx--, tbl_idx++) {
         char c   = toupper(str[idx]);
         auto num = c >= 'A' ? (c - 'A' + 10) : (c - '0');
+        if (num < 0 || num > 15) { return "Failed to convert string to integer, invalid hex character"_s; }
         result |= static_cast<RetType>(num) << static_cast<RetType>(tbl_idx * 4ull);
         if (idx == 0) break;
     }
@@ -542,7 +549,7 @@ namespace cxpr {
     arlib_forceinline constexpr auto StrViewToU64Hexadecimal(const StringView str) {
         return cxpr::StrViewTo64Hexadecimal<false>(str);
     }
-}
+}    // namespace cxpr
 #ifdef COMPILER_GCC
     #pragma GCC diagnostic pop
 #endif

@@ -68,6 +68,71 @@ ArgParser::ParseResult ArgParser::parse() {
                     if (!opt.assign(value)) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
+                } else if (opt.type == Option::Type::StringVector) {
+                    const auto& strval = *it;
+                    Vector<String> vec = strval.split(",").iter().map(&StringView::extract_string).collect<Vector>();
+                    if (!opt.assign(move(vec))) {
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
+                    }
+                } else if (opt.type == Option::Type::IntVector) {
+                    const auto& strval = *it;
+                    bool has_error     = false;
+                    String error{};
+                    Vector<int> vec = strval.split(",")
+                                      .iter()
+                                      .map([&has_error, &error](const auto& v) {
+                                          auto res = StrViewToInt(v);
+                                          if (res.is_error()) {
+                                              has_error = true;
+                                              error     = res.to_error().error_string();
+                                              return 0;
+                                          }
+                                          return res.to_ok();
+                                      })
+                                      .collect<Vector>();
+                    if (has_error) { return error; }
+                    if (!opt.assign(move(vec))) {
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
+                    }
+                } else if (opt.type == Option::Type::UintVector) {
+                    const auto& strval = *it;
+                    bool has_error     = false;
+                    String error{};
+                    Vector<unsigned int> vec = strval.split(",")
+                                               .iter()
+                                               .map([&has_error, &error](const auto& v) {
+                                                   auto res = StrViewToUInt(v);
+                                                   if (res.is_error()) {
+                                                       has_error = true;
+                                                       error     = res.to_error().error_string();
+                                                       return 0u;
+                                                   }
+                                                   return res.to_ok();
+                                               })
+                                               .collect<Vector>();
+                    if (has_error) { return error; }
+                    if (!opt.assign(move(vec))) {
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
+                    }
+                } else if (opt.type == Option::Type::RealVector) {
+                    const auto& strval = *it;
+                    bool has_error     = false;
+                    String error{};
+                    Vector<double> vec = strval.split(",")
+                                         .iter()
+                                         .map([&has_error, &error](const auto& v) {
+                                             auto res = StrViewToDouble(v);
+                                             if (res.is_error()) {
+                                                 has_error = true;
+                                                 error     = res.to_error().error_string();
+                                                 return 0.0;
+                                             }
+                                             return res.to_ok();
+                                         })
+                                         .collect<Vector>();
+                    if (!opt.assign(move(vec))) {
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
+                    }
                 }
                 m_arguments.remove(*it);
             } else if (opt.type == Option::Type::Bool) {
@@ -129,6 +194,35 @@ ArgParser::add_option(StringView opt_name, StringView value_name, StringView des
     });
     return *this;
 }
+ArgParser&
+ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<int>& value_ref) {
+    m_options.push_back(OptT{
+    opt_name, Option{description, value_name, IntVecRef{ value_ref }}
+    });
+    return *this;
+}
+ArgParser& ArgParser::add_option(
+StringView opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref
+) {
+    m_options.push_back(OptT{
+    opt_name, Option{description, value_name, UintVecRef{ value_ref }}
+    });
+    return *this;
+}
+ArgParser&
+ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<String>& value_ref) {
+    m_options.push_back(OptT{
+    opt_name, Option{description, value_name, StringVecRef{ value_ref }}
+    });
+    return *this;
+}
+ArgParser&
+ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<double>& value_ref) {
+    m_options.push_back(OptT{
+    opt_name, Option{description, value_name, RealVecRef{ value_ref }}
+    });
+    return *this;
+}
 String ArgParser::construct_help_string() const {
     String builder{};
     builder += Printer::format(
@@ -154,7 +248,7 @@ String ArgParser::construct_help_string() const {
             name_value_list.push_back(String{ name });
         }
     }
-    size_t needed_width = *max(IteratorView{ name_value_list }.map([](const String& s) { return s.size(); })) + 2;
+    size_t needed_width = *max(name_value_list.iter().map([](const String& s) { return s.size(); })) + 2;
     size_t idx          = 0;
     for (const auto& [name, opt] : m_options) {
         builder += '\t';
@@ -177,6 +271,18 @@ String ArgParser::construct_help_string() const {
             } else if (opt.type == Option::Type::Real) {
                 const auto& realv = opt.value.get<RealRef>().get();
                 builder += Printer::format(" (Default value: {})", realv);
+            } else if (opt.type == Option::Type::StringVector) {
+                const auto& realv = opt.value.get<StringVecRef>().get();
+                builder += Printer::format(" (Default value: {})", realv);
+            } else if (opt.type == Option::Type::IntVector) {
+                const auto& realv = opt.value.get<IntVecRef>().get();
+                builder += Printer::format(" (Default value: {})", realv);
+            } else if (opt.type == Option::Type::UintVector) {
+                const auto& realv = opt.value.get<UintVecRef>().get();
+                builder += Printer::format(" (Default value: {})", realv);
+            } else if (opt.type == Option::Type::RealVector) {
+                const auto& realv = opt.value.get<RealVecRef>().get();
+                builder += Printer::format(" (Default value: {})", realv);
             }
         }
         builder += '\n';
@@ -191,7 +297,7 @@ void ArgParser::print_help() const {
     Printer::print("{}", help_string());
 }
 bool ArgParser::Option::requires_value() const {
-    return type == Type::Int || type == Type::String || type == Type::Uint || type == Type::Real;
+    return type != Type::Bool && type != Type::NoValue;
 }
 bool ArgParser::Option::assign(StringView arg_value) {
     if (type == Type::String) {
@@ -204,6 +310,38 @@ bool ArgParser::Option::assign(StringView arg_value) {
 bool ArgParser::Option::assign(bool arg_value) {
     if (type == Type::Bool) {
         value.get<BoolRef>().get() = arg_value;
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Vector<String>&& arg_value) {
+    if (type == Type::StringVector) {
+        value.get<StringVecRef>().get() = move(arg_value);
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Vector<int>&& arg_value) {
+    if (type == Type::IntVector) {
+        value.get<IntVecRef>().get() = move(arg_value);
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Vector<unsigned int>&& arg_value) {
+    if (type == Type::UintVector) {
+        value.get<UintVecRef>().get() = move(arg_value);
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Vector<double>&& arg_value) {
+    if (type == Type::RealVector) {
+        value.get<RealVecRef>().get() = move(arg_value);
     } else {
         return false;
     }
