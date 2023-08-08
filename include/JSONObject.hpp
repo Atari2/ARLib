@@ -279,14 +279,16 @@ namespace JSON {
             return as<val>();
         }
         template <JSONTypeExt T>
-        const auto& as() const {
+        ConditionalT<JSONType<T>, const T&, T> as() const {
             constexpr auto val = map_t_to_enum<T>();
+            if constexpr (!JSONType<T>) { return static_cast<T>(as<val>()); }
             return static_cast<const T&>(as<val>());
         }
         template <JSONTypeExt T>
-        auto& as() {
+        ConditionalT<JSONType<T>, const T&, T> as() {
             constexpr auto val = map_t_to_enum<T>();
-            return static_cast<T&>(as<val>());
+            if constexpr (!JSONType<T>) { return static_cast<T>(as<val>()); }
+            return static_cast<const T&>(as<val>());
         }
         template <JSONTypeExt T>
         auto try_as() const {
