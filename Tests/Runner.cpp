@@ -582,6 +582,19 @@ TEST(ARLibTests, JSONTest) {
     EXPECT_EQ(err.message(), "Missing end of quotation on string"_s);
     EXPECT_EQ(err.offset(), 41);
 
+    auto test_try_as = JSON::Parser::parse(R"({ "hello": "world" })");
+    EXPECT_TRUE(test_try_as.is_ok());
+    auto test_try_as_val = test_try_as.to_ok();
+    const auto& ttobj    = test_try_as_val.root();
+    auto v               = ttobj["hello"_s].try_as<String>();
+    auto v2              = ttobj["hello"_s].try_as<JSON::JString>();
+    EXPECT_TRUE(v.is_ok());
+    EXPECT_TRUE(v2.is_ok());
+    auto v3 = v2.map<String>();
+    auto v4 = v2.map([](auto&& s) { return static_cast<String>(s); });
+    EXPECT_EQ(v3.to_ok(), "world"_s);
+    EXPECT_EQ(v4.to_ok(), "world"_s);
+
     auto solo_array = JSON::Parser::parse(R"([1, 2, 3])"_sv);
     EXPECT_TRUE(solo_array.is_ok());
     auto val  = solo_array.to_ok();

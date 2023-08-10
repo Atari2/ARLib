@@ -290,15 +290,40 @@ namespace JSON {
             if constexpr (!JSONType<T>) { return static_cast<T>(as<val>()); }
             return static_cast<const T&>(as<val>());
         }
+        template <JSONTypeExt T, bool IsConst>
+        constexpr static auto& _try_as_return_value() {
+            if constexpr (JSONType<T>) {
+                using Ret = Result<
+                ConditionalT<IsConst, AddConstT<AddLvalueReferenceT<T>>, AddLvalueReferenceT<T>>, ConversionError>;
+                Ret* ptr{ nullptr };
+                return *ptr;
+            } else {
+                using Ret = Result<T, ConversionError>;
+                Ret* ptr{ nullptr };
+                return *ptr;
+            }
+        }
+        template <JSONTypeExt T, bool IsConst>
+        using TryAsRet = RemoveCvRefT<decltype(ValueObj::_try_as_return_value<T, IsConst>())>;
         template <JSONTypeExt T>
-        auto try_as() const {
+        TryAsRet<T, true> try_as() const {
             constexpr auto val = map_t_to_enum<T>();
-            return try_as<val>();
+            auto t             = try_as<val>();
+            if constexpr (JSONType<T>) {
+                return t;
+            } else {
+                return t.map<T>();
+            }
         }
         template <JSONTypeExt T>
-        auto try_as() {
+        TryAsRet<T, false> try_as() {
             constexpr auto val = map_t_to_enum<T>();
-            return try_as<val>();
+            auto t             = try_as<val>();
+            if constexpr (JSONType<T>) {
+                return t;
+            } else {
+                return t.map<T>();
+            }
         }
         template <Type T>
         const auto& as() const {
