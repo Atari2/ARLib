@@ -17,8 +17,14 @@ class Timer {
     Instant m_last;
     public:
     Timer() : m_start{ PerfClock::now() }, m_last{ m_start } {}
-    void reset() { m_start = PerfClock::now(); }
-    Duration elapsed() const { return PerfClock::diff(m_start, PerfClock::now()); }
+    void reset() {
+        m_start = PerfClock::now();
+        m_last  = m_start;
+    }
+    Duration elapsed() { 
+        m_last = PerfClock::now();
+        return PerfClock::diff(m_start, m_last); 
+    }
     Duration elapsed_since_last() {
 		auto now = PerfClock::now();
 		auto diff = PerfClock::diff(m_last, now);
