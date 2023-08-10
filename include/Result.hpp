@@ -146,14 +146,18 @@ class Result {
     }
     auto to_ok() {
         HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");
-        return move(m_ok);
+        if constexpr (IsReference) {
+            return move(m_ok.get());
+        } else {
+            return move(m_ok);
+        }
     }
     auto value_or(ResT&& default_value) {
         if (is_error()) {
             ignore_error();
             return default_value;
         } else {
-            return move(m_ok);
+            return to_ok();
         }
     }
     template <typename T>
