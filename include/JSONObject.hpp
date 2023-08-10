@@ -312,7 +312,7 @@ namespace JSON {
             if constexpr (JSONType<T>) {
                 return t;
             } else {
-                return t.map<T>();
+                return t.template map<T>();
             }
         }
         template <JSONTypeExt T>
@@ -322,7 +322,7 @@ namespace JSON {
             if constexpr (JSONType<T>) {
                 return t;
             } else {
-                return t.map<T>();
+                return t.template map<T>();
             }
         }
         template <Type T>
