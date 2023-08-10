@@ -156,6 +156,24 @@ class Result {
             return move(m_ok);
         }
     }
+    template <typename T>
+    requires(ConvertibleTo<ResT, T>)
+    Result<T, ErrorType> map() {
+        if (is_error()) {
+            return to_error();
+        } else {
+            return static_cast<T>(to_ok());
+        }
+    }
+    template <typename Func>
+    requires(CallableWith<Func, ResT>)
+    Result<InvokeResultT<Func, ResT>, ErrorType> map(Func&& f) {
+        if (is_error()) {
+            return to_error();
+        } else {
+            return invoke(Forward<Func>(f), move(to_ok()));
+        }
+    }
     bool operator==(const Result& other) const {
         if (m_type == other.m_type) {
             if (m_type == CurrType::Ok) {
