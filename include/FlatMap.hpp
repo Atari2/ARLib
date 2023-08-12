@@ -82,7 +82,39 @@ class FlatMap {
     template <typename... Args>
     requires Constructible<Entry, Args...>
     auto insert(Args&&... args) {
-        return insert(Entry{ Forward<Args>(args)... });
+        return m_table.insert(Entry{ Forward<Args>(args)... });
+    }
+    Val& get_or_default(const Key& key)
+    requires DefaultConstructible<Val>
+    {
+        auto entry                  = Entry{ Key{ key }, Val{} };
+        auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
+        if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
+        return const_cast<Val&>((*it).val());
+    }
+    template <typename O, typename OHashCls = Hash<RemoveCvRefT<O>>>
+    requires(EqualityComparableWith<O, Key> && Hashable<O, OHashCls> && !SameAsCvRef<O, Key> && Constructible<Key, O>)
+    Val& get_or_default(O&& key)
+    requires DefaultConstructible<Val>
+    {
+        auto entry                     = Entry{ Key{ key }, Val{} };
+        auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
+        if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
+        return const_cast<Val&>((*it).val());
+    }
+    Val& get_or_insert(const Key& key, Val&& val) {
+        auto entry                  = Entry{ Key{ key }, Forward<Val>(val) };
+        auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
+        if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
+        return const_cast<Val&>((*it).val());
+    }
+    template <typename O, typename OHashCls = Hash<RemoveCvRefT<O>>>
+    requires(EqualityComparableWith<O, Key> && Hashable<O, OHashCls> && !SameAsCvRef<O, Key> && Constructible<Key, O>)
+    Val& get_or_insert(O&& key, Val&& val) {
+        auto entry                  = Entry{ Key{ key }, Forward<Val>(val) };
+        auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
+        if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
+        return const_cast<Val&>((*it).val());
     }
     auto clear() { m_table.clear(); }
     Val& operator[](const Key& key) {

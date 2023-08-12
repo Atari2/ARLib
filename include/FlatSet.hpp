@@ -189,20 +189,20 @@ template <typename Key>
 struct DefaultKeyComparer {
     bool operator()(const Key& lhs, const Key& rhs) const { return lhs == rhs; }
     template <typename Other>
-    requires EqualityComparableWith<Other, Key> bool
-    operator()(Other&& lhs, const Key& rhs) const {
+    requires EqualityComparableWith<Other, Key>
+    bool operator()(Other&& lhs, const Key& rhs) const {
         return lhs == rhs;
     }
     template <typename Other>
-    requires EqualityComparableWith<Key, Other> bool
-    operator()(const Key& lhs, Other&& rhs) const {
+    requires EqualityComparableWith<Key, Other>
+    bool operator()(const Key& lhs, Other&& rhs) const {
         return lhs == rhs;
     }
 };
 template <typename Comparer, typename Key, typename Other>
 concept FlatSetItemCanBeCompared = requires(const Comparer& cmp, const Key& t, const Other& v) {
-                                       { cmp(t, v) } -> ConvertibleTo<bool>;
-                                   };
+    { cmp(t, v) } -> ConvertibleTo<bool>;
+};
 template <typename T, typename HashCls = Hash<T>, typename KeyComparer = DefaultKeyComparer<T>>
 requires Hashable<T, HashCls>
 class FlatSet {
@@ -268,7 +268,7 @@ class FlatSet {
         }
     }
     template <typename O>
-    static constexpr bool CanBeCompared = FlatSetItemCanBeCompared<KeyComparer, T, O>;
+    constexpr static bool CanBeCompared = FlatSetItemCanBeCompared<KeyComparer, T, O>;
 
     public:
     FlatSet() { m_buckets.resize(base_buckets); };
@@ -312,10 +312,7 @@ class FlatSet {
         }
     }
     template <typename O, typename OHashCls = Hash<O>>
-    requires(
-    Hashable<O, OHashCls> &&
-    (EqualityComparableWith<O, T> || CanBeCompared<O>)
-    )
+    requires(Hashable<O, OHashCls> && (EqualityComparableWith<O, T> || CanBeCompared<O>))
     auto find(const O& value) const {
         const auto hasher       = OHashCls{};
         const size_t num_groups = m_buckets.size();
@@ -344,7 +341,7 @@ class FlatSet {
     auto end() const { return FlatSetIterator<T, HashCls, KeyComparer>{ this, m_buckets.size(), BitMask{ 0_u32 } }; }
     bool contains(const T& value) const { return find(value) != end(); }
     template <typename O, typename OHashCls = Hash<O>>
-    requires (EqualityComparableWith<O, T> && Hashable<O, OHashCls>)
+    requires(EqualityComparableWith<O, T> && Hashable<O, OHashCls>)
     auto remove(const O& value) {
         const auto hasher       = OHashCls{};
         const size_t num_groups = m_buckets.size();
@@ -383,6 +380,11 @@ class FlatSet {
             if (internal::match_empty(b.m_ctrl_block)) return false;
             group = (group + 1) % num_groups;
         }
+    }
+    auto __hashmap_private_prepare_for_insert(const T& value) { return prepare_for_insert(value); }
+    T& __hashmap_private_insert(FlatSetIterator<T, HashCls, KeyComparer> it, T&& value) {
+        auto& val = m_buckets[it.m_current_bucket].m_bucket.initialize_at(*it.m_current_item, Forward<T>(value));
+        return val;
     }
     Pair<bool, T&> insert(T&& value) {
         auto&& [ins, it] = prepare_for_insert(value);
