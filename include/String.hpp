@@ -278,8 +278,8 @@ class String {
         String moved{ move(*this) };
         auto new_size = moved.m_size + 1;
         moved.grow_if_needed(new_size);
-        moved.get_buf_internal()[m_size] = c;
-        moved.set_size(m_size + 1);
+        moved.get_buf_internal()[moved.m_size] = c;
+        moved.set_size(new_size);
         return moved;
     }
     [[nodiscard]] String concat(const String& other) && {
