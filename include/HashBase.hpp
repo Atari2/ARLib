@@ -109,10 +109,10 @@ struct Hash<char[N]> {
     [[nodiscard]] size_t operator()(const char (&key)[N]) const noexcept {
         if constexpr (windows_build) {
             // this hash yields way better code on windows
-            return hash_array_representation(key, N);
+            return hash_array_representation(key, N - 1);
         } else {
             constexpr size_t seed = static_cast<size_t>(0xc70f6907UL);
-            return murmur_hash_bytes(key, N, seed);
+            return murmur_hash_bytes(key, N - 1, seed);
         }
     }
 };
