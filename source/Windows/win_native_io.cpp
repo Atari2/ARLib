@@ -33,7 +33,10 @@ struct SetupCodePage {
         SetConsoleOutputCP(__utf8Set.old_output_cp);
     }
 };
-SetupCodePage __utf8Setup{};
+extern "C"
+{
+    SetupCodePage __utf8Setup{};
+}
 static bool GenericWrite(HANDLE hFile, LPCVOID buffer, DWORD nBytes, LPDWORD bytesWritten) {
     return WriteFile(hFile, buffer, nBytes, bytesWritten, nullptr);
 }

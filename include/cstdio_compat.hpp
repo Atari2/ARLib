@@ -12,7 +12,8 @@ extern "C"
     typedef char* va_list;
     #endif
 #endif
-#ifdef WINDOWS
+#ifdef WINDOWS 
+    #pragma comment(linker, "/include:__utf8Setup")
     #ifndef _FILE_DEFINED
         #define _FILE_DEFINED
     typedef struct _iobuf {
