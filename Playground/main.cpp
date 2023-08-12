@@ -10,15 +10,16 @@
 #include "ArgParser.hpp"
 using namespace ARLib;
 int main(int argc, char** argv) {
-    auto parser = ArgParser{ argc, argv };
-    Vector<int> vec{};
-    parser.add_option("--nums", "NUMBER LIST", "A list of numbers", vec);
-    auto ok = parser.parse();
-    if (ok.is_error()) {
-        Printer::print("{}", ok.to_error());
-    } else {
-        Printer::print("{}", vec);
-        Printer::print("{}", parser.get<Vector<int>>("--nums"));
-    }
+    auto s = FlatMap<String, int>{};
+    auto s2 = FlatMap<String, String>{};
+    s.insert("hello world"_s, 2);
+    s.get_or_default("hello world"_s) += 1;
+    s.get_or_default("testing") += 1234;
+    s2.get_or_default("piercarlo") += "testing"_s;
+    s2.get_or_insert("piercarlo", "hello world"_s);
+    s2.get_or_insert("asdf", "hello world"_s);
+    Printer::print("{}", s["hello world"_sv]);
+    Printer::print("{} {}", s["testing"], s2["piercarlo"]);
+    Printer::print("{}", s2["asdf"]);
     return 0;
 }

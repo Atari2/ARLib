@@ -586,8 +586,8 @@ TEST(ARLibTests, JSONTest) {
     EXPECT_TRUE(test_try_as.is_ok());
     auto test_try_as_val = test_try_as.to_ok();
     const auto& ttobj    = test_try_as_val.root();
-    auto v               = ttobj["hello"_s].try_as<String>();
-    auto v2              = ttobj["hello"_s].try_as<JSON::JString>();
+    auto v               = ttobj["hello"_sv].try_as<String>();
+    auto v2              = ttobj["hello"_sv].try_as<JSON::JString>();
     EXPECT_TRUE(v.is_ok());
     EXPECT_TRUE(v2.is_ok());
     auto v3 = v2.map<String>();
@@ -1231,6 +1231,20 @@ TEST(ARLibTests, FlatMapTest) {
     res = map.remove("hello"_s);
     EXPECT_EQ(res, false);
     EXPECT_EQ(map.size(), 1ull);
+
+    auto s  = FlatMap<String, int>{};
+    auto s2 = FlatMap<String, String>{};
+    s.insert("hello world"_s, 2);
+    s.get_or_default("hello world"_s) += 1;
+    s.get_or_default("testing") += 1234;
+    s2.get_or_default("piercarlo") += "testing"_s;
+    s2.get_or_insert("piercarlo", "hello world"_s);
+    s2.get_or_insert("asdf", "hello world"_s);
+
+    EXPECT_EQ(s["hello world"], 3);
+    EXPECT_EQ(s["testing"], 1234);
+    EXPECT_EQ(s2["piercarlo"], "testing");
+    EXPECT_EQ(s2["asdf"], "hello world");
 }
 TEST(ARLibTests, FlatMapSetExtraTest) {
     constexpr static size_t n_of_strings = 1024;

@@ -33,6 +33,8 @@ namespace JSON {
         operator Value() &&;
         ValueObj& operator[](const String& key);
         const ValueObj& operator[](const String& key) const { return *(static_cast<const Parent&>(*this))[key]; }
+        ValueObj& operator[](const StringView& key);
+        const ValueObj& operator[](const StringView& key) const { return *(static_cast<const Parent&>(*this))[key]; }
     };
     struct Array : public Vector<Value> {
         using Parent = Vector<Value>;
@@ -387,6 +389,8 @@ namespace JSON {
         }
         const auto& operator[](const String& s) const { return as<Type::JObject>()[s]; }
         auto& operator[](const String& s) { return as<Type::JObject>()[s]; }
+        const auto& operator[](const StringView& s) const { return as<Type::JObject>()[s]; }
+        auto& operator[](const StringView& s) { return as<Type::JObject>()[s]; }
         const auto& operator[](size_t i) const { return as<Type::JArray>()[i]; }
         auto& operator[](size_t i) { return as<Type::JArray>()[i]; }
     };

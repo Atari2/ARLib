@@ -25,12 +25,7 @@ namespace JSON {
         return nullptr;
     }
     ValueObj& Object::operator[](const String& key) {
-        if (auto it = find(key); it != end()) {
-            return const_cast<ValueObj&>(*(*it).val());
-        } else {
-            auto [_, insit] = insert(key, make(nullptr));
-            return const_cast<ValueObj&>(*insit.val());
-        }
+        return *this->get_or_insert(key, make(nullptr));
     }
     Value::Value(ValueObj&& obj) : UniquePtr{ Forward<ValueObj>(obj) } {}
     Value::Value(const Value& other) : UniquePtr{ ValueObj{ *other.get() } } {}
@@ -41,7 +36,7 @@ namespace JSON {
     Value Value::deepcopy() const {
         return Value{ *this };
     }
-    Array::Array(const Array& other) : Vector{ } {
+    Array::Array(const Array& other) : Vector{} {
         for (const auto& item : other) { append(move(item.deepcopy())); }
     }
     Array& Array::operator=(const Array& other) {
