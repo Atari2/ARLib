@@ -57,6 +57,9 @@ namespace JSON {
             if (!state.advance_check()) { break; };
         }
     }
+    String escape_string(const String& str) {
+        return str.replace(R"(")"_sv, R"(\")"_sv);
+    }
     // delimeters are comma, close square parens and close curly.
     Parsed<String> eat_until_space_or_delim(ParseState& state) {
         STATE_ENTER();
@@ -268,7 +271,7 @@ namespace JSON {
                     repr.append(indent_string + BoolToStr(val.as<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append(indent_string + "\""_s + val.as<Type::JString>() + '"');
+                    repr.append(indent_string + "\""_s + escape_string(val.as<Type::JString>()) + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -305,7 +308,7 @@ namespace JSON {
                     repr.append(BoolToStr(val.as<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append("\""_s + val.as<Type::JString>() + '"');
+                    repr.append("\""_s + escape_string(val.as<Type::JString>()) + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -321,7 +324,7 @@ namespace JSON {
         for (const auto& entry : obj) {
             const auto& val = *entry.val();
             const auto& key = entry.key();
-            repr.append("\""_s + key + '"');
+            repr.append("\""_s + escape_string(key) + '"');
             repr.append(":"_s);
             switch (val.type()) {
                 case Type::JArray:
@@ -340,7 +343,7 @@ namespace JSON {
                     repr.append(BoolToStr(val.as<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append("\""_s + val.as<Type::JString>() + '"');
+                    repr.append("\""_s + escape_string(val.as<Type::JString>()) + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -360,7 +363,7 @@ namespace JSON {
             const auto& val = *entry.val();
             const auto& key = entry.key();
             repr.append(indent_string);
-            repr.append("\""_s + key + '"');
+            repr.append("\""_s + escape_string(key) + '"');
             repr.append(": "_s);
             switch (val.type()) {
                 case Type::JArray:
@@ -387,7 +390,7 @@ namespace JSON {
                     repr.append(BoolToStr(val.as<Type::JBool>().value()));
                     break;
                 case Type::JString:
-                    repr.append("\""_s + val.as<Type::JString>() + '"');
+                    repr.append("\""_s + escape_string(val.as<Type::JString>()) + '"');
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -415,7 +418,7 @@ namespace JSON {
             case JSON::Type::JObject:
                 return dump_object(val.as<Type::JObject>(), index);
             case JSON::Type::JString:
-                return "\""_s + val.as<Type::JString>() + "\""_s;
+                return "\""_s + escape_string(val.as<Type::JString>()) + "\""_s;
         }
         return "{}"_s;
     }
@@ -432,7 +435,7 @@ namespace JSON {
             case JSON::Type::JObject:
                 return dump_object_compact(val.as<Type::JObject>());
             case JSON::Type::JString:
-                return "\""_s + val.as<Type::JString>() + "\""_s;
+                return "\""_s + escape_string(val.as<Type::JString>()) + "\""_s;
         }
         return "{}"_s;
     }

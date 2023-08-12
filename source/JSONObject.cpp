@@ -70,7 +70,7 @@ namespace JSON {
             const auto& val = *entry.val();
             const auto& key = entry.key();
             TRY(f.write(indent_string));
-            TRY(f.write("\""_s + key + '"'));
+            TRY(f.write("\""_s + escape_string(key) + '"'));
             TRY(f.write(": "_s));
             switch (val.type()) {
                 case Type::JArray:
@@ -89,7 +89,7 @@ namespace JSON {
                     TRY(f.write(BoolToStr(val.as<Type::JBool>().value())));
                     break;
                 case Type::JString:
-                    TRY(f.write("\""_s + val.as<Type::JString>() + '"'));
+                    TRY(f.write("\""_s + escape_string(val.as<Type::JString>()) + '"'));
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -136,7 +136,7 @@ namespace JSON {
                     break;
                 case Type::JString:
                     TRY(f.write(indent_string));
-                    TRY(f.write("\""_s + val.as<Type::JString>() + '"'));
+                    TRY(f.write("\""_s + escape_string(val.as<Type::JString>()) + '"'));
                     break;
                 default:
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
@@ -169,7 +169,7 @@ namespace JSON {
                 TRY(f.write(as<Type::JNumber>().to_string()));
                 break;
             case Type::JString:
-                TRY(f.write("\""_s + as<Type::JString>() + '"'));
+                TRY(f.write("\""_s + escape_string(as<Type::JString>()) + '"'));
                 break;
         }
         return {};

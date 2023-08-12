@@ -35,6 +35,7 @@ namespace JSON {
         constexpr size_t index() const { return current_index; }
         constexpr bool at_end() const { return current_index == view.size(); }
     };
+    String escape_string(const String& str);
     Parsed<Object> parse_object(ParseState& state);
     void skip_whitespace(ParseState& state);
     Parsed<String> eat_until_space_or_delim(ParseState& state);
