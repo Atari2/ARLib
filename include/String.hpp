@@ -115,8 +115,13 @@ class String {
         if (this != &other) {
             if (!is_local()) deallocate<char, DeallocType::Multiple>(m_data_buf);
             m_size = other.m_size;
-            grow_if_needed(m_size);
-            memcpy(m_data_buf, other.m_data_buf, m_size + 1);
+            if (other.is_local()) {
+                memcpy(m_local_buf, other.m_local_buf, SMALL_STRING_CAP + 1);
+                m_data_buf = PointerTraits<char*>::pointer_to(*m_local_buf);
+            } else {
+                grow_if_needed(m_size);
+                memcpy(m_data_buf, other.m_data_buf, other.m_size + 1);
+            }
         }
         return *this;
     }
