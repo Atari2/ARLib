@@ -12,13 +12,28 @@ namespace ARLib {
 constexpr static DWORD todw(Integral auto v) {
     return static_cast<DWORD>(v);
 }
-struct SetupUTF8Output {
-    SetupUTF8Output() {
-        UINT cp = GetConsoleCP();
-        if (cp != CP_UTF8) { HARD_ASSERT(SetConsoleOutputCP(CP_UTF8), "Failed to initialize CP_UTF8 console output"); }
+struct SaveCodePage {
+    UINT old_cp{};
+    UINT old_output_cp{};
+};
+SaveCodePage __utf8Set{};
+struct SetupCodePage {
+    SetupCodePage() {
+        UINT cp                 = GetConsoleCP();
+        UINT ocp                = GetConsoleOutputCP();
+        __utf8Set.old_cp        = cp;
+        __utf8Set.old_output_cp = ocp;
+        if (cp != CP_UTF8) {
+            BOOL res = SetConsoleCP(CP_UTF8) && SetConsoleOutputCP(CP_UTF8);
+            if (!res) { assertion_failed__(); }
+        }
+    }
+    ~SetupCodePage() {
+        SetConsoleCP(__utf8Set.old_cp);
+        SetConsoleOutputCP(__utf8Set.old_output_cp);
     }
 };
-SetupUTF8Output __utf8Set{};
+SetupCodePage __utf8Setup{};
 static bool GenericWrite(HANDLE hFile, LPCVOID buffer, DWORD nBytes, LPDWORD bytesWritten) {
     return WriteFile(hFile, buffer, nBytes, bytesWritten, nullptr);
 }
