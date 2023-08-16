@@ -102,14 +102,7 @@ class File {
         if (line.size() != count) return FileError{ "Couldn't read requested size"_s, m_filename };
         return line;
     }
-    ReadResult read_line() {
-        if (m_mode != OpenFileMode::Read) {
-            return FileError{ "Can't read from a file not open in read mode"_s, m_filename };
-        }
-        String line{ LINELENGTH_MAX, '\0' };
-        line.set_size(ARLib::fread(line.rawptr(), sizeof(char), LINELENGTH_MAX, m_ptr));
-        return line;
-    }
+    ReadResult read_line(bool& eof_reached);
     ReadResult read_all() {
         if (m_mode != OpenFileMode::Read) {
             return FileError{ "Can't read from a file not open in read mode"_s, m_filename };

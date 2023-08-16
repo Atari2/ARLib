@@ -110,7 +110,11 @@ size_t ftell(FILE* fp) {
 #endif
 }
 size_t fread(void* buffer, size_t size, size_t count, FILE* fp) {
+#ifdef WINDOWS
+    return ReadFileGeneric(buffer, size, count, fp);
+#else
     return ::fread(buffer, size, count, fp);
+#endif
 }
 size_t fwrite(const void* buffer, size_t size, size_t count, FILE* fp) {
 #ifdef WINDOWS
