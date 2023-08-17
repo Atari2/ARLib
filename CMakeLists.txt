@@ -174,6 +174,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${ARLIB_SOURCE_DIR}/Assertion.cpp
     ${ARLIB_SOURCE_DIR}/BigInt.cpp
     ${ARLIB_SOURCE_DIR}/CharConv.cpp
+    ${ARLIB_SOURCE_DIR}/CSVParser.cpp
     ${ARLIB_SOURCE_DIR}/DebugNewDelete.cpp
     ${ARLIB_SOURCE_DIR}/EventLoop.cpp
     ${ARLIB_SOURCE_DIR}/File.cpp
@@ -231,6 +232,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/ContextManager.hpp
     ${ARLIB_INCLUDE_DIR}/Conversion.hpp
     ${ARLIB_INCLUDE_DIR}/CpuInfo.hpp
+    ${ARLIB_INCLUDE_DIR}/CSVParser.hpp
     ${ARLIB_INCLUDE_DIR}/CxprHashMap.hpp
     ${ARLIB_INCLUDE_DIR}/DebugNewDelete.hpp
     ${ARLIB_INCLUDE_DIR}/EnumHelpers.hpp
