@@ -111,6 +111,21 @@ class Result {
             new (&m_err) UniquePtr<ErrorBase>{ move(other.m_err) };
         }
     }
+    Result& operator=(Result&& other) noexcept {
+        if (m_type == CurrType::Ok) {
+            m_ok.~Res();
+        } else {
+            if (m_err.exists()) ASSERT_NOT_REACHED("Result with error was not handled");
+            m_err.~UniquePtr();
+        }
+        if (other.m_type == CurrType::Ok) {
+            new (&m_ok) Res{ move(other.m_ok) };
+        } else {
+            new (&m_err) UniquePtr<ErrorBase>{ move(other.m_err) };
+        }
+        m_type = other.m_type;
+        return *this;
+    }
     CurrType type() const { return m_type; }
     bool is_error() const { return m_type == CurrType::Err; }
     bool is_ok() const { return m_type == CurrType::Ok; }
