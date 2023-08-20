@@ -278,7 +278,6 @@ class String {
     }
     [[nodiscard]] String concat(StringView other) const&;
     [[nodiscard]] String concat(const char* other) const&;
-
     [[nodiscard]] String concat(char c) && {
         String moved{ move(*this) };
         auto new_size = moved.m_size + 1;
@@ -297,15 +296,12 @@ class String {
     }
     [[nodiscard]] String concat(StringView other) &&;
     [[nodiscard]] String concat(const char* other) &&;
-
     String operator+(const String& other) && { return move(*this).concat(other); }
     String operator+(const char* other) && { return move(*this).concat(other); }
     String operator+(char c) && { return move(*this).concat(c); }
-
     String operator+(const String& other) const& { return concat(other); }
     String operator+(const char* other) const& { return concat(other); }
     String operator+(char c) const& { return concat(c); }
-
     String& operator+=(const String& other) {
         append(other);
         return *this;
@@ -432,10 +428,14 @@ class String {
         if (m_size == 0) return;
         if (!isspace(m_data_buf[m_size - 1])) return;
         if (is_local()) {
-            while (isspace(m_local_buf[m_size - 1]) && m_size > 0) m_size--;
+            while (isspace(m_local_buf[m_size - 1]) && m_size > 0) {
+                if (--m_size == 0) break;
+            }
             m_local_buf[m_size] = '\0';
         } else {
-            while (isspace(m_data_buf[m_size - 1]) && m_size > 0) m_size--;
+            while (isspace(m_data_buf[m_size - 1]) && m_size > 0) {
+                if (--m_size == 0) break;
+            }
             m_data_buf[m_size] = '\0';
             // if the m_size is now small enough, let's swap to small String
             if (m_size <= SMALL_STRING_CAP) {
