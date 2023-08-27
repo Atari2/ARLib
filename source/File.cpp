@@ -22,7 +22,6 @@ File::ReadResult File::read_line(bool& eof_reached) {
             int64_t offset = -(static_cast<int64_t>(read) - static_cast<int64_t>(aftereolidx));
             auto old_pos   = ARLib::ftell(m_ptr);
             auto new_pos   = ARLib::fseek(m_ptr, static_cast<long>(offset), SEEK_CUR);
-            HARD_ASSERT(old_pos - new_pos == -offset, "pebnis");
             line += move(partial);
             break;
         }

@@ -18,12 +18,12 @@ Result<Vector<CSVRH>, CSVParseError> CSVParser::read_all() {
     }
     return rows;
 }
-CSVRowResult CSVRow::parse_row(File& file) {
+CSVRowResult CSVRow::parse_row([[maybe_unused]] File& file) {
     Vector<String> row;
     // TODO: parse row!
     return CSVRow{ move(row) };
 }
-CSVHeaderResult CSVHeader::parse_header(File& file) {
+CSVHeaderResult CSVHeader::parse_header([[maybe_unused]] File& file) {
     Vector<String> header;
     // TODO: parse header!
     return CSVHeader{ move(header) };
