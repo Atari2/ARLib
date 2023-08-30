@@ -23,11 +23,10 @@ class CSVParseError : public ErrorBase {
 };
 class CSVRow;
 class CSVHeader;
-using CSVRH = Variant<CSVRow, CSVHeader>;
+using CSVRH           = Variant<CSVRow, CSVHeader>;
 using CSVHeaderResult = Result<CSVHeader, CSVParseError>;
-using CSVRowResult = Result<CSVRow, CSVParseError>;
-using CSVResult = Result<CSVRH, CSVParseError>;
-
+using CSVRowResult    = Result<CSVRow, CSVParseError>;
+using CSVResult       = Result<CSVRH, CSVParseError>;
 class CSVHeader {
     friend class CSVParser;
     Vector<String> m_row;
@@ -36,6 +35,7 @@ class CSVHeader {
 };
 class CSVRow {
     friend class CSVParser;
+    friend struct PrintInfo<CSVRow>;
     Vector<String> m_row;
     static CSVRowResult parse_row(File& line);
     CSVRow(Vector<String>&& row) : m_row(move(row)) {}
@@ -56,5 +56,11 @@ class CSVParser {
     void with_separator(char separator) { m_separator = separator; }
     CSVResult read_row();
     Result<Vector<CSVRH>, CSVParseError> read_all();
+};
+template <>
+struct PrintInfo<CSVRow> {
+    const CSVRow& m_row;
+    PrintInfo(const CSVRow& row) : m_row{ row } {}
+    String repr() const { return print_conditional(m_row.m_row); }
 };
 }    // namespace ARLib
