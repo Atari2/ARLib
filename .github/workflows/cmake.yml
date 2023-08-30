@@ -17,6 +17,11 @@ jobs:
       matrix:
         os: [ windows-latest, ubuntu-latest ]
         compiler: [ msvc, gcc, clang ]
+        exclude:
+          - os: windows-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: msvc
 
     steps:
     - uses: actions/checkout@v3
@@ -24,14 +29,16 @@ jobs:
     - name: Setup compilers (gcc)
       run:  |
             sudo apt update
-            sudo apt install gcc-13 g++-13
+            sudo apt install gcc-13 g++-13 ninja-build
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
 
     - name: Setup compilers (clang)
       run:  |
+            sudo apt update
             wget https://apt.llvm.org/llvm.sh
             chmod +x llvm.sh
             sudo ./llvm.sh 16
+            sudo apt install ninja-build
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
     
     - name: Create Build Environment
@@ -39,26 +46,42 @@ jobs:
 
     - name: Configure CMake (gcc)
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13
+      run: cmake -S ${{github.workspace}} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
     
     - name: Configure CMake (clang)
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16
+      run: cmake -S ${{github.workspace}} -DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16
       if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
       
     - name: Configure CMake (msvc)
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE
+      shell: pwsh
+      run:  |
+            ${{github.workspace}}/setup_vsdev.ps1
+            cmake -S ${{github.workspace}} -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
       if: matrix.os == 'windows-latest' && matrix.compiler == 'msvc'
     
     - name: Configure CMake (clang-cl)
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_C_COMPILER=clang-cl.exe -DCMAKE_CXX_COMPILER=clang-cl.exe
+      shell: pwsh
+      run:  |
+            ${{github.workspace}}/setup_vsdev.ps1
+            cmake -S ${{github.workspace}} -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl
       if: matrix.os == 'windows-latest' && matrix.compiler == 'clang'
 
-    - name: Build
+    - name: Build (windows)
+      working-directory: ${{github.workspace}}/build
+      shell: pwsh
+      run:  |
+            ${{github.workspace}}/setup_vsdev.ps1
+            cmake --build ${{github.workspace}}/build --config ${{env.CMAKE_BUILD_TYPE}}
+      if: matrix.os == 'windows-latest'
+    
+    - name: Build (linux)
+      working-directory: ${{github.workspace}}/build
       run: cmake --build ${{github.workspace}}/build --config ${{env.CMAKE_BUILD_TYPE}}
+      if: matrix.os == 'ubuntu-latest'
 
     - name: Test
       working-directory: ${{github.workspace}}/build/Tests

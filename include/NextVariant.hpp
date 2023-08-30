@@ -243,14 +243,14 @@ namespace v2 {
         template <size_t Index>
         requires(Index < ntypes)
         const auto& get() const {
-            using T = VariantArray::template At<Index>;
+            using T = typename VariantArray::template At<Index>;
             HARD_ASSERT(Index == m_current_type, "get<>() in variant was trying to access not current type");
             return m_storage.template as<T>();
         }
         template <size_t Index>
         requires(Index < ntypes)
         auto& get() {
-            using T = VariantArray::template At<Index>;
+            using T = typename VariantArray::template At<Index>;
             HARD_ASSERT(Index == m_current_type, "get<>() in variant was trying to access not current type");
             return m_storage.template as<T>();
         }
@@ -267,7 +267,7 @@ namespace v2 {
         template <size_t Index, typename... Args>
         requires(Index < ntypes)
         void set(Args&&... args) {
-            using Type = VariantArray::template At<Index>;
+            using Type = typename VariantArray::template At<Index>;
             static_assert(Constructible<Type, Args...>, "Args can't construct type at index passed");
             destroy_current();
             m_current_type = Index;
