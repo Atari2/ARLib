@@ -7,71 +7,73 @@ on:
     branches: [ master ]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Release
+  CMAKE_BUILD_TYPE: Release
+  CMAKE_GENERATOR: Ninja
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest ]
+        compiler: [ msvc, gcc, clang ]
 
     steps:
     - uses: actions/checkout@v3
     
-    - name: Setup compilers
+    - name: Setup compilers (gcc)
       run:  |
             sudo apt update
             sudo apt install gcc-13 g++-13
-      shell: bash
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
+
+    - name: Setup compilers (clang)
+      run:  |
+            wget https://apt.llvm.org/llvm.sh
+            chmod +x llvm.sh
+            sudo ./llvm.sh 16
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
     
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      shell: bash
+    - name: Configure CMake (gcc)
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-      env:
-        CC: gcc-13
-        CXX: g++-13
-      if: matrix.os == 'ubuntu-latest'
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
+    
+    - name: Configure CMake (clang)
+      working-directory: ${{github.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_C_COMPILER=clang-16 -DCMAKE_CXX_COMPILER=clang++-16
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
       
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      shell: bash
+    - name: Configure CMake (msvc)
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-      if: matrix.os == 'windows-latest'
+      run: cmake $GITHUB_WORKSPACE
+      if: matrix.os == 'windows-latest' && matrix.compiler == 'msvc'
+    
+    - name: Configure CMake (clang-cl)
+      working-directory: ${{github.workspace}}/build
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_C_COMPILER=clang-cl.exe -DCMAKE_CXX_COMPILER=clang-cl.exe
+      if: matrix.os == 'windows-latest' && matrix.compiler == 'clang'
 
     - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.CMAKE_BUILD_TYPE}}
 
     - name: Test
       working-directory: ${{github.workspace}}/build/Tests
-      shell: bash
       run: ctest --rerun-failed --output-on-failure -C $BUILD_TYPE
     
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
-        name: ARLib
-        path: ${{github.workspace}}/build/Release/ARLib.lib
+        name: ARLib-${{matrix.os}}-${{matrix.compiler}}
+        path: ${{github.workspace}}/build/ARLib.lib
       if: matrix.os == 'windows-latest'
     
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
-        name: ARLib
+        name: ARLib-${{matrix.os}}-${{matrix.compiler}}
         path: ${{github.workspace}}/build/libARLib.a
       if: matrix.os == 'ubuntu-latest'
