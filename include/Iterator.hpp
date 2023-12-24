@@ -32,6 +32,7 @@ class Iterator final : public IteratorBase<T> {
     Iterator(const Iterator<T>& other) : IteratorBase<T>(other) {}
     Iterator(Iterator<T>&& other) noexcept : IteratorBase<T>(other) {}
     T& operator*() { return *m_current; }
+    T* operator->() { return m_current; }
     Iterator& operator=(const Iterator<T>& other) {
         m_current = other.m_current;
         return *this;
@@ -89,6 +90,7 @@ class ConstIterator final : public IteratorBase<typename AddConst<Ct>::type> {
         return *this;
     }
     constexpr const T& operator*() const { return *m_current; }
+    constexpr const T* operator->() const { return m_current; }
     constexpr ConstIterator<Ct>& operator++() {
         m_current++;
         return *this;
@@ -128,6 +130,7 @@ class ReverseIterator final : public IteratorBase<T> {
     ReverseIterator(const ReverseIterator<T>& other) : IteratorBase<T>(other.m_current) {}
     ReverseIterator(ReverseIterator<T>&& other) noexcept : IteratorBase<T>(other) { other.m_current = nullptr; }
     T& operator*() { return *m_current; }
+    T* operator->() { return m_current; }
     ReverseIterator& operator=(const ReverseIterator<T>& other) { m_current = other.m_current; }
     ReverseIterator& operator=(ReverseIterator<T>&& other) noexcept {
         m_current       = other.m_current;
@@ -173,6 +176,7 @@ class ConstReverseIterator final : public IteratorBase<typename AddConst<Ct>::ty
         other.m_current = nullptr;
     }
     const T& operator*() { return *m_current; }
+    const T* operator->() { return m_current; }
     ConstReverseIterator<Ct>& operator=(const ConstReverseIterator<Ct>& other) { m_current = other.m_current; }
     ConstReverseIterator<Ct>& operator=(ConstReverseIterator<Ct>&& other) noexcept {
         m_current       = other.m_current;
@@ -263,6 +267,8 @@ class IfIterator {
     }
     OutputValueType operator*() { return *m_current_iter; }
     const OutputValueType operator*() const { return *m_current_iter; }
+    auto operator->() { return m_current_iter.operator->(); }
+    auto operator->() const { return m_current_iter.operator->(); }
     IfIterator& operator++() {
         if (m_current_iter == m_end) return *this;
         ++m_current_iter;
