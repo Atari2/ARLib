@@ -87,7 +87,7 @@ class Result {
         : m_ok{ Forward<T>(val) }, m_type{ CurrType::Ok } {}
     template <typename ET>
     Result(ET&& val)
-    requires(Constructible<ErrorType, ET>)
+    requires(Constructible<ErrorType, ET> && !DerivedFrom<ET, ErrorBase>)
         : m_err{ new ErrorType{ move(val) } }, m_type{ CurrType::Err } {}
     template <typename OtherET>
     Result(OtherET&& val)
