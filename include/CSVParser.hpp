@@ -4,6 +4,7 @@
 #include "Vector.hpp"
 #include "File.hpp"
 #include "Result.hpp"
+#include "SharedPtr.hpp"
 namespace ARLib {
 struct CSVErrorInfo {
     String error_string;
@@ -20,47 +21,70 @@ class CSVParseError : public ErrorBase {
     const String& message() const { return m_info.error_string; }
     const String& error_string() const { return m_info.error_string; }
     size_t offset() const { return m_info.error_offset; }
+    virtual bool is_eof() const { return false; };
+};
+class CSVEndOfFileError : public CSVParseError {
+    public:
+    bool is_eof() const override { return true; }
 };
 class CSVRow;
-class CSVHeader;
-using CSVRH           = Variant<CSVRow, CSVHeader>;
-using CSVHeaderResult = Result<CSVHeader, CSVParseError>;
-using CSVRowResult    = Result<CSVRow, CSVParseError>;
-using CSVResult       = Result<CSVRH, CSVParseError>;
-class CSVHeader {
-    friend class CSVParser;
-    Vector<String> m_row;
-    static CSVHeaderResult parse_header(File& line);
-    CSVHeader(Vector<String>&& row) : m_row(move(row)) {}
-};
+class CSVParser;
+using CSVRowResult = Result<Pair<CSVRow, String>, CSVParseError>;
+using CSVResult    = Result<CSVRow, CSVParseError>;
+using CSVHeader    = Vector<String>;
 class CSVRow {
     friend class CSVParser;
     friend struct PrintInfo<CSVRow>;
     Vector<String> m_row;
-    static CSVRowResult parse_row(File& line);
-    CSVRow(Vector<String>&& row) : m_row(move(row)) {}
+    WeakPtr<Optional<CSVHeader>> m_header;
+    static CSVRowResult parse_row(File& line, String&& leftover, char sep, const CSVParser& parser);
+    CSVRow(Vector<String>&& row, WeakPtr<Optional<CSVHeader>>&& ptr) : m_row(move(row)), m_header{ move(ptr) } {}
+    public:
+    const String& operator[](size_t index) const { return m_row[index]; }
+    Result<const String&> operator[](StringView name) const {
+        if (m_header->empty()) { return Error{ "CSVRow does not have a header"_s }; }
+        const auto idx = find_if(m_header->value(), [&name](const auto& f) { return f.view() == name; });
+        if (idx == npos_) return Error{ "Header of row does not contain this key"_s };
+        return m_row[idx];
+    }
+    const String& field(size_t index) const { return m_row[index]; }
+    Result<const String&> field(StringView name) const { return this->operator[](name); }
 };
 class CSVParser {
-    Vector<CSVRow> m_rows;
-    Optional<CSVHeader> m_header;
+    SharedPtr<Optional<CSVHeader>> m_header;
     File m_file;
     char m_separator;
     bool m_has_header;
-    bool m_read_header;
+    String m_leftover;
 
     public:
     CSVParser(Path p) :
-        m_rows{}, m_header{}, m_file{ move(p) }, m_separator{ ',' }, m_has_header{ false }, m_read_header{ false } {}
+        m_header{ Optional<CSVHeader>{} }, m_file{ move(p) }, m_separator{ ',' }, m_has_header{ false }, m_leftover{} {}
     DiscardResult<FileError> open();
     void with_header(bool has_header) { m_has_header = move(has_header); }
     void with_separator(char separator) { m_separator = separator; }
     CSVResult read_row();
-    Result<Vector<CSVRH>, CSVParseError> read_all();
+    Result<Vector<CSVResult>, CSVParseError> read_all();
+    const auto& header() const { return m_header; }
+};
+template <>
+struct PrintInfo<CSVResult> {
+    const CSVResult& m_result;
+    PrintInfo(const CSVResult& result) : m_result{ result } {}
+    String repr() {
+        if (m_result.is_ok()) {
+            return print_conditional(m_result.ok_value());
+        } else {
+            return print_conditional(m_result.error_value());
+        }
+    }
 };
 template <>
 struct PrintInfo<CSVRow> {
     const CSVRow& m_row;
     PrintInfo(const CSVRow& row) : m_row{ row } {}
-    String repr() const { return print_conditional(m_row.m_row); }
+    String repr() const {
+        return "Header: "_s + print_conditional(m_row.m_header) + "\n\tRow:"_s + print_conditional(m_row.m_row);
+    }
 };
 }    // namespace ARLib

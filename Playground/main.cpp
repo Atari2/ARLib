@@ -5,13 +5,11 @@
 
 using namespace ARLib;
 int main(int argc, char** argv) {
-    File f{ "test.txt"_p };
-    f.open(OpenFileMode::Read);
-    bool eof_reached = false;
-    for (size_t i = 0; !eof_reached; ++i) {
-        auto s = f.read_line(eof_reached).must();
-        Printer::print("Line {}: {}", i, s.size());
-        Printer::print("{}", s);
-    }
+    CSVParser parser{ "test.txt"_p };
+    parser.with_separator(':');
+    parser.with_header(true);
+    parser.open().must();
+    auto rows = parser.read_all().must().iter().map(&CSVResult::must).collect<Vector>();
+    Printer::print("{}", rows[0]["this"_sv].must());
     return 0;
 }
