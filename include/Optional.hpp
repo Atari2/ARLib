@@ -127,7 +127,7 @@ class Optional {
     }
     template <typename... Args>
     void emplace(Args... args) {
-        m_object = new T(args...);
+        m_object = new T(Forward<Args>(args)...);
         m_exists = true;
     }
     void put(T&& value) {
