@@ -84,6 +84,17 @@ class IteratorView {
     {
         return m_end - m_begin;
     }
+    auto skip(size_t n) {
+        if constexpr (IterCanAdvanceWithOffset<Iter> && IterCanSubtractForSize<Iter>) {
+            size_t size = m_end - m_begin;
+            if (n > size) { n = size; }
+            return IteratorView{ release_storage(), m_begin + n, m_end };
+        } else {
+            auto new_begin = m_begin;
+            for (size_t i = 0; i < n && new_begin != m_end; ++i) { ++new_begin; }
+            return IteratorView{ release_storage(), new_begin, m_end };
+        }
+    }
     template <typename NewCont>
     requires Pushable<NewCont, IteratorOutputType<Iter>>
     NewCont join() {
