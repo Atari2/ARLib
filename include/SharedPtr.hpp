@@ -86,7 +86,7 @@ class SharedPtr {
         other.m_count   = m_count;
         m_count->incref();
     }
-    WeakPtr<T> weakptr() { return WeakPtr{ m_storage, m_count }; }
+    WeakPtr<T> weakptr() const { return WeakPtr{ m_storage, m_count }; }
     T* get() { return m_storage; }
     const T* get() const { return m_storage; }
     auto refcount() const { return m_count ? m_count->count() : 0ul; }
