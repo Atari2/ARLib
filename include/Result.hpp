@@ -64,6 +64,9 @@ class Result {
         UniquePtr<ErrorBase> m_err;
     };
     CurrType m_type : 1;
+    template <typename A, typename B>
+    requires(DerivedFrom<B, ErrorBase>)
+    friend class Result;
 
 
     public:
@@ -94,12 +97,15 @@ class Result {
     requires(DerivedFrom<OtherET, ErrorBase>)
         : m_err{ new OtherET{ move(val) } }, m_type{ CurrType::Err } {}
     template <typename OtherET>
-    requires(Constructible<ErrorType, OtherET>)
+    requires(DerivedFrom<OtherET, ErrorBase>)
+    Result(UniquePtr<OtherET>&& err) : m_err{ err.release() }, m_type{ CurrType::Err } {}
+    template <typename OtherET>
+    requires(BaseOfV<ErrorType, OtherET>)
     Result(Result<ResT, OtherET>&& other) {
         if (other.is_ok()) {
             new (&m_ok) Res{ move(other.to_ok()) };
         } else {
-            new (&m_err) UniquePtr<ErrorBase>{ new ErrorType{ move(other.to_error()) } };
+            new (&m_err) UniquePtr<ErrorBase>{ other.m_err.release() };
         }
         m_type = other.type();
     }
@@ -155,9 +161,9 @@ class Result {
     }
     auto to_error() {
         HARD_ASSERT(is_error(), "Tried to take error type from result with value.");
-        ErrorType copy{ move(*static_cast<ErrorType*>(m_err.get())) };
-        m_err.reset();
-        return copy;
+        auto* ptr = static_cast<ErrorType*>(m_err.release());
+        UniquePtr<ErrorType> moved{ ptr };
+        return moved;
     }
     auto to_ok() {
         HARD_ASSERT(is_ok(), "Tried to take ok type from result with error.");

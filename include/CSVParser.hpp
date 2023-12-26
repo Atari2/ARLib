@@ -25,6 +25,7 @@ class CSVParseError : public ErrorBase {
 };
 class CSVEndOfFileError : public CSVParseError {
     public:
+    CSVEndOfFileError() : CSVParseError{ "End-of-file reached"_s, npos_ } {}
     bool is_eof() const override { return true; }
 };
 class CSVRow;
@@ -68,23 +69,18 @@ class CSVParser {
     const auto& header() const { return m_header; }
 };
 template <>
-struct PrintInfo<CSVResult> {
-    const CSVResult& m_result;
-    PrintInfo(const CSVResult& result) : m_result{ result } {}
-    String repr() {
-        if (m_result.is_ok()) {
-            return print_conditional(m_result.ok_value());
-        } else {
-            return print_conditional(m_result.error_value());
-        }
-    }
-};
-template <>
 struct PrintInfo<CSVRow> {
     const CSVRow& m_row;
     PrintInfo(const CSVRow& row) : m_row{ row } {}
     String repr() const {
-        return "Header: "_s + print_conditional(m_row.m_header) + "\n\tRow:"_s + print_conditional(m_row.m_row);
+        String output{};
+        if (m_row.m_header->has_value()) {
+            const auto& header = m_row.m_header->value();
+            output += "Header: "_s + print_conditional(header);
+        }
+        if (!output.is_empty()) { output += '\n'; }
+        output += "Row: "_s + print_conditional(m_row.m_row);
+        return output;
     }
 };
 }    // namespace ARLib

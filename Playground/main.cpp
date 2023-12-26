@@ -10,6 +10,8 @@ int main(int argc, char** argv) {
     parser.with_header(true);
     parser.open().must();
     auto rows = parser.read_all().must().iter().map(&CSVResult::must).collect<Vector>();
-    Printer::print("{}", rows[0]["this"_sv].must());
+    for (const auto& row : rows) {
+        Printer::print(R"("{}" "{}" "{}")", row["this"_sv].must(), row["barely"_sv].must(), row["works"_sv].must());
+    }
     return 0;
 }

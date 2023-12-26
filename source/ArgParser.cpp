@@ -84,7 +84,7 @@ ArgParser::ParseResult ArgParser::parse() {
                                           auto res = StrViewToInt(v);
                                           if (res.is_error()) {
                                               has_error = true;
-                                              error     = res.to_error().error_string();
+                                              error     = res.to_error()->error_string();
                                               return 0;
                                           }
                                           return res.to_ok();
@@ -104,7 +104,7 @@ ArgParser::ParseResult ArgParser::parse() {
                                                    auto res = StrViewToUInt(v);
                                                    if (res.is_error()) {
                                                        has_error = true;
-                                                       error     = res.to_error().error_string();
+                                                       error     = res.to_error()->error_string();
                                                        return 0u;
                                                    }
                                                    return res.to_ok();
@@ -124,7 +124,7 @@ ArgParser::ParseResult ArgParser::parse() {
                                              auto res = StrViewToDouble(v);
                                              if (res.is_error()) {
                                                  has_error = true;
-                                                 error     = res.to_error().error_string();
+                                                 error     = res.to_error()->error_string();
                                                  return 0.0;
                                              }
                                              return res.to_ok();

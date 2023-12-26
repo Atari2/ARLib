@@ -6,15 +6,7 @@ DiscardResult<FileError> CSVParser::open() {
 }
 CSVResult CSVParser::read_row() {
     auto res = CSVRow::parse_row(m_file, move(m_leftover), m_separator, *this);
-    if (res.is_error()) {
-        if (res.error_value().is_eof()) {
-            // FIXME: find a way to avoid having to do this
-            // res.to_error() copies CSVEndOfFileError to CSVParseError and causes object slicing.
-            res.ignore_error();
-            return CSVEndOfFileError{};
-        }
-        return res.to_error();
-    }
+    if (res.is_error()) { return res.to_error(); }
     auto&& [row, rest] = res.to_ok();
     m_leftover         = move(rest);
     m_leftover.iltrim();
@@ -31,11 +23,9 @@ Result<Vector<CSVResult>, CSVParseError> CSVParser::read_all() {
             auto res = row_or_err.to_ok();
             rows.append(move(res));
         } else {
-            if (row_or_err.error_value().is_eof()) {
-                row_or_err.ignore_error();
-                break;
-            }
-            return row_or_err.to_error();
+            auto err = row_or_err.to_error();
+            if (err->is_eof()) break;
+            return err;
         }
     }
     return rows;
@@ -43,7 +33,7 @@ Result<Vector<CSVResult>, CSVParseError> CSVParser::read_all() {
 static Result<Tuple<String, String, bool>, CSVParseError> parse_field(File& file, String&& leftover, char sep) {
     bool eof_reached = false;
     auto res         = file.read_line(eof_reached);
-    if (res.is_error()) { return CSVParseError{ res.to_error().error_string(), file.pos() }; }
+    if (res.is_error()) { return res.to_error(); }
     auto line = res.to_ok();
     // read_line eats the CRLF, so we add it back
     line = leftover + line + "\r\n"_s;

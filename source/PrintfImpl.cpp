@@ -602,7 +602,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
             formatted_arg = res.to_ok();
             return PrintfErrorCodes::Ok;
         } else {
-            return res.to_error().code();
+            return res.to_error()->code();
         }
     };
 

@@ -579,8 +579,8 @@ TEST(ARLibTests, JSONTest) {
     auto maybe_obj_2 = JSON::Parser::parse(R"({"hello world": 10, "array: [1, 2, 3, 4]})"_sv);
     EXPECT_FALSE(maybe_obj_2.is_ok());
     auto err = maybe_obj_2.to_error();
-    EXPECT_EQ(err.message(), "Missing end of quotation on string"_s);
-    EXPECT_EQ(err.offset(), 41);
+    EXPECT_EQ(err->message(), "Missing end of quotation on string"_s);
+    EXPECT_EQ(err->offset(), 41);
 
     auto test_try_as = JSON::Parser::parse(R"({ "hello": "world" })");
     EXPECT_TRUE(test_try_as.is_ok());
@@ -627,7 +627,7 @@ TEST(ARLibTests, JSONTest) {
     auto error_double_obj = JSON::Parser::parse(R"({} {})");
     EXPECT_TRUE(error_double_obj.is_error());
     auto err2 = error_double_obj.to_error();
-    EXPECT_EQ(err2.message(), "End of json reached but end of buffer not reached"_s);
+    EXPECT_EQ(err2->message(), "End of json reached but end of buffer not reached"_s);
 }
 TEST(ARLibTests, RandomTest) {
     EXPECT_EQ(Random::PCG::random_s(), 355248013);
