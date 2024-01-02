@@ -2,6 +2,7 @@
 
 #include "Utility.hpp"
 #include "Iterator.hpp"
+#include "Pair.hpp"
 namespace ARLib {
 template <typename T>
 class Span {

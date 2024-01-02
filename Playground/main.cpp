@@ -5,7 +5,14 @@
 
 using namespace ARLib;
 int main(int argc, char** argv) {
-    CSVParser parser{ "test.txt"_p };
+    CSVParser parser{
+        R"(this:barely:works
+"a":"b
+c":"d"
+e:f:g
+"h":"j":"k")"_s
+    };
+    // CSVParser parser{ "test.txt"_p };
     parser.with_separator(':');
     parser.with_header(true);
     parser.open().must();

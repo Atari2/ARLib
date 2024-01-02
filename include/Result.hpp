@@ -97,7 +97,7 @@ class Result {
     requires(DerivedFrom<OtherET, ErrorBase>)
         : m_err{ new OtherET{ move(val) } }, m_type{ CurrType::Err } {}
     template <typename OtherET>
-    requires(DerivedFrom<OtherET, ErrorBase>)
+    requires(DerivedFrom<OtherET, ErrorType>)
     Result(UniquePtr<OtherET>&& err) : m_err{ err.release() }, m_type{ CurrType::Err } {}
     template <typename OtherET>
     requires(BaseOfV<ErrorType, OtherET>)

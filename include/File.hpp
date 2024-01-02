@@ -91,7 +91,8 @@ class File {
         if (len != str.size()) { return FileError{ "Failed to write the whole string into the file"_s, m_filename }; }
         return len;
     }
-    size_t pos() { return ARLib::ftell(m_ptr); }
+    size_t pos() const { return ARLib::ftell(m_ptr); }
+    size_t seek(size_t pos) { return static_cast<size_t>(ARLib::fseek(m_ptr, static_cast<long>(pos), SEEK_SET)); }
     WriteResult write(char c) { return write(StringView{ &c, 1 }); }
     WriteResult write(const String& str) { return write(str.view()); }
     ReadResult read_n(size_t count) {

@@ -1276,7 +1276,9 @@ TEST(ARLibTests, FlatMapSetExtraTest) {
         EXPECT_EQ(set.size(), 0);
     };
     auto fill_map = [&strings, &map]() {
-        for (const auto& [i, s] : enumerate(strings)) { EXPECT_TRUE(map.insert(String{ s }, static_cast<int>(i)).first()); }
+        for (const auto& [i, s] : enumerate(strings)) {
+            EXPECT_TRUE(map.insert(String{ s }, static_cast<int>(i)).first());
+        }
         EXPECT_EQ(map.size(), strings.size());
     };
     auto search_map = [&strings, &map]() {
@@ -1355,4 +1357,55 @@ TEST(ARLibTests, CharConvFailTest) {
     res3.ignore_error();
     EXPECT_TRUE(res4.is_error());
     res4.ignore_error();
+}
+TEST(ARLibTests, StringStreamTest) {
+    {
+        StringStream str{ "hello world"_s };
+        str.seek(2);
+        const char c[]{ "this is longer than the origin string" };
+        const uint8_t* cb = reinterpret_cast<const uint8_t*>(c);
+
+        str.write(Span{ cb, sizeof(c) - 1 });
+        EXPECT_EQ(str.str(), "hethis is longer than the origin string"_sv);
+    }
+    {
+        StringStream str{ "hello world"_s };
+        const char c[]{ "this is longer than the origin string" };
+        const uint8_t* cb = reinterpret_cast<const uint8_t*>(c);
+
+        str.write(Span{ cb, sizeof(c) - 1 });
+        EXPECT_EQ(str.str(), "this is longer than the origin string"_sv);
+    }
+    {
+        StringStream str{ "hello world"_s };
+        str.seek(2);
+        const char c[]{ "test" };
+        const uint8_t* cb = reinterpret_cast<const uint8_t*>(c);
+
+        str.write(Span{ cb, sizeof(c) - 1 });
+        EXPECT_EQ(str.str(), "hetestworld"_sv);
+    }
+}
+TEST(ARLibTests, CSVParserTest) {
+    CSVParser parser{
+        R"(this:barely:works
+"a":"b
+c":"d"
+e:f:g
+"h":"j":"k")"_s
+    };
+    parser.with_separator(':');
+    parser.with_header(true);
+    parser.open().must();
+    auto rows = parser.read_all().must().iter().map(&CSVResult::must).collect<Vector>();
+    Array<Tuple<StringView, StringView, StringView>, 3> expected_rows{
+        Tuple{"a"_sv,  "b\r\nc"_sv, "d"_sv},
+        Tuple{ "e"_sv, "f"_sv,    "g"_sv},
+        Tuple{ "h"_sv, "j"_sv,    "k"_sv}
+    };
+    for (const auto& [i, row] : rows.iter().enumerate()) {
+        EXPECT_EQ(expected_rows[i].get<0>(), row["this"_sv].must());
+        EXPECT_EQ(expected_rows[i].get<1>(), row["barely"_sv].must());
+        EXPECT_EQ(expected_rows[i].get<2>(), row["works"_sv].must());
+    }
 }

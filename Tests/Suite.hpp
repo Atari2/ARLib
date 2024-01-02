@@ -5,6 +5,7 @@
 #include "BigInt.hpp"
 #include "CharConv.hpp"
 #include "Chrono.hpp"
+#include "CSVParser.hpp"
 #include "Enumerate.hpp"
 #include "EventLoop.hpp"
 #include "FixedMatrix.hpp"
@@ -26,6 +27,7 @@
 #include "Set.hpp"
 #include "SortedVector.hpp"
 #include "Stack.hpp"
+#include "Stream.hpp"
 #include "String.hpp"
 #include "StringLiteral.hpp"
 #include "Test.hpp"
@@ -40,7 +42,9 @@
 namespace ARLib {
 size_t test_partial_func(int a, String b, Tuple<String, int> c);
 #define TEST_DECL_NAMED(name, lambda, ...)                                                                             \
-    Test<decltype(lambda), ##__VA_ARGS__> name { lambda }
+    Test<decltype(lambda), ##__VA_ARGS__> name {                                                                       \
+        lambda                                                                                                         \
+    }
 #define TEST_DECL(type, ...) Test<type, ##__VA_ARGS__>
 template <typename T, typename... Args>
 bool decl_and_run(T lambda, Args... args) {

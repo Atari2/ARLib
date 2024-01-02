@@ -193,6 +193,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${ARLIB_SOURCE_DIR}/Regex.cpp
     ${ARLIB_SOURCE_DIR}/SourceLocation.cpp
     ${ARLIB_SOURCE_DIR}/StackTrace.cpp
+    ${ARLIB_SOURCE_DIR}/Stream.cpp
     ${ARLIB_SOURCE_DIR}/String.cpp
     ${ARLIB_SOURCE_DIR}/StringView.cpp
     ${ARLIB_SOURCE_DIR}/ThreadBase.cpp
@@ -281,6 +282,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/Span.hpp
     ${ARLIB_INCLUDE_DIR}/Stack.hpp
     ${ARLIB_INCLUDE_DIR}/StackTrace.hpp
+    ${ARLIB_INCLUDE_DIR}/Stream.hpp
     ${ARLIB_INCLUDE_DIR}/String.hpp
     ${ARLIB_INCLUDE_DIR}/StringLiteral.hpp
     ${ARLIB_INCLUDE_DIR}/StringView.hpp

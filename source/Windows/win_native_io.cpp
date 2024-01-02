@@ -50,6 +50,25 @@ bool WriteChar(char c, FILE* fp) {
     [[maybe_unused]] DWORD nBytesWritten{};
     return GenericWrite(hdl, fc, sizeof(char), &nBytesWritten);
 }
+/*
+* 
+File access  Meaning	        Explanation	                    Action if file      Action if file
+mode string                                                     already exists      does not exist
+
+"r"	         read	            Open a file for reading	        read from start	    return NULL and set error
+"w"	         write	            Create a file for writing	    destroy contents	create new
+"a"	         append	            Append to a file	            write to end	    create new
+"r+"	     read extended	    Open a file for read/write	    read from start	    return NULL and set error
+"w+"	     write extended	    Create a file for read/write	destroy contents	create new
+"a+"	     append extended	Open a file for read/write	    write to end	    create new
+
+File access mode flag "b" can optionally be specified to open a file in binary mode.
+File access mode flag "x" can optionally be appended to "w" or "w+" specifiers. This flag forces the function to fail if the file exists, instead of overwriting it.
+
+https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+"x" corresponds to CREATE_NEW which "Creates a new file, only if it does not already exist".
+*/
 static Pair<DWORD, DWORD> ModeToAccessFlags(const char* mode) {
     size_t len          = ARLib::strlen(mode);
     DWORD desiredAccess = 0;
@@ -65,7 +84,7 @@ static Pair<DWORD, DWORD> ModeToAccessFlags(const char* mode) {
                 creat = OPEN_EXISTING;
                 break;
             case 'b':
-                // no effect
+                // no effect at createfile level
                 break;
             case 'a':
                 desiredAccess |= FILE_APPEND_DATA;
@@ -75,7 +94,7 @@ static Pair<DWORD, DWORD> ModeToAccessFlags(const char* mode) {
                 creat = CREATE_NEW;
                 break;
             case '+':
-                // update?
+                desiredAccess |= (GENERIC_WRITE | GENERIC_READ);
                 break;
             default:
                 break;
@@ -112,7 +131,8 @@ static int ModeToFlags(const char* mode) {
                 flags |= _O_APPEND;
                 break;
             case '+':
-                // update?
+                flags = (flags & ~(_O_RDONLY | _O_WRONLY));
+                flags |= _O_RDWR;
                 break;
             default:
                 break;

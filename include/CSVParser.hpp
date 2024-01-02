@@ -2,7 +2,7 @@
 
 #include "Path.hpp"
 #include "Vector.hpp"
-#include "File.hpp"
+#include "Stream.hpp"
 #include "Result.hpp"
 #include "SharedPtr.hpp"
 namespace ARLib {
@@ -38,7 +38,7 @@ class CSVRow {
     friend struct PrintInfo<CSVRow>;
     Vector<String> m_row;
     WeakPtr<Optional<CSVHeader>> m_header;
-    static CSVRowResult parse_row(File& line, String&& leftover, char sep, const CSVParser& parser);
+    static CSVRowResult parse_row(CharacterStream* line, String&& leftover, char sep, const CSVParser& parser);
     CSVRow(Vector<String>&& row, WeakPtr<Optional<CSVHeader>>&& ptr) : m_row(move(row)), m_header{ move(ptr) } {}
     public:
     const String& operator[](size_t index) const { return m_row[index]; }
@@ -53,15 +53,20 @@ class CSVRow {
 };
 class CSVParser {
     SharedPtr<Optional<CSVHeader>> m_header;
-    File m_file;
+    UniquePtr<CharacterStream> m_stream;
     char m_separator;
     bool m_has_header;
     String m_leftover;
 
     public:
     CSVParser(Path p) :
-        m_header{ Optional<CSVHeader>{} }, m_file{ move(p) }, m_separator{ ',' }, m_has_header{ false }, m_leftover{} {}
-    DiscardResult<FileError> open();
+        m_header{ Optional<CSVHeader>{} }, m_stream{ new FileStream{ move(p) } }, m_separator{ ',' },
+        m_has_header{ false },
+        m_leftover{} {}
+    CSVParser(String p) :
+    m_header{ Optional<CSVHeader>{} }, m_stream{ new StringStream{ move(p) } }, m_separator{ ',' },
+    m_has_header{ false }, m_leftover{} {}
+    DiscardResult<FileError> open() { return m_stream->open(); }
     void with_header(bool has_header) { m_has_header = move(has_header); }
     void with_separator(char separator) { m_separator = separator; }
     CSVResult read_row();
