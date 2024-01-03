@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.hpp"
+#include "Result.hpp"
 namespace ARLib {
 namespace Random {
     // minimal PCG 32-bit implementation
@@ -24,6 +25,12 @@ namespace Random {
         static uint32_t random_s();
         uint32_t bounded_random(uint32_t bound);
         static uint32_t bounded_random_s(uint32_t bound);
+    };
+
+    struct HardwareGen {
+        static Result<uint16_t> random_16();
+        static Result<uint32_t> random_32();
+        static Result<uint64_t> random_64();
     };
 }    // namespace Random
 }    // namespace ARLib

@@ -1,6 +1,7 @@
 #include "Random.hpp"
 
 #include "Chrono.hpp"
+#include <immintrin.h>
 
 #ifdef COMPILER_MSVC
     #pragma warning(push)
@@ -56,6 +57,33 @@ namespace Random {
     }
     uint32_t PCG::bounded_random_s(uint32_t bound) {
         return static_state().bounded_random(bound);
+    }
+    Result<uint64_t> HardwareGen::random_64() {
+        unsigned long long result{ 0 };
+        constexpr size_t max_retries = 10;
+        for (size_t i = 0; i < max_retries; ++i) {
+            int success = _rdseed64_step(&result);
+            if (success == 1) { return static_cast<uint64_t>(result); }
+        }
+        return "Hardware failed to generate random number 10 times"_s;
+    }
+    Result<uint32_t> HardwareGen::random_32() {
+        uint32_t result{ 0 };
+        constexpr size_t max_retries = 10;
+        for (size_t i = 0; i < max_retries; ++i) {
+            int success = _rdseed32_step(&result);
+            if (success == 1) { return result; }
+        }
+        return "Hardware failed to generate random number 10 times"_s;
+    }
+    Result<uint16_t> HardwareGen::random_16() {
+        uint16_t result{ 0 };
+        constexpr size_t max_retries = 10;
+        for (size_t i = 0; i < max_retries; ++i) {
+            int success = _rdseed16_step(&result);
+            if (success == 1) { return result; }
+        }
+        return "Hardware failed to generate random number 10 times"_s;
     }
 }    // namespace Random
 }    // namespace ARLib

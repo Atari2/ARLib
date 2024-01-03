@@ -426,15 +426,16 @@ if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 		/w14928
 		)
 	if (ON_CLANG)
-	list(APPEND ARLIB_COMPILE_WARNINGS
-			-Wno-c++17-extensions
-			-Wno-deprecated-declarations
-		)
+	    list(APPEND ARLIB_COMPILE_WARNINGS
+			    -Wno-c++17-extensions
+			    -Wno-deprecated-declarations
+		    )
+        list(APPEND ARLIB_COMPILE_OPTIONS -mrdseed)
 	endif()
 	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 else()
 	add_subdirectory(ASM_GCC)
-	list(APPEND ARLIB_COMPILE_OPTIONS -msse4.1 ${AVX_FLAGS} -fno-exceptions)
+	list(APPEND ARLIB_COMPILE_OPTIONS  -mrdseed -msse4.1 ${AVX_FLAGS} -fno-exceptions)
 	if (DEBUG_BUILD AND NOT ON_WINDOWS)
 		list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
 		list(APPEND ARLIB_LINK_OPTIONS ${ARLIB_SANITIZERS_FLAGS})

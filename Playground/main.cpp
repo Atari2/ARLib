@@ -2,6 +2,7 @@
 #include "File.hpp"
 #include "FileSystem.hpp"
 #include "Printer.hpp"
+#include "Random.hpp"
 
 using namespace ARLib;
 int main(int argc, char** argv) {
@@ -20,5 +21,7 @@ e:f:g
     for (const auto& row : rows) {
         Printer::print(R"("{}" "{}" "{}")", row["this"_sv].must(), row["barely"_sv].must(), row["works"_sv].must());
     }
+    auto v = Random::HardwareGen::random_64().must();
+    Printer::print("{}", v);
     return 0;
 }
