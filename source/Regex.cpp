@@ -7,7 +7,7 @@ namespace ARLib {
 constexpr static Array re_tok_chars{ '.', '(', ')', '[', ']', '|', '$', '^', '?', '*', '+' };
 constexpr static Array re_esc_chars{ 's', 'w', 'W', 'd' };
 
-constexpr static inline bool REGEX_DEBUG = true;
+constexpr static inline bool REGEX_DEBUG = false;
 template <typename Func>
 void regex_debug_print(Func&& func) {
     if constexpr (REGEX_DEBUG) { func(); }

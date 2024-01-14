@@ -40,7 +40,7 @@ class Regex {
     private:
     using RegexVariant = Variant<char, RegexToken, EscapedRegexToken, Group, CharGroup>;
     public:
-    using ReTokVector  = UniquePtr<Vector<RegexVariant>>;
+    using ReTokVector = UniquePtr<Vector<RegexVariant>>;
     struct Group {
         size_t m_group_number;
         ReTokVector m_group_regex{};
@@ -49,6 +49,7 @@ class Regex {
         ReTokVector m_char_group{};
     };
     private:
+    friend struct PrintInfo<Regex>;
     ReTokVector m_regex;
 
     static Result<Regex, RegexParseError> parse_regex(String&&);
@@ -72,6 +73,12 @@ class Regex {
 inline Regex operator""_re(const char* regex, size_t len) {
     return MUST(Regex::create(StringView{ regex, len }));
 }
+template <>
+struct PrintInfo<Regex> {
+    const Regex& m_regex;
+    PrintInfo(const Regex& regex) : m_regex(regex) {}
+    String repr() const { return print_conditional(m_regex.m_regex); }
+};
 template <>
 struct PrintInfo<Regex::Group> {
     const Regex::Group& m_group;
