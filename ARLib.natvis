@@ -356,10 +356,12 @@
 		<Expand>
 			<Item Name="[rows]">rows()</Item>
 			<Item Name="[cols]">cols()</Item>
-			<IndexListItems>
-				<Size>rows()</Size>
-				<ValueNode>data()[$i]</ValueNode>
-			</IndexListItems>
+			<ArrayItems>
+				<Direction>Forward</Direction>
+				<Rank>2</Rank>
+				<Size>$i == 0 ? rows() : cols()</Size>
+				<ValuePointer>data()</ValuePointer>
+			</ArrayItems>
 		</Expand>
 	</Type>
 	<Type Name="ARLib::HashTable&lt;*&gt;">

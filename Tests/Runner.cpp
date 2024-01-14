@@ -834,6 +834,23 @@ TEST(ARLibTests, MatrixTests) {
     double val = mat[{ 5_sz, 5_sz }];
     EXPECT_EQ(val, 5.0 + 5.0 * 10.0 - 1.0);
 }
+TEST(ARLibTests, MoreMatrixTests) {
+    Matrix2D mat{
+        {{ 1, 2, 3, 4 }, { 5, 6, 7, 8 }}
+    };
+    Array expected{ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
+    auto expectedb = expected.begin();
+    for (auto& row : mat) {
+        for (const auto val : row) { EXPECT_EQ(val, *expectedb++); }
+    }
+    Array expected2{ 1.0, 5.0, 2.0, 6.0, 3.0, 7.0, 4.0, 8.0 };
+    auto expected2b = expected2.begin();
+    for (auto coliter = mat.begin<MatIterType::ByCol>(); coliter != mat.end<MatIterType::ByCol>(); ++coliter) {
+        for (const auto& v : *coliter) { EXPECT_EQ(v, *expected2b++); }
+    }
+    expectedb = expected.begin();
+    for (const auto& v : mat.cartesian()) { EXPECT_EQ(v, *expectedb++); }
+}
 TEST(ARLibTests, ArgParserTests) {
     const char* argv[]{ "ARLibPlayground.exe", "-b", "-t", "help.txt", "-n", "10", "-un", "200", "-v", "3.5" };
     ArgParser parser{ sizeof_array(argv), argv };
