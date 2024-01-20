@@ -211,9 +211,12 @@ concept Swappable = requires(T a, T b) {
                         { swap(a, b) } -> SameAs<void>;
                     };
 
+template <typename T>
+concept NonVoid = !IsVoidV<T>;
+
 template <typename Cont>
 concept Container = requires(Cont container) {
-    { container[0ull] };
+    { container[0ull] } -> NonVoid;
     { container.size() } -> SameAs<size_t>;
     { container.set_size(0ull) };
 } && Reservable<Cont>;
