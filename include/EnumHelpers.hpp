@@ -8,6 +8,7 @@
 #include "PrintInfo.hpp"
 #include "StringView.hpp"
 #include "GenericView.hpp"
+#include "Optional.hpp"
 namespace ARLib {
 template <typename T>
 struct TagType {};
@@ -128,8 +129,8 @@ namespace EnumHelpers {
     };
     template <typename T>
     concept EnumSupportsMap = Enum<T> && requires {
-                                             { EnumMapProvider<T>{} };
-                                         };
+        { EnumMapProvider<T>{} };
+    };
     template <EnumSupportsMap T>
     class EnumIterator {
         size_t index                            = 0;
@@ -202,6 +203,11 @@ String enum_to_str(T e) {
     return String{ enum_to_str_view<SearchType, T>(e) };
 }
 template <EnumHelpers::EnumSupportsMap T>
+Optional<T> enum_parse(StringView v) {
+    constexpr const auto& enum_map = EnumHelpers::EnumMapProvider<T>::enum_array;
+    return enum_map.iter().find_if([v](const auto& p) { return p.first() == v; }).map([](auto&& p) { return p.second(); });
+}
+template <EnumHelpers::EnumSupportsMap T>
 struct ForEachEnum {
     constexpr auto begin() const { return EnumHelpers::EnumIterator<T>{ 0 }; }
     constexpr auto end() const {
@@ -244,20 +250,34 @@ struct PrintInfo<E> {
     ENUM_TO_STR(en, __VA_ARGS__)
 
 #define BITFIELD_ENUM_OP_OR(E)                                                                                         \
-    constexpr auto operator|(E self, E other) { return UpCast<E>(ToUnderlying(self) | ToUnderlying(other)); }
+    constexpr auto operator|(E self, E other) {                                                                        \
+        return UpCast<E>(ToUnderlying(self) | ToUnderlying(other));                                                    \
+    }
 #define BITFIELD_ENUM_OP_AND(E)                                                                                        \
-    constexpr auto operator&(E self, E other) { return UpCast<E>(ToUnderlying(self) & ToUnderlying(other)); }
+    constexpr auto operator&(E self, E other) {                                                                        \
+        return UpCast<E>(ToUnderlying(self) & ToUnderlying(other));                                                    \
+    }
 
 #define BITFIELD_ENUM_OP_NONE(E)                                                                                       \
-    constexpr auto operator!(E self) { return self == E::None; }
+    constexpr auto operator!(E self) {                                                                                 \
+        return self == E::None;                                                                                        \
+    }
 #define BITFIELD_ENUM_OP_LOG_AND(E)                                                                                    \
-    constexpr auto operator&&(E self, E other) { return ToUnderlying(self) && ToUnderlying(other); }
+    constexpr auto operator&&(E self, E other) {                                                                       \
+        return ToUnderlying(self) && ToUnderlying(other);                                                              \
+    }
 #define BITFIELD_ENUM_OP_LOG_OR(E)                                                                                     \
-    constexpr auto operator||(E self, E other) { return ToUnderlying(self) || ToUnderlying(other); }
+    constexpr auto operator||(E self, E other) {                                                                       \
+        return ToUnderlying(self) || ToUnderlying(other);                                                              \
+    }
 #define BITFIELD_ENUM_OP_XOR(E)                                                                                        \
-    constexpr auto operator^(E self, E other) { return UpCast<E>(ToUnderlying(self) ^ ToUnderlying(other)); }
+    constexpr auto operator^(E self, E other) {                                                                        \
+        return UpCast<E>(ToUnderlying(self) ^ ToUnderlying(other));                                                    \
+    }
 #define BITFIELD_ENUM_OP_NOT(E)                                                                                        \
-    constexpr auto operator~(E self) { return UpCast<E>(~ToUnderlying(self)); }
+    constexpr auto operator~(E self) {                                                                                 \
+        return UpCast<E>(~ToUnderlying(self));                                                                         \
+    }
 
 #define MAKE_BITFIELD_ENUM(E)                                                                                          \
     BITFIELD_ENUM_OP_OR(E)                                                                                             \
