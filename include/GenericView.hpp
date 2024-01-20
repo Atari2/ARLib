@@ -60,6 +60,7 @@ class IteratorView {
     Iter m_end;
     using ItemType             = RemoveReferenceT<IteratorInputType<Iter>>;
     using OutputType           = RemoveReferenceT<IteratorOutputType<Iter>>;
+    using FindOutputType       = IteratorOutputType<Iter>;
     ItemType* m_stolen_storage = nullptr;
     ItemType* release_storage() {
         ItemType* storage = m_stolen_storage;
@@ -174,8 +175,8 @@ class IteratorView {
     }
     template <typename T2>
     requires requires {
-                 { T2{ declval<IteratorOutputType<Iter>>() } } -> SameAs<T2>;
-             }
+        { T2{ declval<IteratorOutputType<Iter>>() } } -> SameAs<T2>;
+    }
     auto map() {
         auto conversion_func = [](const auto& v) {
             return T2{ v };
@@ -227,13 +228,13 @@ class IteratorView {
     }
     template <typename Functor>
     requires CallableWithRes<Functor, OutputType, bool>
-    constexpr Optional<OutputType> find_if(Functor f) {
+    constexpr Optional<FindOutputType> find_if(Functor f) {
         for (auto it = m_begin; it != m_end; ++it) {
             if (invoke(Forward<Functor>(f), *it)) return { *it };
         }
         return {};
     }
-    constexpr Optional<OutputType> find(const OutputType& val) {
+    constexpr Optional<FindOutputType> find(const OutputType& val) {
         for (auto it = m_begin; it != m_end; ++it) {
             if (*it == val) return { *it };
         }

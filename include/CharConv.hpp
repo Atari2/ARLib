@@ -68,6 +68,9 @@ inline Result<uint64_t> StrToU64(const String& str, int base = 10) {
 inline Result<int> StrToInt(const String& str, int base = 10) {
     return StrViewToInt(str.view(), base);
 }
+inline Result<int> StrToDecInt(const String& str) {
+    return StrViewToInt(str.view(), 10);
+}
 inline Result<unsigned int> StrToUInt(const String& str, int base = 10) {
     return StrViewToUInt(str.view(), base);
 }
@@ -96,11 +99,11 @@ namespace cxpr {
         switch (base) {
             case 2:
                 return cxpr::StrViewToU64Binary(view.substringview(cur_index, max_index));
-            case 8:    
+            case 8:
                 return cxpr::StrViewToU64Octal(view.substringview(cur_index, max_index));
-            case 10:   
+            case 10:
                 return cxpr::StrViewToU64Decimal(view.substringview(cur_index, max_index));
-            case 16:   
+            case 16:
                 return cxpr::StrViewToU64Hexadecimal(view.substringview(cur_index, max_index));
             default:
                 // bases other than 2, 8, 10 and 16 take the slow path
@@ -257,7 +260,7 @@ namespace cxpr {
     inline unsigned int StrToUInt(const String& str, int base = 10) {
         return static_cast<unsigned int>(cxpr::StrViewToU64(str.view(), base));
     }
-}
+}    // namespace cxpr
 template <SupportedBase Base = SupportedBase::Decimal, bool WantsBase = false>
 String IntToStr(Integral auto value) {
     auto make_unsigned = [](auto v) {

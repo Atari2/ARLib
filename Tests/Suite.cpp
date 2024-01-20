@@ -58,7 +58,7 @@ bool run_all_legacy_tests() {
         RETURN_IF_NOT_EQ(opt.empty(), true)
         opt.emplace("hello", 5ull);
         RETURN_IF_NOT_EQ(opt.has_value(), true)
-        delete opt.detach();
+        opt.evict();
         RETURN_IF_NOT_EQ(opt.empty(), true)
         return true;
     };

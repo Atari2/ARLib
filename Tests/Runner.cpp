@@ -103,7 +103,7 @@ TEST(ARLibTests, OptionalTests) {
     EXPECT_EQ(opt.empty(), true);
     opt.emplace("hello", 5ull);
     EXPECT_EQ(opt.has_value(), true);
-    delete opt.detach();
+    opt.evict();
     EXPECT_EQ(opt.empty(), true);
     auto str  = Optional<String>{}.value_or("Hello world"_s);
     auto str2 = Optional<String>{ "hello cpp"_s }.value_or("shouldn't get returned"_s);
@@ -1417,12 +1417,43 @@ e:f:g
     auto rows = parser.read_all().must().iter().map(&CSVResult::must).collect<Vector>();
     Array<Tuple<StringView, StringView, StringView>, 3> expected_rows{
         Tuple{"a"_sv,  "b\r\nc"_sv, "d"_sv},
-        Tuple{ "e"_sv, "f"_sv,    "g"_sv},
-        Tuple{ "h"_sv, "j"_sv,    "k"_sv}
+        Tuple{ "e"_sv, "f"_sv,      "g"_sv},
+        Tuple{ "h"_sv, "j"_sv,      "k"_sv}
     };
     for (const auto& [i, row] : rows.iter().enumerate()) {
         EXPECT_EQ(expected_rows[i].get<0>(), row["this"_sv].must());
         EXPECT_EQ(expected_rows[i].get<1>(), row["barely"_sv].must());
         EXPECT_EQ(expected_rows[i].get<2>(), row["works"_sv].must());
     }
+}
+MAKE_FANCY_ENUM(TestEnum, uint64_t, A, B, C);
+TEST(ARLibTests, FancyEnumTest) {
+    static_assert(enum_to_str_view(TestEnum::A) == "A"_sv);
+    static_assert(enum_to_str_view(TestEnum::B) == "B"_sv);
+    static_assert(enum_to_str_view(TestEnum::C) == "C"_sv);
+    constexpr Array<TestEnum, enum_size<TestEnum>()> expected_enums{ TestEnum::A, TestEnum::B, TestEnum::C };
+    for (auto [i, en] : for_each_enum<TestEnum>().iter().enumerate()) { EXPECT_EQ(en, expected_enums[i]); }
+    auto v = enum_parse<TestEnum>("A"_sv);
+    EXPECT_TRUE(v.has_value());
+    EXPECT_EQ(*v, TestEnum::A);
+}
+TEST(ARLibTests, OptionalRefTest) {
+    size_t i = 22;
+    size_t a = 33;
+    Optional<size_t&> opti{ i };
+    EXPECT_TRUE(opti.has_value());
+    EXPECT_EQ(*opti, 22);
+    opti = a;
+    EXPECT_EQ(i, 22);
+    EXPECT_EQ(*opti, 33);
+    const auto& b = Optional<size_t&>{ i }.value_or(a);
+    EXPECT_EQ(&b, &i);
+    EXPECT_EQ(b, i);
+    Vector<String> v{ "1"_s, "2"_s, "3"_s };
+    auto res1 = v.iter().find("3"_s);
+    auto res2 = v.iter().map(StrToDecInt).map(&Result<int>::must).find(2);
+    static_assert(SameAs<decltype(res1), Optional<String&>>); // find on an owned vector with long lifetime should return an lvalue reference
+    static_assert(SameAs<decltype(res2), Optional<int>>); // find on a mapping should return a lvalue.
+    EXPECT_EQ(res1, "3"_s);
+    EXPECT_EQ(res2, 2);
 }
