@@ -132,7 +132,7 @@ bool run_all_legacy_tests() {
     };
     auto fill_test = []() -> bool {
         Vector<String> vec{};
-        fill_with<String, Vector<String>>(vec, 10, 5ull, 'a');
+        fill_with(vec, 10, 5ull, 'a');
         RETURN_IF_NOT_EQ(vec.size(), 10ull)
         for (auto& str : vec) { RETURN_IF_NOT_EQ(str, "aaaaa"_s) }
         return true;

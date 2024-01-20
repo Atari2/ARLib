@@ -211,12 +211,12 @@ concept Swappable = requires(T a, T b) {
                         { swap(a, b) } -> SameAs<void>;
                     };
 
-template <typename Cont, typename T>
+template <typename Cont>
 concept Container = requires(Cont container) {
-                        { container[0ull] } -> SameAs<T&>;
-                        { container.size() } -> SameAs<size_t>;
-                        { container.set_size(0ull) };
-                    } && Reservable<Cont>;
+    { container[0ull] };
+    { container.size() } -> SameAs<size_t>;
+    { container.set_size(0ull) };
+} && Reservable<Cont>;
 
 template <typename Cont>
 concept CanKnowSize = requires(Cont container) {

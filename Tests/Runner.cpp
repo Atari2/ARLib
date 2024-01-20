@@ -191,7 +191,7 @@ TEST(ARLibTests, PartialFuncTests) {
 }
 TEST(ARLibTests, FillTest) {
     Vector<String> vec{};
-    fill_with<String, Vector<String>>(vec, 10, 5ull, 'a');
+    fill_with(vec, 10, 5ull, 'a');
     EXPECT_EQ(vec.size(), 10ull);
     for (auto& str : vec) { EXPECT_EQ(str, "aaaaa"_s); }
 }

@@ -215,9 +215,7 @@ void sort(C& cont) {
     auto begin = cont.begin();
     auto end   = cont.end();
     if (begin == end) return;    // empty
-    quicksort_internal(begin, end - 1,[](const auto& a, const auto& b) {
-        return a <=> b;
-    });
+    quicksort_internal(begin, end - 1, [](const auto& a, const auto& b) { return a <=> b; });
 }
 template <Iterable C, typename Functor>
 void sort(C& cont, Functor&& func) {
@@ -272,7 +270,11 @@ constexpr auto basic_growth(Sized auto requested_size) {
         return requested_size + 2048;
 }
 size_t prime_generator(size_t n);
-template <typename T, Container<T> Cont, size_t N>
+
+template <Container Cont>
+using ContainerTypeImpl = RemoveCvRefT<decltype(declval<Cont>()[0ull])>;
+
+template <Container Cont, size_t N, typename T = ContainerTypeImpl<Cont>>
 constexpr void fill(Cont& container)
 requires DefaultConstructible<T>
 {
@@ -285,7 +287,7 @@ requires DefaultConstructible<T>
         for (size_t i = prev_size; i < N; i++) container[i] = {};
     }
 }
-template <typename T, Container<T> Cont>
+template <Container Cont, typename T = ContainerTypeImpl<Cont>>
 constexpr void fill(Cont& container, size_t num)
 requires DefaultConstructible<T>
 {
@@ -298,7 +300,7 @@ requires DefaultConstructible<T>
         for (size_t i = prev_size; i < num; i++) container[i] = {};
     }
 }
-template <typename T, Container<T> Cont, typename... Args>
+template <Container Cont, typename T = ContainerTypeImpl<Cont>, typename... Args>
 constexpr void fill_with(Cont& container, size_t num, Args... args)
 requires MoveAssignable<T> && Constructible<T, Args...>
 {
