@@ -36,20 +36,20 @@ concept ConvertibleTo = ConvertibleV<From, To> && requires(AddRvalueReferenceT<F
 
 template <typename Cls, typename... Args>
 concept Constructible = requires(Args&&... args) {
-                            { Cls{ ForwardTrait<Args>(args)... } } -> SameAsCvRef<Cls>;
-                        };
+    { Cls{ ForwardTrait<Args>(args)... } } -> SameAsCvRef<Cls>;
+};
 template <typename Cls>
 concept DefaultConstructible = requires() {
-                                   { Cls{} } -> SameAsCvRef<Cls>;
-                               };
+    { Cls{} } -> SameAsCvRef<Cls>;
+};
 template <typename Cls>
 concept MoveConstructible = requires(Cls&& a) {
-                                { Cls{ ForwardTrait<Cls>(a) } } -> SameAsCvRef<Cls>;
-                            };
+    { Cls{ ForwardTrait<Cls>(a) } } -> SameAsCvRef<Cls>;
+};
 template <typename Cls>
 concept CopyConstructible = requires(const Cls& a) {
-                                { Cls{ a } } -> SameAsCvRef<Cls>;
-                            };
+    { Cls{ a } } -> SameAsCvRef<Cls>;
+};
 
 template <typename Cls>
 concept TriviallyConstructible = requires { Supports<TriviallyConstructibleV<Cls>>::value; };
@@ -96,20 +96,20 @@ concept TriviallyCopyAssignable = requires { Supports<TriviallyCopyAssignableV<C
 
 template <typename T>
 concept Incrementable = requires(T a) {
-                            { ++a };
-                            { a++ };
-                        };
+    { ++a };
+    { a++ };
+};
 
 template <typename T>
 concept Decrementable = requires(T a) {
-                            { --a };
-                            { a-- };
-                        };
+    { --a };
+    { a-- };
+};
 
 template <typename T>
 concept Dereferencable = requires(T a) {
-                             { *a };
-                         };
+    { *a };
+};
 
 template <typename T>
 concept IteratorConcept = Incrementable<T> && Decrementable<T> && Dereferencable<T>;
@@ -119,80 +119,80 @@ concept ForwardIterator = Incrementable<T> && Dereferencable<T>;
 
 template <typename T>
 concept EqualityComparable = requires(T a, T b) {
-                                 { a == b } -> ConvertibleTo<bool>;
-                                 { a != b } -> ConvertibleTo<bool>;
-                             };
+    { a == b } -> ConvertibleTo<bool>;
+    { a != b } -> ConvertibleTo<bool>;
+};
 
 template <typename T, typename C>
 concept EqualityComparableWith = requires(T a, C b) {
-                                     { a == b } -> ConvertibleTo<bool>;
-                                     { a != b } -> ConvertibleTo<bool>;
-                                 };
+    { a == b } -> ConvertibleTo<bool>;
+    { a != b } -> ConvertibleTo<bool>;
+};
 
 template <typename T, typename HashCls = Hash<RemoveCvRefT<T>>>
 concept Hashable = requires(const T& a) {
-                       { HashCls{}(a) } -> SameAs<size_t>;
-                   } && EqualityComparable<T>;
+    { HashCls{}(a) } -> SameAs<size_t>;
+} && EqualityComparable<T>;
 
 template <typename T>
 concept LessComparable = requires(T a, T b) {
-                             { a < b } -> ConvertibleTo<bool>;
-                         };
+    { a < b } -> ConvertibleTo<bool>;
+};
 
 template <typename T>
 concept MoreComparable = requires(T a, T b) {
-                             { a > b } -> ConvertibleTo<bool>;
-                         };
+    { a > b } -> ConvertibleTo<bool>;
+};
 
 template <typename T>
 concept Orderable = requires(const T& a, const T& b) {
-                        { a <=> b } -> ConvertibleTo<Ordering>;
-                    };
+    { a <=> b } -> ConvertibleTo<Ordering>;
+};
 
 template <typename T>
 concept Iterable = requires(T a) {
-                       { a.begin() };
-                       { a.end() };
-                   };
+    { a.begin() };
+    { a.end() };
+};
 
 template <typename T>
 concept IterCanSubtractForSize = requires(T a, T b) {
-                                     { a - b } -> SameAs<size_t>;
-                                 };
+    { a - b } -> SameAs<size_t>;
+};
 template <typename T>
 concept EnumerableC = Iterable<T> && (requires(T a) {
-                                          { a.size() };
-                                      } || IterCanSubtractForSize<T>);
+                          { a.size() };
+                      } || IterCanSubtractForSize<T>);
 
 template <typename T>
 concept Stringable = requires(T a) {
-                         { a.to_string() };
-                     };
+    { a.to_string() };
+};
 
 template <typename T>
 concept Badgeable = requires(T a) {
-                        { Badge<T>{} } -> SameAs<Badge<T>>;
-                    };
+    { Badge<T>{} } -> SameAs<Badge<T>>;
+};
 
 template <typename C>
 concept Resizeable = requires(C a) {
-                         { a.resize() };
-                     };
+    { a.resize() };
+};
 
 template <typename C>
 concept Reservable = requires(C a) {
-                         { a.reserve(0ull) };
-                     };
+    { a.reserve(0ull) };
+};
 
 template <typename Callable, typename... Args>
 concept CallableWith = requires(Callable func, Args... args) {
-                           { invoke(func, args...) } -> SameAs<ResultOfT<Callable(Args...)>>;
-                       };
+    { invoke(func, args...) } -> SameAs<ResultOfT<Callable(Args...)>>;
+};
 
 template <typename Cls, typename F, typename Res, typename... Args>
 concept CallMembFnImpl = requires {
-                             { (declval<F>())(declval<Args>()...) } -> SameAs<Res>;
-                         };
+    { (declval<F>())(declval<Args>()...) } -> SameAs<Res>;
+};
 template <typename Cls, typename F, typename Res, typename MaybeClsPtr, typename... Args>
 struct CallMembFnImplStruct {
     constexpr static bool is_mbm_fn = IsSameV<MaybeClsPtr, Cls*> ? CallMembFnImpl<Cls, F, Res, Args...> :
@@ -203,13 +203,13 @@ concept CallMembFn = CallMembFnImplStruct<Cls, F, Res, Args...>::is_mbm_fn;
 
 template <typename Callable, typename Res, typename... Args>
 concept CallableWithRes = requires(Callable func, Args... args) {
-                              { invoke_r<Res>(func, args...) } -> SameAs<Res>;
-                          } || CallMembFn<MembFnCls<Callable>, MembFnFn<Callable>, Res, Args...>;
+    { invoke_r<Res>(func, args...) } -> SameAs<Res>;
+} || CallMembFn<MembFnCls<Callable>, MembFnFn<Callable>, Res, Args...>;
 
 template <typename T>
 concept Swappable = requires(T a, T b) {
-                        { swap(a, b) } -> SameAs<void>;
-                    };
+    { swap(a, b) } -> SameAs<void>;
+};
 
 template <typename T>
 concept NonVoid = !IsVoidV<T>;
@@ -223,15 +223,15 @@ concept Container = requires(Cont container) {
 
 template <typename Cont>
 concept CanKnowSize = requires(Cont container) {
-                          { container.size() } -> SameAs<size_t>;
-                      };
+    { container.size() } -> SameAs<size_t>;
+};
 
 template <typename Cont, typename T>
 concept Pushable = requires(Cont container, T elem) {
-                       { container.push_back(ForwardTrait<T>(elem)) } -> SameAs<void>;
-                   } || requires(Cont container, T elem) {
-                            { container.append(ForwardTrait<T>(elem)) } -> SameAs<void>;
-                        };
+    { container.push_back(ForwardTrait<T>(elem)) } -> SameAs<void>;
+} || requires(Cont container, T elem) {
+    { container.append(ForwardTrait<T>(elem)) } -> SameAs<void>;
+};
 
 template <typename T>
 concept Integral = IsIntegralV<T>;

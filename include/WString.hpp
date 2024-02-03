@@ -16,7 +16,7 @@ class Vector;
 class String;
 class StringView;
 class WString {
-    constexpr static size_t SMALL_STRING_CAP = 15;
+    constexpr static size_t SMALL_STRING_CAP = static_cast<size_t>(15 / sizeof(wchar_t));
     union {
         wchar_t m_local_buf[SMALL_STRING_CAP + 1] = { 0 };
         size_t m_allocated_capacity;

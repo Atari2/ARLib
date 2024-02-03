@@ -15,7 +15,7 @@ ConjunctionV<BoolConstant<sizeof(To) == sizeof(From)>, IsTriviallyCopiable<To>, 
 template <CopyAssignable T>
 constexpr void ConditionalBitCopy(T* dst, const T* src, size_t count) {
     if (!dst || !src || count == 0) return;
-    if constexpr (IsTriviallyCopiableV<T>) {
+    if constexpr (TriviallyCopyAssignableV<T>) {
         ARLib::memcpy(dst, src, count * sizeof(T));
     } else {
         for (size_t i = 0; i < count; i++) { dst[i] = src[i]; }
@@ -25,7 +25,7 @@ constexpr void ConditionalBitCopy(T* dst, const T* src, size_t count) {
 template <MoveAssignable T>
 constexpr void ConditionalBitMove(T* dst, T* src, size_t count) {
     if (!dst || !src || count == 0) return;
-    if constexpr (IsTriviallyCopiableV<T>) {
+    if constexpr (TriviallyMoveAssignableV<T>) {
         ARLib::memcpy(dst, src, count * sizeof(T));
     } else {
         for (size_t i = 0; i < count; i++) { dst[i] = ARLib::move(src[i]); }
