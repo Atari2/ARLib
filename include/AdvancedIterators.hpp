@@ -159,7 +159,13 @@ class Enumerator {
     explicit Enumerator(Rt* begin) : m_iter(begin), m_index(0) {}
     Enumerator(Rt* begin, size_t index) : m_iter(begin), m_index(index) {}
     Enumerator(Iter iter, size_t index) : m_iter(iter), m_index(index) {}
-    Unit operator*() { return { m_index, *m_iter }; }
+    Unit operator*() {
+        if constexpr (IsLvalueReferenceV<T>) {
+            return { m_index, *m_iter };
+        } else {
+            return { move(m_index), move(*m_iter) };
+        }
+    }
     Enumerator& operator++() {
         m_index++;
         m_iter++;

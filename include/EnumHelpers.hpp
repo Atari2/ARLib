@@ -161,6 +161,7 @@ namespace EnumHelpers {
             index--;
             return iter;
         }
+        constexpr size_t operator-(const EnumIterator& other) const { return index - other.index; }
     };
 }    // namespace EnumHelpers
 
@@ -214,6 +215,7 @@ struct ForEachEnum {
         return EnumHelpers::EnumIterator<T>{ EnumHelpers::EnumMapProvider<T>::enum_array.size() };
     }
     constexpr auto iter() const { return IteratorView{ *this }; }
+    constexpr auto size() const { return EnumHelpers::EnumMapProvider<T>::enum_array.size(); }
 };
 template <EnumHelpers::EnumSupportsMap T>
 constexpr auto for_each_enum() {
