@@ -4,7 +4,7 @@
 #include "Printer.hpp"
 #include "Stack.hpp"
 namespace ARLib {
-constexpr static Array re_tok_chars{ '.', '(', ')', '[', ']', '|', '$', '^', '?', '*', '+' };
+constexpr static Array re_tok_chars{ '.', '(', ')', '[', ']', '|', '$', '^', '?', '*', '+', '{', '}' };
 constexpr static Array re_esc_chars{ 's', 'w', 'W', 'd' };
 
 constexpr static inline bool REGEX_DEBUG = false;
@@ -14,13 +14,53 @@ void regex_debug_print(Func&& func) {
 }
 #define REGEX_DEBUG(format, ...) regex_debug_print([&]() { Printer::print(format, __VA_ARGS__); })
 
-static_assert(from_enum(RegexToken::Plus) + 1 == re_tok_chars.size());
+static_assert(enum_size<RegexToken>() == re_tok_chars.size());
 static_assert(from_enum(EscapedRegexToken::NumberChar) + 1 == re_esc_chars.size());
+static Result<Regex::CountToken, RegexParseError>
+parse_count_token(ARLib::Iterator<char>& it, ARLib::Iterator<char> end, size_t& index) {
+    // get stringview from current up until }
+    const char* start_ptr = it.operator->();
+    while (it != end) {
+        if (*it != '}') {
+            ++it;
+            ++index;
+        } else {
+            break;
+        }
+    }
+    if (it == end) { return RegexParseError{ "Invalid count"_s, index }; }
+    const char* end_ptr = it.operator->();
+    StringView view{ start_ptr, end_ptr };
+    Regex::CountToken tok{};
+
+    if (view.index_of(',') != StringView::npos) {
+        auto values = view.split(",");
+        if (values.size() != 2) { return RegexParseError{ "Count has more than 2 values"_s, index }; }
+        TRY_SET(min, StrViewToU64Decimal(values[0]).map_error([&](auto&& err) {
+            return RegexParseError{ err.error_string().str(), index };
+        }));
+        TRY_SET(max, StrViewToU64Decimal(values[1]).map_error([&](auto&& err) {
+            return RegexParseError{ err.error_string().str(), index };
+        }));
+        tok = Regex::CountToken{ .m_min = min, .m_max = max };
+    } else {
+        TRY_SET(count, StrViewToU64Decimal(view).map_error([&](auto&& err) {
+            return RegexParseError{ err.error_string().str(), index };
+        }));
+        tok = Regex::CountToken{ .m_min = count, .m_max = count };
+    }
+
+    // move it back so the parser can eat the }
+    --it;
+    --index;
+    return tok;
+}
 Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
     Regex::ReTokVector tokens{ new Vector<Regex::RegexVariant> };
     struct RegexState {
-        size_t in_group;     // TODO: change these to something that supports nesting
-        size_t in_square;    // TODO: change these to something that supports nesting
+        size_t in_group;
+        size_t in_square;
+        bool in_count;
         bool next_is_escaped;
     };
     auto it             = regex.begin();
@@ -36,6 +76,11 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
         if (state.in_square != 0) return current_chargroup.m_char_group;
         return group_stack.size() == 0 ? tokens : group_stack.peek().m_group_regex;
     };
+
+#define CHECK_VALIDITY(b, msg)                                                                                         \
+    {                                                                                                                  \
+        if (!(b)) { return RegexParseError{ String{ msg }, index }; }                                                  \
+    }
 
     while (it != end) {
         const char cur = *it;
@@ -57,7 +102,24 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
             if (auto fit = find(re_tok_chars, cur); fit != npos_) {
                 auto tok = to_enum<RegexToken>(fit);
                 switch (tok) {
+                    case RegexToken::OpenCurly:
+                        CHECK_VALIDITY(!state.in_count, "Invalid count");
+                        if (state.in_square != 0) {
+                            current_tokens()->emplace(cur);
+                        } else {
+                            state.in_count = true;
+                        }
+                        break;
+                    case RegexToken::CloseCurly:
+                        CHECK_VALIDITY(state.in_count, "Unmatched close count group");
+                        if (state.in_square != 0) {
+                            current_tokens()->emplace(cur);
+                        } else {
+                            state.in_count = false;
+                        }
+                        break;
                     case RegexToken::GroupOpen:
+                        CHECK_VALIDITY(!state.in_count, "Invalid count");
                         if (state.in_square != 0) {
                             current_tokens()->emplace(cur);
                         } else {
@@ -67,6 +129,7 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                         }
                         break;
                     case RegexToken::GroupClose:
+                        CHECK_VALIDITY(!state.in_count, "Invalid count");
                         {
                             if (state.in_square != 0) {
                                 current_tokens()->emplace(cur);
@@ -81,10 +144,12 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                         }
                         break;
                     case RegexToken::SquareOpen:
+                        CHECK_VALIDITY(!state.in_count, "Invalid count");
                         current_chargroup.m_char_group = UniquePtr{ new Vector<Regex::RegexVariant> };
                         state.in_square++;
                         break;
                     case RegexToken::SquareClose:
+                        CHECK_VALIDITY(!state.in_count, "Invalid count");
                         {
                             if (state.in_square == 0) {
                                 return RegexParseError{ "Unmatched square parenthesis"_s, index };
@@ -93,12 +158,19 @@ Result<Regex, RegexParseError> Regex::parse_regex(String&& regex) {
                             current_tokens()->emplace(move(current_chargroup));
                         }
                         break;
+
                     default:
                         current_tokens()->emplace(tok);
                         break;
                 }
             } else {
-                current_tokens()->emplace(cur);
+                if (state.in_count) {
+                    // attempt at parsing {1,2}
+                    TRY_SET(count_token, parse_count_token(it, end, index));
+                    current_tokens()->emplace(count_token);
+                } else {
+                    current_tokens()->emplace(cur);
+                }
             }
         }
 

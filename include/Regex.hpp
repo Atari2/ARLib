@@ -14,7 +14,7 @@ namespace ARLib {
 
 MAKE_FANCY_ENUM(
 RegexToken, size_t, Dot, GroupOpen, GroupClose, SquareOpen, SquareClose, Or, StartString, EndString, Lazy, Asterisk,
-Plus
+Plus, OpenCurly, CloseCurly
 );
 MAKE_FANCY_ENUM(EscapedRegexToken, size_t, WhiteSpace, WordChar, NotWordChar, NumberChar);
 struct RegexErrorInfo {
@@ -30,15 +30,16 @@ class RegexParseError : public ErrorBase {
     RegexParseError(RegexErrorInfo info) : m_info(move(info)){};
     const RegexErrorInfo& info() const { return m_info; }
     const String& message() const { return m_info.error_string; }
-    const String& error_string() const { return m_info.error_string; }
+    StringView error_string() const { return m_info.error_string; }
     size_t offset() const { return m_info.error_offset; }
 };
 class Regex {
     public:
     struct Group;
     struct CharGroup;
+    struct CountToken;
     private:
-    using RegexVariant = Variant<char, RegexToken, EscapedRegexToken, Group, CharGroup>;
+    using RegexVariant = Variant<char, RegexToken, EscapedRegexToken, Group, CharGroup, CountToken>;
     public:
     using ReTokVector = UniquePtr<Vector<RegexVariant>>;
     struct Group {
@@ -47,6 +48,10 @@ class Regex {
     };
     struct CharGroup {
         ReTokVector m_char_group{};
+    };
+    struct CountToken {
+        size_t m_min;
+        size_t m_max;
     };
     private:
     friend struct PrintInfo<Regex>;
@@ -93,6 +98,14 @@ struct PrintInfo<Regex::CharGroup> {
     const Regex::CharGroup& m_chargroup;
     PrintInfo(const Regex::CharGroup& chargroup) : m_chargroup(chargroup) {}
     String repr() const { return "CharGroup: { "_s + print_conditional(m_chargroup.m_char_group) + " }"_s; }
+};
+template <>
+struct PrintInfo<Regex::CountToken> {
+    const Regex::CountToken& m_count_token;
+    PrintInfo(const Regex::CountToken& count_token) : m_count_token(count_token) {}
+    String repr() const {
+        return "CountToken: { "_s + IntToStr(m_count_token.m_min) + ","_s + IntToStr(m_count_token.m_max) + " }"_s;
+    }
 };
 template <>
 struct PrintInfo<RegexParseError> {
