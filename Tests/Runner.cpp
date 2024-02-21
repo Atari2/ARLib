@@ -1218,7 +1218,7 @@ TEST(ARLibTests, ProcessTests) {
 TEST(ARLibTests, AsyncTest) {
     auto long_running_task = [](StringView str, Pair<int, int> pair) {
         ThisThread::sleep(2_sec);
-        return str.extract_string() + IntToStr(pair.first()) + IntToStr(pair.second());
+        return str.str() + IntToStr(pair.first()) + IntToStr(pair.second());
     };
     auto fut  = create_async_task(long_running_task, "Hello World"_sv, Pair{ 10, 20 });
     auto fut2 = create_async_task(&String::at, "Hello World"_s, 1_sz);
@@ -1452,8 +1452,34 @@ TEST(ARLibTests, OptionalRefTest) {
     Vector<String> v{ "1"_s, "2"_s, "3"_s };
     auto res1 = v.iter().find("3"_s);
     auto res2 = v.iter().map(StrToDecInt).map(&Result<int>::must).find(2);
-    static_assert(SameAs<decltype(res1), Optional<String&>>); // find on an owned vector with long lifetime should return an lvalue reference
-    static_assert(SameAs<decltype(res2), Optional<int>>); // find on a mapping should return a lvalue.
+    // find on an owned vector with long lifetime should return an lvalue reference
+    static_assert(SameAs<decltype(res1), Optional<String&>>);
+    // find on a mapping should return a lvalue.
+    static_assert(SameAs<decltype(res2), Optional<int>>);    
     EXPECT_EQ(res1, "3"_s);
     EXPECT_EQ(res2, 2);
+}
+TEST(ARLibTests, ResultTest) {
+    // verify that automatic conversion from B -> Result<X, A> where is A is base class of B doesn't cause object slicing
+    struct A : public ErrorBase {
+        constexpr A() = default;
+        StringView error_string() const override { return ""_sv; };
+        virtual bool test() const { return true; }
+        virtual ~A(){};
+    };
+    struct B final : public A {
+        constexpr B() = default;
+        bool test() const override { return false; }
+    };
+    Result<int, B> resb{ B{} };
+    EXPECT_TRUE(resb.is_error());
+    Result<int, A> resa{ resb.to_error() };
+    EXPECT_FALSE(resa.error_value().test());
+    resa.ignore_error();
+
+    // verify that this compiles and runs
+    Result<int, TestEnum> resc{ TestEnum::A };
+    EXPECT_TRUE(resc.is_error());
+    Result<int, Error> resd{ resc.to_error() };
+    EXPECT_EQ(resd.to_error()->error_string(), "A"_sv);
 }
