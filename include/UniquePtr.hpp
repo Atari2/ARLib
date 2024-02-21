@@ -111,7 +111,7 @@ struct PrintInfo<UniquePtr<T>> {
     PrintInfo(const UniquePtr<T>& ptr) : m_ptr(ptr) {}
     String repr() const {
         if constexpr (Printable<T>) {
-            return "UniquePtr { "_s + PrintInfo<T>{ *m_ptr.get() }.repr() + " }"_s;
+            return PrintInfo<T>{ *m_ptr.get() }.repr();
         } else {
             DemangledInfo info{ MANGLED_TYPENAME_TO_STRING(T) };
             return "UniquePtr { "_s + String{ info.name() } + " }"_s;
