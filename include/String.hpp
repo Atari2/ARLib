@@ -179,6 +179,7 @@ class String {
     [[nodiscard]] StringView view();
     [[nodiscard]] StringView view() const;
     [[nodiscard]] StringView substringview(size_t first = 0, size_t last = npos) const;
+    [[nodiscard]] operator StringView() const;
     // comparison operators
     [[nodiscard]] bool operator==(const String& other) const {
         if (other.m_size == m_size) { return strncmp(m_data_buf, other.m_data_buf, m_size) == 0; }
