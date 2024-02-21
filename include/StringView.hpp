@@ -126,8 +126,8 @@ class StringView {
     }
     [[nodiscard]] constexpr ConstIterator<char> begin() const { return ConstIterator<char>{ m_start }; }
     [[nodiscard]] constexpr ConstIterator<char> end() const { return ConstIterator<char>{ m_start + m_size }; }
-    [[nodiscard]] String extract_string() const { return { m_start, length() }; }
-    explicit operator String() const { return extract_string(); }
+    [[nodiscard]] String str() const { return { m_start, length() }; }
+    explicit operator String() const { return str(); }
     constexpr StringView substringview(size_t first = 0, size_t last = npos) const {
         size_t ssize = size();
         if (first > ssize) return {};
@@ -186,6 +186,6 @@ template <>
 struct PrintInfo<StringView> {
     const StringView& m_view;
     PrintInfo(const StringView& view) : m_view(view) {}
-    String repr() const { return m_view.extract_string(); }
+    String repr() const { return m_view.str(); }
 };
 }    // namespace ARLib

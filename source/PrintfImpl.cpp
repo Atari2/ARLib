@@ -21,7 +21,7 @@ class PrintfError : public ErrorBase {
     PrintfError(PrintfError&&) = default;
     PrintfError(PrintfErrorCodes code) : m_code{ code }, m_error(enum_to_str(code)) {}
     auto code() const { return m_code; }
-    const String& error_string() const override { return m_error; }
+    StringView error_string() const override { return m_error; }
 };
 /*
     double-precision	sign bit, 11-bit exponent, 52-bit significand
@@ -229,7 +229,7 @@ Result<String, PrintfError> format_integer_like_type(const PrintfTypes::PrintfIn
             formatted_arg = String{ info.width - formatted_arg.size() - prefix.size(), ' ' } + formatted_arg;
         }
     }
-    if (!prefix.empty()) { formatted_arg = prefix.extract_string() + formatted_arg; }
+    if (!prefix.empty()) { formatted_arg = prefix.str() + formatted_arg; }
     return formatted_arg;
 }
 template <FloatingPoint T>
@@ -619,7 +619,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
 
     for (auto& fdesc : fmtargs) {
         formatted_arg.clear();
-        output += format.substringview(prev_idx, fdesc.begin_idx).extract_string();
+        output += format.substringview(prev_idx, fdesc.begin_idx).str();
         prev_idx = fdesc.end_idx;
         using enum Type;
         if (fdesc.is_escape) {
@@ -782,7 +782,7 @@ PrintfResult printf_impl(PrintfResult& output, const char* fmt, va_list args) {
         }
         output += formatted_arg;
     }
-    output += format.substringview(prev_idx).extract_string();
+    output += format.substringview(prev_idx).str();
     return output;
 }
 PrintfResult _vsprintf(_In_z_ _Printf_format_string_ const char* fmt, va_list args) {

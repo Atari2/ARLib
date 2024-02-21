@@ -239,6 +239,22 @@ struct PrintInfo<E> {
     PrintInfo(E val) : m_val(val) {}
     String repr() const { return enum_to_str(m_val); }
 };
+template <FancyEnum T>
+class EnumError<T> final : public ErrorBase {
+    T m_value;
+    public:
+    EnumError(EnumError&&) = default;
+    EnumError(StringView val) : m_value{ enum_parse<T>(val) } { }
+    EnumError(T val) : m_value{ val } {}
+    T value() const { return m_value; }
+    StringView error_string() const override { return enum_to_str_view(m_value); }
+    bool operator==(const EnumError& other) const { return m_value == other.m_value; }
+    virtual ~EnumError() {}
+};
+template <FancyEnum T>
+struct IntoError<EnumError<T>, Error> {
+    static Error into(EnumError<T>&& en) { return Error{ en.error_string() }; }
+};
 }    // namespace ARLib
 #define ENUM_TO_STR(en, ...)                                                                                           \
     template <>                                                                                                        \

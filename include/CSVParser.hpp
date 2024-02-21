@@ -15,11 +15,11 @@ class CSVParseError : public ErrorBase {
 
     public:
     CSVParseError() = default;
-    CSVParseError(String error, size_t offset) : m_info{ move(error), offset } {};
+    CSVParseError(StringView error, size_t offset) : m_info{ error.str(), offset } {};
     CSVParseError(CSVErrorInfo info) : m_info(move(info)){};
     const CSVErrorInfo& info() const { return m_info; }
     const String& message() const { return m_info.error_string; }
-    const String& error_string() const { return m_info.error_string; }
+    StringView error_string() const { return m_info.error_string; }
     size_t offset() const { return m_info.error_offset; }
     virtual bool is_eof() const { return false; };
 };

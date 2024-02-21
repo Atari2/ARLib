@@ -21,7 +21,7 @@ class FileError : public ErrorBase {
     FileError() = default;
     FileError(String error, Path filename) : m_filename(move(filename)), m_error(move(error)) {}
     const Path& filename() const { return m_filename; }
-    const String& error_string() const override { return m_error; }
+    StringView error_string() const override { return m_error; }
 };
 class File {
     constexpr static inline size_t LINELENGTH_MAX = 1024;

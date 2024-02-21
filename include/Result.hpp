@@ -7,11 +7,13 @@
 #include "String.hpp"
 #include "UniquePtr.hpp"
 #include "PrintInfo.hpp"
+#include "EnumConcepts.hpp"
+#include "StringView.hpp"
 namespace ARLib {
 class ErrorBase {
     public:
     bool operator==(const ErrorBase& other) const { return error_string() == other.error_string(); }
-    virtual const String& error_string() const = 0;
+    virtual StringView error_string() const = 0;
     virtual ~ErrorBase()                       = default;
 };
 class Error : public ErrorBase {
@@ -19,13 +21,26 @@ class Error : public ErrorBase {
     String m_error_string;
     public:
     Error(Error&&) = default;
+    Error(StringView val) : m_error_string{ val.str() } {}
     Error(ConvertibleTo<String> auto val) : m_error_string{ move(val) } {}
     template <typename OtherError>
     requires DerivedFrom<OtherError, ErrorBase>
     Error(OtherError&& other) : m_error_string{ move(other.error_string()) } {}
-    const String& error_string() const override { return m_error_string; }
+    StringView error_string() const override { return m_error_string; }
     bool operator==(const Error& other) const { return m_error_string == other.m_error_string; }
     virtual ~Error() {}
+};
+template <DerivedFrom<ErrorBase> From, DerivedFrom<ErrorBase> To>
+struct IntoError {
+    static void into(From);    // purposefully returning void so the concept fails when a class isn't specializing this
+};
+template <typename OriginalError, typename OtherError>
+concept ImplIntoError = requires(OriginalError from) {
+    { IntoError<OriginalError, OtherError>::into(move(from)) } -> SameAs<OtherError>;
+};
+template <typename T>
+class EnumError {
+    // stub
 };
 #ifdef DEBUG
 class BacktraceError final : public Error {
@@ -54,18 +69,19 @@ struct EmplaceErr {};
 constexpr inline EmplaceOk emplace_ok{};
 constexpr inline EmplaceErr emplace_error{};
 enum class CurrType : bool { Ok, Err };
-template <typename ResT, typename ErrorType = Error>
-requires(DerivedFrom<ErrorType, ErrorBase>)
+template <typename ResT, typename EnumOrErrorType = Error>
+requires(DerivedFrom<EnumOrErrorType, ErrorBase> || FancyEnum<EnumOrErrorType>)
 class Result {
     constexpr static inline bool IsReference = IsLvalueReferenceV<ResT>;
     using Res                                = ConditionalT<IsReference, RefBox<RemoveReferenceT<ResT>>, ResT>;
+    using ErrorType = ConditionalT<FancyEnum<EnumOrErrorType>, EnumError<EnumOrErrorType>, EnumOrErrorType>;
     union {
         Res m_ok;
         UniquePtr<ErrorBase> m_err;
     };
     CurrType m_type : 1;
     template <typename A, typename B>
-    requires(DerivedFrom<B, ErrorBase>)
+    requires(DerivedFrom<B, ErrorBase> || FancyEnum<B>)
     friend class Result;
 
 
@@ -96,9 +112,37 @@ class Result {
     Result(OtherET&& val)
     requires(DerivedFrom<OtherET, ErrorBase>)
         : m_err{ new OtherET{ move(val) } }, m_type{ CurrType::Err } {}
+
+    // the following overloads may look very confusing
+    // which is why they're commented
+
+    // this overload is very important
+    // activates when ErrorType is a base class of OtherET
+    // if this is true, we can move the pointer and prevent object slicing
+    // without this overload the following one will be used and the derived class will be copied and slicing occurs
     template <typename OtherET>
     requires(DerivedFrom<OtherET, ErrorType>)
-    Result(UniquePtr<OtherET>&& err) : m_err{ err.release() }, m_type{ CurrType::Err } {}
+    Result(UniquePtr<OtherET>&& err) : m_type{ CurrType::Err } {
+        new (&m_err) UniquePtr<ErrorBase>{ err.release() };
+    }
+
+    // this overload activates when OtherET can be converted to ErrorType
+    // *but* is not a derived type, this means that we don't care about object slicing
+    // and we should instead just create a new error.
+    template <typename OtherET>
+    requires(ConvertibleV<OtherET, ErrorType> && !DerivedFrom<OtherET, ErrorType>)
+    Result(UniquePtr<OtherET>&& err) : m_type{ CurrType::Err } {
+        new (&m_err) UniquePtr<ErrorBase>{ new ErrorType{ move(*err) } };
+    }
+
+    // this overload activates when OtherET is unrelated to ErrorType but the IntoError "interface"
+    // can be used to convert from a type to the other
+    template <typename OtherET>
+    requires(ImplIntoError<OtherET, ErrorType> && !ConvertibleV<OtherET, ErrorType>)
+    Result(UniquePtr<OtherET>&& err) : m_type{ CurrType::Err } {
+        using IntoErrT = IntoError<OtherET, ErrorType>;
+        new (&m_err) UniquePtr<ErrorBase>{ new ErrorType{ IntoErrT::into(move(*err)) } };
+    }
     template <typename OtherET>
     requires(BaseOfV<ErrorType, OtherET>)
     Result(Result<ResT, OtherET>&& other) {
@@ -109,7 +153,14 @@ class Result {
         }
         m_type = other.type();
     }
-    Result(ErrorType&& val) : m_err{ new ErrorType{ move(val) } }, m_type{ CurrType::Err } {}
+    Result(EnumOrErrorType&& val)
+    requires FancyEnum<EnumOrErrorType>
+        : m_type{ CurrType::Err } {
+        new (&m_err) UniquePtr<ErrorBase>{ new ErrorType{ move(val) } };
+    }
+    Result(ErrorType&& val) : m_type{ CurrType::Err } {
+        new (&m_err) UniquePtr<ErrorBase>{ new ErrorType{ move(val) } };
+    }
     Result(Result&& other) noexcept : m_type(other.m_type) {
         if (other.m_type == CurrType::Ok) {
             new (&m_ok) Res{ move(other.m_ok) };
@@ -199,6 +250,27 @@ class Result {
             return invoke(Forward<Func>(f), move(to_ok()));
         }
     }
+    template <typename OtherError>
+    requires(ConvertibleTo<ErrorType, OtherError>)
+    Result<ResT, ErrorType> map_error() {
+        if (is_error()) {
+            auto perr = to_error();
+            OtherError err{ *perr };
+            return Result<ResT, ErrorType>{ err };
+        } else {
+            return to_ok();
+        }
+    }
+    template <typename Func>
+    requires(CallableWith<Func, ErrorType>)
+    Result<ResT, InvokeResultT<Func, ErrorType>> map_error(Func&& f) {
+        if (is_error()) {
+            auto perr = to_error();
+            return Result<ResT, InvokeResultT<Func, ErrorType>>{ invoke(Forward<Func>(f), move(*perr)) };
+        } else {
+            return to_ok();
+        }
+    }
     bool operator==(const Result& other) const {
         if (m_type == other.m_type) {
             if (m_type == CurrType::Ok) {
@@ -240,12 +312,12 @@ template <DerivedFrom<ErrorBase> ErrorType>
 struct PrintInfo<ErrorType> {
     const ErrorType& m_error;
     PrintInfo(const ErrorType& error) : m_error{ error } {}
-    String repr() const { return m_error.error_string(); }
+    String repr() const { return m_error.error_string().str(); }
 };
-template <typename T>
-struct PrintInfo<Result<T>> {
-    const Result<T>& m_result;
-    PrintInfo(const Result<T>& result) : m_result{ result } {}
+template <typename T, typename Err>
+struct PrintInfo<Result<T, Err>> {
+    const Result<T, Err>& m_result;
+    PrintInfo(const Result<T, Err>& result) : m_result{ result } {}
     String repr() const {
         if (m_result.is_ok()) {
             return "Result { "_s + print_conditional(m_result.ok_value()) + " }"_s;

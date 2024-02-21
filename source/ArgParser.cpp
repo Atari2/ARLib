@@ -70,7 +70,7 @@ ArgParser::ParseResult ArgParser::parse() {
                     }
                 } else if (opt.type == Option::Type::StringVector) {
                     const auto& strval = *it;
-                    Vector<String> vec = strval.split(",").iter().map(&StringView::extract_string).collect<Vector>();
+                    Vector<String> vec = strval.split(",").iter().map(&StringView::str).collect<Vector>();
                     if (!opt.assign(move(vec))) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
@@ -84,7 +84,7 @@ ArgParser::ParseResult ArgParser::parse() {
                                           auto res = StrViewToInt(v);
                                           if (res.is_error()) {
                                               has_error = true;
-                                              error     = res.to_error()->error_string();
+                                              error     = res.to_error()->error_string().str();
                                               return 0;
                                           }
                                           return res.to_ok();
@@ -104,7 +104,7 @@ ArgParser::ParseResult ArgParser::parse() {
                                                    auto res = StrViewToUInt(v);
                                                    if (res.is_error()) {
                                                        has_error = true;
-                                                       error     = res.to_error()->error_string();
+                                                       error     = res.to_error()->error_string().str();
                                                        return 0u;
                                                    }
                                                    return res.to_ok();
@@ -124,7 +124,7 @@ ArgParser::ParseResult ArgParser::parse() {
                                              auto res = StrViewToDouble(v);
                                              if (res.is_error()) {
                                                  has_error = true;
-                                                 error     = res.to_error()->error_string();
+                                                 error     = res.to_error()->error_string().str();
                                                  return 0.0;
                                              }
                                              return res.to_ok();

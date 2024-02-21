@@ -184,7 +184,7 @@ namespace JSON {
             m_info{ "Invalid JSON conversion attempted, tried to convert a "_s + enum_to_str(actual) + " to a " +
                     enum_to_str(to) } {};
         const String& message() const { return m_info; }
-        const String& error_string() const { return m_info; }
+        StringView error_string() const { return m_info; }
     };
     using SerializeResult = DiscardResult<FileError>;
     class ValueObj {
@@ -420,11 +420,11 @@ namespace JSON {
 
         public:
         ParseError() = default;
-        ParseError(String error, size_t offset) : m_info{ move(error), offset } {};
+        ParseError(StringView error, size_t offset) : m_info{ error.str(), offset } {};
         ParseError(ErrorInfo info) : m_info(move(info)){};
         const ErrorInfo& info() const { return m_info; }
         const String& message() const { return m_info.error_string; }
-        const String& error_string() const { return m_info.error_string; }
+        StringView error_string() const { return m_info.error_string; }
         size_t offset() const { return m_info.error_offset; }
     };
 }    // namespace JSON

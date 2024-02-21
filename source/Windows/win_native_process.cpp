@@ -9,7 +9,7 @@ Win32Process::Win32Process(StringView command) {
     m_cmdline_buffer = new char[32767];
     memcpy(m_cmdline_buffer, command.data(), command.size());
     m_cmdline_buffer[command.size()] = '\0';
-    m_proc_name                      = command.extract_string();
+    m_proc_name                      = command.str();
 }
 Win32Process& Win32Process::with_timeout(size_t ms_timeout) {
     m_timeout = static_cast<timeout_t>(ms_timeout);
