@@ -66,7 +66,7 @@ UnixProcess& UnixProcess::operator=(UnixProcess&& proc) noexcept {
     return *this;
 }
 UnixProcess::UnixProcess(StringView command) : m_environment{} {
-    m_cmdline = command.extract_string();
+    m_cmdline = command.str();
     m_argv    = new char*[2];
     m_argv[0] = new char[m_cmdline.size() + 1];
     m_argv[1] = nullptr;
@@ -77,7 +77,7 @@ UnixProcess& UnixProcess::with_timeout(size_t ms_timeout) {
     return *this;
 }
 UnixProcess& UnixProcess::with_cwd(StringView cwd) {
-    m_working_dir = cwd.extract_string();
+    m_working_dir = cwd.str();
     return *this;
 }
 UnixProcess& UnixProcess::with_env(std::initializer_list<EnvironMapString> env_values) {
