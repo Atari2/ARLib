@@ -236,6 +236,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/CSVParser.hpp
     ${ARLIB_INCLUDE_DIR}/CxprHashMap.hpp
     ${ARLIB_INCLUDE_DIR}/DebugNewDelete.hpp
+    ${ARLIB_INCLUDE_DIR}/EnumConcepts.hpp
     ${ARLIB_INCLUDE_DIR}/EnumHelpers.hpp
     ${ARLIB_INCLUDE_DIR}/Enumerate.hpp
     ${ARLIB_INCLUDE_DIR}/EventLoop.hpp

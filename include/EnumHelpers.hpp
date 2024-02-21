@@ -9,9 +9,8 @@
 #include "StringView.hpp"
 #include "GenericView.hpp"
 #include "Optional.hpp"
+#include "EnumConcepts.hpp"
 namespace ARLib {
-template <typename T>
-struct TagType {};
 template <Enum T>
 constexpr auto ToUnderlying(T value) {
     return static_cast<UnderlyingTypeT<T>>(value);
@@ -66,47 +65,49 @@ namespace EnumHelpers {
     }
     template <Enum T>
     requires(!get_enum_full_string<T>({}).empty())
-    constexpr auto construct_enum_array(TagType<T>) {
-        constexpr StringView view = get_enum_full_string<T>({});
-        Array<Pair<StringView, T>, count_enum_values(view)> enum_map_l;
-        UnderlyingTypeT<T> current_val{};
-        auto get_pair = [&view, &current_val](size_t first_idx, size_t second_idx) {
-            constexpr bool Signed = IsSigned<UnderlyingTypeT<T>>;
-            auto sub              = view.substringview_fromlen(first_idx, second_idx - first_idx);
-            auto equal_idx        = sub.index_of('=');
-            if (equal_idx == StringView::npos) {
-                // no equal, get next value
-                auto first_nospace_idx = sub.index_not_of(' ');
-                auto last_nospace_idx  = sub.index_of(' ', first_nospace_idx);
-                return Pair{ sub.substringview_fromlen(first_nospace_idx, last_nospace_idx),
-                             to_enum<T>(current_val++) };
-            } else {
-                auto first_nospace_idx = sub.index_not_of(' ');
-                auto last_nospace_idx  = sub.index_of(' ', first_nospace_idx);
-                using Ut               = UnderlyingTypeT<T>;
-                const auto value       = to_enum<T>(
-                Signed ? static_cast<Ut>(cxpr::StrViewToI64(sub.substringview_fromlen(equal_idx + 1))) :
-                               static_cast<Ut>(cxpr::StrViewToU64(sub.substringview_fromlen(equal_idx + 1)))
-                );
-                current_val = from_enum(value) + UnderlyingTypeT<T>{ 1 };
-                return Pair{ sub.substringview_fromlen(
-                             first_nospace_idx,
-                             (last_nospace_idx < equal_idx ? last_nospace_idx : equal_idx) - first_nospace_idx
-                             ),
-                             value };
+    struct EnumArrayProvider<T> {
+        constexpr static auto construct_enum_array(TagType<T>) {
+            constexpr StringView view = get_enum_full_string<T>({});
+            Array<Pair<StringView, T>, count_enum_values(view)> enum_map_l;
+            UnderlyingTypeT<T> current_val{};
+            auto get_pair = [&view, &current_val](size_t first_idx, size_t second_idx) {
+                constexpr bool Signed = IsSigned<UnderlyingTypeT<T>>;
+                auto sub              = view.substringview_fromlen(first_idx, second_idx - first_idx);
+                auto equal_idx        = sub.index_of('=');
+                if (equal_idx == StringView::npos) {
+                    // no equal, get next value
+                    auto first_nospace_idx = sub.index_not_of(' ');
+                    auto last_nospace_idx  = sub.index_of(' ', first_nospace_idx);
+                    return Pair{ sub.substringview_fromlen(first_nospace_idx, last_nospace_idx),
+                                 to_enum<T>(current_val++) };
+                } else {
+                    auto first_nospace_idx = sub.index_not_of(' ');
+                    auto last_nospace_idx  = sub.index_of(' ', first_nospace_idx);
+                    using Ut               = UnderlyingTypeT<T>;
+                    const auto value       = to_enum<T>(
+                    Signed ? static_cast<Ut>(cxpr::StrViewToI64(sub.substringview_fromlen(equal_idx + 1))) :
+                                   static_cast<Ut>(cxpr::StrViewToU64(sub.substringview_fromlen(equal_idx + 1)))
+                    );
+                    current_val = from_enum(value) + UnderlyingTypeT<T>{ 1 };
+                    return Pair{ sub.substringview_fromlen(
+                                 first_nospace_idx,
+                                 (last_nospace_idx < equal_idx ? last_nospace_idx : equal_idx) - first_nospace_idx
+                                 ),
+                                 value };
+                }
+            };
+            size_t first_idx  = 0;
+            size_t second_idx = view.index_of(',');
+            size_t i          = 0;
+            while (second_idx != StringView::npos) {
+                enum_map_l[i++] = get_pair(first_idx, second_idx);
+                first_idx       = second_idx + 1;
+                second_idx      = view.index_of(',', first_idx);
             }
-        };
-        size_t first_idx  = 0;
-        size_t second_idx = view.index_of(',');
-        size_t i          = 0;
-        while (second_idx != StringView::npos) {
-            enum_map_l[i++] = get_pair(first_idx, second_idx);
-            first_idx       = second_idx + 1;
-            second_idx      = view.index_of(',', first_idx);
+            enum_map_l[i] = get_pair(first_idx, view.size());
+            return enum_map_l;
         }
-        enum_map_l[i] = get_pair(first_idx, view.size());
-        return enum_map_l;
-    }
+    };
     template <Enum T>
     constexpr auto
     construct_enum_map(const Array<Pair<StringView, T>, count_enum_values(get_enum_full_string<T>({}))>& enum_array) {
@@ -121,15 +122,11 @@ namespace EnumHelpers {
         }
         return map;
     }
-    template <Enum T>
-    requires(requires { construct_enum_array<T>({}); })
-    struct EnumMapProvider {
-        constexpr static auto enum_array = construct_enum_array<T>({});
-        constexpr static auto map        = construct_enum_map<T>(enum_array);
-    };
     template <typename T>
-    concept EnumSupportsMap = Enum<T> && requires {
-        { EnumMapProvider<T>{} };
+    requires(Enum<T> && HasEnumArrayProvider<T>)
+    struct EnumMapProvider {
+        constexpr static auto enum_array = EnumArrayProvider<T>::construct_enum_array({});
+        constexpr static auto map        = construct_enum_map<T>(enum_array);
     };
     template <EnumSupportsMap T>
     class EnumIterator {
@@ -206,7 +203,9 @@ String enum_to_str(T e) {
 template <EnumHelpers::EnumSupportsMap T>
 Optional<T> enum_parse(StringView v) {
     constexpr const auto& enum_map = EnumHelpers::EnumMapProvider<T>::enum_array;
-    return enum_map.iter().find_if([v](const auto& p) { return p.first() == v; }).map([](auto&& p) { return p.second(); });
+    return enum_map.iter().find_if([v](const auto& p) { return p.first() == v; }).map([](auto&& p) {
+        return p.second();
+    });
 }
 template <EnumHelpers::EnumSupportsMap T>
 struct ForEachEnum {
