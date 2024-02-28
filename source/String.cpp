@@ -3,6 +3,7 @@
 #include "Ordering.hpp"
 #include "StringView.hpp"
 #include "Vector.hpp"
+#include "Span.hpp"
 namespace ARLib {
 [[nodiscard]] bool String::operator==(const StringView& other) const {
     auto thislen  = size();
@@ -340,5 +341,11 @@ String String::concat(const char* other)&& {
     StringView sother{ other };
     moved.append(sother);
     return moved;
+}
+Span<const char> String::span() const {
+    return Span<const char>{ get_buf_internal(), m_size };
+}
+Span<const uint8_t> String::bytespan() const {
+    return Span<const uint8_t>{ reinterpret_cast<const uint8_t*>(get_buf_internal()), m_size };
 }
 }    // namespace ARLib

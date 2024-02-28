@@ -166,6 +166,8 @@ class StringView {
         return npos;
     }
     constexpr bool is_empty() const { return !m_start; }
+    Span<const char> span() const;
+    Span<const uint8_t> bytespan() const;
 };
 constexpr StringView operator""_sv(const char* source, size_t len) {
     return StringView{ source, len };

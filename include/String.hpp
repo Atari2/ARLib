@@ -11,6 +11,8 @@ class StringView;
 class Ordering;
 template <typename T>
 class Vector;
+template <typename T>
+class Span;
 class String {
     constexpr static size_t SMALL_STRING_CAP = 15;
     union {
@@ -517,6 +519,8 @@ class String {
     void ireplace(StringView n, StringView s, size_t times = String::npos);
     String replace(StringView n, StringView s, size_t times = String::npos) const;
     void reserve(size_t new_capacity) { grow_if_needed(new_capacity); }
+    Span<const char> span() const;
+    Span<const uint8_t> bytespan() const;
 };
 inline String operator""_s(const char* source, size_t len) {
     return String{ source, len };
