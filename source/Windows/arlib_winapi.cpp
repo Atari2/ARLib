@@ -63,4 +63,9 @@ WString string_to_wstring(StringView str) {
 String wstring_to_string(WStringView wstr) {
     return WideToUTF8(wstr.data(), static_cast<int>(wstr.size()));
 }
+size_t get_page_size() {
+    SYSTEM_INFO si{};
+    GetSystemInfo(&si);
+    return si.dwPageSize;
+}
 }    // namespace ARLib

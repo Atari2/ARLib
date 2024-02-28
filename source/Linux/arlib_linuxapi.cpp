@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 namespace ARLib {
 struct SetupLocale {
     String currlocale{};
@@ -83,5 +84,9 @@ String wstring_to_string(WStringView wstr) {
         str.append(StringView{ buf, static_cast<size_t>(ret) });
     }
     return str;
+}
+size_t get_page_size() {
+    long sz = sysconf(_SC_PAGESIZE);
+    return static_cast<size_t>(sz);
 }
 }    // namespace ARLib
