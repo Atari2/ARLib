@@ -60,6 +60,7 @@ class File {
     }
     static void rename(const Path& old, const Path& new_) { ARLib::rename(old.string().data(), new_.string().data()); }
     DiscardResult<FileError> open(OpenFileMode mode) {
+        if (m_ptr != nullptr) { return FileError{ "File is already open"_s, m_filename }; }
         m_mode = mode;
         switch (mode) {
             case OpenFileMode::Read:
@@ -138,9 +139,10 @@ class File {
         HARD_ASSERT(m_ptr != nullptr, "File has to be open to ask for the size");
         return filesize(m_ptr);
     }
-    ~File() {
+    void close() {
         if (m_ptr) ARLib::fclose(m_ptr);
     }
+    ~File() { close(); }
 };
 template <>
 struct Hash<File> {
