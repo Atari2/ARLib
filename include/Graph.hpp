@@ -52,7 +52,7 @@ class Graph {
     };
     struct GraphNodeComparer {
         [[nodiscard]] bool operator()(const NodeType& lhs, const NodeType& rhs) const {
-            return lhs->value() == lhs->value();
+            return lhs->value() == rhs->value();
         }
         [[nodiscard]] bool operator()(const NodeType& lhs, const T& rhs) const { return lhs->value() == rhs; }
         [[nodiscard]] bool operator()(const T& lhs, const NodeType& rhs) const { return lhs == rhs->value(); }
@@ -161,14 +161,14 @@ class Graph {
                 return edge.m_source_node;
             }
         })
-        .collect<Vector>();
+        .template collect<Vector>();
     }
     Vector<SharedPtr<GraphNode<T>>> neighbors(const GraphNode<T>& node) const { return neighbors(node.value()); }
     Vector<SharedPtr<GraphNode<T>>> neighbors_directed(const T& node) const {
         return m_edges.iter()
         .filter([&](const auto& edge) { return edge.source().value() == node; })
         .map([&](const auto& edge) -> SharedPtr<GraphNode<T>> { return edge.m_dest_node; })
-        .collect<Vector>();
+        .template collect<Vector>();
     }
     Vector<SharedPtr<GraphNode<T>>> neighbors_directed(const GraphNode<T>& node) const {
         return neighbors_directed(node.value());

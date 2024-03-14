@@ -1489,7 +1489,7 @@ TEST(ARLibTests, VectorTests) {
     auto removed = v.remove_matching([](int i) { return i % 2 == 0; });
     EXPECT_EQ(removed, 5);
     EXPECT_EQ(v.size(), 5);
-    removed = v.remove_matching([](int i) { return false; });
+    removed = v.remove_matching([]([[maybe_unused]] int i) { return false; });
     EXPECT_EQ(removed, 0);
     EXPECT_EQ(v.size(), 5);
     removed = v.remove_matching([](int i) { return i % 2 == 1; });
