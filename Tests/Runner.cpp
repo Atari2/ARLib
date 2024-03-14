@@ -1483,3 +1483,44 @@ TEST(ARLibTests, ResultTest) {
     Result<int, Error> resd{ resc.to_error() };
     EXPECT_EQ(resd.to_error()->error_string(), "A"_sv);
 }
+TEST(ARLibTests, VectorTests) {
+    Vector<int> v {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    EXPECT_EQ(v.size(), 10);
+    auto removed = v.remove_matching([](int i) { return i % 2 == 0; });
+    EXPECT_EQ(removed, 5);
+    EXPECT_EQ(v.size(), 5);
+    removed = v.remove_matching([](int i) { return false; });
+    EXPECT_EQ(removed, 0);
+    EXPECT_EQ(v.size(), 5);
+    removed = v.remove_matching([](int i) { return i % 2 == 1; });
+    EXPECT_EQ(removed, 5);
+    EXPECT_EQ(v.size(), 0);
+}
+TEST(ARLibTests, GraphTests) {
+    Graph<String> g{};
+    const auto& node = g.add_node("Hello World"_s);
+    EXPECT_EQ(g.n_nodes(), 1);
+    EXPECT_EQ(node.value(), "Hello World"_sv);
+    const auto& edge = g.add_edge("Hello World"_s, "This is a test"_s);
+    EXPECT_EQ(edge.dest().value(), "This is a test"_sv);
+    EXPECT_EQ(edge.source().value(), "Hello World"_sv);
+    EXPECT_EQ(g.n_edges(), 1);
+    EXPECT_EQ(g.n_nodes(), 2);
+    auto node2       = g.find_node("Hello World"_s);
+    EXPECT_TRUE(node2.has_value());
+    auto node3       = g.find_node("asdf"_s);
+    EXPECT_FALSE(node3.has_value());
+    auto neighs      = g.neighbors("Hello World"_s);
+    EXPECT_EQ(neighs.size(), 1);
+    EXPECT_EQ(neighs[0]->value(), "This is a test"_sv);
+    auto dneighs     = g.neighbors_directed("Hello World"_s);
+    EXPECT_EQ(dneighs.size(), 1);
+    EXPECT_EQ(dneighs[0]->value(), "This is a test"_sv);
+    auto edge1 = g.find_edge("Hello World"_s, "This is a test"_s);
+    EXPECT_TRUE(edge1.has_value());
+    g.remove_edge(edge1.value());
+    EXPECT_EQ(g.n_edges(), 0);
+    size_t removed = g.remove_node(node);
+    EXPECT_EQ(removed, 0);
+    EXPECT_EQ(g.n_nodes(), 1);
+}

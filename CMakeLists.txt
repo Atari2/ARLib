@@ -180,6 +180,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${ARLIB_SOURCE_DIR}/File.cpp
 	${ARLIB_SOURCE_DIR}/FileSystem.cpp
     ${ARLIB_SOURCE_DIR}/FlatSet.cpp
+    ${ARLIB_SOURCE_DIR}/Graph.cpp
     ${ARLIB_SOURCE_DIR}/Hash.cpp
     ${ARLIB_SOURCE_DIR}/HashBase.cpp
     ${ARLIB_SOURCE_DIR}/JSONObject.cpp
@@ -246,6 +247,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/FlatMap.hpp
     ${ARLIB_INCLUDE_DIR}/FlatSet.hpp
     ${ARLIB_INCLUDE_DIR}/Functional.hpp
+    ${ARLIB_INCLUDE_DIR}/Graph.hpp
     ${ARLIB_INCLUDE_DIR}/Hash.hpp
     ${ARLIB_INCLUDE_DIR}/HashBase.hpp
     ${ARLIB_INCLUDE_DIR}/ImplProcessCommon.hpp

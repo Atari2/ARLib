@@ -12,6 +12,7 @@
 #include "FlatMap.hpp"
 #include "Functional.hpp"
 #include "GenericView.hpp"
+#include "Graph.hpp"
 #include "Hash.hpp"
 #include "JSONParser.hpp"
 #include "LinkedSet.hpp"
