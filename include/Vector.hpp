@@ -74,7 +74,7 @@ class Vector {
         m_storage        = new_storage;
         m_end_of_storage = m_storage + m_capacity;
     }
-    arlib_forceinline constexpr bool assert_size_(size_t index) const { return index < m_size; }
+    constexpr arlib_forceinline bool assert_size_(size_t index) const { return index < m_size; }
 
     public:
     Vector() = default;
@@ -334,6 +334,24 @@ class Vector {
                 return;
             }
         }
+    }
+    template <typename Functor>
+    requires CallableWithRes<Functor, bool, T>
+    size_t remove_matching(Functor&& func) {
+        size_t original_size = m_size;
+        size_t i             = 0;
+        while (i < m_size) { 
+            auto& val = m_storage[i];
+            if (func(val)) {
+                // remove element
+                remove_at(i);
+                // remove_at will decrement m_size
+                // we don't increment i because now at i-th place there will be a new element
+            } else {
+                ++i;
+            }
+        }
+        return original_size - m_size;
     }
     Iter find(const T& val) {
         for (auto it = begin(); it != end(); it++)
