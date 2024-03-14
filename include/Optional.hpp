@@ -244,7 +244,8 @@ struct PrintInfo<Optional<T>> {
         }
     }
 };
-template <Printable T>
+template <typename T>
+requires Printable<RemoveCvRefT<T>>
 struct PrintInfo<Optional<T&>> {
     const Optional<T&>& m_optional;
     explicit PrintInfo(const Optional<T&>& optional) : m_optional(optional) {}
