@@ -24,7 +24,7 @@ jobs:
             compiler: msvc
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup compilers (gcc)
       run:  |
@@ -88,14 +88,14 @@ jobs:
       run: ctest --rerun-failed --output-on-failure -C $BUILD_TYPE
     
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ARLib-${{matrix.os}}-${{matrix.compiler}}
         path: ${{github.workspace}}/build/ARLib.lib
       if: matrix.os == 'windows-latest'
     
     - name: Upload
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ARLib-${{matrix.os}}-${{matrix.compiler}}
         path: ${{github.workspace}}/build/libARLib.a
