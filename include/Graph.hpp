@@ -45,6 +45,33 @@ class GraphEdge {
     const GraphNode<T>& dest() const { return *m_dest_node; }
 };
 template <typename T>
+concept HasGraphKeyType = requires (const T& val) {
+    typename T::GraphKeyType;
+    requires Hashable<typename T::GraphKeyType>;
+    requires EqualityComparable<typename T::GraphKeyType>;
+    { val.identifier() } -> SameAs<AddConstT<AddLvalueReferenceT<typename T::GraphKeyType>>>;
+};
+
+template <HasGraphKeyType T>
+struct Hash<T> {
+    [[nodiscard]] size_t operator()(const T& node) const { return Hash<typename T::GraphKeyType>{}(node.identifier()); }
+};
+
+template <HasGraphKeyType T>
+bool operator==(const T& lhs, const T& rhs) {
+    return lhs.identifier() == rhs.identifier();
+}
+
+template <typename KeyType>
+class GraphValueTypeBase {
+    KeyType m_identifier;
+    public:
+    using GraphKeyType = KeyType;
+    GraphValueTypeBase(KeyType&& identifier) : m_identifier{ move(identifier) } {}
+    const KeyType& identifier() const { return m_identifier; }
+};
+
+template <typename T>
 class Graph {
     using NodeType = SharedPtr<GraphNode<T>>;
     struct GraphNodeHasher {
@@ -78,6 +105,13 @@ class Graph {
         const auto&& [source_inserted, source_v] = m_nodes.insert(SharedPtr{ new GraphNode{ Forward<T>(source) } });
         const auto&& [dest_inserted, dest_v]     = m_nodes.insert(SharedPtr{ new GraphNode{ Forward<T>(dest) } });
         m_edges.append(GraphEdge{ source_v, dest_v });
+        return m_edges.last();
+    }
+    const GraphEdge<T>& add_edge(const GraphNode<T>& source, const GraphNode<T>& dest) {
+        auto sit = m_nodes.find(source);
+        auto dit = m_nodes.find(dest);
+        HARD_ASSERT(sit != m_nodes.end() && dit != m_nodes.end(), "Invalid nodes when inserting edge");
+        m_edges.append(GraphEdge{ *sit, *dit });
         return m_edges.last();
     }
     auto find_node(const T& value) const {
