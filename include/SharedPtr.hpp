@@ -192,10 +192,10 @@ struct PrintInfo<SharedPtr<T>> {
     PrintInfo(const SharedPtr<T>& ptr) : m_ptr(ptr) {}
     String repr() const {
         if constexpr (Printable<T>) {
-            return "SharedPtr { "_s + PrintInfo<T>{ *m_ptr.get() }.repr() + " }"_s;
+            return PrintInfo<T>{ *m_ptr.get() }.repr();
         } else {
             DemangledInfo info{ MANGLED_TYPENAME_TO_STRING(T) };
-            return "SharedPtr { "_s + String{ info.name() } + " }"_s;
+            return String{ info.name() };
         };
     }
 };
@@ -216,7 +216,7 @@ struct PrintInfo<SharedPtr<T[]>> {
         } else {
             conc.append("nullptr");
         }
-        return "SharedPtr { "_s + conc + " }"_s;
+        return conc;
     }
 };
 }    // namespace ARLib
