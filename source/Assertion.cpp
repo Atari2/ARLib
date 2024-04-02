@@ -14,9 +14,13 @@
 #endif
 [[noreturn]] void abort__() {
 #ifdef _MSC_VER
+    #ifdef ARLIB_DEBUG
+    __debugbreak();
+    #else
     __fastfail(1);
+    #endif
 #else
-    __asm__ volatile("call abort");
+    __builtin_trap();
 #endif
     arlib_unreachable
 }
