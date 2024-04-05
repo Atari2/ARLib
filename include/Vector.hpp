@@ -340,7 +340,7 @@ class Vector {
     size_t remove_matching(Functor&& func) {
         size_t original_size = m_size;
         size_t i             = 0;
-        while (i < m_size) { 
+        while (i < m_size) {
             auto& val = m_storage[i];
             if (func(val)) {
                 // remove element
@@ -376,6 +376,20 @@ class Vector {
         auto view  = IteratorView<Vector<T>>{ m_storage, m_size };
         m_capacity = 0;
         return view;
+    }
+    auto riter() const& { return IteratorView<Vector<T>, decltype(crbegin())>{ nullptr, crbegin(), crend() }; }
+    auto riter() & { return IteratorView<Vector<T>, decltype(rbegin())>{ nullptr, rbegin(), rend() }; }
+    auto riter() && {
+        auto view  = IteratorView<Vector<T>, decltype(rbegin())>{ m_storage, rbegin(), rend() };
+        m_capacity = 0;
+        return view;
+    }
+    auto reversed() const& { return riter().template collect<Vector>(); }
+    auto reversed() & { return riter().template collect<Vector>(); }
+    auto reversed() && {
+        auto view  = IteratorView<Vector<T>, decltype(rbegin())>{ m_storage, rbegin(), rend() };
+        m_capacity = 0;
+        return view.template collect<Vector<T>>();
     }
     auto span() const { return Span<const T>{ m_storage, m_size }; }
     auto span() { return Span<T>{ m_storage, m_size }; }
