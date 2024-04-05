@@ -2,6 +2,7 @@
 #include "PrintInfo.hpp"
 #include "StringView.hpp"
 #include "Vector.hpp"
+#include "SSOVector.hpp"
 #include "cstdio_compat.hpp"
 namespace ARLib {
 // anything that wants to be printed from this function has to specialize PrintInfo
@@ -62,8 +63,12 @@ class Printer {
     String format_string{};
     String builder{};
     template <Printable Arg, typename... Args>
-    void print_impl(const Arg& arg, const Args&... args) {
-        builder.append(PrintInfo<Arg>{ arg }.repr());
+    void print_impl(const SSOVector<String>& format_specs, const Arg& arg, const Args&... args) {
+        if constexpr (PrintableFormatted<Arg>) {
+            builder.append(PrintInfo<Arg>{ arg }.repr(format_specs[current_index]));
+        } else {
+            builder.append(PrintInfo<Arg>{ arg }.repr());
+        }
         if constexpr (sizeof...(args) == 0) {
             builder.append(format_string.substringview(indexes.last() + 2));
         } else {
@@ -71,7 +76,7 @@ class Printer {
             format_string.substringview(indexes.index(current_index) + 2, indexes.index(current_index + 1))
             );
             current_index++;
-            print_impl(args...);
+            print_impl(format_specs, args...);
         }
     }
     template <typename... Args>
@@ -79,6 +84,8 @@ class Printer {
         enum class FormatState { EscapeNextOpen, EscapeNextClosed, Continue } state{ FormatState::Continue };
         String escaped_format_string{};
         escaped_format_string.reserve(format.size());
+        SSOVector<String, sizeof...(Args)> format_specs{};
+        String current_format_spec{};
         for (size_t idx = 0; idx < format_string.size(); idx++) {
             char c = format_string[idx];
             if (c == '{') {
@@ -97,6 +104,7 @@ class Printer {
                     case FormatState::EscapeNextOpen:
                         indexes.append(escaped_format_string.size() - 1);
                         escaped_format_string.append(c);
+                        format_specs.append(move(current_format_spec));
                         [[fallthrough]];
                     case FormatState::EscapeNextClosed:
                         state = FormatState::Continue;
@@ -110,6 +118,8 @@ class Printer {
                 if (state != FormatState::EscapeNextOpen) {
                     escaped_format_string.append(c);
                     state = FormatState::Continue;
+                } else {
+                    current_format_spec.append(c);
                 }
             }
         }
@@ -130,7 +140,7 @@ class Printer {
             builder = move(format_string);
         } else {
             builder.append(format_string.substringview(0, indexes.index(current_index)));
-            print_impl(args...);
+            print_impl(format_specs, args...);
         }
     }
     void print_puts() { puts(builder.data()); }

@@ -5,10 +5,10 @@
 namespace ARLib {
 template <typename T, size_t SSO = 15>
 class SSOVector {
-    T m_situ_storage[SSO]{};
+    ConditionalT<SSO != 0, T[SSO], T*> m_situ_storage{};
     size_t m_capacity = SSO;
     size_t m_size     = 0;
-    T* m_storage      = addressof(m_situ_storage[0]);
+    T* m_storage      = SSO != 0 ? addressof(m_situ_storage[0]) : m_situ_storage;
     void grow_internal(size_t new_capacity) {
         // if grow internal has been called, it means that we need to grow out of situ
         HARD_ASSERT(new_capacity > m_capacity, "New capacity should be bigger than existing capacity")

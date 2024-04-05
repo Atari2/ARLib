@@ -12,9 +12,15 @@ template <typename T>
 PrintInfo(T) -> PrintInfo<T>;
 
 template <typename T>
-concept Printable = requires() {
-                        { declval<PrintInfo<T>>().repr() } -> SameAs<String>;
-                    };
+concept PrintableUnformatted = requires() {
+    { declval<PrintInfo<T>>().repr() } -> SameAs<String>;
+};
+template <typename T>
+concept PrintableFormatted = requires(const String& format) {
+    { declval<PrintInfo<T>>().repr(format) } -> SameAs<String>;
+};
+template <typename T>
+concept Printable = PrintableUnformatted<T> || PrintableFormatted<T>;
 template <typename T>
 String print_conditional(const T& m_value) {
     if constexpr (Printable<T>) {
@@ -30,7 +36,12 @@ String print_conditional(const T& m_value) {
         using type_ = AddConstT<AddLValueRefIfNotPtrT<x>>;                                                             \
         type_ m_val;                                                                                                   \
         explicit PrintInfo(type_ val) : m_val(val) {}                                                                  \
-        String repr() const { return impl(m_val); }                                                                    \
+        String repr() const {                                                                                          \
+            return impl(m_val);                                                                                        \
+        }                                                                                                              \
+        String repr([[maybe_unused]] const String& format) const {                                                     \
+            return impl(m_val);                                                                                        \
+        }                                                                                                              \
     };
 
 #define BASIC_CONST_PRINT_IMPL(x, impl)                                                                                \
@@ -39,7 +50,12 @@ String print_conditional(const T& m_value) {
         using type_ = AddConstT<AddLValueRefIfNotPtrT<const x>>;                                                       \
         type_ m_val;                                                                                                   \
         explicit PrintInfo(type_ val) : m_val(val) {}                                                                  \
-        String repr() const { return impl(m_val); }                                                                    \
+        String repr() const {                                                                                          \
+            return impl(m_val);                                                                                        \
+        }                                                                                                              \
+        String repr([[maybe_unused]] const String& format) const {                                                     \
+            return impl(m_val);                                                                                        \
+        }                                                                                                              \
     };
 
 #define BASIC_PRINT_IMPL(x, impl)                                                                                      \
@@ -66,6 +82,7 @@ struct PrintInfo<T*> {
                 return "nullptr"_s + " (pointer to "_s + info.name() + ')';
         }
     }
+    String repr([[maybe_unused]] const String& format_spec) { return repr(); }
 };
 template <Printable T, size_t N>
 struct PrintInfo<T[N]> {
@@ -93,8 +110,8 @@ struct PrintInfo<char[N]> {
 template <Printable T, size_t N, size_t M>
 requires(!IsArrayV<T>)
 struct PrintInfo<T[N][M]> {
-    const T(&m_matrix)[N][M];
-    explicit PrintInfo(const T(&matrix)[N][M]) : m_matrix(matrix) {}
+    const T (&m_matrix)[N][M];
+    explicit PrintInfo(const T (&matrix)[N][M]) : m_matrix(matrix) {}
     String repr() {
         String str{ "[\n" };
         for (size_t i = 0; i < N; i++) {
