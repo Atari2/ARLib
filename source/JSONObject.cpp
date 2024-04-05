@@ -27,6 +27,9 @@ namespace JSON {
     ValueObj& Object::operator[](const String& key) {
         return *this->get_or_insert(key, make(nullptr));
     }
+    ValueObj& Object::operator[](const StringView& key) {
+        return *this->get_or_insert(key, make(nullptr));
+    }
     Value::Value(ValueObj&& obj) : UniquePtr{ Forward<ValueObj>(obj) } {}
     Value::Value(const Value& other) : UniquePtr{ ValueObj{ *other.get() } } {}
     Value& Value::operator=(const Value& other) {
