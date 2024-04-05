@@ -7,6 +7,7 @@
 #include "FlatSet.hpp"
 #include "Optional.hpp"
 #include "PrintInfo.hpp"
+#include "FlatMap.hpp"
 namespace ARLib {
 template <typename T>
 class Graph;
@@ -206,6 +207,66 @@ class Graph {
     }
     Vector<SharedPtr<GraphNode<T>>> neighbors_directed(const GraphNode<T>& node) const {
         return neighbors_directed(node.value());
+    }
+    Vector<SharedPtr<GraphNode<T>>> dijkstra(const GraphNode<T>& source, const GraphNode<T>& dest) {
+        // FIXME: this implementation is very memory hungry and very inefficient
+        //        needs some care and fixing.
+        FlatMap<GraphNode<T>, double> dist{};
+        FlatMap<GraphNode<T>, Optional<GraphNode<T>>> prev{};
+        Vector<GraphNode<T>> queue{};
+        queue.reserve(m_nodes.size());
+        for (const auto& v : m_nodes) {
+            dist.insert(*v, NumericLimits::InfinityD);
+            prev.insert(*v, Optional<GraphNode<T>>{});
+            queue.append(*v);
+        }
+
+        auto find_min_dist = [&queue](const auto& distmap) {
+            auto current_min = queue.begin();
+            auto end         = queue.end();
+            auto current     = queue.begin();
+            while (current != end) {
+                if (distmap[*current] < distmap[*current_min]) { current_min = current; }
+                ++current;
+            }
+            return *current_min;
+        };
+
+        dist[source] = 0.0;
+        while (queue.size() != 0) {
+            const auto& u = find_min_dist(dist);
+            if (u == dest) {
+                Optional<GraphNode<T>> optu{ u };
+                Vector<SharedPtr<GraphNode<T>>> stack{};
+                if (prev[u].has_value() || u == source) {
+                    while (optu.has_value()) {
+                        stack.append(*m_nodes.find(*optu));
+                        optu = prev[*optu];
+                    }
+                }
+                return move(stack).reversed();
+            }
+            queue.remove(u);
+
+            for (const auto& v : neighbors_directed(u).iter().filter([&queue](const auto& n) {
+                     return queue.find(*n) != queue.end();
+                 })) {
+                double alt =
+                dist[u] +
+                find_directed_edge(u, *v).map(&GraphEdge<T>::weight).value_or(double{ NumericLimits::InfinityD });
+                if (alt < dist[*v]) {
+                    dist[*v] = alt;
+                    prev[*v] = u;
+                }
+            }
+        }
+        return {};
+    }
+    Vector<SharedPtr<GraphNode<T>>> dijkstra(const T& source, const T& dest) {
+        const auto& sourcenode = m_nodes.find(source);
+        const auto& destnode   = m_nodes.find(dest);
+        if (sourcenode == m_nodes.end() || destnode == m_nodes.end()) return {};
+        return dijkstra(*sourcenode, *destnode);
     }
     size_t n_nodes() const { return m_nodes.size(); }
     size_t n_edges() const { return m_edges.size(); }

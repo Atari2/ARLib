@@ -3,31 +3,28 @@
 #include "Matrix.hpp"
 #include "Chrono.hpp"
 #include "Graph.hpp"
+#include "Stream.hpp"
+#include "JSONParser.hpp"
 
 using namespace ARLib;
-
-struct Test : public GraphValueTypeBase<String> {
-
-};
-int main(int argc, char** argv) {
-    Graph<String> g{};
-    Graph<Test> g2{};
-    const auto& nodeg1 = g2.add_node(Test{ "hello"_s });
-    const auto& nodeg2 = g2.add_node(Test{ "world"_s });
-    const auto& edgeg  = g2.add_edge(nodeg1, nodeg2);
-    const auto& node   = g.add_node("Hello World"_s);
-    const auto& edge   = g.add_edge("Hello World"_s, "This is a test"_s);
-    auto node2         = g.find_node("Hello World"_s);
-    auto node3         = g.find_node("asdf"_s);
-    auto neighs        = g.neighbors("Hello World"_s);
-    auto dneighs       = g.neighbors_directed("Hello World"_s);
-    Printer::print("{}, {}", neighs, dneighs);
-    Printer::print("{} {}", node2.has_value(), node3.has_value());
-    auto edge1 = g.find_edge("Hello World"_s, "This is a test"_s);
-    Printer::print("{}", edge1.has_value());
-    // size_t removed = g.remove_node(node);    
-    g.remove_edge(edge1.value());
-    Vector<int> v{};
-    v[123];
+int main([[maybe_unused]] int argc,[[maybe_unused]] char** argv) {
+    Graph<uint32_t> g{};
+    auto& pcg = Random::PCG::static_state();
+    FlatSet<uint32_t> unique_values{};
+    for (size_t i = 0; i < 100; ++i) unique_values.insert(pcg.random());
+    Printer::print("{} unique values", unique_values.size());
+    Vector<uint32_t> unique_values_vec{};
+    unique_values_vec.reserve(unique_values.size());
+    for (auto&& [i, v] : enumerate(unique_values)) {
+        g.add_node(uint32_t{ v });
+        unique_values_vec.append(v);
+    }
+    const size_t idx_cap = unique_values_vec.size();
+    for (size_t i = 0; i < 1000; ++i) {
+        auto source = pcg.bounded_random(static_cast<uint32_t>(idx_cap));
+        auto dest   = pcg.bounded_random(static_cast<uint32_t>(idx_cap));
+        g.add_edge(uint32_t{ unique_values_vec[source] }, uint32_t{ unique_values_vec[dest] });
+    }
+    Printer::print("{} nodes and {} edges", g.n_nodes(), g.n_edges());
     return 0;
 }

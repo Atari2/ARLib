@@ -1523,4 +1523,25 @@ TEST(ARLibTests, GraphTests) {
     size_t removed = g.remove_node(node);
     EXPECT_EQ(removed, 0);
     EXPECT_EQ(g.n_nodes(), 1);
+
+    Graph<int32_t> g2{};
+    auto& n1 = g2.add_node(1);
+    g2.add_node(2);
+    g2.add_node(3);
+    g2.add_node(4);
+    auto& n2 = g2.add_node(5);
+    g2.add_edge(1, 2);
+    g2.add_edge(2, 3, 3.0);
+    g2.add_edge(2, 4);
+    g2.add_edge(3, 5);
+    g2.add_edge(4, 5, 5.0);
+    auto& n3 = g2.add_node(6);
+    auto r = g2.dijkstra(n1, n2);
+    auto r2  = g2.dijkstra(n1, n3);
+    EXPECT_EQ(r2.size(), 0);
+    int32_t expected_node_values[] {1, 2, 3, 5};
+    EXPECT_EQ(r.size(), sizeof_array(expected_node_values));
+    for (size_t i = 0; i < sizeof_array(expected_node_values); ++i) { 
+        EXPECT_EQ(r[i]->value(), expected_node_values[i]);
+    }
 }
