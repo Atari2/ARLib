@@ -34,34 +34,35 @@ class GraphEdge {
     friend Graph<T>;
     SharedPtr<GraphNode<T>> m_source_node;
     SharedPtr<GraphNode<T>> m_dest_node;
+    double m_weight{ 1.0 };
 
     public:
     GraphEdge(SharedPtr<GraphNode<T>> source, SharedPtr<GraphNode<T>> dest) :
         m_source_node{ move(source) }, m_dest_node{ move(dest) } {}
+    GraphEdge(SharedPtr<GraphNode<T>> source, SharedPtr<GraphNode<T>> dest, double weight) :
+        m_source_node{ move(source) }, m_dest_node{ move(dest) }, m_weight{ weight } {}
     bool operator==(const GraphEdge& other) const {
-        return *m_source_node == other.source() && *m_dest_node == other.dest();
+        return *m_source_node == other.source() && *m_dest_node == other.dest() && m_weight == other.m_weight;
     }
     const GraphNode<T>& source() const { return *m_source_node; }
     const GraphNode<T>& dest() const { return *m_dest_node; }
+    double weight() const { return m_weight; }
 };
 template <typename T>
-concept HasGraphKeyType = requires (const T& val) {
+concept HasGraphKeyType = requires(const T& val) {
     typename T::GraphKeyType;
     requires Hashable<typename T::GraphKeyType>;
     requires EqualityComparable<typename T::GraphKeyType>;
     { val.identifier() } -> SameAs<AddConstT<AddLvalueReferenceT<typename T::GraphKeyType>>>;
 };
-
 template <HasGraphKeyType T>
 struct Hash<T> {
     [[nodiscard]] size_t operator()(const T& node) const { return Hash<typename T::GraphKeyType>{}(node.identifier()); }
 };
-
 template <HasGraphKeyType T>
 bool operator==(const T& lhs, const T& rhs) {
     return lhs.identifier() == rhs.identifier();
 }
-
 template <typename KeyType>
 class GraphValueTypeBase {
     KeyType m_identifier;
@@ -70,7 +71,6 @@ class GraphValueTypeBase {
     GraphValueTypeBase(KeyType&& identifier) : m_identifier{ move(identifier) } {}
     const KeyType& identifier() const { return m_identifier; }
 };
-
 template <typename T>
 class Graph {
     using NodeType = SharedPtr<GraphNode<T>>;
@@ -101,17 +101,17 @@ class Graph {
         const auto&& [inserted, v] = m_nodes.insert(SharedPtr{ new GraphNode{ Forward<T>(value) } });
         return *v;
     }
-    const GraphEdge<T>& add_edge(T&& source, T&& dest) {
+    const GraphEdge<T>& add_edge(T&& source, T&& dest, double weight = 1.0) {
         const auto&& [source_inserted, source_v] = m_nodes.insert(SharedPtr{ new GraphNode{ Forward<T>(source) } });
         const auto&& [dest_inserted, dest_v]     = m_nodes.insert(SharedPtr{ new GraphNode{ Forward<T>(dest) } });
-        m_edges.append(GraphEdge{ source_v, dest_v });
+        m_edges.append(GraphEdge{ source_v, dest_v, weight });
         return m_edges.last();
     }
-    const GraphEdge<T>& add_edge(const GraphNode<T>& source, const GraphNode<T>& dest) {
+    const GraphEdge<T>& add_edge(const GraphNode<T>& source, const GraphNode<T>& dest, double weight = 1.0) {
         auto sit = m_nodes.find(source);
         auto dit = m_nodes.find(dest);
         HARD_ASSERT(sit != m_nodes.end() && dit != m_nodes.end(), "Invalid nodes when inserting edge");
-        m_edges.append(GraphEdge{ *sit, *dit });
+        m_edges.append(GraphEdge{ *sit, *dit, weight });
         return m_edges.last();
     }
     auto find_node(const T& value) const {
@@ -209,5 +209,7 @@ class Graph {
     }
     size_t n_nodes() const { return m_nodes.size(); }
     size_t n_edges() const { return m_edges.size(); }
+    const auto& nodes() const { return m_nodes; }
+    const auto& edges() const { return m_edges; }
 };
 }    // namespace ARLib
