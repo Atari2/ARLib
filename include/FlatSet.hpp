@@ -6,6 +6,7 @@
 #include "Printer.hpp"
 #include "Array.hpp"
 #include "EnumHelpers.hpp"
+#include "GenericView.hpp"
 /*
 A FlatSet implementation with a design very similar to that of abseil's swiss tables, albeit simplified for the sake of complexity
 from here: https://github.com/abseil/abseil-cpp/blob/master/absl/container/internal/raw_hash_set.h
@@ -66,6 +67,7 @@ class FlatSetIterator {
         return m_set == other.m_set && m_current_bucket == other.m_current_bucket &&
                m_current_item == other.m_current_item;
     }
+    size_t size() const { return m_set->size(); }
     FlatSetIterator operator++(int);
     FlatSetIterator& operator++();
 };
@@ -339,6 +341,8 @@ class FlatSet {
         return end();
     }
     auto end() const { return FlatSetIterator<T, HashCls, KeyComparer>{ this, m_buckets.size(), BitMask{ 0_u32 } }; }
+    auto iter() { return IteratorView{ *this }; }
+    auto iter() const { return IteratorView{ *this }; }
     bool contains(const T& value) const { return find(value) != end(); }
     template <typename O, typename OHashCls = Hash<O>>
     requires((EqualityComparableWith<O, T> || CanBeCompared<O>) && Hashable<O, OHashCls>)

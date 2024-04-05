@@ -51,9 +51,8 @@ GenericView(const Cont&) -> GenericView<AddConstT<ContainerValueTypeT<Cont>>>;
 
 template <typename T>
 using ReadOnlyView = GenericView<AddConstT<T>>;
-template <Iterable Cont>
+template <Iterable Cont, typename Iter = decltype(declval<Cont>().begin())>
 class IteratorView {
-    using Iter         = decltype(declval<Cont>().begin());
     using IterRet      = ConditionalT<CopyConstructible<Iter>, Iter, AddLvalueReferenceT<Iter>>;
     using ConstIterRet = AddConstT<IterRet>;
     Iter m_begin;
@@ -81,9 +80,18 @@ class IteratorView {
     ConstIterRet begin() const { return m_begin; }
     ConstIterRet end() const { return m_end; }
     size_t size()
-    requires IterCanSubtractForSize<Iter>
+    requires(
+    IterCanSubtractForSize<Iter> ||
+    requires(Iter it) {
+        { it.size() } -> SameAs<size_t>;
+    }
+    )
     {
-        return m_end - m_begin;
+        if constexpr (IterCanSubtractForSize<Iter>) {
+            return m_end - m_begin;
+        } else {
+            return m_begin.size();
+        }
     }
     auto skip(size_t n) {
         if constexpr (IterCanAdvanceWithOffset<Iter> && IterCanSubtractForSize<Iter>) {
@@ -129,7 +137,7 @@ class IteratorView {
                 NewCont copy{};
                 if constexpr (Reservable<NewCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
                 for (auto it = m_begin; it != m_end; ++it) { copy.append(move(*it)); }
-                delete[] m_stolen_storage;
+                deallocate<ItemType, DeallocType::Multiple>(m_stolen_storage);
                 m_stolen_storage = nullptr;
                 return copy;
             }

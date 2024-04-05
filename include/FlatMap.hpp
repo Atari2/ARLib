@@ -75,6 +75,8 @@ class FlatMap {
     }
     auto begin() const { return m_table.begin(); }
     auto end() const { return m_table.end(); }
+    auto iter() { return IteratorView{ *this }; }
+    auto iter() const { return IteratorView{ *this }; }
     bool contains(const Key& value) const { return find(value) != end(); }
     bool remove(const Key& value) { return m_table.remove(value); }
     auto insert(Entry&& entry) { return m_table.insert(Forward<Entry>(entry)); }
@@ -97,7 +99,7 @@ class FlatMap {
     Val& get_or_default(O&& key)
     requires DefaultConstructible<Val>
     {
-        auto entry                     = Entry{ Key{ key }, Val{} };
+        auto entry                  = Entry{ Key{ key }, Val{} };
         auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
         if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
         return const_cast<Val&>((*it).val());
