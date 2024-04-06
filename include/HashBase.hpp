@@ -40,7 +40,7 @@ template <class Key>
 #ifdef ON_WINDOWS
     return static_cast<size_t>(k ^ hash_bswap(static_cast<uint32_t>(k * 1086221891)));
 #else
-    return static_cast<size_t>(k ^ static_cast<Key>(__builtin_bswap32(static_cast<uint32_t>(k * 1086221891))));
+    return static_cast<size_t>(k ^ static_cast<Key>(__builtin_bswap32(static_cast<uint32_t>(k) * 1086221891)));
 #endif
 }
 

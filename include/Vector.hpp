@@ -409,10 +409,22 @@ class Vector {
     ConstIter end() const { return ConstIter{ m_storage + m_size }; }
     ConstIter cbegin() const { return ConstIter{ m_storage }; }
     ConstIter cend() const { return ConstIter{ m_storage + m_size }; }
-    ReverseIter rbegin() { return ReverseIter{ m_storage + m_size - 1 }; }
-    ReverseIter rend() { return ReverseIter{ m_storage - 1 }; }
-    ConstReverseIter crbegin() const { return ConstReverseIter{ m_storage + m_size - 1 }; }
-    ConstReverseIter crend() const { return ConstReverseIter{ m_storage - 1 }; }
+    ReverseIter rbegin() {
+        if (m_storage == nullptr || m_size == 0) { return ReverseIter{ nullptr }; }
+        return ReverseIter{ m_storage + m_size - 1 };
+    }
+    ReverseIter rend() {
+        if (m_storage == nullptr || m_size == 0) { return ReverseIter{ nullptr }; }
+        return ReverseIter{ m_storage - 1 };
+    }
+    ConstReverseIter crbegin() const {
+        if (m_storage == nullptr || m_size == 0) { return ConstReverseIter{ nullptr }; }
+        return ConstReverseIter{ m_storage + m_size - 1 };
+    }
+    ConstReverseIter crend() const {
+        if (m_storage == nullptr || m_size == 0) { return ConstReverseIter{ nullptr }; }
+        return ConstReverseIter{ m_storage - 1 };
+    }
     T& last() { return m_storage[m_size - 1]; }
     const T& last() const { return m_storage[m_size - 1]; }
     void clear_retain() { m_size = 0; }
