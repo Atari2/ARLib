@@ -43,7 +43,7 @@ constexpr void UninitializedMoveConstruct(T* dst, T* src, size_t count) {
     }
 }
 template <CopyConstructible T>
-constexpr void UninitializedCopyConstruct(T* dst, T* src, size_t count) {
+constexpr void UninitializedCopyConstruct(T* dst, const T* src, size_t count) {
     if (!dst || !src || count == 0) return;
     if constexpr (IsTriviallyCopiableV<T>) {
         ARLib::memcpy(dst, src, count * sizeof(T));
