@@ -1,6 +1,7 @@
 #pragma once
 #include "Memory.hpp"
 #include "PrintInfo.hpp"
+#include "Allocator.hpp"
 #include "std_includes.hpp"
 namespace ARLib {
 template <typename T, size_t SSO = 15>
@@ -13,13 +14,13 @@ class SSOVector {
         // if grow internal has been called, it means that we need to grow out of situ
         HARD_ASSERT(new_capacity > m_capacity, "New capacity should be bigger than existing capacity")
         if (m_capacity == SSO) {
-            m_storage  = new T[new_capacity];
+            m_storage = allocate_uninitialized<T>(new_capacity);
             m_capacity = new_capacity;
-            if constexpr (SSO != 0) ConditionalBitMove(m_storage, addressof(m_situ_storage[0]), m_size);
+            if constexpr (SSO != 0) UninitializedMoveConstruct(m_storage, addressof(m_situ_storage[0]), m_size);
         } else {
-            T* new_storage = new T[new_capacity];
-            ConditionalBitMove(new_storage, m_storage, m_size);
-            delete[] m_storage;
+            T* new_storage = allocate_uninitialized<T>(new_capacity);
+            UninitializedMoveConstruct(new_storage, m_storage, m_size);
+            deallocate<T, DeallocType::Multiple>(m_storage);
             m_storage  = new_storage;
             m_capacity = new_capacity;
         }
@@ -27,7 +28,7 @@ class SSOVector {
     void grow_to_capacity(size_t requested_capacity) { grow_internal(basic_growth(requested_capacity)); }
     void append_internal(T&& item) {
         if (m_size == m_capacity) { grow_to_capacity(m_capacity + 1); }
-        m_storage[m_size++] = move(item);
+        new (&m_storage[m_size++]) T{ move(item) };
     }
 
     public:
@@ -45,19 +46,19 @@ class SSOVector {
     requires(OTHER_SSO != SSO)
         : m_size(other.size()) {
         if (other.size() > SSO) {
-            m_storage  = new T[other.capacity()];
+            m_storage = allocate_uninitialized<T>(other.capacity());
             m_capacity = other.capacity();
         }
-        ConditionalBitCopy(m_storage, other.storage(), other.size());
+        UninitializedCopyConstruct(m_storage, other.storage(), other.size());
     }
     template <size_t OTHER_SSO>
     SSOVector(SSOVector<T, OTHER_SSO>&& other)
     requires(OTHER_SSO != SSO)
         : m_size(other.size()) {
         if (other.size() > SSO && other.capacity() == OTHER_SSO) {
-            m_storage  = new T[other.capacity()];
+            m_storage  = allocate_uninitialized<T>(other.capacity());
             m_capacity = other.capacity();
-            ConditionalBitCopy(m_storage, other.storage(), other.size());
+            UninitializedCopyConstruct(m_storage, other.storage(), other.size());
         } else if ((OTHER_SSO < SSO && other.capacity() == OTHER_SSO) || other.size() <= SSO) {
             ConditionalBitCopy(m_storage, other.storage(), other.size());
             if (other.capacity() != OTHER_SSO) other.release_strong();
@@ -67,8 +68,8 @@ class SSOVector {
         }
     }
     SSOVector(const SSOVector& other) : m_capacity(other.m_capacity), m_size(other.m_size) {
-        if (other.m_capacity != SSO) { m_storage = new T[other.m_capacity]; }
-        ConditionalBitCopy(m_storage, other.m_storage, other.m_size);
+        if (other.m_capacity != SSO) { m_storage = allocate_uninitialized<T>(other.m_capacity); }
+        UninitializedCopyConstruct(m_storage, other.m_storage, other.m_size);
     }
     SSOVector(SSOVector&& other) noexcept : m_capacity(other.m_capacity), m_size(other.m_size) {
         if (other.m_capacity == SSO) {
@@ -86,8 +87,8 @@ class SSOVector {
     {
         m_size = other.size();
         if (m_size > m_capacity) {
-            if (m_capacity != SSO) delete[] m_storage;
-            m_storage  = new T[other.capacity()];
+            if (m_capacity != SSO) deallocate<T, DeallocType::Multiple>(m_storage);
+            m_storage  = allocate_initialized<T>(other.capacity());
             m_capacity = other.capacity();
         }
         ConditionalBitCopy(m_storage, other.storage(), m_size);
@@ -102,7 +103,7 @@ class SSOVector {
         if (other.capacity() == OTHER_SSO) {
             if (OTHER_SSO < SSO) {
                 m_capacity = OTHER_SSO;
-                m_storage  = new T[OTHER_SSO];
+                m_storage  = allocate_initialized<T>(OTHER_SSO);
             }
             ConditionalBitCopy(m_storage, other.storage(), m_size);
         } else {
@@ -116,11 +117,11 @@ class SSOVector {
         if (m_capacity > SSO && other.m_size > m_capacity) {
             // if we're already not in situ and we can't fit the other vector, let's resize
             // if we're already not in situ *but* we can fit the other vector, we don't do anything
-            delete[] m_storage;
-            m_storage = new T[other.m_size];
+            deallocate<T, DeallocType::Multiple>(m_storage);
+            allocate_initialized<T>(other.m_size);
         } else if (other.m_capacity == SSO && m_capacity > SSO) {
             // if the other one is in situ but we're not, then we delete our storage, since we don't really need it
-            delete[] m_storage;
+            deallocate<T, DeallocType::Multiple>(m_storage);
             m_storage = SSO != 0 ? addressof(m_situ_storage[0]) : m_situ_storage;
         }
         m_size     = other.m_size;
@@ -130,7 +131,7 @@ class SSOVector {
     }
     SSOVector& operator=(SSOVector&& other) noexcept {
         if (this == &other) return *this;
-        if (m_capacity > SSO) { delete[] m_storage; }
+        if (m_capacity > SSO) { deallocate<T, DeallocType::Multiple>(m_storage); }
         m_size     = other.m_size;
         m_capacity = other.m_capacity;
         if (other.m_capacity == SSO) {
@@ -165,8 +166,8 @@ class SSOVector {
         HARD_ASSERT(m_capacity != SSO, "Don't release in-situ memory")
         T* released;
         if (m_capacity == SSO) {
-            released = new T[SSO];
-            ConditionalBitCopy(released, m_storage, m_size);
+            released = allocate_uninitialized<T>(SSO);
+            UninitializedCopyConstruct(released, m_storage, m_size);
         } else {
             released   = m_storage;
             m_storage  = SSO != 0 ? addressof(m_situ_storage[0]) : m_situ_storage;
@@ -177,7 +178,7 @@ class SSOVector {
     }
     void release_strong() {
         if (m_capacity != SSO) {
-            delete[] m_storage;
+            deallocate<T, DeallocType::Multiple>(m_storage);
             m_storage  = SSO != 0 ? addressof(m_situ_storage[0]) : m_situ_storage;
             m_capacity = SSO;
         }
@@ -200,14 +201,14 @@ class SSOVector {
             // grow
             if (m_capacity == SSO) {
                 m_capacity = basic_growth(m_capacity + 1);
-                m_storage  = new T[m_capacity];
-                ConditionalBitCopy(m_storage + sizeof(T), m_situ_storage, m_size);
+                m_storage  = allocate_uninitialized<T>(m_capacity);
+                UninitializedCopyConstruct(m_storage + sizeof(T), m_situ_storage, m_size);
             } else {
                 T* storage = m_storage;
                 m_capacity = basic_growth(m_capacity + 1);
-                m_storage  = new T[m_capacity];
-                ConditionalBitCopy(m_storage + sizeof(T), storage, m_size);
-                delete[] storage;
+                m_storage  = allocate_uninitialized<T>(m_capacity);
+                UninitializedCopyConstruct(m_storage + sizeof(T), storage, m_size);
+                deallocate<T, DeallocType::Multiple>(storage);
             }
         } else {
             if constexpr (IsTriviallyCopiableV<T>) {
@@ -219,7 +220,7 @@ class SSOVector {
                 }
             }
         }
-        m_storage[0] = move(item);
+        new (&m_storage[0]) T{ move(item) };
         m_size++;
     }
     void resize(size_t new_size)
@@ -227,7 +228,9 @@ class SSOVector {
     {
         if (new_size < m_size) return;
         if (new_size > m_capacity) { grow_to_capacity(new_size); }
-        for (size_t i = m_size; i < new_size; i++) { m_storage[i] = move(T{}); }
+        for (size_t i = m_size; i < new_size; i++) {   
+            new (&m_storage[i]) T{}; 
+        }
         m_size = new_size;
     }
     void reserve(size_t new_capacity) {
@@ -241,7 +244,7 @@ class SSOVector {
     const T& last() const { return m_storage[m_size - 1]; }
     T& last() { return m_storage[m_size - 1]; }
     ~SSOVector() {
-        if (m_capacity > SSO) delete[] m_storage;
+        if (m_capacity > SSO) deallocate<T, DeallocType::Multiple>(m_storage);
     }
 };
 template <Printable T, size_t S>
