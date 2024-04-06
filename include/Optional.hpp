@@ -94,12 +94,12 @@ class Optional {
     Optional& operator=(const Optional& other) = default;
     Optional& operator=(Optional&& other)      = default;
     Optional(T&& val)
-    requires(MoveAssignable<T> && !IsLvalueReferenceV<T>)
+    requires(MoveConstructible<T> && !IsLvalueReferenceV<T>)
     {
         m_object.initialize(Forward<T>(val));
     }
     Optional(const T& val)
-    requires(CopyAssignable<T> && !IsLvalueReferenceV<T>)
+    requires(CopyConstructible<T> && !IsLvalueReferenceV<T>)
     {
         m_object.initialize(T{ val });
     }
