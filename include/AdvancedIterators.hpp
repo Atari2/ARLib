@@ -79,7 +79,7 @@ auto& types_into_iter_tuple(Tp tp, Tps... tps) {
         return *tup;
     } else {
         using Arr = TypeArray<RealT>;
-        return types_into_iter_tuple<Tps...>(Arr{}, tps...);
+        return types_into_iter_tuple(Arr{}, tps...);
     }
 }
 template <typename Tp, typename... Tps, typename... Rem>
@@ -90,7 +90,7 @@ auto& types_into_iter_tuple(TypeArray<Tps...>, Tp tp, Rem... rem) {
         return *tup;
     } else {
         using Arr = TypeArray<Tps..., RealT>;
-        return types_into_iter_tuple<Rem...>(Arr{}, rem...);
+        return types_into_iter_tuple(Arr{}, rem...);
     }
 }
 template <typename... Tps>
