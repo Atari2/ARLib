@@ -5,6 +5,20 @@
 #include "AdvancedIterators.hpp"
 #include "TypeTraits.hpp"
 namespace ARLib {
+template <typename T>
+concept HasInnerContainerType = requires { typename RemoveCvRefT<T>::InnerContainer; };
+template <typename T>
+struct GetContainerType {
+    using Container = T;
+};
+template <typename T>
+requires HasInnerContainerType<T>
+struct GetContainerType<T> {
+    using Container = typename RemoveCvRefT<T>::InnerContainer;
+};
+template <typename T>
+using ContainerTypeT = typename GetContainerType<T>::Container;
+
 template <typename Cont>
 size_t container_size(const Cont& cont) {
     if constexpr (EnumerableC<Cont>) {
@@ -21,8 +35,8 @@ size_t container_size(const Cont& cont) {
 }
 template <typename It>
 concept IterCanAdvanceWithOffset = requires(It it, size_t dist) {
-                                       { it + dist } -> SameAs<It>;
-                                   };
+    { it + dist } -> SameAs<It>;
+};
 template <typename It>
 auto advance_iterator(It iter, It end, size_t dist) {
     if constexpr (IterCanAdvanceWithOffset<It>) {
@@ -63,6 +77,7 @@ class Enumerate {
     T m_container;
 
     public:
+    using InnerContainer = ContainerTypeT<T>;
     explicit Enumerate(T&& container) : m_container(Forward<T>(container)) {}
     auto begin() const { return Enumerator{ ARLib::begin(m_container), 0ull }; }
     auto end() const { return Enumerator{ ARLib::end(m_container), it_npos }; }
@@ -85,6 +100,7 @@ class ConstEnumerate {
     TRef m_container;
 
     public:
+    using InnerContainer = ContainerTypeT<T>;
     explicit ConstEnumerate(const T& container) : m_container(container) {}
     auto begin() const { return ConstEnumerator{ ARLib::begin(m_container), 0ull }; }
     auto end() const { return ConstEnumerator{ ARLib::end(m_container), m_container.size() }; }
@@ -121,9 +137,7 @@ class ZipIterate {
         return *min(ARLib::begin(sizes), ARLib::end(sizes));
     }
     public:
-    ZipIterate(const Conts&... conts) : m_tuple{ conts... }, m_size{} {
-        m_size = isize(IndexSequenceFor<Conts...>{});
-    }
+    ZipIterate(const Conts&... conts) : m_tuple{ conts... }, m_size{} { m_size = isize(IndexSequenceFor<Conts...>{}); }
     template <typename... UConts>
     ZipIterate(UConts&&... conts) : m_tuple{ Forward<UConts>(conts)... }, m_size{} {
         m_size = isize(IndexSequenceFor<Conts...>{});
@@ -146,6 +160,7 @@ class FilterIterate {
     Iter m_end;
     Functor m_func;
     public:
+    using InnerContainer = ContainerTypeT<Container>;
     FilterIterate(Container& cont, Functor func) : m_start(cont.begin()), m_end(cont.end()), m_func(func) {}
     FilterIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
     auto begin() const { return IfIterator<Iter, Functor>{ m_start, m_end, m_func }; }
@@ -161,6 +176,7 @@ class MapIterate {
     Functor m_func;
 
     public:
+    using InnerContainer = ContainerTypeT<Container>;
     MapIterate(Container& cont, Functor func) : m_start(cont.begin()), m_end(cont.end()), m_func(func) {}
     MapIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
     auto begin() const { return MapIterator<Iter, Functor>{ m_start, m_end, m_func }; }
@@ -170,9 +186,9 @@ class MapIterate {
 };
 template <typename Container>
 concept ReverseIterable = requires(Container cont) {
-                              { cont.rbegin() } -> IteratorConcept;
-                              { cont.rend() } -> IteratorConcept;
-                          };
+    { cont.rbegin() } -> IteratorConcept;
+    { cont.rend() } -> IteratorConcept;
+};
 template <ReverseIterable Container>
 class ReverseIterate {
     using Iter = decltype(declval<Container>().rbegin());
@@ -181,6 +197,7 @@ class ReverseIterate {
     Iter m_end;
 
     public:
+    using InnerContainer = ContainerTypeT<Container>;
     ReverseIterate(Container& cont) : m_start(cont.rbegin()), m_end(cont.rend()) {}
     ReverseIterate(Iter start, Iter end) : m_start(start), m_end(end) {}
     auto begin() const { return m_start; }

@@ -57,23 +57,27 @@ class IteratorView {
     using ConstIterRet = AddConstT<IterRet>;
     Iter m_begin;
     Iter m_end;
-    using ItemType             = RemoveReferenceT<IteratorInputType<Iter>>;
-    using OutputType           = RemoveReferenceT<IteratorOutputType<Iter>>;
-    using FindOutputType       = IteratorOutputType<Iter>;
-    ItemType* m_stolen_storage = nullptr;
-    ItemType* release_storage() {
-        ItemType* storage = m_stolen_storage;
-        m_stolen_storage  = nullptr;
-        return storage;
+    using ItemType       = RemoveReferenceT<IteratorInputType<Iter>>;
+    using OutputType     = RemoveReferenceT<IteratorOutputType<Iter>>;
+    using FindOutputType = IteratorOutputType<Iter>;
+    using ContainerType  = ContainerTypeT<Cont>;
+    Optional<ContainerType> m_stolen_container{};
+    Optional<ContainerType> release_container() {
+        auto released{ move(m_stolen_container) };
+        return released; 
     }
-
     public:
+    using InnerContainer                    = ContainerType;
     IteratorView(const IteratorView& other) = delete;
     IteratorView(IteratorView&& other) noexcept :
-        m_begin(move(other.m_begin)), m_end(move(other.m_end)), m_stolen_storage(other.release_storage()) {}
-    IteratorView(ItemType* storage, Iter begin, Iter end) :
-        m_begin(move(begin)), m_end(move(end)), m_stolen_storage(storage) {}
-    IteratorView(ItemType* storage, size_t size) : m_begin(storage), m_end(storage + size), m_stolen_storage(storage) {}
+        m_begin(move(other.m_begin)), m_end(move(other.m_end)), m_stolen_container(move(other.m_stolen_container)) {}
+    explicit IteratorView(ContainerType&& storage) :
+        m_begin(storage.begin()), m_end(storage.end()), m_stolen_container(Forward<ContainerType>(storage)) {}
+    IteratorView(ContainerType&& storage, Iter begin, Iter end) :
+        m_begin(move(begin)), m_end(move(end)), m_stolen_container(Forward<ContainerType>(storage)) {}
+    IteratorView(Optional<ContainerType>&& storage, Iter begin, Iter end) :
+        m_begin(move(begin)), m_end(move(end)), m_stolen_container(Forward<Optional<ContainerType>>(storage)) {}
+    IteratorView(Iter begin, Iter end) : m_begin(move(begin)), m_end(move(end)) {}
     explicit IteratorView(Cont& cont) : m_begin(cont.begin()), m_end(cont.end()) {}
     IterRet begin() { return m_begin; }
     IterRet end() { return m_end; }
@@ -97,11 +101,11 @@ class IteratorView {
         if constexpr (IterCanAdvanceWithOffset<Iter> && IterCanSubtractForSize<Iter>) {
             size_t size = m_end - m_begin;
             if (n > size) { n = size; }
-            return IteratorView{ release_storage(), m_begin + n, m_end };
+            return IteratorView{ release_container(), m_begin + n, m_end };
         } else {
             auto new_begin = m_begin;
             for (size_t i = 0; i < n && new_begin != m_end; ++i) { ++new_begin; }
-            return IteratorView{ release_storage(), new_begin, m_end };
+            return IteratorView{ release_container(), new_begin, m_end };
         }
     }
     template <typename NewCont>
@@ -130,15 +134,13 @@ class IteratorView {
     NewCont collect()
     requires Pushable<NewCont, IteratorOutputType<Iter>>
     {
-        if (m_stolen_storage != nullptr) {
+        if (m_stolen_container.has_value()) {
             if constexpr (SameAs<NewCont, Cont> && IterCanSubtractForSize<Iter>) {
-                return NewCont{ m_stolen_storage, size() };
+                return m_stolen_container.extract();
             } else {
                 NewCont copy{};
                 if constexpr (Reservable<NewCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
                 for (auto it = m_begin; it != m_end; ++it) { copy.append(move(*it)); }
-                deallocate<ItemType, DeallocType::Multiple>(m_stolen_storage);
-                m_stolen_storage = nullptr;
                 return copy;
             }
         } else {
@@ -153,15 +155,13 @@ class IteratorView {
     requires Pushable<NewCont<ItemT>, ItemT>
     {
         using RealCont = NewCont<ItemT>;
-        if (m_stolen_storage != nullptr) {
+        if (m_stolen_container.has_value()) {
             if constexpr (SameAs<RealCont, Cont> && IterCanSubtractForSize<Iter>) {
-                return RealCont{ m_stolen_storage, size() };
+                return m_stolen_container.extract();
             } else {
                 RealCont copy{};
                 if constexpr (Reservable<RealCont> && IterCanSubtractForSize<Iter>) { copy.reserve(size()); }
                 for (auto it = m_begin; it != m_end; ++it) { copy.append(move(*it)); }
-                deallocate<ItemType, DeallocType::Multiple>(m_stolen_storage);
-                m_stolen_storage = nullptr;
                 return copy;
             }
         } else {
@@ -174,12 +174,12 @@ class IteratorView {
     template <typename Functor>
     auto filter(Functor func) {
         auto filter_iter = FilterIterate{ *this, func };
-        return IteratorView<decltype(filter_iter)>{ release_storage(), filter_iter.begin(), filter_iter.end() };
+        return IteratorView<decltype(filter_iter)>{ release_container(), filter_iter.begin(), filter_iter.end() };
     }
     template <typename Functor>
     auto map(Functor func) {
         auto map_iter = MapIterate{ *this, func };
-        return IteratorView<decltype(map_iter)>{ release_storage(), map_iter.begin(), map_iter.end() };
+        return IteratorView<decltype(map_iter)>{ release_container(), map_iter.begin(), map_iter.end() };
     }
     template <typename T2>
     requires requires {
@@ -190,11 +190,11 @@ class IteratorView {
             return T2{ v };
         };
         auto map_iter = MapIterate{ *this, conversion_func };
-        return IteratorView<decltype(map_iter)>{ release_storage(), map_iter.begin(), map_iter.end() };
+        return IteratorView<decltype(map_iter)>{ release_container(), map_iter.begin(), map_iter.end() };
     }
     auto enumerate() {
         auto enum_iter = Enumerate{ *this };
-        return IteratorView<decltype(enum_iter)>{ release_storage(), enum_iter.begin(), enum_iter.end() };
+        return IteratorView<decltype(enum_iter)>{ release_container(), enum_iter.begin(), enum_iter.end() };
     }
     template <Iterable C>
     auto zip(C&& cont) & {
@@ -248,7 +248,6 @@ class IteratorView {
         }
         return {};
     }
-    ~IteratorView() { deallocate<ItemType, DeallocType::Multiple>(m_stolen_storage); }
 };
 template <Printable T>
 struct PrintInfo<GenericView<T>> {

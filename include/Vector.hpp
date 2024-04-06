@@ -372,22 +372,17 @@ class Vector {
     }
     auto iter() const& { return IteratorView{ *this }; }
     auto iter() & { return IteratorView{ *this }; }
-    auto iter() && {
-        auto view  = IteratorView<Vector<T>>{ m_storage, m_size };
-        m_capacity = 0;
-        return view;
-    }
-    auto riter() const& { return IteratorView<Vector<T>, decltype(crbegin())>{ nullptr, crbegin(), crend() }; }
-    auto riter() & { return IteratorView<Vector<T>, decltype(rbegin())>{ nullptr, rbegin(), rend() }; }
+    auto iter() && { return IteratorView<Vector<T>>{ move(*this) }; }
+    auto riter() const& { return IteratorView<Vector<T>, decltype(crbegin())>{ crbegin(), crend() }; }
+    auto riter() & { return IteratorView<Vector<T>, decltype(rbegin())>{ rbegin(), rend() }; }
     auto riter() && {
-        auto view  = IteratorView<Vector<T>, decltype(rbegin())>{ m_storage, rbegin(), rend() };
-        m_capacity = 0;
+        auto view = IteratorView<Vector<T>, decltype(rbegin())>{ move(*this), rbegin(), rend() };
         return view;
     }
     auto reversed() const& { return riter().template collect<Vector>(); }
     auto reversed() & { return riter().template collect<Vector>(); }
     auto reversed() && {
-        auto view  = IteratorView<Vector<T>, decltype(rbegin())>{ m_storage, rbegin(), rend() };
+        auto view  = IteratorView<Vector<T>, decltype(rbegin())>{ move(*this), rbegin(), rend() };
         m_capacity = 0;
         return view.template collect<Vector<T>>();
     }
