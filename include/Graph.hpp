@@ -50,6 +50,14 @@ class GraphEdge {
     double weight() const { return m_weight; }
 };
 template <typename T>
+struct PrintInfo<GraphEdge<T>> {
+    const GraphEdge<T>& m_edge;
+    PrintInfo(const GraphEdge<T>& edge) : m_edge{ edge } {}
+    String repr() const {
+        return "Edge { "_s + print_conditional(m_edge.source()) + " -> " + print_conditional(m_edge.dest()) + " }"_s;
+    }
+};
+template <typename T>
 concept HasGraphKeyType = requires(const T& val) {
     typename T::GraphKeyType;
     requires Hashable<typename T::GraphKeyType>;
@@ -247,8 +255,7 @@ class Graph {
                 return move(stack).reversed();
             }
             queue.remove(u);
-
-            for (const auto& v : neighbors_directed(u).iter().filter([&queue](const auto& n) {
+            for (auto&& v : neighbors_directed(u).iter().filter([&queue](const auto& n) {
                      return queue.find(*n) != queue.end();
                  })) {
                 double alt =
