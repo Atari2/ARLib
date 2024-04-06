@@ -109,10 +109,17 @@ struct FlatSetStorageStack {
         return *this;
     }
     T& initialize_at(size_t index, T&& value) {
-        initialized_mask |= static_cast<uint16_t>(1 << index);
-        uint8_t* obj_ptr = &storage[ObjectSize * index];
-        T* obj           = new (obj_ptr) T{ move(value) };
-        return *obj;
+        const uint16_t index_mask = static_cast<uint16_t>(1 << index);
+        uint8_t* obj_ptr          = &storage[ObjectSize * index];
+        if ((initialized_mask & index_mask) != 0) {
+            T* obj = reinterpret_cast<T*>(obj_ptr);
+            *obj   = move(value);
+            return *obj;
+        } else {
+            initialized_mask |= index_mask;
+            T* obj = new (obj_ptr) T{ move(value) };
+            return *obj;
+        }
     }
     void destroy_at(size_t index) {
         initialized_mask &= static_cast<uint16_t>(~(1 << index));
@@ -162,10 +169,17 @@ struct FlatSetStorageHeap {
     }
     T& initialize_at(size_t index, T&& value) {
         if (storage == nullptr) { storage = allocate_uninitialized<uint8_t>(StorageSize); }
-        initialized_mask |= static_cast<uint16_t>(1 << index);
-        uint8_t* obj_ptr = &storage[ObjectSize * index];
-        T* obj           = new (obj_ptr) T{ move(value) };
-        return *obj;
+        const uint16_t index_mask = static_cast<uint16_t>(1 << index);
+        uint8_t* obj_ptr          = &storage[ObjectSize * index];
+        if ((initialized_mask & index_mask) != 0) {
+            T* obj = reinterpret_cast<T*>(obj_ptr);
+            *obj   = move(value);
+            return *obj;
+        } else {
+            initialized_mask |= index_mask;
+            T* obj = new (obj_ptr) T{ move(value) };
+            return *obj;
+        }
     }
     void destroy_at(size_t index) {
         initialized_mask &= static_cast<uint16_t>(~(1 << index));
@@ -390,8 +404,9 @@ class FlatSet {
         auto& val = m_buckets[it.m_current_bucket].m_bucket.initialize_at(*it.m_current_item, Forward<T>(value));
         return val;
     }
-    Pair<bool, T&> insert(T&& value) {
+    Pair<bool, const T&> insert(T&& value) {
         auto&& [ins, it] = prepare_for_insert(value);
+        if (!ins) return { false, *it };
         auto& val        = m_buckets[it.m_current_bucket].m_bucket.initialize_at(*it.m_current_item, Forward<T>(value));
         return { ins, val };
     }

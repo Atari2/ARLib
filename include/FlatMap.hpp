@@ -79,7 +79,20 @@ class FlatMap {
     auto iter() const { return IteratorView{ *this }; }
     bool contains(const Key& value) const { return find(value) != end(); }
     bool remove(const Key& value) { return m_table.remove(value); }
-    auto insert(Entry&& entry) { return m_table.insert(Forward<Entry>(entry)); }
+    auto insert(Entry&& entry) {
+        auto&& [ins, v] = m_table.insert(Forward<Entry>(entry));
+        if (!ins) {
+            // HashTable refused insertion, which means that Entry.key() is already present
+            // since we may be inserting a new value with the same key, e.g.
+            // map["hello"] = 10;
+            // map["hello"] = 30;  <--- here
+            // we overwrite the old value with the new one
+            // note 1: reusing `entry` here is valid because since it wasn't inserted, it has not been moved from.
+            // note 2: const_cast is valid (and required) because we're allowed to touch the value, and the original object is not const
+            const_cast<Entry&>(v).val() = entry.val(); 
+        }
+        return Pair<bool, const Entry&>{ ins, v };
+    }
     auto insert(Key&& key, Val&& value) { return insert(Entry{ Forward<Key>(key), Forward<Val>(value) }); }
     template <typename... Args>
     requires Constructible<Entry, Args...>
