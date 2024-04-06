@@ -1455,7 +1455,7 @@ TEST(ARLibTests, OptionalRefTest) {
     // find on an owned vector with long lifetime should return an lvalue reference
     static_assert(SameAs<decltype(res1), Optional<String&>>);
     // find on a mapping should return a lvalue.
-    static_assert(SameAs<decltype(res2), Optional<int>>);    
+    static_assert(SameAs<decltype(res2), Optional<int>>);
     EXPECT_EQ(res1, "3"_s);
     EXPECT_EQ(res2, 2);
 }
@@ -1484,7 +1484,7 @@ TEST(ARLibTests, ResultTest) {
     EXPECT_EQ(resd.to_error()->error_string(), "A"_sv);
 }
 TEST(ARLibTests, VectorTests) {
-    Vector<int> v {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    Vector<int> v{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     EXPECT_EQ(v.size(), 10);
     auto removed = v.remove_matching([](int i) { return i % 2 == 0; });
     EXPECT_EQ(removed, 5);
@@ -1506,14 +1506,14 @@ TEST(ARLibTests, GraphTests) {
     EXPECT_EQ(edge.source().value(), "Hello World"_sv);
     EXPECT_EQ(g.n_edges(), 1);
     EXPECT_EQ(g.n_nodes(), 2);
-    auto node2       = g.find_node("Hello World"_s);
+    auto node2 = g.find_node("Hello World"_s);
     EXPECT_TRUE(node2.has_value());
-    auto node3       = g.find_node("asdf"_s);
+    auto node3 = g.find_node("asdf"_s);
     EXPECT_FALSE(node3.has_value());
-    auto neighs      = g.neighbors("Hello World"_s);
+    auto neighs = g.neighbors("Hello World"_s);
     EXPECT_EQ(neighs.size(), 1);
     EXPECT_EQ(neighs[0]->value(), "This is a test"_sv);
-    auto dneighs     = g.neighbors_directed("Hello World"_s);
+    auto dneighs = g.neighbors_directed("Hello World"_s);
     EXPECT_EQ(dneighs.size(), 1);
     EXPECT_EQ(dneighs[0]->value(), "This is a test"_sv);
     auto edge1 = g.find_edge("Hello World"_s, "This is a test"_s);
@@ -1536,12 +1536,12 @@ TEST(ARLibTests, GraphTests) {
     g2.add_edge(3, 5);
     g2.add_edge(4, 5, 5.0);
     auto& n3 = g2.add_node(6);
-    auto r = g2.dijkstra(n1, n2);
+    auto r   = g2.dijkstra(n1, n2);
     auto r2  = g2.dijkstra(n1, n3);
     EXPECT_EQ(r2.size(), 0);
-    int32_t expected_node_values[] {1, 2, 3, 5};
+    int32_t expected_node_values[]{ 1, 2, 3, 5 };
     EXPECT_EQ(r.size(), sizeof_array(expected_node_values));
-    for (size_t i = 0; i < sizeof_array(expected_node_values); ++i) { 
+    for (size_t i = 0; i < sizeof_array(expected_node_values); ++i) {
         EXPECT_EQ(r[i]->value(), expected_node_values[i]);
     }
 }
