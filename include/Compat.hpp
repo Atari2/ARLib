@@ -16,6 +16,10 @@
         #define ENVIRON32 1
     #endif
 
+    #if _MSC_VER < 1939
+        #error "This library requires cl 19.39 or over to compile correctly"
+    #endif
+
 #elif defined(COMPILER_GCC)    // GCC
     #define arlib_unreachable __builtin_unreachable();
     #define arlib_forceinline __attribute__((always_inline))
@@ -27,6 +31,10 @@
         #define ENVIRON32 1
     #endif
 
+    #if __GNUC__ < 12
+        #error "This library requires GCC 12 or over to compile corre"
+    #endif
+
 #elif defined(COMPILER_CLANG)    // CLANG
     #define arlib_unreachable __builtin_unreachable();
     #define arlib_forceinline __attribute__((always_inline))
@@ -36,6 +44,10 @@
         #define ENVIRON64 1
     #else
         #define ENVIRON32 1
+    #endif
+
+    #if __clang_major__ < 16
+        #error "This library requires Clang 16 or over to compile correctly"
     #endif
 #else    // OTHER
 
