@@ -5,17 +5,6 @@
 #include "cstring_compat.hpp"
 namespace ARLib {
 
-// gcc 11+ and msvc 19.3+ support everything in here
-// clang 13 however (latest clang) doesn't, clang 14 (not available yet) does
-#ifdef COMPILER_CLANG
-    #if __clang_major__ >= 14
-        #define STRINGLITERAL_AVAILABLE
-    #endif
-#else
-    #define STRINGLITERAL_AVAILABLE
-#endif
-
-#ifdef STRINGLITERAL_AVAILABLE
 // this is a weird class
 // it attempts at adding a convenience API around a compile time string
 // e.g. "hello world"
@@ -28,9 +17,34 @@ namespace ARLib {
 // you'll need to declare the variable as static (and constexpr) to guarantee storage pointer stability.
 template <size_t N>
 struct StringLiteral {
-    const char _m_str[N];
+    char _m_str[N]{};
     constexpr static inline size_t npos   = static_cast<size_t>(-1);
     constexpr static inline size_t m_size = N - 1;
+    consteval StringLiteral(const char (&str)[N]) {
+        for (size_t i = 0; i < N; i++) _m_str[i] = str[i];
+    }
+    consteval StringLiteral() = default;
+    constexpr operator StringView() const { return _m_str; }
+    template <size_t M>
+    consteval StringLiteral<M + N - 1> operator+(const StringLiteral<M>& rhs) const {
+        StringLiteral<M + N - 1> out;
+        for (size_t i = 0; i < N - 1; i++) out._m_str[i] = _m_str[i];
+        for (size_t i = 0; i < M; i++) out._m_str[i + N - 1] = rhs._m_str[i];
+        return out;
+    }
+    template <size_t M>
+    consteval StringLiteral<M + N - 1> operator+(const char (&rhs)[M]) const {
+        StringLiteral<M + N - 1> out;
+        for (size_t i = 0; i < N - 1; i++) out._m_str[i] = _m_str[i];
+        for (size_t i = 0; i < M; i++) out._m_str[i + N - 1] = rhs[i];
+        return out;
+    }
+    consteval StringLiteral<N + 1> operator+(const char c) const {
+        StringLiteral<N + 1> out;
+        for (size_t i = 0; i < N; i++) out._m_str[i] = _m_str[i];
+        out._m_str[N - 1] = c;
+        return out;
+    }
     consteval const char* ptr() const { return _m_str; }
     consteval size_t size() const { return m_size; }
     consteval char operator[](const size_t index) const { return _m_str[index]; }
@@ -87,7 +101,29 @@ struct StringLiteral {
         }
         return npos;
     }
+    consteval bool operator==(const StringLiteral& other) const {
+        for (size_t i = 0; i < N; ++i) {
+            if (_m_str[i] != other._m_str[i]) { return false; }
+        }
+        return true;
+    }
+    consteval bool operator==(const StringView& other) const {
+        for (size_t i = 0; i < N; ++i) {
+            if (_m_str[i] != other[i]) { return false; }
+        }
+        return true;
+    }
+    consteval bool operator==(const char (&other)[N]) const {
+        for (size_t i = 0; i < N; ++i) {
+            if (_m_str[i] != other[i]) { return false; }
+        }
+        return true;
+    }
 };
+template <size_t N>
+consteval StringLiteral<N> sl(const char (&str)[N]) {
+    return str;
+}
 template <size_t N>
 StringLiteral(const char (&str)[N]) -> StringLiteral<N>;
 template <size_t N>
@@ -96,5 +132,4 @@ struct PrintInfo<StringLiteral<N>> {
     PrintInfo(const StringLiteral<N>& string) : m_string(string) {}
     String repr() const { return String{ m_string.ptr() }; }
 };
-#endif
 }    // namespace ARLib
