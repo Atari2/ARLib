@@ -50,10 +50,8 @@ namespace Detail {
         StringView fmt;
         template <size_t N>
         consteval CheckedFormatString(const char (&fmt_)[N]) : fmt{ fmt_, N - 1 } {
-#ifndef COMPILER_CLANG
             bool result = check_format_string<ArgsSize>(fmt_);
             if (!result) compiletime_assertion_fail("Format arguments are not the same number as formats to fill");
-#endif
         }
     };
 }    // namespace Detail
@@ -124,17 +122,7 @@ class Printer {
             }
         }
         format_string = move(escaped_format_string);
-        // this check is moved to compile time for MSVC and GCC
-        // using Detail::CheckedFormatString
-        // since Clang-14 complains about fmt_ being an unknown value
         constexpr auto num_args = sizeof...(args);
-#ifdef COMPILER_CLANG
-        HARD_ASSERT_FMT(
-        (indexes.size() == num_args),
-        "Format arguments are not the same number as formats to fill, arguments are %d, to fill there are %d", num_args,
-        indexes.size()
-        )
-#endif
         builder.reserve(format.size());
         if constexpr (num_args == 0) {
             builder = move(format_string);
