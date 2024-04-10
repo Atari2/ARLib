@@ -16,8 +16,8 @@
         #define ENVIRON32 1
     #endif
 
-    #if _MSC_VER < 1939
-        #error "This library requires cl 19.39 or over to compile correctly"
+    #if _MSC_VER < 1937
+        #error "This library requires cl 19.37 or over to compile correctly"
     #endif
 
 #elif defined(COMPILER_GCC)    // GCC
