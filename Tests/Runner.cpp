@@ -274,6 +274,8 @@ TEST(ARLibTests, StringViewTests) {
     static_assert(c == 'o');    // this needs to compile
     static_assert(view == "hello world"_sv);
     static_assert(view == "hello world");
+    auto v = "   \t\n  hello world    \f\v\n  "_sv.trim();
+    EXPECT_EQ(v, "hello world"_sv);
 }
 TEST(ARLibTests, FormatTest) {
     Vector<double> vec{ 1.0, 2.0, 3.0 };
@@ -770,7 +772,6 @@ TEST(ARLibTests, StrStrTests) {
     EXPECT_EQ(ARLib::strstr(str, c), str);
     EXPECT_EQ(ARLib::strstr(str, d), str + 5);
 }
-#ifdef STRINGLITERAL_AVAILABLE
 TEST(ARLibTests, StringLiteralTests) {
     constexpr static StringLiteral l{ "hello  world my name is" };
     constexpr char c = l[4];
@@ -785,8 +786,9 @@ TEST(ARLibTests, StringLiteralTests) {
     static_assert(splits.size() == 2);
     static_assert(splits[0] == "hello");
     static_assert(splits[1] == "world my name is");
+    constexpr auto view = sl("hello") + ' ' + "world!";
+    static_assert(view == "hello world!");
 }
-#endif
 TEST(ARLibTests, PriorityQueueTests) {
     struct TestQueueItem {
         String it;

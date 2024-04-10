@@ -168,6 +168,26 @@ class StringView {
     constexpr bool is_empty() const { return !m_start; }
     Span<const char> span() const;
     Span<const uint8_t> bytespan() const;
+    StringView trim() const {
+        size_t front         = 0;
+        size_t back          = m_size - 1;
+        bool front_unmatched = false;
+        bool back_unmatched  = false;
+        for (; front <= back;) {
+            if (isspace(m_start[front])) {
+                front++;
+            } else {
+                front_unmatched = true;
+            }
+            if (isspace(m_start[back])) {
+                back--;
+            } else {
+                back_unmatched = true;
+            }
+            if (front_unmatched && back_unmatched) { break; }
+        }
+        return StringView{ m_start + front, m_start + back + 1 };
+    }
 };
 constexpr StringView operator""_sv(const char* source, size_t len) {
     return StringView{ source, len };

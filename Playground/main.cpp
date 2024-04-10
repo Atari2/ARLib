@@ -7,7 +7,7 @@
 #include "JSONParser.hpp"
 
 using namespace ARLib;
-int main([[maybe_unused]] int argc,[[maybe_unused]] char** argv) {
+int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     Graph<uint32_t> g{};
     auto& pcg = Random::PCG::static_state();
     FlatSet<uint32_t> unique_values{};
@@ -26,5 +26,7 @@ int main([[maybe_unused]] int argc,[[maybe_unused]] char** argv) {
         g.add_edge(uint32_t{ unique_values_vec[source] }, uint32_t{ unique_values_vec[dest] });
     }
     Printer::print("{} nodes and {} edges", g.n_nodes(), g.n_edges());
+    auto v = "   \t\n  hello world    \f\v\n  "_sv.trim();
+    Printer::print("{}", v);
     return 0;
 }
