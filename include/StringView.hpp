@@ -168,7 +168,7 @@ class StringView {
     constexpr bool is_empty() const { return !m_start; }
     Span<const char> span() const;
     Span<const uint8_t> bytespan() const;
-    StringView trim() const {
+    constexpr StringView trim() const {
         size_t front         = 0;
         size_t back          = m_size - 1;
         bool front_unmatched = false;
