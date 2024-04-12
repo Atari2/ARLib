@@ -74,20 +74,17 @@ class IntrusiveMap {
         return Val{};
     }
 #ifdef DEBUG_NEW_DELETE
-    ~IntrusiveMap()
-    requires(!IsSameV<RemoveReferenceT<decltype(*this)>, DebugNewDeleteMap>)
-    = default;
-    ~IntrusiveMap()
-    requires IsSameV<RemoveReferenceT<decltype(*this)>, DebugNewDeleteMap>
-    {
-        if (m_lost_entries) return;
-        for (size_t i = 0; i < MAP_SIZE; i++) {
-            auto [size, type] = m_vals[i];
-            if (m_tombs[i]) {
-                printf(
-                "Pointer still not free at %p with size %zu and type %s\n", m_keys[i], size,
-                type == AllocType::Single ? "Single" : "Multiple"
-                );
+    ~IntrusiveMap() {
+        if constexpr (SameAsCvRef<decltype(*this), DebugNewDeleteMap>) {
+            if (m_lost_entries) return;
+            for (size_t i = 0; i < MAP_SIZE; i++) {
+                auto [size, type] = m_vals[i];
+                if (m_tombs[i]) {
+                    printf(
+                    "Pointer still not free at %p with size %zu and type %s\n", m_keys[i], size,
+                    type == AllocType::Single ? "Single" : "Multiple"
+                    );
+                }
             }
         }
     };
