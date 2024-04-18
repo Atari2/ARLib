@@ -130,6 +130,7 @@ ArgParser::ParseResult ArgParser::parse() {
                                              return res.to_ok();
                                          })
                                          .collect<Vector>();
+                    if (has_error) { return error; }
                     if (!opt.assign(move(vec))) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
