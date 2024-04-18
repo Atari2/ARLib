@@ -1,4 +1,4 @@
-#include "Suite.hpp"
+﻿#include "Suite.hpp"
 #include <gtest/gtest.h>
 #include "GTestPrintHelpers.hpp"
 
@@ -1548,4 +1548,24 @@ TEST(ARLibTests, GraphTests) {
     for (size_t i = 0; i < sizeof_array(expected_node_values); ++i) {
         EXPECT_EQ(r[i]->value(), expected_node_values[i]);
     }
+}
+TEST(ARLibTests, SyncDataTest) {
+    SyncData<String> data{ "Hello World"_s };
+    {
+        Vector<JThread> threads{};
+        threads.fill(
+        [&]() {
+            return JThread{ [&]() {
+                static size_t id = 0;
+                data.with_lock([&](String& l) {
+                    id++;
+                    l.append(' ');
+                    l.append(IntToStr(id));
+                });
+            } };
+        },
+        10
+        );
+    }
+    EXPECT_EQ(data.extract(), "Hello World 1 2 3 4 5 6 7 8 9 10"_sv);
 }

@@ -31,6 +31,7 @@
 #include "Stream.hpp"
 #include "String.hpp"
 #include "StringLiteral.hpp"
+#include "Sync.hpp"
 #include "Test.hpp"
 #include "Threading.hpp"
 #include "Tree.hpp"

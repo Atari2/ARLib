@@ -288,6 +288,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/String.hpp
     ${ARLIB_INCLUDE_DIR}/StringLiteral.hpp
     ${ARLIB_INCLUDE_DIR}/StringView.hpp
+    ${ARLIB_INCLUDE_DIR}/Sync.hpp
     ${ARLIB_INCLUDE_DIR}/Test.hpp
     ${ARLIB_INCLUDE_DIR}/ThreadBase.hpp
     ${ARLIB_INCLUDE_DIR}/Threading.hpp
