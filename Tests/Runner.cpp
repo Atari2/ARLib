@@ -1,4 +1,4 @@
-﻿#include "Suite.hpp"
+#include "Suite.hpp"
 #include <gtest/gtest.h>
 #include "GTestPrintHelpers.hpp"
 
@@ -276,6 +276,8 @@ TEST(ARLibTests, StringViewTests) {
     static_assert(view == "hello world");
     auto v = "   \t\n  hello world    \f\v\n  "_sv.trim();
     EXPECT_EQ(v, "hello world"_sv);
+    constexpr auto v2 = "   \t\n  hello world    \f\v\n  "_sv.trim();
+    static_assert(v2 == "hello world"_sv);
 }
 TEST(ARLibTests, FormatTest) {
     Vector<double> vec{ 1.0, 2.0, 3.0 };
