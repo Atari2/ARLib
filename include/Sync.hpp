@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 #include "Threading.hpp"
 namespace ARLib {
 template <typename DataType>

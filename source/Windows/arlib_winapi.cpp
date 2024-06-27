@@ -14,7 +14,7 @@ void print_last_error() {
         LPSTR buffer = nullptr;
         FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, last_error,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&buffer), 0, NULL
+        0, reinterpret_cast<LPSTR>(&buffer), 0, NULL
         );
         puts(buffer);
         LocalFree(buffer);
@@ -26,7 +26,7 @@ String last_error() {
         LPSTR buffer = nullptr;
         FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, last_error,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&buffer), 0, NULL
+        0, reinterpret_cast<LPSTR>(&buffer), 0, NULL
         );
         String message{ buffer };
         LocalFree(buffer);
