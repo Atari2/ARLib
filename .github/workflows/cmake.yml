@@ -86,7 +86,7 @@ jobs:
 
     - name: Test
       working-directory: ${{github.workspace}}/build/Tests
-      run: ctest --rerun-failed --output-on-failure -C $BUILD_TYPE
+      run: ctest --rerun-failed --output-on-failure -C ${{env.CMAKE_BUILD_TYPE}}
     
     - name: Upload
       uses: actions/upload-artifact@v4
