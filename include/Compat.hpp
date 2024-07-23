@@ -32,7 +32,7 @@
     #endif
 
     #if __GNUC__ < 12
-        #error "This library requires GCC 12 or over to compile corre"
+        #error "This library requires GCC 12 or over to compile correctly"
     #endif
 
 #elif defined(COMPILER_CLANG)    // CLANG

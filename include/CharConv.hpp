@@ -359,21 +359,43 @@ inline String ToString(Stringable auto& value) {
     if constexpr (IsSameV<decltype(value), String>) return value;
     return value.to_string();
 }
+String IntToStrFormatted(Integral auto value, const String& format) {
+    if (format.size() != 1) { return IntToStr(value); }
+    switch (format[0]) {
+        case 'B':
+        case 'b':
+            return IntToStr<SupportedBase::Binary, true>(value);
+        case 'O':
+        case 'o':
+            return IntToStr<SupportedBase::Octal, true>(value);
+        case 'X':
+        case 'x':
+            return IntToStr<SupportedBase::Hexadecimal, true>(value);
+        default:
+            return IntToStr(value);
+    }
+}
+#define _PRINT_LAMBDA_WRAP(func)                                                                                       \
+    [](const auto& v, [[maybe_unused]] const String& fmt) {                                                            \
+        return func(v);                                                                                                \
+    }
 
-BASIC_PRINT_IMPL(short, IntToStr)
-BASIC_PRINT_IMPL(unsigned short, IntToStr)
-BASIC_PRINT_IMPL(int, IntToStr)
-BASIC_PRINT_IMPL(unsigned int, IntToStr);
-BASIC_PRINT_IMPL(long, IntToStr)
-BASIC_PRINT_IMPL(unsigned long, IntToStr)
-BASIC_PRINT_IMPL(long long, IntToStr)
-BASIC_PRINT_IMPL(unsigned long long, IntToStr)
-BASIC_PRINT_IMPL(long double, LongDoubleToStr);
-BASIC_PRINT_IMPL(double, DoubleToStr)
-BASIC_PRINT_IMPL(float, FloatToStr)
-BASIC_PRINT_IMPL(unsigned char, IntToStr);
-BASIC_PRINT_IMPL(char, CharToStr);
-BASIC_PRINT_IMPL(bool, BoolToStr)
+BASIC_PRINT_IMPL(short, IntToStr, IntToStrFormatted)
+BASIC_PRINT_IMPL(unsigned short, IntToStr, IntToStrFormatted)
+BASIC_PRINT_IMPL(int, IntToStr, IntToStrFormatted)
+BASIC_PRINT_IMPL(unsigned int, IntToStr, IntToStrFormatted)
+BASIC_PRINT_IMPL(long, IntToStr, IntToStrFormatted)
+BASIC_PRINT_IMPL(unsigned long, IntToStr, IntToStrFormatted)
+BASIC_PRINT_IMPL(long long, IntToStr, IntToStrFormatted)
+BASIC_PRINT_IMPL(unsigned long long, IntToStr, IntToStrFormatted)
+BASIC_PRINT_IMPL(long double, LongDoubleToStr, _PRINT_LAMBDA_WRAP(LongDoubleToStr))
+BASIC_PRINT_IMPL(double, DoubleToStr, _PRINT_LAMBDA_WRAP(DoubleToStr))
+BASIC_PRINT_IMPL(float, FloatToStr, _PRINT_LAMBDA_WRAP(FloatToStr))
+BASIC_PRINT_IMPL(unsigned char, IntToStr, IntToStrFormatted);
+BASIC_PRINT_IMPL(char, CharToStr, _PRINT_LAMBDA_WRAP(CharToStr))
+BASIC_PRINT_IMPL(bool, BoolToStr, _PRINT_LAMBDA_WRAP(BoolToStr))
+
+#undef _PRINT_LAMBDA_WRAP
 
 #ifdef COMPILER_CLANG
     #if __clang_major__ >= 14

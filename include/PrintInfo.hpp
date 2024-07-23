@@ -30,7 +30,7 @@ String print_conditional(const T& m_value) {
         return String{ info.name() };
     }
 };
-#define BASIC_NOT_CONST_PRINT_IMPL(x, impl)                                                                            \
+#define BASIC_NOT_CONST_PRINT_IMPL(x, impl, format_impl)                                                               \
     template <>                                                                                                        \
     struct PrintInfo<x> {                                                                                              \
         using type_ = AddConstT<AddLValueRefIfNotPtrT<x>>;                                                             \
@@ -40,11 +40,11 @@ String print_conditional(const T& m_value) {
             return impl(m_val);                                                                                        \
         }                                                                                                              \
         String repr([[maybe_unused]] const String& format) const {                                                     \
-            return impl(m_val);                                                                                        \
+            return format_impl(m_val, format);                                                                         \
         }                                                                                                              \
     };
 
-#define BASIC_CONST_PRINT_IMPL(x, impl)                                                                                \
+#define BASIC_CONST_PRINT_IMPL(x, impl, format_impl)                                                                   \
     template <>                                                                                                        \
     struct PrintInfo<const x> {                                                                                        \
         using type_ = AddConstT<AddLValueRefIfNotPtrT<const x>>;                                                       \
@@ -54,16 +54,41 @@ String print_conditional(const T& m_value) {
             return impl(m_val);                                                                                        \
         }                                                                                                              \
         String repr([[maybe_unused]] const String& format) const {                                                     \
-            return impl(m_val);                                                                                        \
+            return format_impl(m_val, format);                                                                         \
         }                                                                                                              \
     };
 
-#define BASIC_PRINT_IMPL(x, impl)                                                                                      \
-    BASIC_NOT_CONST_PRINT_IMPL(x, impl)                                                                                \
-    BASIC_CONST_PRINT_IMPL(x, impl)
+#define BASIC_PRINT_IMPL(x, impl, format_impl)                                                                         \
+    BASIC_NOT_CONST_PRINT_IMPL(x, impl, format_impl)                                                                   \
+    BASIC_CONST_PRINT_IMPL(x, impl, format_impl)
 
-BASIC_PRINT_IMPL(String, )
-BASIC_PRINT_IMPL(char*, String)
+BASIC_PRINT_IMPL(String, , [](const String& v, const String& fmt) {
+    if (fmt.size() != 1) return v;
+    switch (fmt[0]) {
+        case 'U':
+        case 'u':
+            return v.upper();
+        case 'L':
+        case 'l':
+            return v.lower();
+        default:
+            return v;
+    }
+})
+BASIC_PRINT_IMPL(char*, String, [](const char* cv, const String& fmt) {
+    auto v = String{ cv };
+    if (fmt.size() != 1) return v;
+    switch (fmt[0]) {
+        case 'U':
+        case 'u':
+            return v.upper();
+        case 'L':
+        case 'l':
+            return v.lower();
+        default:
+            return v;
+    }
+})
 template <typename T>
 struct PrintInfo<T*> {
     const T* m_ptr;
@@ -106,6 +131,20 @@ struct PrintInfo<char[N]> {
     const char (&m_str)[N];
     explicit PrintInfo(const char (&str)[N]) : m_str(str) {}
     String repr() const { return String{ m_str }; }
+    String repr(const String& format) {
+        auto v = String{ m_str };
+        if (format.size() != 1) return v;
+        switch (format[0]) {
+            case 'U':
+            case 'u':
+                return v.upper();
+            case 'L':
+            case 'l':
+                return v.lower();
+            default:
+                return v;
+        }
+    }
 };
 template <Printable T, size_t N, size_t M>
 requires(!IsArrayV<T>)

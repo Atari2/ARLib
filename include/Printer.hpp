@@ -65,6 +65,9 @@ class Printer {
         if constexpr (PrintableFormatted<Arg>) {
             builder.append(PrintInfo<Arg>{ arg }.repr(format_specs[current_index]));
         } else {
+            HARD_ASSERT(
+            format_specs[current_index].is_empty(), "Format specifiers are only allowed for PrintableFormatted types"
+            );
             builder.append(PrintInfo<Arg>{ arg }.repr());
         }
         if constexpr (sizeof...(args) == 0) {
