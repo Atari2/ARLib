@@ -9,7 +9,8 @@ static size_t found_eol(String& line) {
     return String::npos;
 }
 File::ReadResult File::read_line(bool& eof_reached) {
-    if (m_mode == OpenFileMode::None || m_mode == OpenFileMode::Read) {
+    bool is_readable = (m_mode & OpenFileMode::Read) != OpenFileMode::None;
+    if (!is_readable) {
         return FileError{ "Can't read from a file not open in read mode"_s, m_filename };
     }
     String line{};

@@ -61,22 +61,27 @@ class File {
     static void rename(const Path& old, const Path& new_) { ARLib::rename(old.string().data(), new_.string().data()); }
     DiscardResult<FileError> open(OpenFileMode mode) {
         if (m_ptr != nullptr) { return FileError{ "File is already open"_s, m_filename }; }
-        m_mode = mode;
-        switch (mode) {
-            case OpenFileMode::Read:
-                m_ptr = fopen(m_filename.string().data(), "r");
-                break;
-            case OpenFileMode::Write:
-                m_ptr = fopen(m_filename.string().data(), "w");
-                break;
-            case OpenFileMode::ReadWrite:
-                m_ptr = fopen(m_filename.string().data(), "w+");
-                break;
-            case OpenFileMode::Append:
-                m_ptr = fopen(m_filename.string().data(), "a+");
-                break;
-            default:
-                break;
+        m_mode           = mode;
+        bool is_readable = (mode & OpenFileMode::Read) != OpenFileMode::None;
+        bool is_writable = (mode & OpenFileMode::Write) != OpenFileMode::None;
+        bool is_append   = (mode & OpenFileMode::Append) != OpenFileMode::None;
+
+        if (is_writable && is_append) {
+            return FileError{ "Append mode implies write mode"_s, m_filename };
+        }
+
+        if (is_readable && is_writable) {
+            m_ptr = fopen(m_filename.string().data(), "w+");
+        } else if (is_append && is_readable) {
+            m_ptr = fopen(m_filename.string().data(), "a+");
+        } else if (is_readable) {
+            m_ptr = fopen(m_filename.string().data(), "r");
+        } else if (is_writable) {
+            m_ptr = fopen(m_filename.string().data(), "w");
+        } else if (is_append) {
+            m_ptr = fopen(m_filename.string().data(), "a");
+        } else {
+            return FileError{ "Invalid open file mode"_s, m_filename };
         }
         if (!m_ptr) {
             return FileError{ last_error(), m_filename };
@@ -97,7 +102,7 @@ class File {
     WriteResult write(char c) { return write(StringView{ &c, 1 }); }
     WriteResult write(const String& str) { return write(str.view()); }
     ReadResult read_n(size_t count) {
-        if (m_mode != OpenFileMode::Read) {
+        if ((m_mode & OpenFileMode::Read) == OpenFileMode::None) {
             return FileError{ "Can't read from a file not open in read mode"_s, m_filename };
         }
         String line{ count, '\0' };
@@ -107,7 +112,7 @@ class File {
     }
     ReadResult read_line(bool& eof_reached);
     ReadResult read_all() {
-        if (m_mode != OpenFileMode::Read) {
+        if ((m_mode & OpenFileMode::Read) == OpenFileMode::None) {
             return FileError{ "Can't read from a file not open in read mode"_s, m_filename };
         }
         String line{};
