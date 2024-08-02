@@ -105,6 +105,7 @@ class Printer {
                     case FormatState::EscapeNextOpen:
                         indexes.append(escaped_format_string.size() - 1);
                         escaped_format_string.append(c);
+                        current_format_spec.itrim();
                         format_specs.append(move(current_format_spec));
                         [[fallthrough]];
                     case FormatState::EscapeNextClosed:

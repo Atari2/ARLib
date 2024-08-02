@@ -302,7 +302,7 @@ String IntToStr(Integral auto value) {
             while (uvalue > 0) {
                 Integral auto rem = uvalue % 16;
                 if (rem > 9)
-                    rev[idx--] = (static_cast<char>(rem) + '7');
+                    rev[idx--] = (static_cast<char>(rem) + 'W');  // W = 'a' - 10
                 else
                     rev[idx--] = (static_cast<char>(rem) + '0');
                 uvalue >>= 4;
@@ -322,9 +322,12 @@ String IntToStr(Integral auto value) {
                 uvalue >>= 1;
             }
         } else if constexpr (Base == SupportedBase::Octal) {
-            size_t len = StrLenFromIntegral<8>(uvalue) + (WantsBase ? 1 : 0);
+            size_t len = StrLenFromIntegral<8>(uvalue) + (WantsBase ? 2 : 0);
             rev.resize(len);
-            if constexpr (WantsBase) { rev[0] = '0'; }
+            if constexpr (WantsBase) {
+                rev[0] = '0';
+                rev[1] = 'o';
+            }
             size_t idx = len - 1;
             if (uvalue == 0) { rev[idx] = '0'; }
             while (uvalue > 0) {
@@ -360,17 +363,58 @@ inline String ToString(Stringable auto& value) {
     return value.to_string();
 }
 String IntToStrFormatted(Integral auto value, const String& format) {
-    if (format.size() != 1) { return IntToStr(value); }
-    switch (format[0]) {
+    if (format.size() != 1 && format.size() != 2) { return IntToStr(value); }
+    char base = format.size() == 2 ? format[1] : format[0];
+    char wants_prefix = format.size() == 2 ? format[0] == '#' : false;
+    switch (base) {
+        case 'D':
+            if (wants_prefix) {
+                return "0D"_s + IntToStr(value);
+            } else {
+                return IntToStr(value);
+            }
+        case 'd':
+            if (wants_prefix) {
+                return "0d"_s + IntToStr(value);
+            } else {
+                return IntToStr(value);
+            }
         case 'B':
+            if (wants_prefix) {
+                return IntToStr<SupportedBase::Binary, true>(value).upper();
+            } else {
+                return IntToStr<SupportedBase::Binary, false>(value).upper();
+            }
         case 'b':
-            return IntToStr<SupportedBase::Binary, true>(value);
+            if (wants_prefix) {
+                return IntToStr<SupportedBase::Binary, true>(value);
+            } else {
+                return IntToStr<SupportedBase::Binary, false>(value);
+            }
         case 'O':
+            if (wants_prefix) {
+                return IntToStr<SupportedBase::Octal, true>(value).upper();
+            } else {
+                return IntToStr<SupportedBase::Octal, false>(value).upper();
+            }
         case 'o':
-            return IntToStr<SupportedBase::Octal, true>(value);
+            if (wants_prefix) {
+                return IntToStr<SupportedBase::Octal, true>(value);
+            } else {
+                return IntToStr<SupportedBase::Octal, false>(value);
+            }
         case 'X':
+            if (wants_prefix) {
+                return IntToStr<SupportedBase::Hexadecimal, true>(value).upper();
+            } else {
+                return IntToStr<SupportedBase::Hexadecimal, false>(value).upper();
+            }
         case 'x':
-            return IntToStr<SupportedBase::Hexadecimal, true>(value);
+            if (wants_prefix) {
+                return IntToStr<SupportedBase::Hexadecimal, true>(value);
+            } else {
+                return IntToStr<SupportedBase::Hexadecimal, false>(value);
+            }
         default:
             return IntToStr(value);
     }
