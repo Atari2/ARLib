@@ -181,6 +181,12 @@ class IteratorView {
         auto map_iter = MapIterate{ *this, func };
         return IteratorView<decltype(map_iter)>{ release_container(), map_iter.begin(), map_iter.end() };
     }
+    template <typename Functor>
+    auto filter_map(Functor func) {
+        auto filter_map_iter = FilterMapIterate{ *this, func };
+        return IteratorView<decltype(filter_map_iter)>{ release_container(), filter_map_iter.begin(),
+                                                        filter_map_iter.end() };
+    }
     template <typename T2>
     requires requires {
         { T2{ declval<IteratorOutputType<Iter>>() } } -> SameAs<T2>;

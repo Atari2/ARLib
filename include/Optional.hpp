@@ -4,6 +4,7 @@
 #include "HashBase.hpp"
 #include "Ordering.hpp"
 #include "PrintInfo.hpp"
+#include "Enumerate.hpp"
 namespace ARLib {
 template <typename T>
 class OptionalStorage {
@@ -256,5 +257,87 @@ struct PrintInfo<Optional<T&>> {
             return "OptionalRef { "_s + PrintInfo<T>{ m_optional.value() }.repr() + " }"_s;
         }
     }
+};
+template <class IterUnit, class Functor>
+requires requires(IterUnit iter, Functor func) { invoke(func, *iter); }
+class FilterMapIterator {
+    using OVTImpl = MapType<IteratorOutputType<IterUnit>, Functor>;
+    template <typename T>
+    struct _verify_optional {
+        constexpr static bool Value = false;
+        using InternalType          = void;
+    };
+    template <typename T>
+    struct _verify_optional<Optional<T>> {
+        constexpr static bool Value = true;
+        using InternalType          = T;
+    };
+    using VerificationType = _verify_optional<OVTImpl>;
+    using InternalType     = typename VerificationType::InternalType;
+    static_assert(VerificationType::Value, "FilterMapIterator must return an Optional");
+    IterUnit m_current_iter;
+    IterUnit m_end;
+    Functor m_func;
+    OVTImpl m_current_value;
+    void advance() {
+        while (true) {
+            if (m_current_iter == m_end) return;
+            m_current_value = invoke(m_func, *m_current_iter);
+            if (m_current_value.empty()) {
+                ++m_current_iter;
+            } else {
+                break;
+            }
+        }
+    }
+
+    public:
+    using InputValueType = IteratorInputType<IterUnit>;
+    // this is necessary so that if we have a map iterator of an iterator that returns an lvalue we can return a copy of the output
+    // instead of a reference to something that may be dead
+    using OutputValueType = ConditionalT<IsLvalueReferenceV<InternalType>, InternalType, AddLvalueReferenceT<InternalType>>;
+    FilterMapIterator(IterUnit unit, IterUnit end, Functor func, bool is_end = false) :
+        m_current_iter(unit), m_end(end), m_func(func) {
+        if (!is_end) { advance(); }
+    }
+    OutputValueType operator*() { return m_current_value.value(); }
+    OutputValueType operator*() const { return m_current_value.value(); }
+    FilterMapIterator& operator++() {
+        if (m_current_iter == m_end) return *this;
+        ++m_current_iter;
+        advance();
+        return *this;
+    }
+    FilterMapIterator operator++(int) {
+        FilterMapIterator iter{ *this };
+        this->operator++();
+        return iter;
+    }
+    bool operator==(const FilterMapIterator& other) const { return m_current_iter == other.m_current_iter; }
+    bool operator!=(const FilterMapIterator& other) const { return m_current_iter != other.m_current_iter; }
+    bool operator<(const FilterMapIterator& other) { return m_current_iter < other.m_current_iter; }
+    bool operator>(const FilterMapIterator& other) { return m_current_iter > other.m_current_iter; }
+    size_t operator-(const FilterMapIterator& other) const
+    requires IterCanSubtractForSize<IterUnit>
+    {
+        if (other.m_end != m_end) return it_npos;
+        return m_current_iter - other.m_current_iter;
+    }
+};
+template <Iterable Container, typename Functor>
+class FilterMapIterate {
+    using Iter = decltype(declval<Container>().begin());
+    Iter m_start;
+    Iter m_end;
+    Functor m_func;
+
+    public:
+    using InnerContainer = ContainerTypeT<Container>;
+    FilterMapIterate(Container& cont, Functor func) : m_start(cont.begin()), m_end(cont.end()), m_func(func) {}
+    FilterMapIterate(Iter start, Iter end, Functor func) : m_start(start), m_end(end), m_func(func) {}
+    auto begin() const { return FilterMapIterator<Iter, Functor>{ m_start, m_end, m_func }; }
+    auto end() const { return FilterMapIterator<Iter, Functor>{ m_end, m_end, m_func, true }; }
+    auto begin() { return FilterMapIterator<Iter, Functor>{ m_start, m_end, m_func }; }
+    auto end() { return FilterMapIterator<Iter, Functor>{ m_end, m_end, m_func, true }; }
 };
 }    // namespace ARLib

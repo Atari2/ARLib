@@ -43,11 +43,11 @@ namespace JSON {
     Parsed<String> parse_non_delimited(ParseState& state);
     Parsed<Number> parse_number(const String& raw_value);
     Parsed<Array> parse_array(ParseState& state);
-    String dump_array(const Array& arr, size_t indent = 1);
-    String dump_object(const Object& obj, size_t indent = 1);
+    String dump_array(const Array& arr, size_t indent_size, size_t indent = 1);
+    String dump_object(const Object& obj, size_t indent_size, size_t indent = 1);
     String dump_array_compact(const Array& arr);
     String dump_object_compact(const Object& obj);
-    String dump_json(const ValueObj& val, size_t index = 1);
+    String dump_json(const ValueObj& val, size_t indent_size = 4);
     String dump_json_compact(const ValueObj& val);
     using ParseResult = Result<Document, ParseError>;
 
@@ -105,5 +105,10 @@ struct PrintInfo<JSON::Document> {
     const JSON::Document& m_document;
     PrintInfo(const JSON::Document& document) : m_document(document) {}
     String repr() const { return JSON::dump_json(m_document.root()); }
+    String repr(const String& format) const { 
+        if (format == "c") return JSON::dump_json_compact(m_document.root());
+        auto indent_size = StrToUInt(format).value_or(4);
+        return JSON::dump_json(m_document.root(), indent_size);
+    }
 };
 }    // namespace ARLib

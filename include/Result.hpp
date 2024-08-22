@@ -9,6 +9,7 @@
 #include "PrintInfo.hpp"
 #include "EnumConcepts.hpp"
 #include "StringView.hpp"
+#include "Optional.hpp"
 namespace ARLib {
 class ErrorBase {
     public:
@@ -269,6 +270,14 @@ class Result {
             return Result<ResT, InvokeResultT<Func, ErrorType>>{ invoke(Forward<Func>(f), move(*perr)) };
         } else {
             return to_ok();
+        }
+    }
+    Optional<ResT> optional() && {
+        if (is_ok()) {
+            return Optional<ResT>{ to_ok() };
+        } else {
+            ignore_error();
+            return Optional<ResT>{};
         }
     }
     bool operator==(const Result& other) const {

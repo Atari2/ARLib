@@ -633,6 +633,42 @@ TEST(ARLibTests, JSONTest) {
     auto err2 = error_double_obj.to_error();
     EXPECT_EQ(err2->message(), "End of json reached but end of buffer not reached"_s);
 }
+TEST(ARLibTests, JSONFormatTest) {
+    auto val = R"( { "hello": "world", "array": [1, 2, 3, 4, 5], "object": { "key": "value" } } )"_json;
+    auto str1 = Printer::format("{}", val);
+    auto str2 = Printer::format("{c}", val);
+    auto str3 = Printer::format("{2}", val);
+    auto exp1 = R"({
+    "array": [
+        1,
+        2,
+        3,
+        4,
+        5
+    ],
+    "hello": "world",
+    "object": {
+        "key": "value"
+    }
+})"_sv;
+    auto exp3 = R"({
+  "array": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "hello": "world",
+  "object": {
+    "key": "value"
+  }
+})"_sv;
+    auto exp2 = R"({"array":[1,2,3,4,5],"hello":"world","object":{"key":"value"}})"_sv;
+    EXPECT_EQ(str1, exp1);
+    EXPECT_EQ(str2, exp2);
+    EXPECT_EQ(str3, exp3);
+}
 TEST(ARLibTests, RandomTest) {
     EXPECT_EQ(Random::PCG::random_s(), 355248013);
     auto pcg = Random::PCG::create();
@@ -705,8 +741,16 @@ TEST(ARLibTests, BigIntTest) {
     auto f2 = BigInt{ "123456781234567891234879169467981276392189732178937891237928173981239812219873218973"_s };
     auto g2 = BigInt{ "12837127389712389123891738127317892312987389217"_s };
     auto div_result = BigInt{ "9617165701222654353349541990196129976"_s };
+    auto mult_result = BigInt{
+        "1584830427832001978373428214706578240986387238183124667460474794597290057578846187414084558057027516086041384374216885097020014141"_s
+    };
+    auto f3 = f2 * -1;
 
+    EXPECT_EQ(f3.sign(), BigInt::Sign::Minus);
+
+    EXPECT_EQ(div_result * -1, f2 / g2);
     EXPECT_EQ(div_result, f2 / g2);
+    EXPECT_EQ(mult_result, f2 * g2);
 }
 TEST(ARLibTests, HashFuncTests) {
     {
@@ -1462,6 +1506,12 @@ TEST(ARLibTests, OptionalRefTest) {
     static_assert(SameAs<decltype(res2), Optional<int>>);
     EXPECT_EQ(res1, "3"_s);
     EXPECT_EQ(res2, 2);
+    int intval = 0;
+    Optional<int&> emptyopt{};
+    EXPECT_FALSE(emptyopt.has_value());
+    emptyopt = intval;
+    EXPECT_TRUE(emptyopt.has_value());
+    EXPECT_EQ(*emptyopt, 0);
 }
 TEST(ARLibTests, ResultTest) {
     // verify that automatic conversion from B -> Result<X, A> where is A is base class of B doesn't cause object slicing

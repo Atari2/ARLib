@@ -252,20 +252,20 @@ namespace JSON {
         return obj;
     }
     // FIXME: fix indentation
-    String dump_array(const Array& arr, size_t indent) {
+    String dump_array(const Array& arr, size_t indent_size, size_t indent) {
         if (arr.size() == 0) return "[]"_s;
-        String prev_indent_string{ indent - 1, '\t' };
-        String indent_string{ indent, '\t' };
+        String prev_indent_string{ (indent - 1) * indent_size, ' ' };
+        String indent_string{ indent * indent_size, ' ' };
         String repr{ prev_indent_string + "[\n" };
         size_t i = 0;
         for (const auto& val_ptr : arr) {
             const auto& val = *val_ptr;
             switch (val.type()) {
                 case Type::JArray:
-                    repr.append(dump_array(val.as<Type::JArray>(), indent + 1));
+                    repr.append(dump_array(val.as<Type::JArray>(), indent_size, indent + 1));
                     break;
                 case Type::JObject:
-                    repr.append(dump_object(val.as<Type::JObject>(), indent + 1));
+                    repr.append(dump_object(val.as<Type::JObject>(), indent_size, indent + 1));
                     break;
                 case Type::JNumber:
                     repr.append(indent_string + val.as<Type::JNumber>().to_string());
@@ -327,6 +327,7 @@ namespace JSON {
     }
     String dump_object_compact(const Object& obj) {
         String repr{ "{" };
+        size_t i = 0;
         for (const auto& entry : obj) {
             const auto& val = *entry.val();
             const auto& key = entry.key();
@@ -355,14 +356,18 @@ namespace JSON {
                     ASSERT_NOT_REACHED("Invalid type in JSON object");
                     break;
             }
+
+            if (++i < obj.size()) {
+                repr.append(",");
+            }
         }
         repr.append("}");
         return repr;
     }
-    String dump_object(const Object& obj, size_t indent) {
+    String dump_object(const Object& obj, size_t indent_size, size_t indent) {
         if (obj.size() == 0) return "{}"_s;
-        String indent_string{ indent, '\t' };
-        String prev_indent_string{ indent - 1, '\t' };
+        String indent_string{ indent * indent_size, ' ' };
+        String prev_indent_string{ (indent - 1) * indent_size, ' ' };
         String repr{ prev_indent_string + "{\n"_s };
         size_t i = 0;
         for (const auto& entry : obj) {
@@ -374,14 +379,14 @@ namespace JSON {
             switch (val.type()) {
                 case Type::JArray:
                     {
-                        String arrrepr = dump_array(val.as<Type::JArray>(), indent + 1);
+                        String arrrepr = dump_array(val.as<Type::JArray>(), indent_size, indent + 1);
                         arrrepr.iltrim();
                         repr.append(move(arrrepr));
                     }
                     break;
                 case Type::JObject:
                     {
-                        String objrepr = dump_object(val.as<Type::JObject>(), indent + 1);
+                        String objrepr = dump_object(val.as<Type::JObject>(), indent_size, indent + 1);
                         objrepr.iltrim();
                         repr.append(move(objrepr));
                     }
@@ -411,10 +416,10 @@ namespace JSON {
         repr.append(prev_indent_string + "}"_s);
         return repr;
     }
-    String dump_json(const ValueObj& val, size_t index) {
+    String dump_json(const ValueObj& val, size_t indent_size) {
         switch (val.type()) {
             case JSON::Type::JArray:
-                return dump_array(val.as<Type::JArray>(), index);
+                return dump_array(val.as<Type::JArray>(), indent_size, 1);
             case JSON::Type::JBool:
                 return BoolToStr(val.as<Type::JBool>().value());
             case JSON::Type::JNull:
@@ -422,7 +427,7 @@ namespace JSON {
             case JSON::Type::JNumber:
                 return val.as<Type::JNumber>().to_string();
             case JSON::Type::JObject:
-                return dump_object(val.as<Type::JObject>(), index);
+                return dump_object(val.as<Type::JObject>(), indent_size, 1);
             case JSON::Type::JString:
                 return "\""_s + escape_string(val.as<Type::JString>()) + "\""_s;
         }
