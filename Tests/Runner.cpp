@@ -634,11 +634,11 @@ TEST(ARLibTests, JSONTest) {
     EXPECT_EQ(err2->message(), "End of json reached but end of buffer not reached"_s);
 }
 TEST(ARLibTests, JSONFormatTest) {
-    auto val = R"( { "hello": "world", "array": [1, 2, 3, 4, 5], "object": { "key": "value" } } )"_json;
+    auto val  = R"( { "hello": "world", "array": [1, 2, 3, 4, 5], "object": { "key": "value" } } )"_json;
     auto str1 = Printer::format("{}", val);
     auto str2 = Printer::format("{c}", val);
     auto str3 = Printer::format("{2}", val);
-    auto exp1 = R"({
+    auto exp1 = windows_build ? R"({
     "array": [
         1,
         2,
@@ -650,8 +650,21 @@ TEST(ARLibTests, JSONFormatTest) {
     "object": {
         "key": "value"
     }
+})"_sv :
+                                R"({
+    "hello": "world",
+    "array": [
+        1,
+        2,
+        3,
+        4,
+        5
+    ],
+    "object": {
+        "key": "value"
+    }
 })"_sv;
-    auto exp3 = R"({
+    auto exp3 = windows_build ? R"({
   "array": [
     1,
     2,
@@ -663,8 +676,22 @@ TEST(ARLibTests, JSONFormatTest) {
   "object": {
     "key": "value"
   }
+})"_sv :
+                                R"({
+  "hello": "world",
+  "array": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "object": {
+    "key": "value"
+  }
 })"_sv;
-    auto exp2 = R"({"array":[1,2,3,4,5],"hello":"world","object":{"key":"value"}})"_sv;
+    auto exp2 = windows_build ? R"({"array":[1,2,3,4,5],"hello":"world","object":{"key":"value"}})"_sv :
+                                R"({"hello":"world","array":[1,2,3,4,5],"object":{"key":"value"}})"_sv;
     EXPECT_EQ(str1, exp1);
     EXPECT_EQ(str2, exp2);
     EXPECT_EQ(str3, exp3);
@@ -740,7 +767,7 @@ TEST(ARLibTests, BigIntTest) {
 
     auto f2 = BigInt{ "123456781234567891234879169467981276392189732178937891237928173981239812219873218973"_s };
     auto g2 = BigInt{ "12837127389712389123891738127317892312987389217"_s };
-    auto div_result = BigInt{ "9617165701222654353349541990196129976"_s };
+    auto div_result  = BigInt{ "9617165701222654353349541990196129976"_s };
     auto mult_result = BigInt{
         "1584830427832001978373428214706578240986387238183124667460474794597290057578846187414084558057027516086041384374216885097020014141"_s
     };
@@ -1619,10 +1646,13 @@ TEST(ARLibTests, SyncDataTest) {
     }
     EXPECT_EQ(data.extract(), "Hello World 1 2 3 4 5 6 7 8 9 10"_sv);
 }
-
 TEST(ARLibTests, FormatSpecTest) {
-    auto res = Printer::format("{X} {x} {B} {b} {O} {o} {d} {D} {U} {L}", 123, 123, 123, 123, 123, 123, 123, 123, "hello", "HELLO");
-    auto res2 = Printer::format("{#X} {#x} {#B} {#b} {#O} {#o} {#d} {#D} {U} {L}", 123, 123, 123, 123, 123, 123, 123, 123, "hello", "HELLO");
+    auto res = Printer::format(
+    "{X} {x} {B} {b} {O} {o} {d} {D} {U} {L}", 123, 123, 123, 123, 123, 123, 123, 123, "hello", "HELLO"
+    );
+    auto res2 = Printer::format(
+    "{#X} {#x} {#B} {#b} {#O} {#o} {#d} {#D} {U} {L}", 123, 123, 123, 123, 123, 123, 123, 123, "hello", "HELLO"
+    );
 
     EXPECT_EQ(res, "7B 7b 1111011 1111011 173 173 123 123 HELLO hello"_sv);
     EXPECT_EQ(res2, "0X7B 0x7b 0B1111011 0b1111011 0O173 0o173 0d123 0D123 HELLO hello"_sv);
