@@ -12,7 +12,7 @@ class StringView {
     char* m_start_mut   = nullptr;
     const char* m_start = nullptr;
     size_t m_size       = 0;
-    [[noreturn]] static void cxpr_error() { new int[0]; }
+    [[noreturn]] static void cxpr_error() { new int[0]; arlib_unreachable }
     constexpr void check_offset(const size_t off) const {
         if (m_size < off) { cxpr_error(); }
     }

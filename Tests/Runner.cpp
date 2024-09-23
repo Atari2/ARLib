@@ -1523,10 +1523,14 @@ TEST(ARLibTests, OptionalRefTest) {
     EXPECT_EQ(*opti, 33);
 // this is a bogus warning from GCC. the reference is not dangling because it is not a reference to a temporary.
 // the reference is valid as long as `a` or `i` live, which is the entire function body.
+#ifdef COMPILER_GCC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-reference"
+#endif
     const auto& b = Optional<size_t&>{ i }.value_or(a);
+#ifdef COMPILER_GCC
 #pragma GCC diagnostic pop
+#endif
     EXPECT_EQ(&b, &i);
     EXPECT_EQ(b, i);
     Vector<String> v{ "1"_s, "2"_s, "3"_s };
