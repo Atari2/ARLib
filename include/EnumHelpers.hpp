@@ -227,6 +227,16 @@ constexpr bool enum_has_value(StringView ename) {
     }
 }
 
+template <typename T>
+requires requires { T::None; }
+constexpr T get_enum_none() {
+    return T::None;
+}
+template <typename T>
+constexpr T get_enum_none() {
+    return T{};
+}
+
 template <EnumHelpers::EnumSupportsMap T>
 struct ForEachEnum {
     constexpr auto begin() const { return EnumHelpers::EnumIterator<T>{ 0 }; }
@@ -297,7 +307,7 @@ struct IntoError<EnumError<T>, Error> {
 
 #define BITFIELD_ENUM_OP_NONE(E)                                                                                       \
     constexpr auto operator!(E self) {                                                                                 \
-        return self == E::None;                                                                                        \
+        return self == get_enum_none<E>();                                                                             \
     }
 #define BITFIELD_ENUM_OP_LOG_AND(E)                                                                                    \
     constexpr auto operator&&(E self, E other) {                                                                       \
