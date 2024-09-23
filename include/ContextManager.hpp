@@ -17,7 +17,8 @@ class ContextManager {
     Functor func, ManageWhen when = ManageWhen::AtExit, TestFunc testfunc = detail::DefaultValueRet
     ) :
         m_func(func),
-        m_when(when), m_testfunc(testfunc) {
+        m_testfunc(testfunc),
+        m_when(when) {
         if (!!(m_when & ManageWhen::AtEnter)) {
             if (!!(m_when & ManageWhen::OnSuccess)) {
                 if (m_testfunc()) m_func();

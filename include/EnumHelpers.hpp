@@ -213,6 +213,20 @@ Optional<T> enum_parse(StringView v) {
         return p.second();
     });
 }
+
+template <typename T>
+constexpr bool enum_has_value(StringView ename) {
+    if constexpr (EnumHelpers::EnumSupportsMap<T>) {
+        constexpr const auto& enum_map = EnumHelpers::EnumMapProvider<T>::enum_array;
+        for (const auto& [name, val] : enum_map) {
+            if (ename == name) return true;
+        }
+        return false;
+    } else {
+        return true; // lie about "None" support because not all enums are "fancy" and we don't want a static_assert fail on those.
+    }
+}
+
 template <EnumHelpers::EnumSupportsMap T>
 struct ForEachEnum {
     constexpr auto begin() const { return EnumHelpers::EnumIterator<T>{ 0 }; }
@@ -305,7 +319,9 @@ struct IntoError<EnumError<T>, Error> {
 #define MAKE_BITFIELD_ENUM(E)                                                                                          \
     BITFIELD_ENUM_OP_OR(E)                                                                                             \
     BITFIELD_ENUM_OP_AND(E)                                                                                            \
+    BITFIELD_ENUM_OP_NONE(E)                                                                                           \
     BITFIELD_ENUM_OP_LOG_AND(E)                                                                                        \
     BITFIELD_ENUM_OP_LOG_OR(E)                                                                                         \
     BITFIELD_ENUM_OP_XOR(E)                                                                                            \
-    BITFIELD_ENUM_OP_NOT(E)
+    BITFIELD_ENUM_OP_NOT(E)                                                                                            \
+    static_assert(ARLib::enum_has_value<E>("None"), "Bitfield enums must have a None value");

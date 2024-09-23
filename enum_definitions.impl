@@ -1,9 +1,10 @@
 # this is a file used to generate enum definitions
 # it generates bitfield enums by default
-# format is "ClassName<>(UnderlyingType)[Members...]"
+# format is "ClassName<>(UnderlyingType)[Members...]F"
 # the <> indicates wether the enum will receive implementations of bitwise operations
-# if the <> is not there, it will, if it's there, it won't.
+# if the <> is not there, it won't, if it's there, it will.
 # underlying_type can be omitted and will be filled in by the generation script
 # underlying_type can be from uint8_t, uint16_t, uint32_t, uint64_t
-ManageWhen()[None, AtExit, AtEnter, OnFailure, OnSuccess]
-OpenFileMode()[None, Read, Write, Append]
+# the F is optional and indicates if an enum is a "fancy" enum (supports string conversion, iteration and other things) or not.
+ManageWhen<>()[None, AtExit, AtEnter, OnFailure, OnSuccess]F
+OpenFileMode<>()[None, Read, Write, Append]F

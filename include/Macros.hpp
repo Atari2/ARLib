@@ -33,5 +33,5 @@
     "Only use consteval static assert in constant evaluted contexts, it will leak memory otherwise"                    \
     );                                                                                                                 \
     do {                                                                                                               \
-        if (!(c)) new char[0];                                                                                         \
+        if (!(c)) new char[1]; /* 1 is needed to avoid -Walloc-size warning on GCC */                                  \
     } while (false)

@@ -3,7 +3,7 @@ import os
 from sys import argv
 import math
 
-patt = re.compile(r"(\w*)(<>)?\((\w*)\)\[(.*)]")
+patt = re.compile(r"(\w*)(<>)?\((\w*)\)\[(.*)](F)?")
 
 folder = argv[1]
 
@@ -26,22 +26,29 @@ for line in filter(lambda x: x.strip() and x.strip()[0] != '#', lines):
     match = patt.match(line)
     if match:
         cls_name = match.group(1)
-        is_not_bitfield = match.group(2)
+        is_bitfield = match.group(2)
         cls_type = match.group(3)
         cls_members = match.group(4).split(',')
+        is_fancy = match.group(5)
         if not cls_type:
             required_bytes = math.ceil(len(cls_members) / 8)
             if required_bytes > 8:
-                raise ValueError("Can't fit these many members in 8 bytes (which is the max)")
+                raise ValueError("Can't fit this many members in 8 bytes (which is the max)")
             cls_type = f'uint{power_bit_length(required_bytes) * 8}_t'
         with open(f'{folder}/include/GeneratedEnums/{cls_name}.hpp', 'w') as f:
             print(f"Generating {cls_name}")
             f.write('#pragma once\n#include "Types.hpp"\n#include "EnumHelpers.hpp"\nnamespace ARLib {\n')
-            f.write(f'\tenum class {cls_name} : {cls_type} {{\n')
+            if is_fancy:
+                f.write(f'\tMAKE_FANCY_ENUM({cls_name},{cls_type},\n')
+            else:
+                f.write(f'\tenum class {cls_name} : {cls_type} {{\n')
             for i, member in enumerate(cls_members):
                 f.write(f'\t\t{member.strip()} = {1 << (i - 1) if i > 0 else 0},\n')
-            f.write('\t};\n')
-            if not is_not_bitfield:
+            if is_fancy:
+                f.write('\t)\n')
+            else:
+                f.write('\t};\n')
+            if is_bitfield:
                 f.write(f'\tMAKE_BITFIELD_ENUM({cls_name})\n')
             f.write('}\n')
 
