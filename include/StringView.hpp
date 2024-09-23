@@ -12,6 +12,10 @@ class StringView {
     char* m_start_mut   = nullptr;
     const char* m_start = nullptr;
     size_t m_size       = 0;
+    [[noreturn]] static void cxpr_error() { new int[0]; }
+    constexpr void check_offset(const size_t off) const {
+        if (m_size < off) { cxpr_error(); }
+    }
 
     public:
     constexpr static auto npos = String::npos;
@@ -139,6 +143,7 @@ class StringView {
         }
     }
     constexpr StringView substringview_fromlen(size_t first = 0, size_t len = npos) const {
+        if (is_constant_evaluated()) { check_offset(first); }
         const size_t rcount = min_bt(len, size() - first);
         return StringView{ data() + first, rcount };
     }

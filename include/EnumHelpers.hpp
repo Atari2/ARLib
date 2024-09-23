@@ -63,11 +63,16 @@ namespace EnumHelpers {
     constexpr StringView get_enum_full_string(TagType<T>) {
         return "";
     }
+    constexpr StringView strip_trailing_commas(StringView view) {
+        size_t last_idx = view.size() - 1;
+        while ((isspace(view[last_idx]) || view[last_idx] == ',') && last_idx > 0) last_idx--;
+        return view.substringview(0, last_idx + 1);
+    }
     template <Enum T>
     requires(!get_enum_full_string<T>({}).empty())
     struct EnumArrayProvider<T> {
         constexpr static auto construct_enum_array(TagType<T>) {
-            constexpr StringView view = get_enum_full_string<T>({});
+            constexpr StringView view = strip_trailing_commas(get_enum_full_string<T>({}));
             Array<Pair<StringView, T>, count_enum_values(view)> enum_map_l;
             UnderlyingTypeT<T> current_val{};
             auto get_pair = [&view, &current_val](size_t first_idx, size_t second_idx) {
@@ -109,9 +114,10 @@ namespace EnumHelpers {
         }
     };
     template <Enum T>
-    constexpr auto
-    construct_enum_map(const Array<Pair<StringView, T>, count_enum_values(get_enum_full_string<T>({}))>& enum_array) {
-        constexpr size_t sz = count_enum_values(get_enum_full_string<T>({}));
+    constexpr auto construct_enum_map(
+    const Array<Pair<StringView, T>, count_enum_values(strip_trailing_commas(get_enum_full_string<T>({})))>& enum_array
+    ) {
+        constexpr size_t sz = count_enum_values(strip_trailing_commas(get_enum_full_string<T>({})));
         EnumStrHashMap<T, sz> map;
         for (const auto& [k, v] : enum_array) {
             const bool inserted = map.insert(v, k);
@@ -244,7 +250,7 @@ class EnumError<T> final : public ErrorBase {
     T m_value;
     public:
     EnumError(EnumError&&) = default;
-    EnumError(StringView val) : m_value{ enum_parse<T>(val) } { }
+    EnumError(StringView val) : m_value{ enum_parse<T>(val) } {}
     EnumError(T val) : m_value{ val } {}
     T value() const { return m_value; }
     StringView error_string() const override { return enum_to_str_view(m_value); }
@@ -258,7 +264,7 @@ struct IntoError<EnumError<T>, Error> {
 }    // namespace ARLib
 #define ENUM_TO_STR(en, ...)                                                                                           \
     template <>                                                                                                        \
-    constexpr StringView ARLib::EnumHelpers::get_enum_full_string(TagType<en>) {                                       \
+    constexpr ARLib::StringView ARLib::EnumHelpers::get_enum_full_string(TagType<en>) {                                \
         return #__VA_ARGS__;                                                                                           \
     }
 
