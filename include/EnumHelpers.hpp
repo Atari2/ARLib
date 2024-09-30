@@ -213,7 +213,6 @@ Optional<T> enum_parse(StringView v) {
         return p.second();
     });
 }
-
 template <typename T>
 constexpr bool enum_has_value(StringView ename) {
     if constexpr (EnumHelpers::EnumSupportsMap<T>) {
@@ -223,20 +222,17 @@ constexpr bool enum_has_value(StringView ename) {
         }
         return false;
     } else {
-        return true; // lie about "None" support because not all enums are "fancy" and we don't want a static_assert fail on those.
+        return true;    // lie about "None" support because not all enums are "fancy" and we don't want a static_assert fail on those.
     }
 }
-
-template <typename T>
-requires requires { T::None; }
-constexpr T get_enum_none() {
-    return T::None;
-}
 template <typename T>
 constexpr T get_enum_none() {
-    return T{};
+    if constexpr (requires { T::None; }) {
+        return T::None;
+    } else {
+        return T{};
+    }
 }
-
 template <EnumHelpers::EnumSupportsMap T>
 struct ForEachEnum {
     constexpr auto begin() const { return EnumHelpers::EnumIterator<T>{ 0 }; }
@@ -295,6 +291,12 @@ struct IntoError<EnumError<T>, Error> {
 #define MAKE_FANCY_ENUM(en, ut, ...)                                                                                   \
     enum class en : ut { __VA_ARGS__ };                                                                                \
     ENUM_TO_STR(en, __VA_ARGS__)
+
+#define MAKE_FANCY_ENUM_NS(en, ut, ns, ...)                                                                            \
+    namespace ns {                                                                                                     \
+        enum class en : ut { __VA_ARGS__ };                                                                            \
+    }                                                                                                                  \
+    ENUM_TO_STR(ns::en, __VA_ARGS__)
 
 #define BITFIELD_ENUM_OP_OR(E)                                                                                         \
     constexpr auto operator|(E self, E other) {                                                                        \
