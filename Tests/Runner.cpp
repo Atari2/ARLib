@@ -136,10 +136,10 @@ TEST(ARLibTests, StackTests) {
 }
 TEST(ARLibTests, TupleTests) {
     Tuple<int, String, double, Vector<String>> tup{
-        0, "hello"_s, 10.0, Vector{"a"_s, "b"_s, "c"_s}
+        0, "hello"_s, 10.0, Vector{ "a"_s, "b"_s, "c"_s }
     };
     Tuple<int, String, double, Vector<String>> tup3{
-        0, "hello"_s, 10.0, Vector{"a"_s, "b"_s, "c"_s}
+        0, "hello"_s, 10.0, Vector{ "a"_s, "b"_s, "c"_s }
     };
     Tuple<int, String> tup4{ 110, "hello"_s };
 
@@ -169,6 +169,21 @@ TEST(ARLibTests, TupleTests) {
     EXPECT_EQ(tup_2.get<double>(), 54.4);
     EXPECT_EQ(tup_2.get<Vector<String>>()[3], "k"_s);
     EXPECT_EQ(tup_2.get<Vector<String>>().size(), 4ull);
+
+    // test recursive destructuring
+    Tuple<Tuple<Tuple<int, float>, Pair<Vector<int>, Vector<float>>>, Pair<String, StringView>> rtup{
+        make_tuple(make_tuple(1, 3.0f), Pair{ Vector{ 1, 2, 3 }, Vector{ 1.0f, 2.0f, 3.0f } }),
+        Pair{ "hello"_s, "world"_sv }
+    };
+    auto&& [i1, f1, vi, vf, s, sv] = flatten_tuple(rtup);
+    EXPECT_EQ(i1, 1);
+    EXPECT_EQ(f1, 3.0f);
+    auto expected_vi = Vector{ 1, 2, 3 };
+    auto expected_vf = Vector{ 1.0f, 2.0f, 3.0f };
+    EXPECT_EQ(vi, expected_vi);
+    EXPECT_EQ(vf, expected_vf);
+    EXPECT_EQ(s, "hello"_s);
+    EXPECT_EQ(sv, "world"_sv);
 }
 TEST(ARLibTests, PartialFuncTests) {
     auto decl = [](int a, const String& b, Tuple<String, int> c) {
@@ -393,11 +408,11 @@ TEST(ARLibTests, GenericViewTests) {
     EXPECT_EQ(Printer::format("{}", filtered), form_filtered);
 
     Array expected_from_en{
-        Pair{0_sz,  1.0},
-        Pair{ 1_sz, 2.0},
-        Pair{ 2_sz, 3.0},
-        Pair{ 3_sz, 4.0},
-        Pair{ 4_sz, 5.0}
+        Pair{ 0_sz, 1.0 },
+        Pair{ 1_sz, 2.0 },
+        Pair{ 2_sz, 3.0 },
+        Pair{ 3_sz, 4.0 },
+        Pair{ 4_sz, 5.0 }
     };
     for (const auto& [exp, act] : "1\n2\n3\nasdf\n4\n\n5"_sv.split("\n")
                                   .iter()
@@ -468,7 +483,7 @@ TEST(ARLibTests, MoreFormatTests) {
     int mat[10][10]{};
     decltype(auto) val = mat[0];
     Map<String, int> map[3]{
-        {{ "hello"_s, 10 }, { "cap"_s, 10 }, { "world"_s, 20 }}
+        { { "hello"_s, 10 }, { "cap"_s, 10 }, { "world"_s, 20 } }
     };
     Vector<String> vec[10] = {
         Vector{ "hello"_s, "world"_s },
@@ -486,25 +501,15 @@ TEST(ARLibTests, ContainerAlgoTest) {
     Vector<int> vec1{ 1, 2, 3, 4, 5, 6 };
     Vector<String> vec2{ "hello"_s, "world"_s, "why"_s };
     FlatMap<String, Vector<int>> map{
-        {"hello"_s,  Vector<int>{ 1, 2, 3, 4, 5 } },
-        { "world"_s, Vector<int>{ 6, 7, 8, 9, 10 }}
+        { "hello"_s, Vector<int>{ 1, 2, 3, 4, 5 }  },
+        { "world"_s, Vector<int>{ 6, 7, 8, 9, 10 } }
     };
     EXPECT_EQ(all_of(vec1, [](int a) { return a < 7; }), true);
     EXPECT_EQ(any_of(vec1, [](int a) { return a == 3; }), true);
-    EXPECT_EQ(
-    exactly_n(
-    vec1, [](int a) { return a < 4; }, 3
-    ),
-    true
-    );
+    EXPECT_EQ(exactly_n(vec1, [](int a) { return a < 4; }, 3), true);
     EXPECT_EQ(all_of(vec2, [](const String& str) { return str == "hello"_s; }), false);
     EXPECT_EQ(any_of(vec2, [](const String& str) { return str == "hello"_s; }), true);
-    EXPECT_EQ(
-    exactly_n(
-    vec2, [](const String& str) { return str == "hello"_s; }, 1
-    ),
-    true
-    );
+    EXPECT_EQ(exactly_n(vec2, [](const String& str) { return str == "hello"_s; }, 1), true);
     EXPECT_EQ(
     all_of(
     map,
@@ -911,7 +916,7 @@ TEST(ARLibTests, MatrixTests) {
 }
 TEST(ARLibTests, MoreMatrixTests) {
     Matrix2D mat{
-        {{ 1, 2, 3, 4 }, { 5, 6, 7, 8 }}
+        { { 1, 2, 3, 4 }, { 5, 6, 7, 8 } }
     };
     Array expected{ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
     auto expectedb = expected.begin();
@@ -1491,9 +1496,9 @@ e:f:g
     parser.open().must();
     auto rows = parser.read_all().must().iter().map(&CSVResult::must).collect<Vector>();
     Array<Tuple<StringView, StringView, StringView>, 3> expected_rows{
-        Tuple{"a"_sv,  "b\r\nc"_sv, "d"_sv},
-        Tuple{ "e"_sv, "f"_sv,      "g"_sv},
-        Tuple{ "h"_sv, "j"_sv,      "k"_sv}
+        Tuple{ "a"_sv, "b\r\nc"_sv, "d"_sv },
+        Tuple{ "e"_sv, "f"_sv,      "g"_sv },
+        Tuple{ "h"_sv, "j"_sv,      "k"_sv }
     };
     for (const auto& [i, row] : rows.iter().enumerate()) {
         EXPECT_EQ(expected_rows[i].get<0>(), row["this"_sv].must());
@@ -1524,12 +1529,12 @@ TEST(ARLibTests, OptionalRefTest) {
 // this is a bogus warning from GCC. the reference is not dangling because it is not a reference to a temporary.
 // the reference is valid as long as `a` or `i` live, which is the entire function body.
 #ifdef COMPILER_GCC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdangling-reference"
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdangling-reference"
 #endif
     const auto& b = Optional<size_t&>{ i }.value_or(a);
 #ifdef COMPILER_GCC
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
 #endif
     EXPECT_EQ(&b, &i);
     EXPECT_EQ(b, i);
@@ -1555,7 +1560,7 @@ TEST(ARLibTests, ResultTest) {
         constexpr A() = default;
         StringView error_string() const override { return ""_sv; };
         virtual bool test() const { return true; }
-        virtual ~A(){};
+        virtual ~A() {};
     };
     struct B final : public A {
         constexpr B() = default;

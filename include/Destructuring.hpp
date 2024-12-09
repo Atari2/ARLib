@@ -133,7 +133,7 @@ template <typename T>
 struct std::tuple_size<ARLib::FlattenTuple<T>> {
     constexpr static size_t value = ARLib::recursive_tuple_size<T>();
 };
-template <size_t N, typename T>
+template <std::size_t N, typename T>
 struct std::tuple_element<N, ARLib::FlattenTuple<T>> {
     using type = decltype(ARLib::recursive_tuple_element<N>(ARLib::declval<T&>()));
 };
