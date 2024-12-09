@@ -25,6 +25,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+  
+    - name: Install ninja
+      run: |
+           sudo apt update
+           sudo apt install ninja-build
+      if: matrix.os == 'ubuntu-24.04'
     
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
