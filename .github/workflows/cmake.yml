@@ -15,32 +15,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ windows-latest, ubuntu-latest ]
+        os: [ windows-2022, ubuntu-24.04 ]
         compiler: [ msvc, gcc, clang ]
         exclude:
-          - os: windows-latest
+          - os: windows-2022
             compiler: gcc
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             compiler: msvc
 
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Setup compilers (gcc)
-      run:  |
-            sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-            sudo apt-get update -y
-            sudo apt-get install gcc-13 g++-13 ninja-build
-      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
-
-    - name: Setup compilers (clang)
-      run:  |
-            sudo apt update
-            wget https://apt.llvm.org/llvm.sh
-            chmod +x llvm.sh
-            sudo ./llvm.sh 18
-            sudo apt install ninja-build
-      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
     
     - name: Create Build Environment
       run: cmake -E make_directory ${{github.workspace}}/build
@@ -48,12 +32,12 @@ jobs:
     - name: Configure CMake (gcc)
       working-directory: ${{github.workspace}}/build
       run: cmake -S ${{github.workspace}} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13
-      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
+      if: matrix.os == 'ubuntu-24.04' && matrix.compiler == 'gcc'
     
     - name: Configure CMake (clang)
       working-directory: ${{github.workspace}}/build
       run: cmake -S ${{github.workspace}} -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18
-      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
+      if: matrix.os == 'ubuntu-24.04' && matrix.compiler == 'clang'
       
     - name: Configure CMake (msvc)
       working-directory: ${{github.workspace}}/build
@@ -61,7 +45,7 @@ jobs:
       run:  |
             ${{github.workspace}}/setup_vsdev.ps1
             cmake -S ${{github.workspace}} -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
-      if: matrix.os == 'windows-latest' && matrix.compiler == 'msvc'
+      if: matrix.os == 'windows-2022' && matrix.compiler == 'msvc'
     
     - name: Configure CMake (clang-cl)
       working-directory: ${{github.workspace}}/build
@@ -69,7 +53,7 @@ jobs:
       run:  |
             ${{github.workspace}}/setup_vsdev.ps1
             cmake -S ${{github.workspace}} -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl
-      if: matrix.os == 'windows-latest' && matrix.compiler == 'clang'
+      if: matrix.os == 'windows-2022' && matrix.compiler == 'clang'
 
     - name: Build (windows)
       working-directory: ${{github.workspace}}/build
@@ -77,12 +61,12 @@ jobs:
       run:  |
             ${{github.workspace}}/setup_vsdev.ps1
             cmake --build ${{github.workspace}}/build --config ${{env.CMAKE_BUILD_TYPE}}
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
     
     - name: Build (linux)
       working-directory: ${{github.workspace}}/build
       run: cmake --build ${{github.workspace}}/build --config ${{env.CMAKE_BUILD_TYPE}}
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-24.04'
 
     - name: Test
       working-directory: ${{github.workspace}}/build/Tests
@@ -93,11 +77,11 @@ jobs:
       with:
         name: ARLib-${{matrix.os}}-${{matrix.compiler}}
         path: ${{github.workspace}}/build/ARLib.lib
-      if: matrix.os == 'windows-latest'
+      if: matrix.os == 'windows-2022'
     
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: ARLib-${{matrix.os}}-${{matrix.compiler}}
         path: ${{github.workspace}}/build/libARLib.a
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-24.04'
