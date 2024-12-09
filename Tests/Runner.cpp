@@ -376,7 +376,7 @@ TEST(ARLibTests, GenericViewTests) {
         R"(["112", "128", "144", "160", "176", "192", "208", "224", "240", "256", "272", "288", "304", "320", "336", "352", "368", "384", "400", "416", "432", "448", "464", "480", "496", "512", "528", "544", "560", "576", "592", "608", "624", "640", "656", "672", "688", "704", "720", "736", "752", "768", "784", "800", "816", "832", "848", "864", "880", "896", "912", "928", "944", "960", "976", "992"])"_s
     };
     view.inplace_transform([](int a) { return a * 2; });
-    for (auto [index, item] : Enumerate{ vec }) { EXPECT_EQ(item, index * 2); }
+    for (const auto&& [index, item] : Enumerate{ vec }) { EXPECT_EQ(item, index * 2); }
     auto vec2 = view.map([](int) { return 0; }).collect<Vector<int>>();
     auto vec3 = view.map([](int a) { return IntToStr(a); }).collect<Vector<String>>();
     for (const auto& [index, item] : Enumerate{ vec3 }) { EXPECT_EQ(item, IntToStr(index * 2)); }

@@ -3,22 +3,7 @@
 #include "Invoke.hpp"
 #include "PrintInfo.hpp"
 #include "Utility.hpp"
-// we love UB
-// forward declaring things in std:: is UB
-// but this avoids having to #include <utility>
-// so I'll do it
-namespace std {
-#ifdef _LIBCPP_VERSION
-inline namespace __1 {
-#endif
-    template <class T>
-    struct tuple_size;
-    template <size_t I, class T>
-    struct tuple_element;
-#ifdef _LIBCPP_VERSION
-}
-#endif
-}    // namespace std
+
 namespace ARLib {
 template <typename T, typename... Args>
 class Tuple;
@@ -211,25 +196,9 @@ class Tuple<T> {
     }
 };
 }    // namespace ARLib
-// tuple_size and tuple_element specializations for ARLib::Tuple
-template <typename... Types>
-struct std::tuple_size<ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
-template <typename... Types>
-struct std::tuple_size<const ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
-template <class Head, class... Tail>
-struct std::tuple_element<0, ARLib::Tuple<Head, Tail...>> {
-    using type = Head;
-    using BaseType = ARLib::Tuple<Head, Tail...>;
-};
-template <std::size_t I, class Head, class... Tail>
-struct std::tuple_element<I, ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, ARLib::Tuple<Tail...>> {};
-template <class Head, class... Tail>
-struct std::tuple_element<0, const ARLib::Tuple<Head, Tail...>> {
-    using type     = ARLib::AddConstT<Head>;
-    using BaseType = ARLib::AddConstT<ARLib::Tuple<Head, Tail...>>;
-};
-template <std::size_t I, class Head, class... Tail>
-struct std::tuple_element<I, const ARLib::Tuple<Head, Tail...>> : std::tuple_element<I - 1, const ARLib::Tuple<Tail...>> {};
+
+#include "Destructuring.hpp"
+
 namespace ARLib {
 template <typename... Args>
 auto make_tuple(Args&&... args) {

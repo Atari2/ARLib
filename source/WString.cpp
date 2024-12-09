@@ -286,7 +286,7 @@ void WString::ireplace(WStringView n, WStringView s, size_t times) {
         reserve(m_size + n_occurr * diff_len);
         buf = get_buf_internal();
     }
-    for (auto [count, index] : Enumerate{ indexes }) {
+    for (const auto&& [count, index] : Enumerate{ indexes }) {
         auto new_index = repl_is_bigger ? index + (count * diff_len) : index - (count * diff_len);
         if (repl_is_bigger)
             ConditionalBitCopy(buf + new_index + diff_len, buf + new_index, m_size - index + 1ull);

@@ -38,7 +38,7 @@ struct Pair {
     constexpr const T& first() const { return _m_first; }
     constexpr const U& second() const { return _m_second; }
     template <size_t Index>
-    auto& get() & {
+    constexpr auto& get() & {
         static_assert(Index == 0 || Index == 1);
         if constexpr (Index == 0)
             return _m_first;
@@ -46,7 +46,7 @@ struct Pair {
             return _m_second;
     }
     template <size_t Index>
-    const auto& get() const& {
+    constexpr const auto& get() const& {
         static_assert(Index == 0 || Index == 1);
         if constexpr (Index == 0)
             return _m_first;
@@ -54,7 +54,7 @@ struct Pair {
             return _m_second;
     }
     template <size_t Index>
-    auto&& get() && {
+    constexpr auto&& get() && {
         static_assert(Index == 0 || Index == 1);
         if constexpr (Index == 0)
             return move(_m_first);
@@ -75,7 +75,7 @@ struct Pair<T&, U&> {
     const T& first() const { return _m_first; }
     const U& second() const { return _m_second; }
     template <size_t Index>
-    auto& get() & {
+    constexpr auto& get() & {
         static_assert(Index == 0 || Index == 1);
         if constexpr (Index == 0)
             return _m_first;
@@ -83,7 +83,7 @@ struct Pair<T&, U&> {
             return _m_second;
     }
     template <size_t Index>
-    const auto& get() const& {
+    constexpr const auto& get() const& {
         static_assert(Index == 0 || Index == 1);
         if constexpr (Index == 0)
             return _m_first;
@@ -91,7 +91,7 @@ struct Pair<T&, U&> {
             return _m_second;
     }
     template <size_t Index>
-    auto&& get() && {
+    constexpr auto&& get() && {
         static_assert(Index == 0 || Index == 1);
         if constexpr (Index == 0)
             return move(_m_first);
@@ -109,3 +109,5 @@ struct PrintInfo<Pair<A, B>> {
     }
 };
 }    // namespace ARLib
+
+#include "Destructuring.hpp"
