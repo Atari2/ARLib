@@ -261,6 +261,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/List.hpp
     ${ARLIB_INCLUDE_DIR}/Macros.hpp
     ${ARLIB_INCLUDE_DIR}/Map.hpp
+    ${ARLIB_INCLUDE_DIR}/MaybeOwned.hpp
     ${ARLIB_INCLUDE_DIR}/Matrix.hpp
     ${ARLIB_INCLUDE_DIR}/Memory.hpp
     ${ARLIB_INCLUDE_DIR}/NumberTraits.hpp

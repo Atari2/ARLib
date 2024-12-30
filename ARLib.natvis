@@ -168,6 +168,12 @@
 			<Item Name="[storage]" ExcludeView="simple">m_storage</Item>
 		</Expand>
 	</Type>
+	<Type Name="ARLib::v2::Variant&lt;*&gt;">
+		<DisplayString>{{ storage = {m_storage} }}</DisplayString>
+		<Expand>
+			<Item Name="[storage]" ExcludeView="simple">m_storage</Item>
+		</Expand>
+	</Type>
 	<Type Name="ARLib::Optional&lt;*&gt;">
 		<Intrinsic Name="exists" Expression="(bool)m_exists"/>
 		<Intrinsic Name="getValue" Expression="*m_object"/>

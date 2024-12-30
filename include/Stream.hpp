@@ -3,6 +3,8 @@
 #include "Span.hpp"
 #include "String.hpp"
 #include "File.hpp"
+#include "MaybeOwned.hpp"
+
 namespace ARLib {
 struct BaseStream {
     // write bytes
@@ -24,6 +26,27 @@ struct CharacterStream : public BaseStream {
     virtual Result<String> read_line(bool& eof_reached)    = 0;
     virtual ~CharacterStream()                             = default;
 };
+class FileStream;
+class FileLineStreamIterator {
+    MaybeOwned<FileStream> m_stream;
+    bool m_eof_reached{ false };
+    bool m_end{ false };
+    String m_current_line{};
+    public:
+    FileLineStreamIterator(MaybeOwned<FileStream> stream, bool end = false);
+    String operator*();
+    FileLineStreamIterator& operator++();
+    bool operator==(const FileLineStreamIterator& other) const;
+    bool operator!=(const FileLineStreamIterator& other) const;
+};
+class FileLineStream {
+    MaybeOwned<FileStream> m_stream;
+    public:
+    FileLineStream(FileStream& stream);
+    FileLineStream(FileStream&& stream);
+    FileLineStreamIterator begin();
+    FileLineStreamIterator end();
+};
 class FileStream : public CharacterStream {
     protected:
     File m_file;
@@ -37,8 +60,12 @@ class FileStream : public CharacterStream {
     Result<size_t> write_string(StringView buffer) override;
     Result<String> read_string() override;
     Result<String> read_line(bool& eof_reached) override;
+    FileLineStream lines() & { return FileLineStream{ *this }; }
+    FileLineStream lines() && { return FileLineStream{ move(*this) }; }
     size_t pos() const override;
     size_t seek(size_t) override;
+    bool operator==(const FileStream& other) const;
+    bool is_open() const { return m_file.is_open(); }
     virtual ~FileStream() = default;
 };
 class BufferedFileStream : public FileStream {

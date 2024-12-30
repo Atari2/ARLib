@@ -118,13 +118,13 @@ template <typename T>
 concept ForwardIterator = Incrementable<T> && Dereferencable<T>;
 
 template <typename T>
-concept EqualityComparable = requires(T a, T b) {
+concept EqualityComparable = requires(const T& a, const T& b) {
     { a == b } -> ConvertibleTo<bool>;
     { a != b } -> ConvertibleTo<bool>;
 };
 
 template <typename T, typename C>
-concept EqualityComparableWith = requires(T a, C b) {
+concept EqualityComparableWith = requires(const T& a, const C& b) {
     { a == b } -> ConvertibleTo<bool>;
     { a != b } -> ConvertibleTo<bool>;
 };

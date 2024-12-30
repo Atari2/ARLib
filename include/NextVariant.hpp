@@ -59,6 +59,7 @@ namespace v2 {
     using GenericBiFnPtr  = void (*)(uint8_t*, uint8_t*);
     using GenericCBiFnPtr = void (*)(uint8_t*, const uint8_t*);
     using CmpFnPtr        = Ordering (*)(const uint8_t*, const uint8_t*);
+    using EqFnPtr         = bool (*)(const uint8_t*, const uint8_t*);
     template <typename T>
     void generic_type_destructor(uint8_t* memory) {
         T& obj = *reinterpret_cast<T*>(memory);
@@ -100,18 +101,30 @@ namespace v2 {
             return unordered;
         }
     }
+    template <typename T>
+    bool generic_eq_func(const uint8_t* lhs, const uint8_t* rhs) {
+        if constexpr (EqualityComparable<T>) {
+            const T& lhsobj = *reinterpret_cast<const T*>(lhs);
+            const T& rhsobj = *reinterpret_cast<const T*>(rhs);
+            return lhsobj == rhsobj;
+        } else {
+            return false;
+        }
+    }
     struct VariantTypeFns {
         GenericFnPtr destructor;
         GenericCBiFnPtr copy_ctor;
         GenericBiFnPtr move_ctor;
         CmpFnPtr cmp_func;
+        EqFnPtr eq_func;
     };
     template <typename T>
     constexpr VariantTypeFns var_fns_creator() {
         return VariantTypeFns{ .destructor = generic_type_destructor<T>,
                                .copy_ctor  = generic_type_copy_ctor<T>,
                                .move_ctor  = generic_type_move_ctor<T>,
-                               .cmp_func   = generic_cmp_func<T> };
+                               .cmp_func   = generic_cmp_func<T>,
+                               .eq_func    = generic_eq_func<T> };
     }
     template <size_t Count>
     struct TypeSelectorByCountImpl {
@@ -281,12 +294,23 @@ namespace v2 {
         size_t current_type() const { return m_current_type; }
         bool is_empty() const { return m_current_type == no_type; }
         bool is_active() const { return m_current_type != no_type; }
+
+        static constexpr inline bool variant_is_orderable = (... && Orderable<Types>);
+        constexpr static inline bool variant_is_eq_comp   = (... && EqualityComparable<Types>);
+
         Ordering operator<=>(const Variant& other) const
-        requires(... && Orderable<Types>)
+        requires variant_is_orderable
         {
             if (other.m_current_type != m_current_type) return unordered;
             if (m_current_type == no_type) return equal;
             return functions[m_current_type].cmp_func(m_storage.raw_memory(), other.m_storage.raw_memory());
+        }
+        bool operator==(const Variant& other) const
+        requires(variant_is_eq_comp && !variant_is_orderable)
+        {
+            if (other.m_current_type != m_current_type) return false;
+            if (m_current_type == no_type) return true;
+            return functions[m_current_type].eq_func(m_storage.raw_memory(), other.m_storage.raw_memory());
         }
         template <typename Callable>
         requires(CallableWith<Callable, Types> || ...)
@@ -341,8 +365,8 @@ namespace v2 {
             return m_storage;
         }
         template <class T>
-        requires SameAs<T, Monostate> bool
-        contains_type() const {
+        requires SameAs<T, Monostate>
+        bool contains_type() const {
             return m_initialized;
         }
         bool is_active() const { return m_initialized; }

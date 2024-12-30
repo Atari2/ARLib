@@ -147,6 +147,8 @@ class File {
     void close() {
         if (m_ptr) ARLib::fclose(m_ptr);
     }
+    bool is_open() const { return m_ptr != nullptr; }
+    bool operator==(const File& other) const { return m_filename == other.m_filename; }
     ~File() { close(); }
 };
 template <>

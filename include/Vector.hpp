@@ -143,7 +143,9 @@ class Vector {
         append(Forward<T>(val));
         (append(Forward<Values>(values)), ...);
     }
-    bool operator==(const Vector& other) const {
+    bool operator==(const Vector& other) const
+    requires EqualityComparable<T>
+    {
         if (size() != other.size()) return false;
         for (size_t i = 0; i < size(); i++) {
             if (m_storage[i] == other[i]) continue;

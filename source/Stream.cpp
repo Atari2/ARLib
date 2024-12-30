@@ -1,9 +1,53 @@
 #include "Stream.hpp"
 #include "Vector.hpp"
 namespace ARLib {
+// FILE STREAM ITERATORS
+FileLineStream::FileLineStream(FileStream& stream) : m_stream{ MaybeOwned<FileStream>::lended(stream) } {
+    if (auto& fs = *m_stream; fs.is_open()) { fs.open(); }
+}
+FileLineStream::FileLineStream(FileStream&& stream) : m_stream{ MaybeOwned<FileStream>::owned(Forward<FileStream>(stream)) } {
+    if (auto& fs = *m_stream; fs.is_open()) { fs.open(); }
+}
+FileLineStreamIterator FileLineStream::begin() {
+    return FileLineStreamIterator{ m_stream };
+}
+FileLineStreamIterator FileLineStream::end() {
+    return FileLineStreamIterator{ m_stream, true };
+}
+FileLineStreamIterator::FileLineStreamIterator(MaybeOwned<FileStream> stream, bool end) : m_stream{ move(stream) }, m_end{ end } {
+    if (!m_end) {
+        auto readres = m_stream->read_line(m_eof_reached);
+        if (readres.is_error()) {
+            m_end = true;
+        } else {
+            m_current_line = readres.to_ok();
+        }
+    }
+}
+bool FileLineStreamIterator::operator==(const FileLineStreamIterator& other) const {
+    return m_end == other.m_end && m_stream == other.m_stream;
+}
+bool FileLineStreamIterator::operator!=(const FileLineStreamIterator& other) const {
+    return m_end != other.m_end || m_stream != other.m_stream;
+}
+String FileLineStreamIterator::operator*() {
+    return m_current_line;
+}
+FileLineStreamIterator& FileLineStreamIterator::operator++() {
+    if (m_eof_reached) { m_end = true; }
+    if (!m_end) {
+        auto readres = m_stream->read_line(m_eof_reached);
+        if (readres.is_error()) {
+            m_end = true;
+        } else {
+            m_current_line = readres.to_ok();
+        }
+    }
+    return *this;
+}
 // FILE STREAM
 DiscardResult<FileError> FileStream::open() {
-    return m_file.open(OpenFileMode::Append);
+    return m_file.open(OpenFileMode::Append | OpenFileMode::Read);
 }
 Result<size_t> FileStream::write(Span<const uint8_t> buffer) {
     StringView view{ reinterpret_cast<const char*>(buffer.data()), buffer.size_bytes() };
@@ -49,6 +93,9 @@ size_t FileStream::pos() const {
 }
 size_t FileStream::seek(size_t pos) {
     return m_file.seek(pos);
+}
+bool FileStream::operator==(const FileStream& other) const {
+    return m_file == other.m_file;
 }
 // BUFFERED FILE STREAM
 Result<size_t> BufferedFileStream::write(Span<const uint8_t> buffer) {
