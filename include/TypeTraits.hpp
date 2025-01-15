@@ -591,16 +591,16 @@ AddLvalueReferenceT<T> priv_declval() noexcept {
 template <typename T, typename... Types>
 struct TypeTuple : TypeTuple<Types...> {
     using RealT = ConditionalT<IsLvalueReferenceV<T>, T, AddPointerT<T>>;
-    RealT dummy;
+    static RealT dummy;
     template <size_t N>
-    constexpr decltype(auto) get() const {
+    static constexpr decltype(auto) get() {
         if constexpr (N == 0 && IsPointerV<RealT>) {
             return *dummy;
         } else if constexpr (N == 0) {
             return dummy;
         } else {
             static_assert(N < (sizeof...(Types) + 1) && N > 0);
-            return static_cast<const TypeTuple<Types...>*>(this)->template get<N - 1>();
+            return TypeTuple<Types...>::template get<N - 1>();
         }
     }
     template <typename U, size_t Index>
@@ -616,10 +616,10 @@ struct TypeTuple : TypeTuple<Types...> {
 template <typename T>
 struct TypeTuple<T> {
     using RealT = ConditionalT<IsLvalueReferenceV<T>, T, AddPointerT<T>>;
-    RealT dummy;
+    static RealT dummy;
     template <size_t N>
     requires(N == 0)
-    constexpr decltype(auto) get() const {
+    static constexpr decltype(auto) get() {
         if constexpr (IsPointerV<RealT>) {
             return *dummy;
         } else {
@@ -637,7 +637,7 @@ struct TypeArray {
     using TT = TypeTuple<Types...>;
     template <size_t I>
     requires(I < sizeof...(Types))
-    using At = RemoveReferenceT<decltype(priv_declval<TT>().template get<I>())>;
+    using At = RemoveReferenceT<decltype(TT::template get<I>())>;
     template <typename T>
     requires (IsAnyOfV<T, Types...>)
     constexpr static inline size_t IndexOf = TT::template index_of<T, 0>();

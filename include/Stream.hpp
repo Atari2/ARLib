@@ -27,27 +27,27 @@ struct CharacterStream : public BaseStream {
     virtual ~CharacterStream()                             = default;
 };
 class FileStream;
-class FileLineStreamIterator {
-    MaybeOwned<FileStream> m_stream;
-    bool m_eof_reached{ false };
-    bool m_end{ false };
-    String m_current_line{};
-    public:
-    FileLineStreamIterator(MaybeOwned<FileStream> stream, bool end = false);
-    String operator*();
-    FileLineStreamIterator& operator++();
-    bool operator==(const FileLineStreamIterator& other) const;
-    bool operator!=(const FileLineStreamIterator& other) const;
-};
-class FileLineStream {
-    MaybeOwned<FileStream> m_stream;
-    public:
-    FileLineStream(FileStream& stream);
-    FileLineStream(FileStream&& stream);
-    FileLineStreamIterator begin();
-    FileLineStreamIterator end();
-};
 class FileStream : public CharacterStream {
+    class LinesIterator {
+        MaybeOwned<FileStream> m_stream;
+        bool m_eof_reached{ false };
+        bool m_end{ false };
+        String m_current_line{};
+        public:
+        LinesIterator(MaybeOwned<FileStream> stream, bool end = false);
+        String operator*();
+        LinesIterator& operator++();
+        bool operator==(const LinesIterator& other) const;
+        bool operator!=(const LinesIterator& other) const;
+    };
+    class Lines {
+        MaybeOwned<FileStream> m_stream;
+        public:
+        Lines(FileStream& stream);
+        Lines(FileStream&& stream);
+        LinesIterator begin();
+        LinesIterator end();
+    };
     protected:
     File m_file;
     public:
@@ -60,8 +60,8 @@ class FileStream : public CharacterStream {
     Result<size_t> write_string(StringView buffer) override;
     Result<String> read_string() override;
     Result<String> read_line(bool& eof_reached) override;
-    FileLineStream lines() & { return FileLineStream{ *this }; }
-    FileLineStream lines() && { return FileLineStream{ move(*this) }; }
+    Lines lines() & { return Lines{ *this }; }
+    Lines lines() && { return Lines{ move(*this) }; }
     size_t pos() const override;
     size_t seek(size_t) override;
     bool operator==(const FileStream& other) const;

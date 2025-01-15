@@ -2,38 +2,40 @@
 #include "Vector.hpp"
 namespace ARLib {
 // FILE STREAM ITERATORS
-FileLineStream::FileLineStream(FileStream& stream) : m_stream{ MaybeOwned<FileStream>::lended(stream) } {
-    if (auto& fs = *m_stream; fs.is_open()) { fs.open(); }
+FileStream::Lines::Lines(FileStream& stream) : m_stream{ MaybeOwned<FileStream>::lended(stream) } {
+    if (auto& fs = *m_stream; !fs.is_open()) { fs.open(); }
 }
-FileLineStream::FileLineStream(FileStream&& stream) : m_stream{ MaybeOwned<FileStream>::owned(Forward<FileStream>(stream)) } {
-    if (auto& fs = *m_stream; fs.is_open()) { fs.open(); }
+FileStream::Lines::Lines(FileStream&& stream) : m_stream{ MaybeOwned<FileStream>::owned(Forward<FileStream>(stream)) } {
+    if (auto& fs = *m_stream; !fs.is_open()) { fs.open(); }
 }
-FileLineStreamIterator FileLineStream::begin() {
-    return FileLineStreamIterator{ m_stream };
+FileStream::LinesIterator FileStream::Lines::begin() {
+    return FileStream::LinesIterator{ m_stream };
 }
-FileLineStreamIterator FileLineStream::end() {
-    return FileLineStreamIterator{ m_stream, true };
+FileStream::LinesIterator FileStream::Lines::end() {
+    return FileStream::LinesIterator{ m_stream, true };
 }
-FileLineStreamIterator::FileLineStreamIterator(MaybeOwned<FileStream> stream, bool end) : m_stream{ move(stream) }, m_end{ end } {
+FileStream::LinesIterator::LinesIterator(MaybeOwned<FileStream> stream, bool end) :
+    m_stream{ move(stream) }, m_end{ end } {
     if (!m_end) {
         auto readres = m_stream->read_line(m_eof_reached);
         if (readres.is_error()) {
             m_end = true;
+            readres.ignore_error();
         } else {
             m_current_line = readres.to_ok();
         }
     }
 }
-bool FileLineStreamIterator::operator==(const FileLineStreamIterator& other) const {
+bool FileStream::LinesIterator::operator==(const FileStream::LinesIterator& other) const {
     return m_end == other.m_end && m_stream == other.m_stream;
 }
-bool FileLineStreamIterator::operator!=(const FileLineStreamIterator& other) const {
+bool FileStream::LinesIterator::operator!=(const FileStream::LinesIterator& other) const {
     return m_end != other.m_end || m_stream != other.m_stream;
 }
-String FileLineStreamIterator::operator*() {
+String FileStream::LinesIterator::operator*() {
     return m_current_line;
 }
-FileLineStreamIterator& FileLineStreamIterator::operator++() {
+FileStream::LinesIterator& FileStream::LinesIterator::operator++() {
     if (m_eof_reached) { m_end = true; }
     if (!m_end) {
         auto readres = m_stream->read_line(m_eof_reached);
