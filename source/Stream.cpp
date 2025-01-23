@@ -2,19 +2,19 @@
 #include "Vector.hpp"
 namespace ARLib {
 // FILE STREAM ITERATORS
-FileStream::Lines::Lines(FileStream& stream) : m_stream{ MaybeOwned<FileStream>::lended(stream) } {
-    if (auto& fs = *m_stream; !fs.is_open()) { fs.open(); }
-}
-FileStream::Lines::Lines(FileStream&& stream) : m_stream{ MaybeOwned<FileStream>::owned(Forward<FileStream>(stream)) } {
-    if (auto& fs = *m_stream; !fs.is_open()) { fs.open(); }
-}
-FileStream::LinesIterator FileStream::Lines::begin() {
+CharacterStream::LinesIterator FileStream::Lines::begin() {
     return FileStream::LinesIterator{ m_stream };
 }
-FileStream::LinesIterator FileStream::Lines::end() {
+CharacterStream::LinesIterator FileStream::Lines::end() {
     return FileStream::LinesIterator{ m_stream, true };
 }
-FileStream::LinesIterator::LinesIterator(MaybeOwned<FileStream> stream, bool end) :
+CharacterStream::LinesIterator FileStream::Lines::begin() const {
+    return FileStream::LinesIterator{ m_stream };
+}
+CharacterStream::LinesIterator FileStream::Lines::end() const {
+    return FileStream::LinesIterator{ m_stream, true };
+}
+CharacterStream::LinesIterator::LinesIterator(MaybeOwned<CharacterStream> stream, bool end) :
     m_stream{ move(stream) }, m_end{ end } {
     if (!m_end) {
         auto readres = m_stream->read_line(m_eof_reached);
@@ -26,16 +26,16 @@ FileStream::LinesIterator::LinesIterator(MaybeOwned<FileStream> stream, bool end
         }
     }
 }
-bool FileStream::LinesIterator::operator==(const FileStream::LinesIterator& other) const {
+bool CharacterStream::LinesIterator::operator==(const FileStream::LinesIterator& other) const {
     return m_end == other.m_end && m_stream == other.m_stream;
 }
-bool FileStream::LinesIterator::operator!=(const FileStream::LinesIterator& other) const {
+bool CharacterStream::LinesIterator::operator!=(const FileStream::LinesIterator& other) const {
     return m_end != other.m_end || m_stream != other.m_stream;
 }
-String FileStream::LinesIterator::operator*() {
+String CharacterStream::LinesIterator::operator*() {
     return m_current_line;
 }
-FileStream::LinesIterator& FileStream::LinesIterator::operator++() {
+CharacterStream::LinesIterator& FileStream::LinesIterator::operator++() {
     if (m_eof_reached) { m_end = true; }
     if (!m_end) {
         auto readres = m_stream->read_line(m_eof_reached);
@@ -47,6 +47,17 @@ FileStream::LinesIterator& FileStream::LinesIterator::operator++() {
     }
     return *this;
 }
+CharacterStream::LinesIterator FileStream::LinesIterator::operator++(int) {
+    auto copy = *this;
+    ++(*this);
+    return copy;
+}
+
+#define RETURN_ERROR_STRING(res)                                                                                       \
+    if (res.is_error()) {                                                                                              \
+        auto error = res.to_error();                                                                                   \
+        return error->error_string();                                                                                  \
+    }
 // FILE STREAM
 DiscardResult<FileError> FileStream::open() {
     return m_file.open(OpenFileMode::Append | OpenFileMode::Read);
@@ -54,12 +65,12 @@ DiscardResult<FileError> FileStream::open() {
 Result<size_t> FileStream::write(Span<const uint8_t> buffer) {
     StringView view{ reinterpret_cast<const char*>(buffer.data()), buffer.size_bytes() };
     auto res = m_file.write(view);
-    if (res.is_error()) return res.to_error()->error_string();
+    RETURN_ERROR_STRING(res);
     return res.to_ok();
 }
 Result<Vector<uint8_t>> FileStream::read(size_t n) {
     auto res = m_file.read_n(n);
-    if (res.is_error()) return res.to_error()->error_string();
+    RETURN_ERROR_STRING(res);
     auto ok         = res.to_ok();
     const size_t sz = ok.size();
     uint8_t* ptr    = reinterpret_cast<uint8_t*>(ok.release());
@@ -68,7 +79,7 @@ Result<Vector<uint8_t>> FileStream::read(size_t n) {
 }
 Result<Vector<uint8_t>> FileStream::read() {
     auto res = m_file.read_all();
-    if (res.is_error()) return res.to_error()->error_string();
+    RETURN_ERROR_STRING(res);
     auto ok         = res.to_ok();
     const size_t sz = ok.size();
     uint8_t* ptr    = reinterpret_cast<uint8_t*>(ok.release());
@@ -77,17 +88,23 @@ Result<Vector<uint8_t>> FileStream::read() {
 }
 Result<size_t> FileStream::write_string(StringView buffer) {
     auto res = m_file.write(buffer);
-    if (res.is_error()) return res.to_error()->error_string();
+    RETURN_ERROR_STRING(res);
     return res.to_ok();
 }
 Result<String> FileStream::read_string() {
     auto res = m_file.read_all();
-    if (res.is_error()) return Result<String>{ res.to_error()->error_string(), emplace_error };
+    if (res.is_error()) { 
+        auto error = res.to_error();
+        return Result<String>{ error->error_string(), emplace_error }; 
+    }
     return Result<String>{ res.to_ok(), emplace_ok };
 }
 Result<String> FileStream::read_line(bool& eof_reached) {
     auto res = m_file.read_line(eof_reached);
-    if (res.is_error()) return Result<String>{ res.to_error()->error_string(), emplace_error };
+    if (res.is_error()) { 
+        auto error = res.to_error();
+        return Result<String>{ error->error_string(), emplace_error }; 
+    }
     return Result<String>{ res.to_ok(), emplace_ok };
 }
 size_t FileStream::pos() const {
@@ -112,7 +129,10 @@ Result<size_t> BufferedFileStream::write(Span<const uint8_t> buffer) {
         auto res = m_file.write(m_buffer);
         m_buffer.clear();
         m_buffer.append(view.substringview_fromlen(rem_buffer));
-        if (res.is_error()) return res.to_error()->error_string();
+        if (res.is_error()) { 
+            auto error = res.to_error();
+            return error->error_string(); 
+        }
     }
     return view.size();
 }

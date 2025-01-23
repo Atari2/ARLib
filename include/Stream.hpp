@@ -4,7 +4,6 @@
 #include "String.hpp"
 #include "File.hpp"
 #include "MaybeOwned.hpp"
-
 namespace ARLib {
 struct BaseStream {
     // write bytes
@@ -20,34 +19,46 @@ struct BaseStream {
     virtual ~BaseStream()       = default;
 };
 struct CharacterStream : public BaseStream {
-    virtual DiscardResult<FileError> open() { return DefaultOk{}; }
-    virtual Result<size_t> write_string(StringView buffer) = 0;
-    virtual Result<String> read_string()                   = 0;
-    virtual Result<String> read_line(bool& eof_reached)    = 0;
-    virtual ~CharacterStream()                             = default;
-};
-class FileStream;
-class FileStream : public CharacterStream {
     class LinesIterator {
-        MaybeOwned<FileStream> m_stream;
+        MaybeOwned<CharacterStream> m_stream;
         bool m_eof_reached{ false };
         bool m_end{ false };
         String m_current_line{};
         public:
-        LinesIterator(MaybeOwned<FileStream> stream, bool end = false);
+        LinesIterator(MaybeOwned<CharacterStream> stream, bool end = false);
         String operator*();
         LinesIterator& operator++();
+        LinesIterator operator++(int);
         bool operator==(const LinesIterator& other) const;
         bool operator!=(const LinesIterator& other) const;
     };
     class Lines {
-        MaybeOwned<FileStream> m_stream;
+        MaybeOwned<CharacterStream> m_stream;
         public:
-        Lines(FileStream& stream);
-        Lines(FileStream&& stream);
+        template <DerivedFrom<CharacterStream> U>
+        Lines(U& stream) : m_stream{ MaybeOwned<CharacterStream>::template lended<U>(stream) } {
+            if (auto& fs = *m_stream; !fs.is_open()) { fs.open(); }
+        }
+        template <DerivedFrom<CharacterStream> U>
+        Lines(U&& stream) : m_stream{ MaybeOwned<CharacterStream>::template owned<U>(Forward<U>(stream)) } {
+            if (auto& fs = *m_stream; !fs.is_open()) { fs.open(); }
+        }
         LinesIterator begin();
         LinesIterator end();
+        LinesIterator begin() const;
+        LinesIterator end() const;
     };
+    virtual Lines lines() &  = 0;
+    virtual Lines lines() && = 0;
+    virtual DiscardResult<FileError> open() { return DefaultOk{}; }
+    virtual Result<size_t> write_string(StringView buffer) = 0;
+    virtual Result<String> read_string()                   = 0;
+    virtual Result<String> read_line(bool& eof_reached)    = 0;
+    virtual bool is_open() const                           = 0;
+    virtual bool operator==(const CharacterStream& other) const { return this == &other; }
+    virtual ~CharacterStream() = default;
+};
+class FileStream : public CharacterStream {
     protected:
     File m_file;
     public:
@@ -60,12 +71,16 @@ class FileStream : public CharacterStream {
     Result<size_t> write_string(StringView buffer) override;
     Result<String> read_string() override;
     Result<String> read_line(bool& eof_reached) override;
-    Lines lines() & { return Lines{ *this }; }
-    Lines lines() && { return Lines{ move(*this) }; }
+    Lines lines() & override { return Lines{ *this }; }
+    Lines lines() && override { return Lines{ move(*this) }; }
     size_t pos() const override;
     size_t seek(size_t) override;
     bool operator==(const FileStream& other) const;
-    bool is_open() const { return m_file.is_open(); }
+    bool operator==(const CharacterStream& other) const override {
+        if (const auto* fs = dynamic_cast<const FileStream*>(&other); fs != nullptr) { return *this == *fs; }
+        return false;
+    }
+    bool is_open() const override { return m_file.is_open(); }
     virtual ~FileStream() = default;
 };
 class BufferedFileStream : public FileStream {
@@ -103,12 +118,15 @@ class StringStream : public CharacterStream {
     Result<size_t> write_string(StringView buffer) override;
     Result<String> read_string() override;
     Result<String> read_line(bool& eof_reached) override;
+    Lines lines() & override { return Lines{ *this }; }
+    Lines lines() && override { return Lines{ move(*this) }; }
     size_t pos() const override { return m_pos; }
     size_t seek(size_t pos) override {
         m_pos = pos;
         return m_pos;
     }
     String str() const { return m_buffer; }
+    bool is_open() const override { return true; }
     virtual ~StringStream() = default;
 };
 }    // namespace ARLib

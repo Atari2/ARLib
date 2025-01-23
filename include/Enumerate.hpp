@@ -21,7 +21,7 @@ using ContainerTypeT = typename GetContainerType<T>::Container;
 
 template <typename Cont>
 size_t container_size(const Cont& cont) {
-    if constexpr (EnumerableC<Cont>) {
+    if constexpr (SizedIterable<Cont>) {
         if constexpr (IterCanSubtractForSize<decltype(declval<Cont>().begin())>) {
             return cont.end() - cont.begin();
         } else {
@@ -82,19 +82,19 @@ class Enumerate {
     auto begin() const { return Enumerator{ ARLib::begin(m_container), 0ull }; }
     auto end() const { return Enumerator{ ARLib::end(m_container), it_npos }; }
 };
-template <EnumerableC T>
+template <Iterable T>
 Enumerate(T&) -> Enumerate<T&>;
-template <EnumerableC T>
+template <Iterable T>
 Enumerate(T&&) -> Enumerate<T>;
-template <EnumerableC T>
+template <Iterable T>
 auto enumerate(T&& cont) {
     return Enumerate{ Forward<T>(cont) };
 }
-template <EnumerableC T>
+template <Iterable T>
 auto enumerate(T& cont) {
     return Enumerate{ cont };
 }
-template <EnumerableC T>
+template <Iterable T>
 class ConstEnumerate {
     using TRef = AddConstT<typename RemoveReference<T>::type>&;
     TRef m_container;
@@ -103,10 +103,10 @@ class ConstEnumerate {
     using InnerContainer = ContainerTypeT<T>;
     explicit ConstEnumerate(const T& container) : m_container(container) {}
     auto begin() const { return ConstEnumerator{ ARLib::begin(m_container), 0ull }; }
-    auto end() const { return ConstEnumerator{ ARLib::end(m_container), m_container.size() }; }
+    auto end() const { return ConstEnumerator{ ARLib::end(m_container), it_npos }; }
 };
 // simple iterator pair wrapper, will only iterate until the shorter of the 2 iterators has elements.
-template <EnumerableC F, EnumerableC S>
+template <Iterable F, Iterable S>
 class PairIterate {
     F& m_first;
     S& m_second;

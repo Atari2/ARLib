@@ -86,7 +86,8 @@ namespace JSON {
             File f{ filename };
             auto maybe_error = f.open(OpenFileMode::Write);
             if (maybe_error.is_error()) {
-                return ParseError{ maybe_error.to_error()->error_string(), 0 };
+                auto error = maybe_error.to_error();
+                return ParseError{ error->error_string(), 0 };
             }
             auto write_res = f.write(result);
             if (write_res.is_error()) { return write_res; }

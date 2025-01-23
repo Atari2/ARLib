@@ -590,14 +590,12 @@ AddLvalueReferenceT<T> priv_declval() noexcept {
 }
 template <typename T, typename... Types>
 struct TypeTuple : TypeTuple<Types...> {
-    using RealT = ConditionalT<IsLvalueReferenceV<T>, T, AddPointerT<T>>;
-    static RealT dummy;
+    using RealT = AddPointerT<RemoveReferenceT<T>>;
+    constexpr static inline RealT dummy{};
     template <size_t N>
     static constexpr decltype(auto) get() {
-        if constexpr (N == 0 && IsPointerV<RealT>) {
+        if constexpr (N == 0) {
             return *dummy;
-        } else if constexpr (N == 0) {
-            return dummy;
         } else {
             static_assert(N < (sizeof...(Types) + 1) && N > 0);
             return TypeTuple<Types...>::template get<N - 1>();
@@ -615,16 +613,12 @@ struct TypeTuple : TypeTuple<Types...> {
 };
 template <typename T>
 struct TypeTuple<T> {
-    using RealT = ConditionalT<IsLvalueReferenceV<T>, T, AddPointerT<T>>;
-    static RealT dummy;
+    using RealT = AddPointerT<RemoveReferenceT<T>>;
+    constexpr static inline RealT dummy{};
     template <size_t N>
     requires(N == 0)
     static constexpr decltype(auto) get() {
-        if constexpr (IsPointerV<RealT>) {
-            return *dummy;
-        } else {
-            return dummy;
-        }
+        return *dummy;
     }
     template <typename U, size_t Index>
     requires(IsSameV<T, U>)

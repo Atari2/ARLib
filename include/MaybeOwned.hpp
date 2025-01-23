@@ -28,12 +28,21 @@ class MaybeOwned {
     public:
     MaybeOwned(MaybeOwned&&)      = default;
     MaybeOwned(const MaybeOwned&) = default;
+    template <DerivedFrom<T> U>
+    static MaybeOwned owned(U&& object)
+    requires MoveConstructible<U>
+    {
+        U* ptr = new U(Forward<U>(object));
+        return MaybeOwned{ static_cast<T*>(ptr) };
+    }
     static MaybeOwned owned(T&& object)
     requires MoveConstructible<T>
     {
         T* ptr = new T(Forward<T>(object));
         return MaybeOwned{ ptr };
     }
+    template <DerivedFrom<T> U>
+    static MaybeOwned lended(U& object) { return MaybeOwned{ static_cast<T&>(object) }; }
     static MaybeOwned lended(T& object) { return MaybeOwned{ object }; }
     T* ptr() { return internal_ptr(); }
     const T* ptr() const { return internal_ptr(); }

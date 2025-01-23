@@ -159,10 +159,11 @@ template <typename T>
 concept IterCanSubtractForSize = requires(T a, T b) {
     { a - b } -> SameAs<size_t>;
 };
+
 template <typename T>
-concept EnumerableC = Iterable<T> && (requires(T a) {
-                          { a.size() };
-                      } || IterCanSubtractForSize<T>);
+concept SizedIterable = Iterable<T> && (requires(T a) {
+                            { a.size() } -> SameAs<size_t>;
+                        } || IterCanSubtractForSize<T>);
 
 template <typename T>
 concept Stringable = requires(T a) {

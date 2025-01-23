@@ -10,7 +10,7 @@ class UniquePtr {
 
     public:
     constexpr UniquePtr() = default;
-    constexpr UniquePtr(nullptr_t) : m_storage(nullptr){};
+    constexpr UniquePtr(nullptr_t) : m_storage(nullptr) {};
     UniquePtr(const UniquePtr&) = delete;
     explicit UniquePtr(T* ptr) : m_storage(ptr) {}
     explicit UniquePtr(T&& storage) : m_storage(new T{ move(storage) }) {}
@@ -41,10 +41,20 @@ class UniquePtr {
     const T* get() const { return m_storage; }
     bool exists() const { return m_storage != nullptr; }
     explicit operator bool() const { return m_storage != nullptr; }
-    T* operator->() { return m_storage; }
-    const T* operator->() const { return m_storage; }
-    T& operator*() { return *m_storage; }
-    const T& operator*() const { return *m_storage; }
+    T* operator->() & { return m_storage; }
+    const T* operator->() const& { return m_storage; }
+    T* operator->() && = delete;
+    T& operator*() & { return *m_storage; }
+    const T& operator*() const& { return *m_storage; }
+    T&& operator*() && = delete;
+
+    // this is operator* which doesn't cause object slicing when moving outside of the UniquePtr
+    template <DerivedFrom<T> U = T>
+    U moved() && {
+        U tmp{ move(*static_cast<U*>(m_storage)) };
+        reset();
+        return tmp;
+    }
     ~UniquePtr() { reset(); }
 };
 template <class T>
@@ -54,7 +64,7 @@ class UniquePtr<T[]> {
 
     public:
     constexpr UniquePtr() = default;
-    constexpr UniquePtr(nullptr_t) : m_storage(nullptr){};
+    constexpr UniquePtr(nullptr_t) : m_storage(nullptr) {};
     UniquePtr(const UniquePtr&)            = delete;
     UniquePtr& operator=(const UniquePtr&) = delete;
     explicit UniquePtr(size_t size)

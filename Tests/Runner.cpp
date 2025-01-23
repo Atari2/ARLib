@@ -172,8 +172,9 @@ TEST(ARLibTests, TupleTests) {
 
     // test recursive destructuring
     Tuple<Tuple<Tuple<int, float>, Pair<Vector<int>, Vector<float>>>, Pair<String, StringView>> rtup{
-        make_tuple(make_tuple(1, 3.0f), Pair{ Vector{ 1, 2, 3 }, Vector{ 1.0f, 2.0f, 3.0f } }),
-        Pair{ "hello"_s, "world"_sv }
+        make_tuple(make_tuple(1, 3.0f), Pair{ Vector{ 1, 2, 3 }, Vector{ 1.0f, 2.0f, 3.0f } }
+          ),
+        Pair{ "hello"_s,         "world"_sv                 }
     };
     auto&& [i1, f1, vi, vf, s, sv] = flatten_tuple(rtup);
     EXPECT_EQ(i1, 1);
@@ -1576,7 +1577,7 @@ TEST(ARLibTests, ResultTest) {
     Result<int, TestEnum> resc{ TestEnum::A };
     EXPECT_TRUE(resc.is_error());
     Result<int, Error> resd{ resc.to_error() };
-    EXPECT_EQ(resd.to_error()->error_string(), "A"_sv);
+    EXPECT_EQ(resd.to_error().moved().error_string(), "A"_sv);
 }
 TEST(ARLibTests, VectorTests) {
     Vector<int> v{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -1670,4 +1671,10 @@ TEST(ARLibTests, FormatSpecTest) {
 
     EXPECT_EQ(res, "7B 7b 1111011 1111011 173 173 123 123 HELLO hello"_sv);
     EXPECT_EQ(res2, "0X7B 0x7b 0B1111011 0b1111011 0O173 0o173 0d123 0D123 HELLO hello"_sv);
+}
+TEST(ARLibTests, StreamingTest) {
+    String test_string{ "hello world\nthis is a test\nanother line" };
+    StringStream str{ test_string };
+    Vector<StringView> expected{ "hello world"_sv, "this is a test"_sv, "another line"_sv };
+    for (const auto& [i, line] : enumerate(str.lines())) { EXPECT_EQ(line, expected[i]); }
 }

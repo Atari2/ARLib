@@ -120,13 +120,17 @@ namespace JSON {
     }
     Parsed<Number> parse_number(const String& raw_value) {
         if (raw_value.contains('.') || raw_value.contains('E') || raw_value.contains('e')) {
-            if (auto res = StrToDouble(raw_value); res.is_error())
-                return ParseError{ res.to_error()->error_string(), 0 };
+            if (auto res = StrToDouble(raw_value); res.is_error()) {
+                auto error = res.to_error();
+                return ParseError{ error->error_string(), 0 };
+            }
             else
                 return res.to_ok();
         } else {
-            if (auto res = StrToI64(raw_value); res.is_error())
-                return ParseError{ res.to_error()->error_string(), 0 };
+            if (auto res = StrToI64(raw_value); res.is_error()) {
+                auto error = res.to_error();
+                return ParseError{ error->error_string(), 0 };
+            }
             else
                 return res.to_ok();
         }
@@ -515,10 +519,13 @@ namespace JSON {
     ParseResult Parser::from_file(const Path& filename) {
         File f{ filename };
         if (auto err = f.open(OpenFileMode::Read); err.is_error()) {
-            return ParseError{ err.to_error()->error_string(), 0 };
+            auto error = err.to_error();
+            return ParseError{ error->error_string(), 0 };
         }
         auto val_or_err = f.read_all();
-        if (val_or_err.is_error()) { return ParseError{ val_or_err.to_error()->error_string(), 0 };
+        if (val_or_err.is_error()) { 
+            auto error = val_or_err.to_error();
+            return ParseError{ error->error_string(), 0 };
         }
         auto val = val_or_err.to_ok();
         TRY_RET(Parser::parse(val.view()));
