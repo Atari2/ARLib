@@ -71,4 +71,13 @@ typedef short int16_t;
 typedef char int8_t;
 #endif
 constexpr size_t BITS_PER_BYTE = 8;
+
+#ifdef WINDOWS
+using maximum_alignment_type = double;
+#elif WINDOWS_MINGW
+using maximum_alignment_type = double;
+#else
+using maximum_alignment_type = long double;
+#endif
+
 }    // namespace ARLib

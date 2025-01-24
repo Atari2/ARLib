@@ -222,6 +222,18 @@ namespace detail {
             else
                 return tail.is_empty();
         }
+        bool operator==(const VariantStorage& other) const
+        requires((... && EqualityComparable<Rest>) && EqualityComparable<First>)
+        {
+            if (is_active != other.is_active) {
+                return false;
+            } else if (is_active) {
+                return head == other.head;
+            } else {
+                // propagate
+                return tail == other.tail;
+            }
+        }
         Ordering operator<=>(const VariantStorage& other) const
         requires((... && Orderable<Rest>) && Orderable<First>)
         {
@@ -353,16 +365,28 @@ namespace detail {
             }
         }
         bool is_empty() const { return is_active; }
+        bool operator==(const VariantStorage& other) const
+        requires EqualityComparable<Type>
+        {
+            if (is_active != other.is_active) {
+                return false;
+            } else if (is_active) {
+                return head == other.head;
+            } else {
+                SOFT_ASSERT(false, "Comparing uninitialized variants, returning equal");
+                return true;
+            }
+        }
         Ordering operator<=>(const VariantStorage& other) const
-        requires(Orderable<Type>)
+        requires Orderable<Type>
         {
             if (is_active != other.is_active) {
                 return unordered;
             } else if (is_active) {
                 return head <=> other.head;
             } else {
-                // what do we even do here
-                return unordered;
+                SOFT_ASSERT(false, "Comparing uninitialized variants, returning equal");
+                return equal;
             }
         }
         ~VariantStorage() {
@@ -489,6 +513,11 @@ class Variant {
     requires(... && Orderable<Types>)
     {
         return m_storage <=> other.m_storage;
+    }
+    bool operator==(const Variant& other) const
+    requires(... && EqualityComparable<Types>)
+    {
+        return m_storage == other.m_storage;
     }
     ~Variant() = default;
 };

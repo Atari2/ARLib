@@ -144,7 +144,8 @@ namespace v2 {
         constexpr static Array functions  = { var_fns_creator<Types>()... };
         constexpr static size_t ntypes    = sizeof...(Types);
         constexpr static size_t max_size  = *max(Array{ sizeof(Types)... });
-        constexpr static size_t max_align = *max(Array{ alignof(Types)... });
+        constexpr static size_t max_align = lcm(alignof(Types)...);
+        static_assert(max_align <= alignof(maximum_alignment_type), "Alignment of variant is too large");
         VariantStorage<max_size, max_align> m_storage{};
         using index_type                          = TypeSelectorByCount<ntypes>;
         constexpr static size_t no_type           = static_cast<index_type>(-1);

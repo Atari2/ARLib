@@ -188,4 +188,65 @@ double round(double x);
 constexpr auto abs(Numeric auto x) {
     return x < decltype(x){ 0 } ? -x : x;
 }
+template <UnsignedIntegral T>
+constexpr T gcd(T a, T b) {
+    // The method is as follows, starting with a and b that are the two positive integers whose GCD is sought.
+    T d{ 0 };
+    if (a % 2 == 0 && b % 2 == 0) {
+        // If a and b are both even, then divide both by two until at least one of them becomes odd;
+        // let d be the number of these paired divisions.
+        while (a % 2 == 0 && b % 2 == 0) {
+            a /= 2;
+            b /= 2;
+            d++;
+        }
+    }
+
+    if (a % 2 == 0) {
+        // If a is even, then divide a by two until a becomes odd.
+        while (a % 2 == 0) a /= 2;
+    } else if (b % 2 == 0) {
+        // If b is even, then divide b by two until b becomes odd.
+        while (b % 2 == 0) b /= 2;
+    }
+
+    // Now, a and b are both odd and will remain odd until the end of the computation
+    // While a ≠ b do
+    while (a != b) {
+        if (a > b) {
+            // If a > b, then replace a with a – b and divide the result by two until a becomes odd (as a and b are both odd, there is, at least, one division by 2).
+            a = a - b;
+            while (a % 2 == 0) a /= 2;
+        } else if (a < b) {
+            // If a < b, then replace b with b – a and divide the result by two until b becomes odd.
+            b = b - a;
+            while (b % 2 == 0) b /= 2;
+        }
+    }
+
+    // Now, a = b, and the greatest common divisor is 2 ^ d * a.
+    return a * (T{ 1 } << d);
+}
+template <UnsignedIntegral T, UnsignedIntegral... Ts>
+requires(sizeof...(Ts) > 1 && (SameAs<T, Ts> && ...))
+constexpr T gcd(T arg, Ts... args) {
+    if constexpr (sizeof...(Ts) == 1) {
+        return gcd(arg, args...);
+    } else {
+        return gcd(arg, gcd(args...));
+    }
+}
+template <UnsignedIntegral T>
+constexpr T lcm(T a, T b) {
+    return a * (b / gcd(a, b));
+}
+template <UnsignedIntegral T, UnsignedIntegral... Ts>
+requires(sizeof...(Ts) > 1 && (SameAs<T, Ts> && ...))
+constexpr auto lcm(T arg, Ts... args) {
+    if constexpr (sizeof...(Ts) == 1) {
+        return lcm(arg, args...);
+    } else {
+        return lcm(arg, lcm(args...));
+    }
+}
 }    // namespace ARLib
