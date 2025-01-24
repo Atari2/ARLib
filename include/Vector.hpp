@@ -265,7 +265,7 @@ class Vector {
             m_storage[index] = move(value);
         }
     }
-    template <IteratorConcept Iter>
+    template <ForwardIterator Iter>
     requires Constructible<T, IteratorOutputType<Iter>>
     void insert(Iter begin, Iter end) {
         if constexpr (IterCanSubtractForSize<Iter>) { reserve(m_size + (end - begin)); }

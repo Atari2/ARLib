@@ -95,16 +95,26 @@ template <typename Cls>
 concept TriviallyCopyAssignable = requires { Supports<TriviallyCopyAssignableV<Cls>>::value; };
 
 template <typename T>
-concept Incrementable = requires(T a) {
-    { ++a };
-    { a++ };
+concept PreIncrementable = requires(T a) {
+    { ++a } -> SameAs<T&>;
 };
+template <typename T>
+concept PostIncrementable = requires(T a) {
+    { a++ } -> SameAs<T>;
+};
+template <typename T>
+concept Incrementable = PreIncrementable<T> && PostIncrementable<T>;
 
 template <typename T>
-concept Decrementable = requires(T a) {
-    { --a };
-    { a-- };
+concept PreDecrementable = requires(T a) {
+    { --a } -> SameAs<T&>;
 };
+template <typename T>
+concept PostDecrementable = requires(T a) {
+    { a-- } -> SameAs<T>;
+};
+template <typename T>
+concept Decrementable = PreDecrementable<T> && PostDecrementable<T>;
 
 template <typename T>
 concept Dereferencable = requires(T a) {
@@ -115,7 +125,10 @@ template <typename T>
 concept IteratorConcept = Incrementable<T> && Decrementable<T> && Dereferencable<T>;
 
 template <typename T>
-concept ForwardIterator = Incrementable<T> && Dereferencable<T>;
+concept ForwardIterator = PreIncrementable<T> && Dereferencable<T>;
+
+template <typename T>
+concept ForwardCopyableIterator = Incrementable<T> && Dereferencable<T>;
 
 template <typename T>
 concept EqualityComparable = requires(const T& a, const T& b) {
@@ -151,8 +164,8 @@ concept Orderable = requires(const T& a, const T& b) {
 
 template <typename T>
 concept Iterable = requires(T a) {
-    { a.begin() };
-    { a.end() };
+    { a.begin() } -> ForwardIterator;
+    { a.end() } -> ForwardIterator;
 };
 
 template <typename T>
