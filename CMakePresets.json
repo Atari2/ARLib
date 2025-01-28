@@ -54,8 +54,7 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-18",
         "CMAKE_CXX_COMPILER": "clang++-18",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ARLIB_USE_LIBCXX": true
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {

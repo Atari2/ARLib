@@ -431,6 +431,14 @@ TEST(ARLibTests, GenericViewTests) {
         EXPECT_EQ(exp_i, act_i);
         EXPECT_EQ(exp_v, act_v);
     }
+    // the better way :)
+    for (const auto& [exp, act] :
+         "1\n2\n3\nasdf\n4\n\n5"_sv.split("\n").iter().map_ok(StrViewToDouble).enumerate().zip(expected_from_en)) {
+        const auto& [exp_i, exp_v] = exp;
+        const auto& [act_i, act_v] = act;
+        EXPECT_EQ(exp_i, act_i);
+        EXPECT_EQ(exp_v, act_v);
+    }
 }
 TEST(ARLibTests, StringTest2) {
     String str{ "ciao come ciao io ciao sono ciao pippo" };

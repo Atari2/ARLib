@@ -18,7 +18,6 @@ struct GetContainerType<T> {
 };
 template <typename T>
 using ContainerTypeT = typename GetContainerType<T>::Container;
-
 template <typename Cont>
 size_t container_size(const Cont& cont) {
     if constexpr (SizedIterable<Cont>) {
@@ -120,7 +119,6 @@ class PairIterate {
 template <typename ZipContainer, Iterable... Conts>
 class ZipIterate {
     ZipContainer m_tuple;
-    size_t m_size;
     template <size_t... Vals>
     auto ibegin(IndexSequence<Vals...>) const {
         return ZipIterator{ m_tuple.template get<Vals>().begin()... };
@@ -128,25 +126,18 @@ class ZipIterate {
     template <size_t... Vals>
     auto iend(IndexSequence<Vals...>) const {
         return ZipIterator{
-            advance_iterator(m_tuple.template get<Vals>().begin(), m_tuple.template get<Vals>().end(), m_size)...
+            m_tuple.template get<Vals>().end()...
         };
     }
-    template <size_t... Vals>
-    size_t isize(IndexSequence<Vals...>) const {
-        size_t sizes[sizeof...(Conts)]{ container_size(m_tuple.template get<Vals>())... };
-        return *min(ARLib::begin(sizes), ARLib::end(sizes));
-    }
     public:
-    ZipIterate(const Conts&... conts) : m_tuple{ conts... }, m_size{} { m_size = isize(IndexSequenceFor<Conts...>{}); }
+    ZipIterate(const Conts&... conts) : m_tuple{ conts... } {}
     template <typename... UConts>
-    ZipIterate(UConts&&... conts) : m_tuple{ Forward<UConts>(conts)... }, m_size{} {
-        m_size = isize(IndexSequenceFor<Conts...>{});
+    ZipIterate(UConts&&... conts) : m_tuple{ Forward<UConts>(conts)... } {
     }
     auto begin() const { return ibegin(IndexSequenceFor<Conts...>{}); }
     auto end() const { return iend(IndexSequenceFor<Conts...>{}); }
     auto begin() { return ibegin(IndexSequenceFor<Conts...>{}); }
     auto end() { return iend(IndexSequenceFor<Conts...>{}); }
-    size_t size() const { return m_size; }
 };
 template <Iterable... Conts>
 auto zip(Conts&&... conts) {

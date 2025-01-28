@@ -7,6 +7,7 @@
 #include "TypeTraits.hpp"
 #include "Optional.hpp"
 #include "Span.hpp"
+#include "Result.hpp"
 namespace ARLib {
 template <typename VT>
 class GenericView {
@@ -48,6 +49,19 @@ GenericView(Cont&) -> GenericView<ContainerValueTypeT<Cont>>;
 
 template <Iterable Cont>
 GenericView(const Cont&) -> GenericView<AddConstT<ContainerValueTypeT<Cont>>>;
+template <typename T>
+struct IsResultType {
+    constexpr static inline bool value = false;
+};
+template <typename Ok, typename Err>
+struct IsResultType<Result<Ok, Err>> {
+    constexpr static inline bool value = true;
+};
+template <typename T>
+constexpr bool IsResultTypeV = IsResultType<T>::value;
+
+template <typename T>
+concept ResultType = IsResultTypeV<T>;
 
 template <typename T>
 using ReadOnlyView = GenericView<AddConstT<T>>;
@@ -64,7 +78,7 @@ class IteratorView {
     Optional<ContainerType> m_stolen_container{};
     Optional<ContainerType> release_container() {
         auto released{ move(m_stolen_container) };
-        return released; 
+        return released;
     }
     public:
     using InnerContainer                    = ContainerType;
@@ -175,6 +189,31 @@ class IteratorView {
     auto filter(Functor func) {
         auto filter_iter = FilterIterate{ *this, func };
         return IteratorView<decltype(filter_iter)>{ release_container(), filter_iter.begin(), filter_iter.end() };
+    }
+    auto filter_ok()
+    requires ResultType<OutputType>
+    {
+        auto filter_iter = FilterIterate{ *this, [](auto&& res) {
+                                             if (res.is_error()) { res.ignore_error(); }
+                                             return res.is_ok();
+                                         } };
+        return IteratorView<decltype(filter_iter)>{ release_container(), filter_iter.begin(), filter_iter.end() };
+    }
+    auto map_ok()
+    requires ResultType<OutputType>
+    {
+        auto map_iter = FilterMapIterate{ *this, &OutputType::optional };
+        return IteratorView<decltype(map_iter)>{ release_container(), map_iter.begin(), map_iter.end() };
+    }
+    template <typename Functor>
+    auto map_ok(Functor func)
+    requires ResultType<InvokeResultT<Functor, OutputType>>
+    {
+        auto map_iter = FilterMapIterate{ *this, [func = Forward<Functor>(func)](auto&& v) {
+                                             using VT = RemoveCvRefT<decltype(v)>;
+                                             return func(Forward<VT>(v)).optional();
+                                         } };
+        return IteratorView<decltype(map_iter)>{ release_container(), map_iter.begin(), map_iter.end() };
     }
     template <typename Functor>
     auto map(Functor func) {

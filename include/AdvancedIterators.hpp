@@ -14,7 +14,7 @@ class PairIterator {
 
     public:
     PairIterator(F first, S second) : m_current_pair(first, second) {}
-    explicit PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair){};
+    explicit PairIterator(IterUnit curr_pair) : m_current_pair(curr_pair) {};
     Pair<FT, ST> operator*() { return { *m_current_pair.template get<0>(), *m_current_pair.template get<1>() }; }
     PairIterator& operator++() {
         m_current_pair.template get<0>()++;
@@ -113,7 +113,7 @@ class ZipIterator {
 
     public:
     ZipIterator(Tps... iterators) : m_current_tuple(iterators...) {}
-    explicit ZipIterator(IterUnit curr_pair) : m_current_tuple(curr_pair){};
+    explicit ZipIterator(IterUnit curr_pair) : m_current_tuple(curr_pair) {};
     auto operator*() { return iget(IndexSequenceFor<Tps...>{}); }
     auto operator*() const { return iget(IndexSequenceFor<Tps...>{}); }
     ZipIterator& operator++() {
@@ -180,7 +180,11 @@ class Enumerator {
     bool operator!=(const Enumerator& other) const { return m_iter != other.m_iter; }
     bool operator<(const Enumerator& other) const { return m_iter < other.m_iter; }
     bool operator>(const Enumerator& other) const { return m_iter > other.m_iter; }
-    size_t operator-(const Enumerator& other) const { return m_iter - other.m_iter; }
+    size_t operator-(const Enumerator& other) const
+    requires IterCanSubtractForSize<Iter>
+    {
+        return m_iter - other.m_iter;
+    }
 };
 template <typename T>
 class ConstEnumerator {

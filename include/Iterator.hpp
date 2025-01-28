@@ -284,12 +284,6 @@ class IfIterator {
     bool operator!=(const IfIterator& other) const { return m_current_iter != other.m_current_iter; }
     bool operator<(const IfIterator& other) { return m_current_iter < other.m_current_iter; }
     bool operator>(const IfIterator& other) { return m_current_iter > other.m_current_iter; }
-    size_t operator-(const IfIterator& other) const
-    requires IterCanSubtractForSize<IterUnit>
-    {
-        if (other.m_end != m_end) return it_npos;
-        return m_current_iter - other.m_current_iter;
-    }
 };
 
 template <class ItemType, class Functor>
