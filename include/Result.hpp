@@ -253,11 +253,11 @@ class Result {
     }
     template <typename OtherError>
     requires(ConvertibleTo<ErrorType, OtherError>)
-    Result<ResT, ErrorType> map_error() {
+    Result<ResT, OtherError> map_error() {
         if (is_error()) {
             auto perr = to_error();
             OtherError err{ *perr };
-            return Result<ResT, ErrorType>{ err };
+            return Result<ResT, OtherError>{ err };
         } else {
             return to_ok();
         }

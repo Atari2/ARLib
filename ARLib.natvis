@@ -169,9 +169,22 @@
 		</Expand>
 	</Type>
 	<Type Name="ARLib::v2::Variant&lt;*&gt;">
-		<DisplayString>{{ storage = {m_storage} }}</DisplayString>
+		<DisplayString Condition="m_current_type==0">{*($T1*)m_storage.m_memory}</DisplayString>
+		<DisplayString Condition="m_current_type==1" Optional="true">{*($T2*)m_storage.m_memory}</DisplayString>
+		<DisplayString Condition="m_current_type==2" Optional="true">{*($T3*)m_storage.m_memory}</DisplayString>
+		<DisplayString Condition="m_current_type==3" Optional="true">{*($T4*)m_storage.m_memory}</DisplayString>
+		<DisplayString Condition="m_current_type==4" Optional="true">{*($T5*)m_storage.m_memory}</DisplayString>
+		<DisplayString Condition="m_current_type==5" Optional="true">{*($T6*)m_storage.m_memory}</DisplayString>
+		<DisplayString Condition="m_current_type==6" Optional="true">{*($T7*)m_storage.m_memory}</DisplayString>
 		<Expand>
-			<Item Name="[storage]" ExcludeView="simple">m_storage</Item>
+			<Item Name="current_type">m_current_type</Item>
+			<Item Name="value0" Condition="m_current_type==0">*($T1*)m_storage.m_memory</Item>
+			<Item Name="value1" Condition="m_current_type==1" Optional="true">*($T2*)m_storage.m_memory</Item>
+			<Item Name="value2" Condition="m_current_type==2" Optional="true">*($T3*)m_storage.m_memory</Item>
+			<Item Name="value3" Condition="m_current_type==3" Optional="true">*($T4*)m_storage.m_memory</Item>
+			<Item Name="value4" Condition="m_current_type==4" Optional="true">*($T5*)m_storage.m_memory</Item>
+			<Item Name="value5" Condition="m_current_type==5" Optional="true">*($T6*)m_storage.m_memory</Item>
+			<Item Name="value6" Condition="m_current_type==6" Optional="true">*($T7*)m_storage.m_memory</Item>
 		</Expand>
 	</Type>
 	<Type Name="ARLib::Optional&lt;*&gt;">
