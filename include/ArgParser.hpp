@@ -9,6 +9,7 @@
 #include "StringView.hpp"
 #include "Variant.hpp"
 #include "Vector.hpp"
+#include "Path.hpp"
 namespace ARLib {
 struct NoValueTag {};
 using StringRef    = RefBox<String>;
@@ -20,11 +21,12 @@ using StringVecRef = RefBox<Vector<String>>;
 using IntVecRef    = RefBox<Vector<int>>;
 using UintVecRef   = RefBox<Vector<unsigned int>>;
 using RealVecRef   = RefBox<Vector<double>>;
+using PathRef      = RefBox<Path>;
 
 template <typename T>
 concept OptionType =
 SameAs<T, IntRef> || SameAs<T, UintRef> || SameAs<T, RealRef> || SameAs<T, StringRef> || SameAs<T, NoValueTag> ||
-SameAs<T, BoolRef> || SameAs<T, StringVecRef> || SameAs<T, IntVecRef> || SameAs<T, UintVecRef> || SameAs<T, RealVecRef>;
+SameAs<T, BoolRef> || SameAs<T, StringVecRef> || SameAs<T, IntVecRef> || SameAs<T, UintVecRef> || SameAs<T, RealVecRef> || SameAs<T, PathRef>;
 class ArgParser {
     Vector<String> m_unmatched_arguments{};
     String m_program_name;
@@ -42,13 +44,14 @@ class ArgParser {
             IntVector,
             UintVector,
             RealVector,
+            Path,
             NoValue
         } type;
         StringView description;
         StringView value_name;
 
         Variant<
-        NoValueTag, BoolRef, StringRef, IntRef, UintRef, RealRef, StringVecRef, IntVecRef, UintVecRef, RealVecRef>
+        NoValueTag, BoolRef, StringRef, IntRef, UintRef, RealRef, StringVecRef, IntVecRef, UintVecRef, RealVecRef, PathRef>
         value;
         bool found;
         constexpr static inline size_t npos = static_cast<size_t>(-1);
@@ -74,6 +77,8 @@ class ArgParser {
                 return Type::RealVector;
             } else if constexpr (SameAs<T, NoValueTag>) {
                 return Type::NoValue;
+            } else if constexpr (SameAs<T, PathRef>) {
+                return Type::Path;
             }
         }
         Option() : type{ Type::NoValue }, description{}, value_name{}, value(NoValueTag{}), found{ false } {}
@@ -88,6 +93,7 @@ class ArgParser {
         bool assign(Vector<int>&& arg_value);
         bool assign(Vector<unsigned int>&& arg_value);
         bool assign(Vector<double>&& arg_value);
+        bool assign(Path&& arg_value);
         bool assign(SignedIntegral auto arg_value) {
             if (type == Type::Int) {
                 value.get<IntRef>().get() = static_cast<int>(arg_value);
@@ -143,6 +149,7 @@ class ArgParser {
     ParseResult parse();
     bool help_requested() const;
     ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, String& value_ref);
+    ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, Path& value_ref);
     ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, int& value_ref);
     ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, unsigned int& value_ref);
     ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, double& value_ref);
@@ -212,7 +219,9 @@ class ArgParser {
             if (value.type == Option::Type::UintVector) {
                 return GetResult<Tp>{ value.value.template get<UintVecRef>().get() };
             } else {
-                return GetResult<Tp>{ "Requested type `vector<unsigned int>` for option containing bool, string or none"_s };
+                return GetResult<Tp>{
+                    "Requested type `vector<unsigned int>` for option containing bool, string or none"_s
+                };
             }
         } else if constexpr (SameAs<Vector<double>, Tp>) {
             if (value.type == Option::Type::RealVector) {
@@ -225,6 +234,12 @@ class ArgParser {
                 return GetResult<Tp>{ value.value.template get<StringVecRef>().get() };
             } else {
                 return GetResult<Tp>{ "Requested type `vector<string>` for option containing bool, string or none"_s };
+            }
+        } else if constexpr (SameAs<Path, Tp>) {
+            if (value.type == Option::Type::Path) {
+                return GetResult<Tp>{ value.value.template get<PathRef>().get() };
+            } else {
+                return GetResult<Tp>{ "Requested type `Path` for option containing bool, string or none"_s };
             }
         } else {
             static_assert(dependant_false<T>, "Invalid get() call");

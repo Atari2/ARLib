@@ -2,7 +2,7 @@
 
 ## [Argparser](include/ArgParser.hpp)
 - [ ] Add a way to specify long and short versions of the arguments
-- [ ] Add a way to parse paths as arguments
+- [x] Add a way to parse paths as arguments
 
 
 ## [Path](include/Path.hpp)

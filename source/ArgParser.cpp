@@ -126,8 +126,8 @@ ArgParser::ParseResult ArgParser::parse() {
                                              auto res = StrViewToDouble(v);
                                              if (res.is_error()) {
                                                  has_error = true;
-                                                 auto err = res.to_error();
-                                                 error      = err->error_string().str();
+                                                 auto err  = res.to_error();
+                                                 error     = err->error_string().str();
                                                  return 0.0;
                                              }
                                              return res.to_ok();
@@ -135,6 +135,10 @@ ArgParser::ParseResult ArgParser::parse() {
                                          .collect<Vector>();
                     if (has_error) { return error; }
                     if (!opt.assign(move(vec))) {
+                        return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
+                    }
+                } else if (opt.type == Option::Type::Path) {
+                    if (!opt.assign(Path{ *it })) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
                 }
@@ -162,46 +166,52 @@ bool ArgParser::help_requested() const {
 ArgParser&
 ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, String& value_ref) {
     m_options.push_back(OptT{
-    opt_name, Option{description, value_name, StringRef{ value_ref }}
+    opt_name, Option{ description, value_name, StringRef{ value_ref } }
+    });
+    return *this;
+}
+ArgParser& ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Path& value_ref) {
+    m_options.push_back(OptT{
+    opt_name, Option{ description, value_name, PathRef{ value_ref } }
     });
     return *this;
 }
 ArgParser& ArgParser::add_option(StringView opt_name, StringView description, bool& value_ref) {
     m_options.push_back(OptT{
-    opt_name, Option{description, StringView{}, BoolRef{ value_ref }}
+    opt_name, Option{ description, StringView{}, BoolRef{ value_ref } }
     });
     return *this;
 }
 ArgParser& ArgParser::add_option(StringView opt_name, StringView description, NoValueTag) {
     m_options.push_back(OptT{
-    opt_name, Option{description, StringView{}, NoValueTag{}}
+    opt_name, Option{ description, StringView{}, NoValueTag{} }
     });
     return *this;
 }
 ArgParser& ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, int& value_ref) {
     m_options.push_back(OptT{
-    opt_name, Option{description, value_name, IntRef{ value_ref }}
+    opt_name, Option{ description, value_name, IntRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
 ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, unsigned int& value_ref) {
     m_options.push_back(OptT{
-    opt_name, Option{description, value_name, UintRef{ value_ref }}
+    opt_name, Option{ description, value_name, UintRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
 ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, double& value_ref) {
     m_options.push_back(OptT{
-    opt_name, Option{description, value_name, RealRef{ value_ref }}
+    opt_name, Option{ description, value_name, RealRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
 ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<int>& value_ref) {
     m_options.push_back(OptT{
-    opt_name, Option{description, value_name, IntVecRef{ value_ref }}
+    opt_name, Option{ description, value_name, IntVecRef{ value_ref } }
     });
     return *this;
 }
@@ -209,21 +219,21 @@ ArgParser& ArgParser::add_option(
 StringView opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref
 ) {
     m_options.push_back(OptT{
-    opt_name, Option{description, value_name, UintVecRef{ value_ref }}
+    opt_name, Option{ description, value_name, UintVecRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
 ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<String>& value_ref) {
     m_options.push_back(OptT{
-    opt_name, Option{description, value_name, StringVecRef{ value_ref }}
+    opt_name, Option{ description, value_name, StringVecRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
 ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<double>& value_ref) {
     m_options.push_back(OptT{
-    opt_name, Option{description, value_name, RealVecRef{ value_ref }}
+    opt_name, Option{ description, value_name, RealVecRef{ value_ref } }
     });
     return *this;
 }
@@ -287,6 +297,9 @@ String ArgParser::construct_help_string() const {
             } else if (opt.type == Option::Type::RealVector) {
                 const auto& realv = opt.value.get<RealVecRef>().get();
                 builder += Printer::format(" (Default value: {})", realv);
+            } else if (opt.type == Option::Type::Path) {
+                const auto& pathv = opt.value.get<PathRef>().get();
+                builder += Printer::format(" (Default value: \"{}\")", pathv);
             }
         }
         builder += '\n';
@@ -346,6 +359,14 @@ bool ArgParser::Option::assign(Vector<unsigned int>&& arg_value) {
 bool ArgParser::Option::assign(Vector<double>&& arg_value) {
     if (type == Type::RealVector) {
         value.get<RealVecRef>().get() = move(arg_value);
+    } else {
+        return false;
+    }
+    return true;
+}
+bool ArgParser::Option::assign(Path&& arg_value) {
+    if (type == Type::Path) {
+        value.get<PathRef>().get() = move(arg_value);
     } else {
         return false;
     }
