@@ -202,6 +202,20 @@ bool remove_filespec(WString& p) {
     p.set_size(newsize);
     return true;
 }
+bool replace_extension(WString& p, WStringView ext) {
+    // the "empty" is a workaround for the fact that PathCchRenameExtension does not accept nullptr as the extension
+    // and since we're using a WStringView, ext.empty() returns true if ext is nullptr, so we need to pass an *actual* pointer to an empty string
+    constexpr static auto empty = WStringView{ L"" };
+    // PathCchRenameExtension fails with E_INVALIDARG when the capacity of the string is *exactly* the size of the string
+    // e.g. if the string is "file.txt" and ext is ".exe" and we pass 8 as size, it will fail
+    // so we reserve some extra space with the size of the extension even though it could be not necessary
+    p.reserve(p.size() + ext.size());
+    auto res = PathCchRenameExtension(p.rawptr(), p.capacity(), ext.empty() ? empty.data() : ext.data());
+    if (res != S_OK) { return false; }
+    auto newsize = wstrlen(p.data());
+    p.set_size(newsize);
+    return true;
+}
 bool is_directory(const WString& p) {
     HANDLE hdl = CreateFile(p.data(), 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (hdl == INVALID_HANDLE_VALUE) { return false; }

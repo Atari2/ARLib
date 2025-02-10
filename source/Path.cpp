@@ -48,7 +48,8 @@ Path Path::operator/(const Path& other) const {
 };
 [[nodiscard]] Path Path::extension() const {
     auto idx = m_path.last_index_of(FsChar{ '.' });
-    if (idx == FsString::npos) {
+    auto slash_idx = m_path.last_index_of(native_backslash);
+    if (idx == FsString::npos || (slash_idx != FsString::npos && slash_idx > idx)) {
         return Path{};
     } else {
         return Path{ m_path.substring(idx) };
@@ -61,6 +62,22 @@ Path Path::operator/(const Path& other) const {
     } else {
         return Path{ m_path.substring(idx + 1) };
     }
+}
+void Path::replace_extension(Path ext) {
+    ARLib::replace_extension(m_path, ext.m_path.view());
+}
+Path Path::replace_extension(Path ext) const {
+    FsString copy{ m_path };
+    ARLib::replace_extension(copy, ext.m_path.view());
+    return Path{ move(copy) };
+}
+void Path::remove_extension() {
+    ARLib::replace_extension(m_path, FsStringView{});
+}
+Path Path::remove_extension() const {
+    FsString copy{ m_path };
+    ARLib::replace_extension(copy, FsStringView{});
+    return Path{ move(copy) };
 }
 bool Path::is_directory() const {
     return ARLib::is_directory(m_path);

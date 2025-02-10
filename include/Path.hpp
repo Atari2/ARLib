@@ -53,6 +53,10 @@ class Path {
     [[nodiscard]] Path remove_filespec() const;
     [[nodiscard]] Path extension() const;
     [[nodiscard]] Path filename() const;
+    void replace_extension(Path ext);
+    Path replace_extension(Path ext) const;
+    void remove_extension();
+    Path remove_extension() const;
     bool is_directory() const;
 };
 inline Path operator""_p(const wchar_t* path, size_t len) {

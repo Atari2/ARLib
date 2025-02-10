@@ -260,6 +260,23 @@ bool remove_filespec(String& p) {
     p.set_size(last_slash);
     return true;
 }
+bool replace_extension(String& p, StringView ext) {
+    size_t last_dot = p.last_index_of('.');
+    size_t last_slash = p.last_index_of('/');
+    const bool has_extension = last_dot != String::npos && (last_slash == String::npos || last_dot > last_slash);
+    if (ext.empty()) {
+        if (has_extension) { p.set_size(last_dot); }
+        return true;
+    } else {
+        ext = ext[0] == '.' ? ext.substringview(1) : ext;
+        if (has_extension) {
+            p.set_size(last_dot);
+        }
+        p.append('.');
+        p.append(ext);
+    }
+    return true;
+}
 bool is_directory(const String& p) {
     struct stat st {};
     stat(p.data(), &st);

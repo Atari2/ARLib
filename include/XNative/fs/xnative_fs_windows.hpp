@@ -110,6 +110,7 @@ class Win32FileInfo {
 };
 using Win32DirIterHandle = void*;
 bool remove_filespec(WString& p);
+bool replace_extension(WString& p, WStringView ext);
 bool is_directory(const WString& p);
 void parent_path(WString& p);
 bool is_absolute(const WString& p);

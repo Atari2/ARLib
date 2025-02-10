@@ -60,6 +60,7 @@ class UnixFileInfo {
 };
 using UnixDirIterHandle = void*;
 bool remove_filespec(String& p);
+bool replace_extension(String& p, StringView ext);
 bool is_directory(const String& p);
 void parent_path(String& p);
 bool is_absolute(const String& p);

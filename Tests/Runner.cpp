@@ -1150,22 +1150,30 @@ TEST(ARLibTests, PathTestsFilenameAndExtension) {
         Path p1{ R"(C:\Users\user\folder\file.txt)" };
         Path p2{ R"(C:\Users\user\folder)" };
         Path p3{ R"(Users\\user\\folder\)" };
+        Path p4{ R"(C:\Users\user.sample\folder\file)" };
+        Path p5{ R"(C:\Users\user.sample\folder\file.txt)" };
         EXPECT_EQ(p1.filename(), "file.txt"_p);
         EXPECT_EQ(p1.extension(), ".txt"_p);
         EXPECT_EQ(p2.filename(), "folder"_p);
         EXPECT_EQ(p2.extension(), ""_p);
         EXPECT_EQ(p3.filename(), ""_p);
         EXPECT_EQ(p2.extension(), ""_p);
+        EXPECT_EQ(p4.extension(), ""_p);
+        EXPECT_EQ(p5.extension(), ".txt"_p);
     } else {
         Path p1{ R"(/Users/user/folder/file.txt)" };
         Path p2{ R"(/Users/user/folder)" };
         Path p3{ R"(Users/user/folder/)" };
+        Path p4{ R"(/Users/user.sample/folder/file)" };
+        Path p5{ R"(/Users/user.sample/folder/file.txt)" };
         EXPECT_EQ(p1.filename(), "file.txt"_p);
         EXPECT_EQ(p1.extension(), ".txt"_p);
         EXPECT_EQ(p2.filename(), "folder"_p);
         EXPECT_EQ(p2.extension(), ""_p);
         EXPECT_EQ(p3.filename(), ""_p);
         EXPECT_EQ(p2.extension(), ""_p);
+        EXPECT_EQ(p4.extension(), ""_p);
+        EXPECT_EQ(p5.extension(), ".txt"_p);
     }
 }
 TEST(ARLibTests, PathTestsConcatenation) {
@@ -1206,6 +1214,15 @@ TEST(ARLibTests, PathTestsConcatenation) {
         EXPECT_EQ(p5 / p6, R"(/Users/user/folder/child/folder/child2/file.txt)"_p);
         EXPECT_EQ(p6 / p5, R"(/Users/user/folder/child)"_p);
     }
+}
+TEST(ARLibTests, ReplaceRemoveExtensionTest) {
+    const Path p1 { "C:/Users/user/folder/file.txt" };
+    auto p2 = p1.remove_extension();
+    EXPECT_EQ(p2, "C:/Users/user/folder/file"_p);
+    p2.replace_extension(".txt"_p);
+    EXPECT_EQ(p2, "C:/Users/user/folder/file.txt"_p);
+    auto p4 = p1.replace_extension(".exe"_p);
+    EXPECT_EQ(p4, "C:/Users/user/folder/file.exe"_p);
 }
 TEST(ARLibTests, SortingTest) {
     Array strings{

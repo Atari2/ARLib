@@ -6,7 +6,7 @@
 
 
 ## [Path](include/Path.hpp)
-- [ ] Add a function to remove/replace the extension
+- [x] Add a function to remove/replace the extension
 
 
 ## Add datetime class
