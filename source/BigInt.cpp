@@ -1,7 +1,7 @@
 #include "BigInt.hpp"
 namespace ARLib {
 DiscardResult<> BigInt::init_from_string(StringView value) {
-    if (value.is_empty()) return {};
+    if (value.empty()) return {};
     m_buffer.reserve(value.size() / 2);
     if (value[0] == '-') { m_sign = Sign::Minus; }
     auto view = value.substringview(from_enum(m_sign));
