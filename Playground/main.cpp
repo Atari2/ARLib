@@ -11,10 +11,8 @@ using namespace ARLib;
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
     ArgParser parser{ argc, argv };
     Path p{};
-    parser.add_option("-p", "PATH", "Path to file", p);
-    parser.parse();
-
+    parser.add_option({ "-p", "--path" }, "PATH", "Path to file", p);
+    parser.parse().must();
     Printer::print("{}", p);
-
     return 0;
 }

@@ -2,6 +2,38 @@
 #include "GenericView.hpp"
 #include "Printer.hpp"
 namespace ARLib {
+ArgParser::OptionName::OptionName(StringView name, OptionLength length) {
+    if (length == OptionLength::Short) {
+        m_short_name = name;
+    } else {
+        m_long_name = name;
+    }
+}
+ArgParser::OptionName::OptionName(StringView long_name, StringView short_name) {
+    m_long_name  = long_name;
+    m_short_name = short_name;
+}
+bool ArgParser::OptionName::operator==(StringView name) const {
+    if (m_long_name.has_value()) {
+        if (m_long_name.value() == name) { return true; }
+    }
+    if (m_short_name.has_value()) {
+        if (m_short_name.value() == name) { return true; }
+    }
+    return false;
+}
+String ArgParser::OptionName::to_string() const {
+    String ret{};
+    if (m_long_name.has_value() && m_short_name.has_value()) {
+        return m_short_name.value().str() + ", " + m_long_name.value().str();
+    } else if (m_long_name.has_value()) {
+        return m_long_name.value().str();
+    } else if (m_short_name.has_value()) {
+        return m_short_name.value().str();
+    } else {
+        ASSERT_NOT_REACHED("OptionName has neither long nor short name");
+    }
+}
 ArgParser::ArgParser(int argc, char** argv) {
     size_t argcs = static_cast<size_t>(argc);
     m_arguments.reserve(argcs - 1);
@@ -32,7 +64,7 @@ ArgParser::ParseResult ArgParser::parse() {
         return DefaultOk{};
     }
     for (auto& [name, opt] : m_options) {
-        auto it = m_arguments.find(name);
+        auto it = m_arguments.find([&name](const auto& v) { return name == v; });
         if (it != m_arguments.end()) {
             if (opt.found) {
                 return Printer::format("Argument parsing error: Option \"{}\" was specified twice\n", name);
@@ -164,59 +196,59 @@ bool ArgParser::help_requested() const {
     return m_help_requested;
 }
 ArgParser&
-ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, String& value_ref) {
+ArgParser::add_option(OptionName opt_name, StringView value_name, StringView description, String& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, StringRef{ value_ref } }
     });
     return *this;
 }
-ArgParser& ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Path& value_ref) {
+ArgParser& ArgParser::add_option(OptionName opt_name, StringView value_name, StringView description, Path& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, PathRef{ value_ref } }
     });
     return *this;
 }
-ArgParser& ArgParser::add_option(StringView opt_name, StringView description, bool& value_ref) {
+ArgParser& ArgParser::add_option(OptionName opt_name, StringView description, bool& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, StringView{}, BoolRef{ value_ref } }
     });
     return *this;
 }
-ArgParser& ArgParser::add_option(StringView opt_name, StringView description, NoValueTag) {
+ArgParser& ArgParser::add_option(OptionName opt_name, StringView description, NoValueTag) {
     m_options.push_back(OptT{
     opt_name, Option{ description, StringView{}, NoValueTag{} }
     });
     return *this;
 }
-ArgParser& ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, int& value_ref) {
+ArgParser& ArgParser::add_option(OptionName opt_name, StringView value_name, StringView description, int& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, IntRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
-ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, unsigned int& value_ref) {
+ArgParser::add_option(OptionName opt_name, StringView value_name, StringView description, unsigned int& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, UintRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
-ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, double& value_ref) {
+ArgParser::add_option(OptionName opt_name, StringView value_name, StringView description, double& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, RealRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
-ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<int>& value_ref) {
+ArgParser::add_option(OptionName opt_name, StringView value_name, StringView description, Vector<int>& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, IntVecRef{ value_ref } }
     });
     return *this;
 }
 ArgParser& ArgParser::add_option(
-StringView opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref
+OptionName opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref
 ) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, UintVecRef{ value_ref } }
@@ -224,14 +256,14 @@ StringView opt_name, StringView value_name, StringView description, Vector<unsig
     return *this;
 }
 ArgParser&
-ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<String>& value_ref) {
+ArgParser::add_option(OptionName opt_name, StringView value_name, StringView description, Vector<String>& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, StringVecRef{ value_ref } }
     });
     return *this;
 }
 ArgParser&
-ArgParser::add_option(StringView opt_name, StringView value_name, StringView description, Vector<double>& value_ref) {
+ArgParser::add_option(OptionName opt_name, StringView value_name, StringView description, Vector<double>& value_ref) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, RealVecRef{ value_ref } }
     });
@@ -257,9 +289,9 @@ String ArgParser::construct_help_string() const {
 
     for (const auto& [name, opt] : m_options) {
         if (!(opt.value_name.size() == 0)) {
-            name_value_list.push_back(String{ name } + " <" + String{ opt.value_name } + ">");
+            name_value_list.push_back(name.to_string() + " <" + String{ opt.value_name } + ">");
         } else {
-            name_value_list.push_back(String{ name });
+            name_value_list.push_back(name.to_string());
         }
     }
     size_t needed_width = *max(name_value_list.iter().map([](const String& s) { return s.size(); })) + 2;
@@ -375,5 +407,9 @@ bool ArgParser::Option::assign(Path&& arg_value) {
 bool ArgParser::Option::has_default() const {
     if (type != Type::NoValue) return true;
     return false;
+}
+PrintInfo<ArgParser::OptionName>::PrintInfo(const ArgParser::OptionName& parser) : m_parser(parser) {}
+String PrintInfo<ArgParser::OptionName>::repr() const {
+    return m_parser.to_string();
 }
 }    // namespace ARLib

@@ -950,11 +950,11 @@ TEST(ARLibTests, ArgParserTests) {
     int n{};
     unsigned int un{};
     double v{};
-    parser.add_option("-b", "testing boolean option", NoValueTag{});
-    parser.add_option("-t", "test string", "testing string option", t);
-    parser.add_option("-n", "test int", "testing int option", n);
-    parser.add_option("-un", "test uint", "testing uint option", un);
-    parser.add_option("-v", "test double", "testing double option", v);
+    parser.add_option({ "-b" }, "testing boolean option", NoValueTag{});
+    parser.add_option({ "-t" }, "test string", "testing string option", t);
+    parser.add_option({ "-n" }, "test int", "testing int option", n);
+    parser.add_option({ "-un" }, "test uint", "testing uint option", un);
+    parser.add_option({ "-v" }, "test double", "testing double option", v);
     auto result = parser.parse();
     EXPECT_FALSE(result.is_error());
     EXPECT_TRUE(result.is_ok());

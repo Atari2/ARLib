@@ -24,10 +24,25 @@ using RealVecRef   = RefBox<Vector<double>>;
 using PathRef      = RefBox<Path>;
 
 template <typename T>
-concept OptionType =
-SameAs<T, IntRef> || SameAs<T, UintRef> || SameAs<T, RealRef> || SameAs<T, StringRef> || SameAs<T, NoValueTag> ||
-SameAs<T, BoolRef> || SameAs<T, StringVecRef> || SameAs<T, IntVecRef> || SameAs<T, UintVecRef> || SameAs<T, RealVecRef> || SameAs<T, PathRef>;
+concept OptionType = SameAs<T, IntRef> || SameAs<T, UintRef> || SameAs<T, RealRef> || SameAs<T, StringRef> ||
+                     SameAs<T, NoValueTag> || SameAs<T, BoolRef> || SameAs<T, StringVecRef> || SameAs<T, IntVecRef> ||
+                     SameAs<T, UintVecRef> || SameAs<T, RealVecRef> || SameAs<T, PathRef>;
 class ArgParser {
+    public:
+    enum class OptionLength {
+        Short = 0x01,
+        Long = 0x02,
+    };
+    class OptionName {
+        Optional<StringView> m_long_name;
+        Optional<StringView> m_short_name;
+        public:
+        OptionName(StringView name, OptionLength length = OptionLength::Short);
+        OptionName(StringView long_name, StringView short_name);
+        bool operator==(StringView name) const;
+        String to_string() const;
+    };
+    private:
     Vector<String> m_unmatched_arguments{};
     String m_program_name;
     Vector<StringView> m_arguments{};
@@ -51,7 +66,8 @@ class ArgParser {
         StringView value_name;
 
         Variant<
-        NoValueTag, BoolRef, StringRef, IntRef, UintRef, RealRef, StringVecRef, IntVecRef, UintVecRef, RealVecRef, PathRef>
+        NoValueTag, BoolRef, StringRef, IntRef, UintRef, RealRef, StringVecRef, IntVecRef, UintVecRef, RealVecRef,
+        PathRef>
         value;
         bool found;
         constexpr static inline size_t npos = static_cast<size_t>(-1);
@@ -120,7 +136,7 @@ class ArgParser {
         }
         bool has_default() const;
     };
-    using OptT = Pair<StringView, Option>;
+    using OptT = Pair<OptionName, Option>;
     Vector<OptT> m_options{};
     bool m_help_requested         = false;
     uint8_t m_version_partial     = 0;
@@ -148,20 +164,20 @@ class ArgParser {
     void add_usage_string(StringView usage_string);
     ParseResult parse();
     bool help_requested() const;
-    ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, String& value_ref);
-    ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, Path& value_ref);
-    ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, int& value_ref);
-    ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, unsigned int& value_ref);
-    ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, double& value_ref);
-    ArgParser& add_option(StringView opt_name, StringView value_name, StringView description, Vector<int>& value_ref);
+    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, String& value_ref);
+    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, Path& value_ref);
+    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, int& value_ref);
+    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, unsigned int& value_ref);
+    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, double& value_ref);
+    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, Vector<int>& value_ref);
     ArgParser&
-    add_option(StringView opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref);
+    add_option(OptionName opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref);
     ArgParser&
-    add_option(StringView opt_name, StringView value_name, StringView description, Vector<String>& value_ref);
+    add_option(OptionName opt_name, StringView value_name, StringView description, Vector<String>& value_ref);
     ArgParser&
-    add_option(StringView opt_name, StringView value_name, StringView description, Vector<double>& value_ref);
-    ArgParser& add_option(StringView opt_name, StringView description, bool& value_ref);
-    ArgParser& add_option(StringView opt_name, StringView description, NoValueTag);
+    add_option(OptionName opt_name, StringView value_name, StringView description, Vector<double>& value_ref);
+    ArgParser& add_option(OptionName opt_name, StringView description, bool& value_ref);
+    ArgParser& add_option(OptionName opt_name, StringView description, NoValueTag);
     void print_help() const;
     const String& help_string() const;
     bool is_present(StringView opt_name) {
@@ -245,5 +261,11 @@ class ArgParser {
             static_assert(dependant_false<T>, "Invalid get() call");
         }
     }
+};
+template <>
+struct PrintInfo<ArgParser::OptionName> {
+    const ArgParser::OptionName& m_parser;
+    explicit PrintInfo(const ArgParser::OptionName& parser);
+    String repr() const;
 };
 }    // namespace ARLib
