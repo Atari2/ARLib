@@ -186,9 +186,8 @@ ArgParser::ParseResult ArgParser::parse() {
     for (const auto& arg : m_arguments) { m_unmatched_arguments.append(String{ arg }); }
     if (m_unmatched_arguments.size() > m_leftover_args_needed) {
         String s{ "Argument parsing error: Unrecognized options found: " };
-        for (const auto& unm : m_unmatched_arguments) { s += "\""_s + unm + "\", "_s; }
-        s += '\n';
-        return move(s);
+        s += m_unmatched_arguments.iter().map([](auto&& o) { return o.quoted(); }).join_with<String>(", "_s);
+        return s;
     }
     return DefaultOk{};
 }

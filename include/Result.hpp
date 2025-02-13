@@ -15,7 +15,7 @@ class ErrorBase {
     public:
     bool operator==(const ErrorBase& other) const { return error_string() == other.error_string(); }
     virtual StringView error_string() const = 0;
-    virtual ~ErrorBase()                       = default;
+    virtual ~ErrorBase()                    = default;
 };
 class Error : public ErrorBase {
     protected:
@@ -113,7 +113,6 @@ class Result {
     Result(OtherET&& val)
     requires(DerivedFrom<OtherET, ErrorBase>)
         : m_err{ new OtherET{ move(val) } }, m_type{ CurrType::Err } {}
-
     // the following overloads may look very confusing
     // which is why they're commented
 
@@ -126,7 +125,6 @@ class Result {
     Result(UniquePtr<OtherET>&& err) : m_type{ CurrType::Err } {
         new (&m_err) UniquePtr<ErrorBase>{ err.release() };
     }
-
     // this overload activates when OtherET can be converted to ErrorType
     // *but* is not a derived type, this means that we don't care about object slicing
     // and we should instead just create a new error.
@@ -135,7 +133,6 @@ class Result {
     Result(UniquePtr<OtherET>&& err) : m_type{ CurrType::Err } {
         new (&m_err) UniquePtr<ErrorBase>{ new ErrorType{ move(*err) } };
     }
-
     // this overload activates when OtherET is unrelated to ErrorType but the IntoError "interface"
     // can be used to convert from a type to the other
     template <typename OtherET>
@@ -295,9 +292,10 @@ class Result {
     }
     auto must() {
         if (is_error()) {
-            ASSERT_NOT_REACHED_FMT(
-            "%s::must() failed \"%s\"", TYPENAME_TO_STRING(*this), print_conditional(to_error()).data()
-            );
+            with_type_of(*this, [&](const char* name) {
+                String error_name = print_conditional(to_error());
+                ASSERT_NOT_REACHED_FMT("%s::must() failed \"%s\"", name, error_name.data());
+            });
         }
         return to_ok();
     }
@@ -356,11 +354,9 @@ struct PrintInfo<Result<T, Err>> {
 
 #define TRY_SET(val, expression) TRY_SET_IMPL(val, CONCAT_TOKENS(__tr_, __COUNTER__), expression)
 
-#define TRY_RET(expression)                                                                                            \
-    { TRY_RET_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
+#define TRY_RET(expression) { TRY_RET_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
 
-#define TRY(expression)                                                                                                \
-    { TRY_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
+#define TRY(expression) { TRY_IMPL(CONCAT_TOKENS(__tr_, __COUNTER__), expression) }
 
 #define MUST(expression)                                                                                               \
     [](auto&& tr) {                                                                                                    \

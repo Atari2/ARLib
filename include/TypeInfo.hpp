@@ -22,6 +22,19 @@ template <typename T>
 auto demangled_info_for() {
     return DemangledInfo{ typeid(T) };
 }
+
+template <typename T,typename Func>
+void with_typename(Func&& func) {
+    DemangledInfo info{ typeid(T) };
+    func(info.name());
+}
+
+template <typename T, typename Func>
+void with_type_of(T& value, Func&& func) {
+    DemangledInfo info{ typeid(T) };
+    func(info.name());
+}
+
 }    // namespace ARLib
 #define MANGLED_TYPENAME_TO_STRING(type) typeid(type).name()
 

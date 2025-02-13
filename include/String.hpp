@@ -481,6 +481,14 @@ class String {
         char* buf = get_buf_internal();
         for (size_t i = 0; i < m_size; i++) { buf[i] = tolower(buf[i]); }
     }
+    [[nodiscard]] String quoted(char quote_char = '"') const { 
+        String ret{};
+        ret.reserve(size() + 2);
+        ret.append(quote_char);
+        ret.append(*this);
+        ret.append(quote_char);
+        return ret;
+    }
     [[nodiscard]] String upper() const& {
         String str(*this);
         str.iupper();

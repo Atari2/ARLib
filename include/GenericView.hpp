@@ -129,12 +129,11 @@ class IteratorView {
         for (auto it = m_begin; it != m_end; ++it) { collector.append(*it); }
         return collector;
     }
-    template <typename NewCont, Constructible<IteratorOutputType<Iter>> JoinObj>
-    requires Pushable<NewCont, IteratorOutputType<Iter>>
+    template <typename NewCont, Constructible<OutputType> JoinObj>
+    requires Pushable<NewCont, OutputType>
     NewCont join_with(JoinObj obj) {
-        using Ot = IteratorOutputType<Iter>;
         --m_end;    // move end one before
-        auto joiner = Ot{ Forward<JoinObj>(obj) };
+        OutputType joiner{ Forward<JoinObj>(obj) };
         NewCont collector{};
         for (auto it = m_begin; it != m_end; ++it) {
             collector.append(*it);
