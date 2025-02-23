@@ -4,7 +4,12 @@
 #include "PrintInfo.hpp"
 #include "Utility.hpp"
 
+#if USE_NEW_TUPLE
+    #include "Destructuring.hpp"
+    #include "NextTuple.hpp"
+#endif
 namespace ARLib {
+    #if !USE_NEW_TUPLE
 template <typename T, typename... Args>
 class Tuple;
 template <typename Tp, typename... P1, typename... P2>
@@ -277,4 +282,5 @@ struct PrintInfo<Tuple<Args...>> {
         return str;
     }
 };
+#endif
 }    // namespace ARLib

@@ -636,4 +636,42 @@ struct TypeArray {
     requires (IsAnyOfV<T, Types...>)
     constexpr static inline size_t IndexOf = TT::template index_of<T, 0>();
 };
+
+
+template <typename T, typename... Types>
+struct IdentityTypeTuple : IdentityTypeTuple<Types...> {
+
+    template <size_t Idx>
+    using type = ConditionalT<Idx == 0, T, typename IdentityTypeTuple<Types...>::template type<Idx - 1>>;
+    template <typename U, size_t Index>
+    requires IsAnyOfV<U, T, Types...>
+    constexpr static size_t index_of() {
+        if constexpr (IsSameV<U, T>) {
+            return Index;
+        } else {
+            return TypeTuple<Types...>::template index_of<U, Index + 1>();
+        }
+    }
+};
+template <typename T>
+struct IdentityTypeTuple<T> {
+    template <size_t Idx>
+    using type = T;
+
+    template <typename U, size_t Index>
+    requires(IsSameV<T, U>)
+    constexpr static size_t index_of() {
+        return Index;
+    }
+};
+template <typename... Types>
+struct IdentityTypeArray {
+    using TT = IdentityTypeTuple<Types...>;
+    template <size_t I>
+    requires(I < sizeof...(Types))
+    using At = TT::template type<I>;
+    template <typename T>
+    requires(IsAnyOfV<T, Types...>)
+    constexpr static inline size_t IndexOf = TT::template index_of<T, 0>();
+};
 }    // namespace ARLib

@@ -85,6 +85,8 @@ static_assert(sizeof(char) == 1);
 
 #ifdef COMPILER_MSVC
     #define HAS_BUILTIN(builtin) 0
+    #define ARLIB_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
 #else
     #define HAS_BUILTIN(builtin) __has_builtin(builtin)
+    #define ARLIB_NO_UNIQUE_ADDRESS [[no_unique_address]]
 #endif

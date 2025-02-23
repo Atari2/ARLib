@@ -20,14 +20,17 @@ inline namespace __1 {
 namespace ARLib {
 template <typename T, typename U>
 struct Pair;
-template <typename T, typename... Args>
-class Tuple;
+template <typename... Types>
+requires(sizeof...(Types) > 0)
+struct Tuple;
 template <typename Idx, typename T>
 auto get();
 }
 
 template <typename T, typename U>
 struct std::tuple_size<ARLib::Pair<T, U>> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
+template <typename T, typename U>
+struct std::tuple_size<ARLib::Pair<T, U>&> : ARLib::IntegralConstant<ARLib::size_t, 2> {};
 template <typename T, typename U>
 struct std::tuple_element<0, ARLib::Pair<T, U>> {
     using type = T;
@@ -44,7 +47,23 @@ template <typename T, typename U>
 struct std::tuple_element<1, const ARLib::Pair<T, U>> {
     using type = ARLib::AddConstT<U>;
 };
-
+template <typename T, typename U>
+struct std::tuple_element<0, ARLib::Pair<T, U>&> {
+    using type = T&;
+};
+template <typename T, typename U>
+struct std::tuple_element<1, ARLib::Pair<T, U>&> {
+    using type = U&;
+};
+template <typename T, typename U>
+struct std::tuple_element<0, const ARLib::Pair<T, U>&> {
+    using type = ARLib::AddConstT<ARLib::AddLvalueReferenceT<T>>;
+};
+template <typename T, typename U>
+struct std::tuple_element<1, const ARLib::Pair<T, U>&> {
+    using type = ARLib::AddConstT<ARLib::AddLvalueReferenceT<U>>;
+};
+#if !USE_NEW_TUPLE
 // tuple_size and tuple_element specializations for ARLib::Tuple
 template <typename... Types>
 struct std::tuple_size<ARLib::Tuple<Types...>> : ARLib::IntegralConstant<ARLib::size_t, sizeof...(Types)> {};
@@ -65,7 +84,7 @@ struct std::tuple_element<0, const ARLib::Tuple<Head, Tail...>> {
 template <std::size_t I, class Head, class... Tail>
 struct std::tuple_element<I, const ARLib::Tuple<Head, Tail...>> :
     std::tuple_element<I - 1, const ARLib::Tuple<Tail...>> {};
-
+#endif
 namespace ARLib {
 template <size_t Idx, typename T>
 concept SupportsMemberGet = requires(T& t) {
@@ -97,7 +116,7 @@ constexpr size_t recursive_tuple_size() {
     }
 }
 template <size_t N, size_t Start = 0, typename T, size_t PlaceHolder = 0>
-decltype(auto) recursive_tuple_element(T& tup) {
+auto& recursive_tuple_element(T& tup) {
     if constexpr (!requires { std::tuple_size<T>::value; }) {
         static_assert(N == 0);
         return tup;
@@ -114,19 +133,65 @@ decltype(auto) recursive_tuple_element(T& tup) {
         }
     }
 }
+
+template <size_t N, size_t Start = 0, typename T, size_t PlaceHolder = 0>
+auto recursive_tuple_element(T&& tup) {
+    if constexpr (!requires { std::tuple_size<T>::value; }) {
+        static_assert(N == 0);
+        return tup;
+    } else {
+        constexpr size_t sz = recursive_tuple_size<typename std::tuple_element<Start, T>::type>();
+        if constexpr (N < sz) {
+            if constexpr (SupportsMemberGet<Start, T>) {
+                return recursive_tuple_element<N>(Forward<T>(tup).template get<Start>());
+            } else {
+                return recursive_tuple_element<N>(ARLib::get<Start>(Forward<T>(tup)));
+            }
+        } else {
+            return recursive_tuple_element<N - sz, Start + 1, T, sz>(Forward<T>(tup));
+        }
+    }
+}
 template <typename T>
 struct FlattenTuple {
-    T& m_tuple;
+    T m_tuple;
     template <size_t N>
-    auto& get() {
+    auto& get() & {
         return recursive_tuple_element<N>(m_tuple);
+    }
+    template <size_t N>
+    const auto& get() const& {
+        return recursive_tuple_element<N>(m_tuple);
+    }
+    template <size_t N>
+    auto get() && {
+        return recursive_tuple_element<N>(move(m_tuple));
     }
 };
 template <typename T>
-FlattenTuple(T) -> FlattenTuple<T>;
+struct FlattenTuple<T&> {
+    T& m_tuple;
+    template <size_t N>
+    auto& get() & {
+        return recursive_tuple_element<N>(m_tuple);
+    }
+    template <size_t N>
+    const auto& get() const& {
+        return recursive_tuple_element<N>(m_tuple);
+    }
+    template <size_t N>
+    auto& get() && {
+        return recursive_tuple_element<N>(m_tuple);
+    }
+};
+
 template <typename T>
-constexpr FlattenTuple<T> flatten_tuple(T& tup) {
-    return FlattenTuple<T>{ tup };
+constexpr FlattenTuple<T&> flatten_tuple(T& tup) {
+    return FlattenTuple<T&>{ tup };
+}
+template <typename T>
+constexpr FlattenTuple<T> flatten_tuple(T&& tup) {
+    return FlattenTuple<T>{ Forward<T>(tup) };
 }
 }    // namespace ARLib
 template <typename T>
@@ -135,5 +200,13 @@ struct std::tuple_size<ARLib::FlattenTuple<T>> {
 };
 template <std::size_t N, typename T>
 struct std::tuple_element<N, ARLib::FlattenTuple<T>> {
-    using type = decltype(ARLib::recursive_tuple_element<N>(ARLib::declval<T&>()));
+    using type = decltype(ARLib::recursive_tuple_element<N>(ARLib::declval<T>()));
+};
+template <typename T>
+struct std::tuple_size<ARLib::FlattenTuple<T&>> {
+    constexpr static size_t value = ARLib::recursive_tuple_size<T>();
+};
+template <std::size_t N, typename T>
+struct std::tuple_element<N, ARLib::FlattenTuple<T&>> {
+    using type = decltype(ARLib::recursive_tuple_element<N>(ARLib::declval<T>()));
 };

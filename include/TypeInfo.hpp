@@ -30,7 +30,7 @@ void with_typename(Func&& func) {
 }
 
 template <typename T, typename Func>
-void with_type_of(T& value, Func&& func) {
+void with_type_of([[maybe_unused]] T& value, Func&& func) {
     DemangledInfo info{ typeid(T) };
     func(info.name());
 }

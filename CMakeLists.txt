@@ -265,6 +265,8 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/MaybeOwned.hpp
     ${ARLIB_INCLUDE_DIR}/Matrix.hpp
     ${ARLIB_INCLUDE_DIR}/Memory.hpp
+    ${ARLIB_INCLUDE_DIR}/NextVariant.hpp
+    ${ARLIB_INCLUDE_DIR}/NextTuple.hpp
     ${ARLIB_INCLUDE_DIR}/NumberTraits.hpp
     ${ARLIB_INCLUDE_DIR}/Optional.hpp
     ${ARLIB_INCLUDE_DIR}/Ordering.hpp
