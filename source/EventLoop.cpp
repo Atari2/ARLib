@@ -8,9 +8,13 @@ void EventLoop::loop_function(EventLoop* loop) {
             {
                 UniqueLock lock{ loop->m_callback_loc };
                 callback = move(loop->m_callbacks.pop());
-                if (loop->m_callbacks.size() == 0) loop->stop();
             }
             callback();
+        } else {
+            loop->m_sleeping = true;
+            loop->m_sleep_condition.notify_one();
+            UniqueLock lock{ loop->m_callback_loc };
+            loop->m_condition_var.wait(lock, [&]() { return loop->m_callbacks.size() > 0 || loop->m_running == false; });
         }
     }
 }
