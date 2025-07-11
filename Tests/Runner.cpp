@@ -1703,3 +1703,19 @@ TEST(ARLibTests, StreamingTest) {
     Vector<StringView> expected{ "hello world"_sv, "this is a test"_sv, "another line"_sv };
     for (const auto& [i, line] : enumerate(str.lines())) { EXPECT_EQ(line, expected[i]); }
 }
+TEST(ARLibTests, ArgParserDefaultValueTest) {
+    const char* argv[] = { "test" };
+    const int argc = 1;
+    ArgParser parser{ argc, argv };
+    Path p{};
+    parser.add_option({ "-p", "--path" }, "PATH", "Path to file", p, "testfile.txt"_p);
+    parser.parse().must();
+    EXPECT_EQ(p, "testfile.txt"_p);
+
+    ArgParser parser2{ argc, argv };
+    Path p2{};
+    parser2.add_option({ "-p", "--path" }, "PATH", "Path to file", p2);
+    auto res = parser2.parse();
+    EXPECT_TRUE(res.is_error());
+    res.ignore_error();
+}

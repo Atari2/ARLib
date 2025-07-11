@@ -157,11 +157,24 @@ namespace v2 {
             functions[m_current_type].destructor(m_storage.raw_memory());
             m_current_type = no_type;
         }
-        template <typename Callable, typename Type>
+        template <typename Callable, typename TypeRef>
         bool visit_if(Callable&& callable) const {
+            using Type             = RemoveCvRefT<TypeRef>;
             constexpr size_t index = VariantArray::template IndexOf<Type>;
             if (m_current_type == index) {
-                if constexpr (CallableWith<Callable, Type>) {
+                if constexpr (CallableWith<Callable, TypeRef>) {
+                    invoke(Forward<Callable>(callable), m_storage.template as<Type>());
+                    return true;
+                }
+            }
+            return false;
+        }
+        template <typename Callable, typename TypeRef>
+        bool visit_if(Callable&& callable) {
+            using Type             = RemoveCvRefT<TypeRef>;
+            constexpr size_t index = VariantArray::template IndexOf<Type>;
+            if (m_current_type == index) {
+                if constexpr (CallableWith<Callable, TypeRef>) {
                     invoke(Forward<Callable>(callable), m_storage.template as<Type>());
                     return true;
                 }
@@ -295,10 +308,8 @@ namespace v2 {
         size_t current_type() const { return m_current_type; }
         bool is_empty() const { return m_current_type == no_type; }
         bool is_active() const { return m_current_type != no_type; }
-
-        static constexpr inline bool variant_is_orderable = (... && Orderable<Types>);
+        constexpr static inline bool variant_is_orderable = (... && Orderable<Types>);
         constexpr static inline bool variant_is_eq_comp   = (... && EqualityComparable<Types>);
-
         Ordering operator<=>(const Variant& other) const
         requires variant_is_orderable
         {
@@ -314,9 +325,14 @@ namespace v2 {
             return functions[m_current_type].eq_func(m_storage.raw_memory(), other.m_storage.raw_memory());
         }
         template <typename Callable>
-        requires(CallableWith<Callable, Types> || ...)
+        requires(CallableWith<Callable, AddConstT<AddLvalueReferenceT<Types>>> || ...)
         void visit(Callable&& visitor) const {
-            (visit_if<Callable, Types>(Forward<Callable>(visitor)) || ...);
+            (visit_if<Callable, AddConstT<AddLvalueReferenceT<Types>>>(Forward<Callable>(visitor)) || ...);
+        }
+        template <typename Callable>
+        requires(CallableWith<Callable, AddLvalueReferenceT<Types>> || ...)
+        void visit(Callable&& visitor) {
+            (visit_if<Callable, AddLvalueReferenceT<Types>>(Forward<Callable>(visitor)) || ...);
         }
         String get_printinfo_string() const {
             String repr{};
@@ -376,4 +392,8 @@ namespace v2 {
         ~Variant() = default;
     };
 }    // namespace v2
+template <typename... Ts>
+struct VariantVisitorHelper : Ts... {
+    using Ts::operator()...;
+};
 }    // namespace ARLib
