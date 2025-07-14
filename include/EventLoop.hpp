@@ -21,8 +21,16 @@ class EventLoop {
         WaitUntilFinished,
         ForceStop,
     };
-    EventLoop() = default;
-
+    EventLoop()                 = default;
+    EventLoop(const EventLoop&) = delete;
+    EventLoop(EventLoop&& other) {
+        other.m_thread.swap(m_thread);
+        m_callbacks       = move(other.m_callbacks);
+        m_running         = other.m_running.load();
+        m_sleeping        = other.m_sleeping.load();
+        m_condition_var   = move(other.m_condition_var);
+        m_sleep_condition = move(other.m_sleep_condition);
+    };
     void start();
     void stop() {
         m_condition_var.notify_one();
