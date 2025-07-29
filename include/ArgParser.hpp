@@ -31,7 +31,7 @@ class ArgParser {
     public:
     enum class OptionLength {
         Short = 0x01,
-        Long = 0x02,
+        Long  = 0x02,
     };
     class OptionName {
         Optional<StringView> m_long_name;
@@ -65,11 +65,15 @@ class ArgParser {
         StringView description;
         StringView value_name;
 
-        Variant<
+        using OptionVariant = Variant<
         NoValueTag, BoolRef, StringRef, IntRef, UintRef, RealRef, StringVecRef, IntVecRef, UintVecRef, RealVecRef,
-        PathRef>
-        value;
+        PathRef>;
+        using OptionValueVariant = Variant<
+        String, int, unsigned int, double, Vector<String>, Vector<int>, Vector<unsigned int>, Vector<double>, Path>;
+
+        OptionVariant value;
         bool found;
+        Optional<OptionValueVariant> default_value;
         constexpr static inline size_t npos = static_cast<size_t>(-1);
         constexpr static inline Type map_t_to_type(const OptionType auto& val) {
             using T = RemoveCvRefT<decltype(val)>;
@@ -99,7 +103,12 @@ class ArgParser {
         }
         Option() : type{ Type::NoValue }, description{}, value_name{}, value(NoValueTag{}), found{ false } {}
         Option(StringView desc, StringView name, OptionType auto&& val) :
-            type{ map_t_to_type(val) }, description{ desc }, value_name{ name }, found{ false } {
+            type{ map_t_to_type(val) }, description{ desc }, value_name{ name }, found{ false }, default_value{} {
+            value = move(val);
+        }
+        Option(StringView desc, StringView name, OptionType auto&& val, Optional<OptionValueVariant>&& default_value) :
+            type{ map_t_to_type(val) }, description{ desc }, value_name{ name }, found{ false },
+            default_value{ move(default_value) } {
             value = move(val);
         }
         bool requires_value() const;
@@ -135,6 +144,7 @@ class ArgParser {
             return true;
         }
         bool has_default() const;
+        bool has_default_value() const;
     };
     using OptT = Pair<OptionName, Option>;
     Vector<OptT> m_options{};
@@ -164,19 +174,43 @@ class ArgParser {
     void add_usage_string(StringView usage_string);
     ParseResult parse();
     bool help_requested() const;
-    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, String& value_ref);
-    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, Path& value_ref);
-    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, int& value_ref);
-    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, unsigned int& value_ref);
-    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, double& value_ref);
-    ArgParser& add_option(OptionName opt_name, StringView value_name, StringView description, Vector<int>& value_ref);
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, String& value_ref,
+    Optional<String> default_value = {}
+    );
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, Path& value_ref,
+    Optional<Path> default_value = {}
+    );
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, int& value_ref, Optional<int> default_value = {}
+    );
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, unsigned int& value_ref,
+    Optional<unsigned int> default_value = {}
+    );
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, double& value_ref,
+    Optional<double> default_value = {}
+    );
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, Vector<int>& value_ref,
+    Optional<Vector<int>> default_value = {}
+    );
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref,
+    Optional<Vector<unsigned int>> default_value = {}
+    );
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, Vector<String>& value_ref,
+    Optional<Vector<String>> default_value = {}
+    );
+    ArgParser& add_option(
+    OptionName opt_name, StringView value_name, StringView description, Vector<double>& value_ref,
+    Optional<Vector<double>> default_value = {}
+    );
     ArgParser&
-    add_option(OptionName opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref);
-    ArgParser&
-    add_option(OptionName opt_name, StringView value_name, StringView description, Vector<String>& value_ref);
-    ArgParser&
-    add_option(OptionName opt_name, StringView value_name, StringView description, Vector<double>& value_ref);
-    ArgParser& add_option(OptionName opt_name, StringView description, bool& value_ref);
+    add_option(OptionName opt_name, StringView description, bool& value_ref, Optional<bool> default_value = {});
     ArgParser& add_option(OptionName opt_name, StringView description, NoValueTag);
     void print_help() const;
     const String& help_string() const;

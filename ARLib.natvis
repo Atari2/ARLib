@@ -169,32 +169,63 @@
 		</Expand>
 	</Type>
 	<Type Name="ARLib::v2::Variant&lt;*&gt;">
-		<DisplayString Condition="m_current_type==0">{*($T1*)m_storage.m_memory}</DisplayString>
-		<DisplayString Condition="m_current_type==1" Optional="true">{*($T2*)m_storage.m_memory}</DisplayString>
-		<DisplayString Condition="m_current_type==2" Optional="true">{*($T3*)m_storage.m_memory}</DisplayString>
-		<DisplayString Condition="m_current_type==3" Optional="true">{*($T4*)m_storage.m_memory}</DisplayString>
-		<DisplayString Condition="m_current_type==4" Optional="true">{*($T5*)m_storage.m_memory}</DisplayString>
-		<DisplayString Condition="m_current_type==5" Optional="true">{*($T6*)m_storage.m_memory}</DisplayString>
-		<DisplayString Condition="m_current_type==6" Optional="true">{*($T7*)m_storage.m_memory}</DisplayString>
+		<DisplayString Condition="m_current_type==0">{*($T1*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==1" Optional="true">{*($T2*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==2" Optional="true">{*($T3*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==3" Optional="true">{*($T4*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==4" Optional="true">{*($T5*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==5" Optional="true">{*($T6*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==6" Optional="true">{*($T7*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==7" Optional="true">{*($T8*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==8" Optional="true">{*($T9*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==9" Optional="true">{*($T10*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==10" Optional="true">{*($T11*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==11" Optional="true">{*($T12*)m_storage.m_memory,na}</DisplayString>
+		<DisplayString Condition="m_current_type==12" Optional="true">{*($T13*)m_storage.m_memory,na}</DisplayString>
 		<Expand>
-			<Item Name="current_type">m_current_type</Item>
-			<Item Name="value0" Condition="m_current_type==0">*($T1*)m_storage.m_memory</Item>
-			<Item Name="value1" Condition="m_current_type==1" Optional="true">*($T2*)m_storage.m_memory</Item>
-			<Item Name="value2" Condition="m_current_type==2" Optional="true">*($T3*)m_storage.m_memory</Item>
-			<Item Name="value3" Condition="m_current_type==3" Optional="true">*($T4*)m_storage.m_memory</Item>
-			<Item Name="value4" Condition="m_current_type==4" Optional="true">*($T5*)m_storage.m_memory</Item>
-			<Item Name="value5" Condition="m_current_type==5" Optional="true">*($T6*)m_storage.m_memory</Item>
-			<Item Name="value6" Condition="m_current_type==6" Optional="true">*($T7*)m_storage.m_memory</Item>
+			<Item Name="[index]">(size_t)m_current_type</Item>
+			<Item Name="[active type]" Condition="m_current_type==0">"$T1"</Item>
+			<Item Name="[active type]" Condition="m_current_type==1" Optional="true">"$T2"</Item>
+			<Item Name="[active type]" Condition="m_current_type==2" Optional="true">"$T3"</Item>
+			<Item Name="[active type]" Condition="m_current_type==3" Optional="true">"$T4"</Item>
+			<Item Name="[active type]" Condition="m_current_type==4" Optional="true">"$T5"</Item>
+			<Item Name="[active type]" Condition="m_current_type==5" Optional="true">"$T6"</Item>
+			<Item Name="[active type]" Condition="m_current_type==6" Optional="true">"$T7"</Item>
+			<Item Name="[active type]" Condition="m_current_type==7" Optional="true">"$T8"</Item>
+			<Item Name="[active type]" Condition="m_current_type==8" Optional="true">"$T9"</Item>
+			<Item Name="[active type]" Condition="m_current_type==9" Optional="true">"$T10"</Item>
+			<Item Name="[active type]" Condition="m_current_type==10" Optional="true">"$T11"</Item>
+			<Item Name="[active type]" Condition="m_current_type==11" Optional="true">"$T12"</Item>
+			<Item Name="[active type]" Condition="m_current_type==12" Optional="true">"$T13"</Item>
+			<Item Name="[active value]" Condition="m_current_type==0">*($T1*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==1" Optional="true">*($T2*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==2" Optional="true">*($T3*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==3" Optional="true">*($T4*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==4" Optional="true">*($T5*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==5" Optional="true">*($T6*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==6" Optional="true">*($T7*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==7" Optional="true">*($T8*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==8" Optional="true">*($T9*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==9" Optional="true">*($T10*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==10" Optional="true">*($T11*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==11" Optional="true">*($T12*)m_storage.m_memory</Item>
+			<Item Name="[active value]" Condition="m_current_type==12" Optional="true">*($T13*)m_storage.m_memory</Item>
 		</Expand>
 	</Type>
-	<Type Name="ARLib::Optional&lt;*&gt;">
+	<Type Name="ARLib::OptionalStorage&lt;*&gt;">
 		<Intrinsic Name="exists" Expression="(bool)m_exists"/>
-		<Intrinsic Name="getValue" Expression="*m_object"/>
+		<Intrinsic Name="getValue" Expression="*($T1*)m_memory"/>
 		<DisplayString Condition="exists()">{{ {getValue()} }}</DisplayString>
 		<DisplayString Condition="!exists()">{{ empty }}</DisplayString>
 		<Expand>
 			<Item Condition="exists()" Name="[value]" ExcludeView="simple">getValue()</Item>
 			<Item Name="[exists]" ExcludeView="simple">exists()</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Optional&lt;*&gt;">
+		<DisplayString>{m_object}</DisplayString>
+		<Expand>
+			<Item Name="[storage]" ExcludeView="simple">m_object</Item>
 		</Expand>
 	</Type>
 	<Type Name="ARLib::UniquePtr&lt;*&gt;">
@@ -756,6 +787,42 @@
 		<Expand>
 			<Item Name="[name]" ExcludeView="simple">m_demangled_name</Item>
 			<Item Name="[should_dealloc]" ExcludeView="simple">m_should_dealloc</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::AtomicStorage&lt;*&gt;">
+		<DisplayString>{{ storage = {m_storage} }}</DisplayString>
+		<Expand>
+			<Item Name="locked" Optional="true">m_lock != 0</Item>
+			<Item Name="storage">m_storage</Item>
+			<Item Name="lock" Optional="true">m_lock</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::PointerAtomicBase&lt;*&gt;">
+		<Intrinsic Name="AsPtr" Expression="($T1*)m_storage.m_storage"/>
+		<DisplayString Condition="AsPtr() != nullptr">{{ value={ AsPtr() }}</DisplayString>
+		<DisplayString Condition="AsPtr() == nullptr">{{ value=null }}</DisplayString>
+		<Expand>
+			<Item Name="storage">m_storage</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::IntegralAtomicBase&lt;*&gt;">
+		<Intrinsic Name="AsValue" Expression="m_storage.m_storage"/>
+		<DisplayString>{{ value={AsValue()} }}</DisplayString>
+		<Expand>
+			<Item Name="storage">m_storage</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::AtomicBase&lt;*&gt;">
+		<DisplayString>{m_storage}</DisplayString>
+		<Expand>
+			<Item Name="storage">m_storage</Item>
+		</Expand>
+	</Type>
+	<Type Name="ARLib::Atomic&lt;*&gt;">
+		<Intrinsic Name="AsBase" Expression="*(ARLib::Atomic&lt;$T1&gt;::Base*)this"/>
+		<DisplayString>{{ {AsBase()} }}</DisplayString>
+		<Expand>
+			<Item Name="storage">m_storage</Item>
 		</Expand>
 	</Type>
 </AutoVisualizer>

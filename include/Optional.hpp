@@ -201,10 +201,11 @@ class Optional {
     T extract() { return m_object.extract(); }
     template <typename Func>
     Optional<InvokeResultT<Func, T>> map(Func func) & {
+        using OutT = Optional<InvokeResultT<Func, T>>;
         if (!m_object.exists()) {
-            return {};
+            return OutT{};
         } else {
-            return Optional{ invoke(func, m_object.as()) };
+            return OutT{ invoke(func, m_object.as()) };
         }
     }
     template <typename Func>
