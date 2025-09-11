@@ -1,5 +1,6 @@
 #include "Tuple.hpp"
 #include "Printer.hpp"
+#include "CharConv.hpp"
 
 using namespace ARLib;
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
