@@ -56,6 +56,7 @@ struct CharacterStream : public BaseStream {
     virtual Result<String> read_line(bool& eof_reached)    = 0;
     virtual bool is_open() const                           = 0;
     virtual bool operator==(const CharacterStream& other) const { return this == &other; }
+    virtual bool is_filestream() const { return false; }
     virtual ~CharacterStream() = default;
 };
 class FileStream : public CharacterStream {
@@ -77,10 +78,11 @@ class FileStream : public CharacterStream {
     size_t seek(size_t) override;
     bool operator==(const FileStream& other) const;
     bool operator==(const CharacterStream& other) const override {
-        if (const auto* fs = dynamic_cast<const FileStream*>(&other); fs != nullptr) { return *this == *fs; }
+        if (other.is_filestream()) { return *this == static_cast<const FileStream&>(other); }
         return false;
     }
     bool is_open() const override { return m_file.is_open(); }
+    bool is_filestream() const override { return true;  }
     virtual ~FileStream() = default;
 };
 class BufferedFileStream : public FileStream {

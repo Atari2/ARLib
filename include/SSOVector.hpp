@@ -14,13 +14,13 @@ class SSOVector {
         // if grow internal has been called, it means that we need to grow out of situ
         HARD_ASSERT(new_capacity > m_capacity, "New capacity should be bigger than existing capacity")
         if (m_capacity == SSO) {
-            m_storage = allocate_uninitialized<T>(new_capacity);
+            m_storage  = allocate_uninitialized<T>(new_capacity);
             m_capacity = new_capacity;
             if constexpr (SSO != 0) UninitializedMoveConstruct(m_storage, addressof(m_situ_storage[0]), m_size);
         } else {
             T* new_storage = allocate_uninitialized<T>(new_capacity);
             UninitializedMoveConstruct(new_storage, m_storage, m_size);
-            deallocate<T, DeallocType::Multiple>(m_storage);
+            destroy_if_not_sso();
             m_storage  = new_storage;
             m_capacity = new_capacity;
         }
@@ -29,6 +29,12 @@ class SSOVector {
     void append_internal(T&& item) {
         if (m_size == m_capacity) { grow_to_capacity(m_capacity + 1); }
         new (&m_storage[m_size++]) T{ move(item) };
+    }
+    void destroy_if_not_sso() {
+        if (m_capacity > SSO && m_storage != nullptr) {
+            for (size_t i = 0; i < m_size; ++i) { m_storage[i].~T(); }
+            deallocate<T, DeallocType::Multiple>(m_storage);
+        }
     }
 
     public:
@@ -46,7 +52,7 @@ class SSOVector {
     requires(OTHER_SSO != SSO)
         : m_size(other.size()) {
         if (other.size() > SSO) {
-            m_storage = allocate_uninitialized<T>(other.capacity());
+            m_storage  = allocate_uninitialized<T>(other.capacity());
             m_capacity = other.capacity();
         }
         UninitializedCopyConstruct(m_storage, other.storage(), other.size());
@@ -87,7 +93,7 @@ class SSOVector {
     {
         m_size = other.size();
         if (m_size > m_capacity) {
-            if (m_capacity != SSO) deallocate<T, DeallocType::Multiple>(m_storage);
+            destroy_if_not_sso();
             m_storage  = allocate_initialized<T>(other.capacity());
             m_capacity = other.capacity();
         }
@@ -117,11 +123,11 @@ class SSOVector {
         if (m_capacity > SSO && other.m_size > m_capacity) {
             // if we're already not in situ and we can't fit the other vector, let's resize
             // if we're already not in situ *but* we can fit the other vector, we don't do anything
-            deallocate<T, DeallocType::Multiple>(m_storage);
+            destroy_if_not_sso();
             allocate_initialized<T>(other.m_size);
         } else if (other.m_capacity == SSO && m_capacity > SSO) {
             // if the other one is in situ but we're not, then we delete our storage, since we don't really need it
-            deallocate<T, DeallocType::Multiple>(m_storage);
+            destroy_if_not_sso();
             m_storage = SSO != 0 ? addressof(m_situ_storage[0]) : m_situ_storage;
         }
         m_size     = other.m_size;
@@ -131,7 +137,7 @@ class SSOVector {
     }
     SSOVector& operator=(SSOVector&& other) noexcept {
         if (this == &other) return *this;
-        if (m_capacity > SSO) { deallocate<T, DeallocType::Multiple>(m_storage); }
+        destroy_if_not_sso();
         m_size     = other.m_size;
         m_capacity = other.m_capacity;
         if (other.m_capacity == SSO) {
@@ -178,7 +184,7 @@ class SSOVector {
     }
     void release_strong() {
         if (m_capacity != SSO) {
-            deallocate<T, DeallocType::Multiple>(m_storage);
+            destroy_if_not_sso();
             m_storage  = SSO != 0 ? addressof(m_situ_storage[0]) : m_situ_storage;
             m_capacity = SSO;
         }
@@ -208,6 +214,7 @@ class SSOVector {
                 m_capacity = basic_growth(m_capacity + 1);
                 m_storage  = allocate_uninitialized<T>(m_capacity);
                 UninitializedCopyConstruct(m_storage + sizeof(T), storage, m_size);
+                for (size_t i = 0; i < m_size; i++) { storage[i].~T(); }
                 deallocate<T, DeallocType::Multiple>(storage);
             }
         } else {
@@ -228,9 +235,7 @@ class SSOVector {
     {
         if (new_size < m_size) return;
         if (new_size > m_capacity) { grow_to_capacity(new_size); }
-        for (size_t i = m_size; i < new_size; i++) {   
-            new (&m_storage[i]) T{}; 
-        }
+        for (size_t i = m_size; i < new_size; i++) { new (&m_storage[i]) T{}; }
         m_size = new_size;
     }
     void reserve(size_t new_capacity) {
@@ -243,9 +248,7 @@ class SSOVector {
     }
     const T& last() const { return m_storage[m_size - 1]; }
     T& last() { return m_storage[m_size - 1]; }
-    ~SSOVector() {
-        if (m_capacity > SSO) deallocate<T, DeallocType::Multiple>(m_storage);
-    }
+    ~SSOVector() { destroy_if_not_sso(); }
 };
 template <Printable T, size_t S>
 struct PrintInfo<SSOVector<T, S>> {

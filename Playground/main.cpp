@@ -1,15 +1,13 @@
 #include "Tuple.hpp"
 #include "Printer.hpp"
 #include "CharConv.hpp"
+#include "SSOVector.hpp"
+#include "BigInt.hpp"
 
 using namespace ARLib;
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
-    auto tup = Tuple("This is a beatiful string"_s);
-    auto tup2 = Tuple("This is another beatiful string"_s);
-    const auto v1 = move(tup).flatten().get<0>();
-    const auto v2   = Tuple("This is a beatiful string"_s).flatten().get<0>();
-    const auto& v3 = tup2.get<0>();
-    Printer::print(R"("{}" "{}" "{}")", v1, v2, tup.get<0>());
-    Printer::print(R"("{}" "{}" "{}")", v3, tup2.get<0>(), &v3 == &tup2.get<0>());
+    auto f2 = BigInt{ "123456781234567891234879169467981276392189732178937891237928173981239812219873218973"_s };
+    auto g2 = BigInt{ "12837127389712389123891738127317892312987389217"_s };
+    auto d = f2 / g2;
     return 0;
 }
