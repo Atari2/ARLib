@@ -119,7 +119,7 @@ endif()
 # on release builds we never enable sanitizers, unless explicitely asked for.
 # on debug builds, we add them (asan on windows, asan+ubsan+leaksan on linux,
 #                               except when using clang-cl because clang-cl doesn't like asan in debug builds)
-if ((DEBUG_BUILD OR ARLIB_FORCE_SANITIZERS) AND NOT ARLIB_DEBUG_NEW_DELETE)
+if (((DEBUG_BUILD AND ARLIB_TOP_LEVEL) OR ARLIB_FORCE_SANITIZERS) AND NOT ARLIB_DEBUG_NEW_DELETE)
     if (ON_WINDOWS AND ON_CLANG)
         message(STATUS "Clang doesn't like debug libraries + asan")
         set(ARLIB_SANITIZERS_FLAGS "")
