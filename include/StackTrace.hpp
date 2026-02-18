@@ -1,7 +1,7 @@
 #pragma once
 #include "PrintInfo.hpp"
 
-#ifdef DEBUG
+#ifdef ARLIB_DEBUG
     #include "Types.hpp"
 namespace ARLib {
 constexpr static unsigned short MAX_BACKTRACE = 512;    // 512 frames should be enough for everything

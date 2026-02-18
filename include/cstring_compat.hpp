@@ -23,7 +23,7 @@ constexpr bool haszerobyte(Integral auto v) {
 }
 size_t strlen_vectorized(const char* ptr);
 constexpr size_t strlen(const char* ptr) {
-#ifndef DEBUG
+#ifndef ARLIB_DEBUG
     if (!is_constant_evaluated()) {
         return strlen_vectorized(ptr);
     } else {

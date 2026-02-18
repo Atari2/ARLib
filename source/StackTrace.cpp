@@ -1,4 +1,4 @@
-#ifdef DEBUG
+#ifdef ARLIB_DEBUG
     #include "StackTrace.hpp"
     #include "CharConvHelpers.hpp"
     #include "Utility.hpp"

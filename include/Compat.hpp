@@ -25,7 +25,7 @@
     #define arlib_unreachable __builtin_unreachable();
     #define arlib_forceinline __attribute__((always_inline))
     #define arlib_noop                ((void)0)
-    #define arlib_no_sanitize_address 
+    #define arlib_no_sanitize_address __attribute__((no_sanitize_address))
     #define compiler_intrinsic
     #if __x86_64__ || __ppc64__
         #define ENVIRON64 1
@@ -41,7 +41,7 @@
     #define arlib_unreachable __builtin_unreachable();
     #define arlib_forceinline __attribute__((always_inline))
     #define arlib_noop        ((void)0)
-    #define arlib_no_sanitize_address 
+    #define arlib_no_sanitize_address __attribute__((no_sanitize_address))
     #define compiler_intrinsic
     #if __x86_64__ || __ppc64__
         #define ENVIRON64 1

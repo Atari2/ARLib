@@ -108,14 +108,14 @@ class ArgParser {
             separator{ ","_sv } {
             value = move(val);
         }
-        Option(StringView desc, StringView name, OptionType auto&& val, Optional<OptionValueVariant>&& default_value) :
+        Option(StringView desc, StringView name, OptionType auto&& val, Optional<OptionValueVariant>&& default_val) :
             type{ map_t_to_type(val) }, description{ desc }, value_name{ name }, found{ false },
-            default_value{ move(default_value) }, separator{ ","_sv } {
+            default_value{ move(default_val) }, separator{ ","_sv } {
             value = move(val);
         }
-        Option(StringView desc, StringView name, OptionType auto&& val, Optional<OptionValueVariant>&& default_value, StringView separator) :
+        Option(StringView desc, StringView name, OptionType auto&& val, Optional<OptionValueVariant>&& default_val, StringView sep) :
             type{ map_t_to_type(val) }, description{ desc }, value_name{ name }, found{ false },
-            default_value{ move(default_value) }, separator{ separator } {
+            default_value{ move(default_val) }, separator{ sep } {
             value = move(val);
         }
         bool requires_value() const;

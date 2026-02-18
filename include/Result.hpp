@@ -43,7 +43,7 @@ template <typename T>
 class EnumError {
     // stub
 };
-#ifdef DEBUG
+#ifdef ARLIB_DEBUG
 class BacktraceError final : public Error {
     BackTrace m_bt;
     public:
