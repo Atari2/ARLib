@@ -2,14 +2,18 @@ cmake_policy(SET CMP0091 NEW)
 cmake_policy(SET CMP0117 NEW)
 cmake_minimum_required(VERSION 3.20)
 project(ARLib VERSION 0.1)
+include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(ARLIB_SOURCE_FILES "")
-set(ARLIB_COMPILE_DEFINITIONS "")
-set(ARLIB_COMPILE_OPTIONS "")
+set(ARLIB_PUBLIC_COMPILE_DEFINITIONS "")
+set(ARLIB_PRIVATE_COMPILE_DEFINITIONS "")
+set(ARLIB_PUBLIC_COMPILE_OPTIONS "")
+set(ARLIB_PRIVATE_COMPILE_OPTIONS "")
 set(ARLIB_COMPILE_WARNINGS "")
-set(ARLIB_LINK_LIBRARIES ARLib_asm_ext)
-set(ARLIB_LINK_OPTIONS "")
+set(ARLIB_PUBLIC_LINK_LIBRARIES "")
+set(ARLIB_PRIVATE_LINK_LIBRARIES ARLib_asm_ext)
+set(ARLIB_PRIVATE_LINK_OPTIONS "")
 
 option(ARLIB_FORCE_SANITIZERS "Always enable sanitizers, even in release builds" OFF)
 option(ARLIB_DISABLE_SANITIZERS "Always disable sanitizers, this takes precendence over ARLIB_FORCE_SANITIZERS" OFF)
@@ -32,7 +36,7 @@ set(ON_CLANG false)
 set(ON_GCC false)
 set(ON_MSVC false)
 if (DEFINED DISABLE_THREADING)
-	list(APPEND ARLIB_COMPILE_DEFINITIONS DISABLE_THREADING)
+	list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS DISABLE_THREADING)
 endif()
 
 if (${CMAKE_VERSION} VERSION_LESS "3.21")
@@ -58,16 +62,16 @@ if (WIN32)
 	set(ON_WINDOWS true)
 	set(ON_LINUX false)
 	message(STATUS "Windows build")
-	list(APPEND ARLIB_COMPILE_DEFINITIONS ON_WINDOWS)
+	list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS ON_WINDOWS)
 elseif (UNIX)
 	set(ON_LINUX true)
 	set(ON_WINDOWS false)
 	message(STATUS "Unix build")
-	list(APPEND ARLIB_COMPILE_DEFINITIONS ON_LINUX)
+	list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS ON_LINUX)
 	if (DEFINED DISABLE_THREADING)
 		message(STATUS "Disabling threading will not link against pthread on Linux but will disable the use of Threading.hpp and similar")
 	else()
-		list(APPEND ARLIB_LINK_LIBRARIES pthread)
+		list(APPEND ARLIB_PUBLIC_LINK_LIBRARIES pthread)
 	endif()
 else()
 	message(FATAL_ERROR "Unsupported platform")
@@ -75,20 +79,20 @@ endif()
 
 if (ARLIB_DEBUG_NEW_DELETE)
 	message(STATUS "Enabling debug new/delete functions")
-	list(APPEND ARLIB_COMPILE_DEFINITIONS DEBUG_NEW_DELETE)
+	list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS DEBUG_NEW_DELETE)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	set(ON_CLANG true)
-	list(APPEND ARLIB_COMPILE_DEFINITIONS COMPILER_CLANG)
+	list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS COMPILER_CLANG)
 	message(STATUS "Using Clang/Clang++ compiler")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	set(ON_GCC true)
-	list(APPEND ARLIB_COMPILE_DEFINITIONS COMPILER_GCC)
+	list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS COMPILER_GCC)
 	message(STATUS "Using GCC/G++ compiler")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	set(ON_MSVC true)
-	list(APPEND ARLIB_COMPILE_DEFINITIONS COMPILER_MSVC)
+	list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS COMPILER_MSVC)
 	message(STATUS "Using MSVC compiler")
 else()
 	message(FATAL_ERROR "Compiler unknown, only valid compilers are Clang/GCC/MSVC")
@@ -96,12 +100,12 @@ endif()
 
 if (ON_WINDOWS AND ON_GCC)
 	message(STATUS "Using MINGW for some reason")
-	list(APPEND ARLIB_COMPILE_DEFINITIONS ON_MINGW)
+	list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS ON_MINGW)
 endif()
 
 #detecting build type
 if (CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-	list(APPEND ARLIB_COMPILE_DEFINITIONS DEBUG)
+	list(APPEND ARLIB_PRIVATE_COMPILE_DEFINITIONS DEBUG)
 	set(DEBUG_BUILD true)
 	set(RELEASE_BUILD false)
 	message(STATUS "In debug mode")
@@ -113,7 +117,7 @@ endif()
 
 # this is a bit confusing so let's explain
 # on release builds we never enable sanitizers, unless explicitely asked for.
-# on debug builds, we add them (asan on windows, asan+ubsan+leaksan on linux, 
+# on debug builds, we add them (asan on windows, asan+ubsan+leaksan on linux,
 #                               except when using clang-cl because clang-cl doesn't like asan in debug builds)
 if ((DEBUG_BUILD OR ARLIB_FORCE_SANITIZERS) AND NOT ARLIB_DEBUG_NEW_DELETE)
     if (ON_WINDOWS AND ON_CLANG)
@@ -133,9 +137,9 @@ endif()
 message(STATUS "Setting sanitizers flags to \"${ARLIB_SANITIZERS_FLAGS}\"")
 
 if (
-	CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR 
-	CMAKE_BUILD_TYPE STREQUAL "Debug" OR 
-	CMAKE_CONFIGURATION_TYPES STREQUAL "RelWithDebInfo" OR 
+	CMAKE_CONFIGURATION_TYPES STREQUAL "Debug" OR
+	CMAKE_BUILD_TYPE STREQUAL "Debug" OR
+	CMAKE_CONFIGURATION_TYPES STREQUAL "RelWithDebInfo" OR
 	CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"
 )
 	set(INCLUDE_DEBUG_INFO TRUE)
@@ -145,9 +149,9 @@ endif()
 
 if (DEBUG_BUILD)
 	if (ON_WINDOWS)
-		list(APPEND ARLIB_LINK_LIBRARIES dbghelp)
+		list(APPEND ARLIB_PUBLIC_LINK_LIBRARIES dbghelp)
 	else()
-		list(APPEND ARLIB_LINK_OPTIONS -rdynamic)
+		list(APPEND ARLIB_PRIVATE_LINK_OPTIONS -rdynamic)
 	endif()
 endif()
 
@@ -166,9 +170,9 @@ CheckAvx()
 
 
 set(ARLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(ARLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source") 
+set(ARLIB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/source")
 
-list(APPEND LIB_SOURCE_FILES_CPP 
+list(APPEND LIB_SOURCE_FILES_CPP
     ${ARLIB_SOURCE_DIR}/NatvisCompile.cpp
     ${ARLIB_SOURCE_DIR}/Algorithm.cpp
     ${ARLIB_SOURCE_DIR}/Assertion.cpp
@@ -348,7 +352,7 @@ list(APPEND LIB_SOURCE_FILES_XNATIVE
     ${ARLIB_INCLUDE_DIR}/XNative/atomic/xnative_atomic_windows.hpp
 )
 if (ON_WINDOWS)
-    list(APPEND ARLIB_SOURCE_FILES 
+    list(APPEND ARLIB_SOURCE_FILES
         ${ARLIB_SOURCE_DIR}/Windows/arlib_winapi.cpp
         ${ARLIB_SOURCE_DIR}/Windows/win_native_io.cpp
         ${ARLIB_INCLUDE_DIR}/Windows/win_native_io.hpp
@@ -373,8 +377,12 @@ file(GLOB_RECURSE GeneratedEnums "${ARLIB_INCLUDE_DIR}/GeneratedEnums/*.hpp")
 list(APPEND ARLIB_SOURCE_FILES ${GeneratedEnums})
 
 add_library(ARLib ${ARLIB_SOURCE_FILES})
+add_library(ARLib::ARLib ALIAS ARLib)
 set_property(TARGET ARLib PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
-target_include_directories(ARLib PUBLIC ${ARLIB_INCLUDE_DIR})
+target_include_directories(ARLib PUBLIC
+    $<BUILD_INTERFACE:${ARLIB_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 if (ON_WINDOWS)
     find_program(POWERSHELL_PATH NAMES powershell)
@@ -387,50 +395,51 @@ if (ARLIB_TOP_LEVEL)
 endif()
 
 if (DEBUG_BUILD)
-    list(APPEND ARLIB_COMPILE_DEFINITIONS ARLIB_DEBUG)
+    list(APPEND ARLIB_PUBLIC_COMPILE_DEFINITIONS ARLIB_DEBUG)
 endif()
 
 if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 	add_subdirectory(ASM_MSVC)
-	list(APPEND ARLIB_COMPILE_OPTIONS /utf-8 ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
-    list(APPEND ARLIB_LINK_LIBRARIES synchronization winmm)
+	list(APPEND ARLIB_PUBLIC_COMPILE_OPTIONS /utf-8)
+	list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS ${AVX_FLAGS} /permissive- /D_HAS_EXCEPTIONS=0 /EHsc)
+    list(APPEND ARLIB_PUBLIC_LINK_LIBRARIES synchronization winmm)
     if (MSVC AND NOT ON_CLANG)
-        list(APPEND ARLIB_COMPILE_OPTIONS /Zc:inline-)
+        list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS /Zc:inline-)
     endif()
-	list(APPEND ARLIB_COMPILE_DEFINITIONS 
-		_CRT_SECURE_NO_WARNINGS 
-        UNICODE 
+	list(APPEND ARLIB_PRIVATE_COMPILE_DEFINITIONS
+		_CRT_SECURE_NO_WARNINGS
+        UNICODE
         _UNICODE
         WIN32_LEAN_AND_MEAN
         VC_EXTRALEAN
         NOMINMAX
 	)
 	if (DEBUG_BUILD)
-		list(APPEND ARLIB_COMPILE_OPTIONS /DEBUG /Oy- ${ARLIB_SANITIZERS_FLAGS})
+		list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS /DEBUG /Oy- ${ARLIB_SANITIZERS_FLAGS})
 	else()
-		list(APPEND ARLIB_COMPILE_OPTIONS /O2 /GR-)
+		list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS /O2 /GR-)
 	endif()
-    list(APPEND ARLIB_LINK_OPTIONS "/NATVIS:${CMAKE_CURRENT_SOURCE_DIR}/ARLib.natvis")
+    list(APPEND ARLIB_PRIVATE_LINK_OPTIONS "/NATVIS:${CMAKE_CURRENT_SOURCE_DIR}/ARLib.natvis")
     set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/NatvisCompile.cpp PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ARLib.natvis")
 	list(APPEND ARLIB_COMPILE_WARNINGS
-		/W3 
-		/w14242 
-		/w14254 
-		/w14265 
-		/w14287 
-		/we4289 
-		/w14296 
-		/w14311 
-		/w14545 
-		/w14546 
-		/w14547 
-		/w14549 
-		/w14555 
-		/w14619 
-		/w14640 
-		/w14826 
-		/w14905 
-		/w14906 
+		/W3
+		/w14242
+		/w14254
+		/w14265
+		/w14287
+		/we4289
+		/w14296
+		/w14311
+		/w14545
+		/w14546
+		/w14547
+		/w14549
+		/w14555
+		/w14619
+		/w14640
+		/w14826
+		/w14905
+		/w14906
 		/w14928
 		)
 	if (ON_CLANG)
@@ -438,32 +447,32 @@ if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
 			    -Wno-c++17-extensions
 			    -Wno-deprecated-declarations
 		    )
-        list(APPEND ARLIB_COMPILE_OPTIONS -mrdseed)
+        list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS -mrdseed)
 	endif()
-	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
+	list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 else()
 	add_subdirectory(ASM_GCC)
-	list(APPEND ARLIB_COMPILE_OPTIONS  -mrdseed -msse4.1 ${AVX_FLAGS} -fno-exceptions)
+	list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS  -mrdseed -msse4.1 ${AVX_FLAGS} -fno-exceptions)
 	if (DEBUG_BUILD AND NOT ON_WINDOWS)
-		list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
-		list(APPEND ARLIB_LINK_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
-		list(APPEND ARLIB_LINK_LIBRARIES ${ARLIB_SANITIZERS_FLAGS})
+		list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
+		list(APPEND ARLIB_PRIVATE_LINK_OPTIONS ${ARLIB_SANITIZERS_FLAGS})
+		list(APPEND ARLIB_PRIVATE_LINK_LIBRARIES ${ARLIB_SANITIZERS_FLAGS})
 	endif()
 	list(APPEND ARLIB_COMPILE_WARNINGS
-		-Wall 
+		-Wall
 		-Wextra
 		-Wpedantic
-		-Wshadow 
+		-Wshadow
 		-Wnon-virtual-dtor
 		-Wold-style-cast
 		-Wcast-align
-		-Wunused 
-		-Woverloaded-virtual 
-		-Wpedantic 
-		-Wconversion 
-		-Wsign-conversion 
+		-Wunused
+		-Woverloaded-virtual
+		-Wpedantic
+		-Wconversion
+		-Wsign-conversion
 		-Wmisleading-indentation
-		-Wnull-dereference 
+		-Wnull-dereference
 		-Wdouble-promotion
 		-Wformat=2
 		-Wno-format-nonliteral
@@ -476,10 +485,10 @@ else()
 			)
     elseif(ON_CLANG AND ARLIB_USE_LIBCXX)
         message(STATUS "Using libc++ instead of libstdc++")
-        list(APPEND ARLIB_COMPILE_OPTIONS
+        list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS
             -stdlib=libc++
         )
-        list(APPEND ARLIB_LINK_LIBRARIES
+        list(APPEND ARLIB_PUBLIC_LINK_LIBRARIES
             -lc++abi
             -lc++
         )
@@ -494,29 +503,72 @@ else()
 		)
 	endif()
     if (ARLIB_USE_MOLD)
-        list(APPEND ARLIB_LINK_OPTIONS
+        list(APPEND ARLIB_PRIVATE_LINK_OPTIONS
             -fuse-ld=mold
         )
     elseif(ON_CLANG AND ARLIB_USE_LIBCXX)
-        list(APPEND ARLIB_LINK_OPTIONS
+        list(APPEND ARLIB_PRIVATE_LINK_OPTIONS
             -fuse-ld=lld
         )
     endif()
-	list(APPEND ARLIB_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
+	list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS ${ARLIB_COMPILE_WARNINGS})
 endif()
 
 
 if (INCLUDE_DEBUG_INFO)
 	message(STATUS "Including debug info")
 	if (ON_MSVC OR (ON_CLANG AND ON_WINDOWS))
-		list(APPEND ARLIB_LINK_OPTIONS /PROFILE /DEBUG:FULL)
+		list(APPEND ARLIB_PRIVATE_LINK_OPTIONS /PROFILE /DEBUG:FULL)
 	else()
-		list(APPEND ARLIB_COMPILE_OPTIONS -g)
+		list(APPEND ARLIB_PRIVATE_COMPILE_OPTIONS -g)
 	endif()
 endif()
 
 
-target_link_options(ARLib PUBLIC ${ARLIB_LINK_OPTIONS})
-target_link_libraries(ARLib PUBLIC ${ARLIB_LINK_LIBRARIES})
-target_compile_options(ARLib PUBLIC ${ARLIB_COMPILE_OPTIONS})
-target_compile_definitions(ARLib PUBLIC ${ARLIB_COMPILE_DEFINITIONS})
+target_link_options(ARLib PRIVATE ${ARLIB_PRIVATE_LINK_OPTIONS})
+target_link_libraries(ARLib
+    PUBLIC ${ARLIB_PUBLIC_LINK_LIBRARIES}
+    PRIVATE ${ARLIB_PRIVATE_LINK_LIBRARIES}
+)
+target_compile_options(ARLib
+    PUBLIC ${ARLIB_PUBLIC_COMPILE_OPTIONS}
+    PRIVATE ${ARLIB_PRIVATE_COMPILE_OPTIONS}
+)
+target_compile_definitions(ARLib
+    PUBLIC ${ARLIB_PUBLIC_COMPILE_DEFINITIONS}
+    PRIVATE ${ARLIB_PRIVATE_COMPILE_DEFINITIONS}
+)
+
+option(ARLIB_INSTALL "Generate install targets" ${ARLIB_TOP_LEVEL})
+
+if (ARLIB_INSTALL)
+    include(CMakePackageConfigHelpers)
+    install(TARGETS ARLib ARLib_asm_ext
+        EXPORT ARLibTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+    install(DIRECTORY ${ARLIB_INCLUDE_DIR}/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+    install(EXPORT ARLibTargets
+        FILE ARLibTargets.cmake
+        NAMESPACE ARLib::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ARLib
+    )
+    configure_package_config_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/ARLibConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/ARLibConfig.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ARLib
+    )
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/ARLibConfigVersion.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+    install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/ARLibConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/ARLibConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ARLib
+    )
+endif()

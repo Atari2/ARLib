@@ -53,7 +53,7 @@ cmake --build . --config Release
 
 To add this library to your cmake project, simply use the following in your CMakeLists.txt
 
-```
+```cmake
 include(FetchContent)
 
 FetchContent_Declare(
@@ -63,8 +63,9 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(ARLib)
-target_include_directories(YOUR_PROJECT PRIVATE ${ARLib_SOURCE_DIR})
-target_link_libraries(YOUR_PROJECT PRIVATE ARLib)
+target_link_libraries(YOUR_PROJECT PRIVATE ARLib::ARLib)
 ```
 
-This requires CMake at least version 3.15
+Linking against `ARLib::ARLib` will automatically set up include directories and the required platform/compiler definitions. It will not leak ARLib's internal warning flags, sanitizer flags, or optimization settings into your project.
+
+This requires CMake at least version 3.20

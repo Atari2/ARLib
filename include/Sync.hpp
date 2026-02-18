@@ -32,7 +32,7 @@ class SyncData {
         func(m_data);
     }
     template <typename Functor>
-    requires CallableWith<Functor, AddConstT<AddLvalueReferenceT<DataType>>>
+    requires CallableWith<Functor, AddLvalueReferenceT<AddConstT<DataType>>>
     void with_lock(Functor&& func) const {
         UniqueLock l{ m_mutex };
         func(m_data);
