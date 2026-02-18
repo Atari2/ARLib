@@ -3,6 +3,7 @@
 namespace ARLib {
 void EventLoop::loop_function(EventLoop* loop) {
     while (loop->running()) {
+        loop->m_sleeping = false;
         if (loop->m_callbacks.size() > 0) {
             Function<void()> callback;
             {

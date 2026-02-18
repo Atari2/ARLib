@@ -1781,3 +1781,19 @@ TEST(ARLibTests, ArgParserListTests) {
         EXPECT_EQ(paths, expected);
     }
 }
+TEST(ARLibTests, BigIntOrderingTests) {
+    BigInt a{ "1234567890123456789012345678901234567890"_s };
+    BigInt b{ "1234567890123456789012345678901234567891"_s };
+    BigInt c{ "1234567890123456789012345678901234567890"_s };
+    EXPECT_TRUE(a < b);
+    EXPECT_TRUE(b > a);
+    EXPECT_TRUE(a == c);
+    EXPECT_TRUE(a <= c);
+    EXPECT_TRUE(a >= c);
+
+    Vector<BigInt> vec{ b, c, a };
+    sort(vec);
+    EXPECT_EQ(vec[0], a);
+    EXPECT_EQ(vec[1], c);
+    EXPECT_EQ(vec[2], b);
+}

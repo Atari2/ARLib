@@ -23,7 +23,7 @@ class EventLoop {
     };
     EventLoop()                 = default;
     EventLoop(const EventLoop&) = delete;
-    EventLoop(EventLoop&& other) {
+    EventLoop(EventLoop&& other) noexcept {
         other.m_thread.swap(m_thread);
         m_callbacks       = move(other.m_callbacks);
         m_running         = other.m_running.load();
@@ -33,8 +33,8 @@ class EventLoop {
     };
     void start();
     void stop() {
-        m_condition_var.notify_one();
         m_running = false;
+        m_condition_var.notify_one();
     }
     bool running() { return m_running; }
     template <typename Functor, typename... Args>

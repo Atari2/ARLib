@@ -144,6 +144,22 @@ class BigInt {
         return (th < other) || (th == other);
     }
     bool operator<=(Integral auto other) const { return *this <= BigInt{ other }; }
+    Ordering operator<=>(const BigInt& other) const {
+        if (this == &other) return equal;
+        size_t my_size    = size();
+        size_t other_size = other.size();
+        if (m_sign == other.m_sign) {
+            if (my_size == other_size) {
+                return comparison_same_length(*this, other);
+            } else {
+                return my_size <=> other_size;
+            }
+        } else {
+            // if sign of this is positive, means other is negative, and that this is bigger than other
+            return (m_sign == Sign::Plus) ? greater : less;
+        }
+    }
+    Ordering operator<=>(Integral auto other) const { return *this <=> BigInt{ other }; }
     BigInt operator+() { return *this; }
     BigInt operator-() {
         BigInt copy = *this;
