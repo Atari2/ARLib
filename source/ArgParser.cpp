@@ -102,7 +102,7 @@ ArgParser::ParseResult ArgParser::parse() {
                     }
                 } else if (opt.type == Option::Type::StringVector) {
                     const auto& strval = *it;
-                    Vector<String> vec = strval.split(",").iter().map(&StringView::str).collect<Vector>();
+                    Vector<String> vec = strval.split(opt.get_separator()).iter().map(&StringView::str).collect<Vector>();
                     if (!opt.assign(move(vec))) {
                         return "Internal argument parser error, report this to the developer along with the command line you were using!\n"_s;
                     }
@@ -110,7 +110,7 @@ ArgParser::ParseResult ArgParser::parse() {
                     const auto& strval = *it;
                     bool has_error     = false;
                     String error{};
-                    Vector<int> vec = strval.split(",")
+                    Vector<int> vec = strval.split(opt.get_separator())
                                       .iter()
                                       .map([&has_error, &error](const auto& v) {
                                           auto res = StrViewToInt(v);
@@ -131,7 +131,7 @@ ArgParser::ParseResult ArgParser::parse() {
                     const auto& strval = *it;
                     bool has_error     = false;
                     String error{};
-                    Vector<unsigned int> vec = strval.split(",")
+                    Vector<unsigned int> vec = strval.split(opt.get_separator())
                                                .iter()
                                                .map([&has_error, &error](const auto& v) {
                                                    auto res = StrViewToUInt(v);
@@ -152,7 +152,7 @@ ArgParser::ParseResult ArgParser::parse() {
                     const auto& strval = *it;
                     bool has_error     = false;
                     String error{};
-                    Vector<double> vec = strval.split(",")
+                    Vector<double> vec = strval.split(opt.get_separator())
                                          .iter()
                                          .map([&has_error, &error](const auto& v) {
                                              auto res = StrViewToDouble(v);
@@ -276,41 +276,41 @@ OptionName opt_name, StringView value_name, StringView description, double& valu
 }
 ArgParser& ArgParser::add_option(
 OptionName opt_name, StringView value_name, StringView description, Vector<int>& value_ref,
-Optional<Vector<int>> default_value
+Optional<Vector<int>> default_value, StringView separator
 ) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, IntVecRef{ value_ref },
-                     move(default_value).map([](auto&& ref) { return Option::OptionValueVariant{ ref }; }) }
+                     move(default_value).map([](auto&& ref) { return Option::OptionValueVariant{ ref }; }), separator }
     });
     return *this;
 }
 ArgParser& ArgParser::add_option(
 OptionName opt_name, StringView value_name, StringView description, Vector<unsigned int>& value_ref,
-Optional<Vector<unsigned int>> default_value
+Optional<Vector<unsigned int>> default_value, StringView separator
 ) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, UintVecRef{ value_ref },
-                     move(default_value).map([](auto&& ref) { return Option::OptionValueVariant{ ref }; }) }
+           move(default_value).map([](auto&& ref) { return Option::OptionValueVariant{ ref }; }), separator }
     });
     return *this;
 }
 ArgParser& ArgParser::add_option(
 OptionName opt_name, StringView value_name, StringView description, Vector<String>& value_ref,
-Optional<Vector<String>> default_value
+Optional<Vector<String>> default_value, StringView separator
 ) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, StringVecRef{ value_ref },
-                     move(default_value).map([](auto&& ref) { return Option::OptionValueVariant{ ref }; }) }
+           move(default_value).map([](auto&& ref) { return Option::OptionValueVariant{ ref }; }), separator }
     });
     return *this;
 }
 ArgParser& ArgParser::add_option(
 OptionName opt_name, StringView value_name, StringView description, Vector<double>& value_ref,
-Optional<Vector<double>> default_value
+Optional<Vector<double>> default_value, StringView separator
 ) {
     m_options.push_back(OptT{
     opt_name, Option{ description, value_name, RealVecRef{ value_ref },
-                     move(default_value).map([](auto&& ref) { return Option::OptionValueVariant{ ref }; }) }
+           move(default_value).map([](auto&& ref) { return Option::OptionValueVariant{ ref }; }), separator }
     });
     return *this;
 }
@@ -455,6 +455,9 @@ bool ArgParser::Option::has_default() const {
 }
 bool ArgParser::Option::has_default_value() const {
     return default_value.has_value();
+}
+StringView ArgParser::Option::get_separator() const {
+    return separator;
 }
 PrintInfo<ArgParser::OptionName>::PrintInfo(const ArgParser::OptionName& parser) : m_parser(parser) {}
 String PrintInfo<ArgParser::OptionName>::repr() const {

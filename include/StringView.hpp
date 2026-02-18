@@ -119,7 +119,9 @@ class StringView {
         }
         return npos;
     }
+    [[nodiscard]] size_t index_of(StringView c, size_t start = 0) const;
     Vector<StringView> split(const char* sep = " ") const;
+    Vector<StringView> split(StringView sep) const;
     void print_view() { printf("%.*s\n", size(), m_start); }
     [[nodiscard]] constexpr size_t size() const { return m_size; }
     [[nodiscard]] constexpr size_t length() const { return m_size; }

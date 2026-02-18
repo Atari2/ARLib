@@ -1,4 +1,4 @@
-﻿#include "Suite.hpp"
+#include "Suite.hpp"
 #include <gtest/gtest.h>
 #include "GTestPrintHelpers.hpp"
 
@@ -1747,5 +1747,37 @@ TEST(ARLibTests, PrimeGeneratorTest) {
     };
     for (size_t i = 0; i < sizeof_array(primes); ++i) {
         EXPECT_EQ(prime_generator(i), primes[i]); 
+    }
+}
+TEST(ARLibTests, ArgParserListTests) {
+    {
+        const char* argv[] = { "ARLibPlayground.exe", "-p", "a,b,c,d" };
+        const int argc     = 3;
+        ArgParser parser{ argc, argv };
+        Vector<String> paths{};
+        parser.add_option({ "-p", "--paths" }, "PATHS", "Paths to files", paths);
+        parser.parse().must();
+        Vector<String> expected{ "a"_s, "b"_s, "c"_s, "d"_s };
+        EXPECT_EQ(paths, expected);
+    }
+    {
+        const char* argv[] = { "ARLibPlayground.exe", "-p", "a=b=c=d" };
+        const int argc     = 3;
+        ArgParser parser{ argc, argv };
+        Vector<String> paths{};
+        parser.add_option({ "-p", "--paths" }, "PATHS", "Paths to files", paths, {}, "=");
+        parser.parse().must();
+        Vector<String> expected{ "a"_s, "b"_s, "c"_s, "d"_s };
+        EXPECT_EQ(paths, expected);
+    }
+    {
+        const char* argv[] = { "ARLibPlayground.exe", "-p", "a<=>b<=>c" };
+        const int argc     = 3;
+        ArgParser parser{ argc, argv };
+        Vector<String> paths{};
+        parser.add_option({ "-p", "--paths" }, "PATHS", "Paths to files", paths, {}, "<=>");
+        parser.parse().must();
+        Vector<String> expected{ "a"_s, "b"_s, "c"_s };
+        EXPECT_EQ(paths, expected);
     }
 }

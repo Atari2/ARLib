@@ -25,6 +25,31 @@ Vector<StringView> StringView::split(const char* sep) const {
     vec.append(substringview(prev_index));
     return vec;
 }
+size_t StringView::index_of(StringView c, size_t start) const {
+    if (m_size == 0 || start >= m_size) return npos;
+    const char* buf = m_start;
+    auto o_len      = c.size();
+    if (o_len > m_size) return npos;
+    if (start + o_len > m_size) return npos;
+    if (o_len == m_size && start == 0 && strncmp(buf, c.data(), o_len) == 0) return 0;
+    for (size_t i = start; i < m_size; i++) {
+        if (strncmp(buf + i, c.data(), o_len) == 0) return i;
+    }
+    return npos;
+}
+Vector<StringView> StringView::split(StringView sv) const {
+    Vector<StringView> vec{};
+    size_t sep_len    = sv.size();
+    size_t prev_index = 0ull;
+    size_t index      = index_of(sv);
+    while (index != npos) {
+        vec.append(substringview(prev_index, index));
+        prev_index = index + sep_len;
+        index      = index_of(sv, prev_index);
+    }
+    vec.append(substringview(prev_index));
+    return vec;
+}
 Span<const char> StringView::span() const {
     return Span<const char>{ m_start, m_size };
 }

@@ -35,7 +35,7 @@ size_t zerobyteidx(__m256i value) {
     if (mask == 0) return sizeof(__m256i);
     return first_zero_bit(static_cast<uint32_t>(mask));
 }
-size_t strlen_vectorized(const char* src) {
+arlib_no_sanitize_address size_t strlen_vectorized(const char* src) {
     auto* ptr = reinterpret_cast<const __m256i*>(src);
     size_t sz = 0;
     for (;;) {

@@ -5,6 +5,7 @@
     #define arlib_unreachable __assume(0);
     #define arlib_forceinline __forceinline
     #define arlib_noop        __noop
+    #define arlib_no_sanitize_address __declspec(no_sanitize_address)
     #if _MSC_FULL_VER > 193431942
         #define compiler_intrinsic [[msvc::intrinsic]]
     #else
@@ -23,7 +24,8 @@
 #elif defined(COMPILER_GCC)    // GCC
     #define arlib_unreachable __builtin_unreachable();
     #define arlib_forceinline __attribute__((always_inline))
-    #define arlib_noop        ((void)0)
+    #define arlib_noop                ((void)0)
+    #define arlib_no_sanitize_address 
     #define compiler_intrinsic
     #if __x86_64__ || __ppc64__
         #define ENVIRON64 1
@@ -39,6 +41,7 @@
     #define arlib_unreachable __builtin_unreachable();
     #define arlib_forceinline __attribute__((always_inline))
     #define arlib_noop        ((void)0)
+    #define arlib_no_sanitize_address 
     #define compiler_intrinsic
     #if __x86_64__ || __ppc64__
         #define ENVIRON64 1
