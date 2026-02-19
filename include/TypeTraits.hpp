@@ -141,22 +141,19 @@ struct PointerTraits<T*> {
 template <class T>
 struct IsClass : decltype(detail::Test<T>(nullptr)) {};
 // convertible
+// some builtins have slightly different names
+#ifdef COMPILER_MSVC
+    #define __arlib_convertible_to(From, To) __is_convertible_to(From, To)
+#else
+    #define __arlib_convertible_to(From, To) __is_convertible(From, To)
+#endif
 template <class From, class To>
-struct Convertible :
-    IntegralConstant<
-    bool,
-    (
-    decltype(detail::TestReturnable<To>(0))::value && decltype(detail::TestImplicitlyConvertible<From, To>(0))::value
-    ) ||
-    (IsVoid<From>::value && IsVoid<To>::value)> {};
+struct Convertible : BoolConstant<__arlib_convertible_to(From, To)> {};
 template <class From, class To>
 struct NothrowConvertible : Conjunction<IsVoid<From>, IsVoid<To>> {};
 // baseof
 template <typename Base, typename Derived>
-struct BaseOf :
-    IntegralConstant<
-    bool,
-    IsClass<Base>::value && IsClass<Derived>::value&& decltype(detail::TestPreIsBaseOf<Base, Derived>(0))::value> {};
+struct BaseOf : BoolConstant<__is_base_of(Base, Derived)> {};
 // constructible in various ways -> todo in concepts
 template <class T>
 struct CopyConstructibleImpl : ConstructibleImpl<T, typename AddLvalueReference<typename AddConst<T>::type>::type> {};

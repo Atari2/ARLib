@@ -171,7 +171,7 @@ class SharedPtr {
     {
         if (m_storage == nullptr && other.m_storage == nullptr) return true;
         if (m_storage == nullptr || other.m_storage == nullptr) return false;
-        return *m_storage == other.as<T>();
+        return *m_storage == other.template as<T>();
     }
     Ordering operator<=>(const SharedPtr& other) const
     requires Orderable<T>
@@ -188,7 +188,7 @@ class SharedPtr {
         if (m_storage == nullptr && other.m_storage == nullptr) return equal;
         if (m_storage == nullptr) return less;
         if (other.m_storage == nullptr) return greater;
-        return *m_storage <=> other.as<T>();
+        return *m_storage <=> other.template as<T>();
     }
     ~SharedPtr() { decrease_instance_count_(); }
 };

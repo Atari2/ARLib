@@ -92,7 +92,7 @@ class UniquePtr {
     bool operator==(const UniquePtr<U>& other) const requires EqualityComparable<T> {
         if (m_storage == nullptr && other.m_storage == nullptr) return true;
         if (m_storage == nullptr || other.m_storage == nullptr) return false;
-        return *m_storage == other.as<T>();
+        return *m_storage == other.template as<T>();
     }
     Ordering operator<=>(const UniquePtr& other) const requires Orderable<T> {
         if (m_storage == nullptr && other.m_storage == nullptr) return equal;
@@ -105,7 +105,7 @@ class UniquePtr {
         if (m_storage == nullptr && other.m_storage == nullptr) return equal;
         if (m_storage == nullptr) return less;
         if (other.m_storage == nullptr) return greater;
-        return *m_storage <=> other.as<T>();
+        return *m_storage <=> other.template as<T>();
     }
     ~UniquePtr() { reset(); }
 };
