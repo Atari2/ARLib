@@ -158,6 +158,38 @@ class SharedPtr {
     const T* operator->() const { return m_storage; }
     T& operator*() { return *m_storage; }
     const T& operator*() const { return *m_storage; }
+    bool operator==(const SharedPtr& other) const
+    requires EqualityComparable<T>
+    {
+        if (m_storage == nullptr && other.m_storage == nullptr) return true;
+        if (m_storage == nullptr || other.m_storage == nullptr) return false;
+        return *m_storage == *other.m_storage;
+    }
+    template <DerivedFrom<T> U>
+    bool operator==(const SharedPtr<U>& other) const
+    requires EqualityComparable<T>
+    {
+        if (m_storage == nullptr && other.m_storage == nullptr) return true;
+        if (m_storage == nullptr || other.m_storage == nullptr) return false;
+        return *m_storage == other.as<T>();
+    }
+    Ordering operator<=>(const SharedPtr& other) const
+    requires Orderable<T>
+    {
+        if (m_storage == nullptr && other.m_storage == nullptr) return equal;
+        if (m_storage == nullptr) return less;
+        if (other.m_storage == nullptr) return greater;
+        return *m_storage <=> *other.m_storage;
+    }
+    template <DerivedFrom<T> U>
+    Ordering operator<=>(const SharedPtr<U>& other) const
+    requires Orderable<T>
+    {
+        if (m_storage == nullptr && other.m_storage == nullptr) return equal;
+        if (m_storage == nullptr) return less;
+        if (other.m_storage == nullptr) return greater;
+        return *m_storage <=> other.as<T>();
+    }
     ~SharedPtr() { decrease_instance_count_(); }
 };
 template <typename T>

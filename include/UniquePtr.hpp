@@ -83,6 +83,30 @@ class UniquePtr {
         reset();
         return tmp;
     }
+    bool operator==(const UniquePtr& other) const requires EqualityComparable<T> {
+        if (m_storage == nullptr && other.m_storage == nullptr) return true;
+        if (m_storage == nullptr || other.m_storage == nullptr) return false;
+        return *m_storage == *other.m_storage;
+    }
+    template <DerivedFrom<T> U>
+    bool operator==(const UniquePtr<U>& other) const requires EqualityComparable<T> {
+        if (m_storage == nullptr && other.m_storage == nullptr) return true;
+        if (m_storage == nullptr || other.m_storage == nullptr) return false;
+        return *m_storage == other.as<T>();
+    }
+    Ordering operator<=>(const UniquePtr& other) const requires Orderable<T> {
+        if (m_storage == nullptr && other.m_storage == nullptr) return equal;
+        if (m_storage == nullptr) return less;
+        if (other.m_storage == nullptr) return greater;
+        return *m_storage <=> *other.m_storage;
+    }
+    template <DerivedFrom<T> U>
+    Ordering operator<=>(const UniquePtr<U>& other) const requires Orderable<T> {
+        if (m_storage == nullptr && other.m_storage == nullptr) return equal;
+        if (m_storage == nullptr) return less;
+        if (other.m_storage == nullptr) return greater;
+        return *m_storage <=> other.as<T>();
+    }
     ~UniquePtr() { reset(); }
 };
 template <class T>

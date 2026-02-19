@@ -397,7 +397,8 @@ TEST(ARLibTests, GenericViewTests) {
     auto vec3 = view.map([](int a) { return IntToStr(a); }).collect<Vector<String>>();
     for (const auto& [index, item] : Enumerate{ vec3 }) { EXPECT_EQ(item, IntToStr(index * 2)); }
     for (auto item : vec2) { EXPECT_EQ(item, 0); }
-    auto filtered = view2.map([](int a) { return a * 2; }
+    auto filtered = view2.map(
+                         [](int a) { return a * 2; }
     ).map([](int b) {
          return b * 2;
      }).map([](int c) {
@@ -1216,7 +1217,7 @@ TEST(ARLibTests, PathTestsConcatenation) {
     }
 }
 TEST(ARLibTests, ReplaceRemoveExtensionTest) {
-    const Path p1 { "C:/Users/user/folder/file.txt" };
+    const Path p1{ "C:/Users/user/folder/file.txt" };
     auto p2 = p1.remove_extension();
     EXPECT_EQ(p2, "C:/Users/user/folder/file"_p);
     p2.replace_extension(".txt"_p);
@@ -1705,7 +1706,7 @@ TEST(ARLibTests, StreamingTest) {
 }
 TEST(ARLibTests, ArgParserDefaultValueTest) {
     const char* argv[] = { "test" };
-    const int argc = 1;
+    const int argc     = 1;
     ArgParser parser{ argc, argv };
     Path p{};
     parser.add_option({ "-p", "--path" }, "PATH", "Path to file", p, "testfile.txt"_p);
@@ -1745,9 +1746,7 @@ TEST(ARLibTests, PrimeGeneratorTest) {
         463, 467, 467, 467, 467, 479, 479, 479, 479, 479, 479, 479, 479, 479, 479, 479, 479, 487, 487, 487, 487, 487,
         487, 487, 487, 491, 491, 491, 491, 499, 499, 499, 499, 499, 499, 499, 499, 503
     };
-    for (size_t i = 0; i < sizeof_array(primes); ++i) {
-        EXPECT_EQ(prime_generator(i), primes[i]); 
-    }
+    for (size_t i = 0; i < sizeof_array(primes); ++i) { EXPECT_EQ(prime_generator(i), primes[i]); }
 }
 TEST(ARLibTests, ArgParserListTests) {
     {
@@ -1839,4 +1838,38 @@ TEST(ARLibTests, SharedPtrDerivedBaseTests) {
         empty = ptr3;
     }
     EXPECT_EQ(empty->name(), "Derived"_sv);
+}
+TEST(ARLibTests, UniquePtrOrderingTests) {
+    SortedVector<UniquePtr<int>> vec{};
+    vec.insert(UniquePtr{ 5 });
+    vec.insert(UniquePtr{ 3 });
+    vec.insert(UniquePtr{ 8 });
+    EXPECT_EQ(*vec[0], 3);
+    EXPECT_EQ(*vec[1], 5);
+    EXPECT_EQ(*vec[2], 8);
+
+    SortedVector<UniquePtr<String>> vec2{};
+    vec2.insert(UniquePtr{ "1"_s });
+    vec2.insert(UniquePtr{ "3"_s });
+    vec2.insert(UniquePtr{ "2"_s });
+    EXPECT_EQ(*vec2[0], "1");
+    EXPECT_EQ(*vec2[1], "2");
+    EXPECT_EQ(*vec2[2], "3");
+}
+TEST(ARLibTests, SharedPtrOrderingTests) {
+    SortedVector<SharedPtr<int>> vec{};
+    vec.insert(SharedPtr{ 5 });
+    vec.insert(SharedPtr{ 3 });
+    vec.insert(SharedPtr{ 8 });
+    EXPECT_EQ(*vec[0], 3);
+    EXPECT_EQ(*vec[1], 5);
+    EXPECT_EQ(*vec[2], 8);
+
+    SortedVector<SharedPtr<String>> vec2{};
+    vec2.insert(SharedPtr{ "1"_s });
+    vec2.insert(SharedPtr{ "3"_s });
+    vec2.insert(SharedPtr{ "2"_s });
+    EXPECT_EQ(*vec2[0], "1");
+    EXPECT_EQ(*vec2[1], "2");
+    EXPECT_EQ(*vec2[2], "3");
 }
