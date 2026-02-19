@@ -181,6 +181,13 @@ void Win32DirectoryIterator::load_next_file() {
         m_inner_curr        = UniquePtr{ m_recursive_iterate.begin() };
         m_inner_end         = UniquePtr{ m_recursive_iterate.end() };
         m_state             = State::Recursing;
+        if (*m_inner_curr == *m_inner_end) {
+            // directory is empty. Go next.
+            m_inner_curr.reset();
+            m_inner_end.reset();
+            m_state = State::File;
+            load_next_file();
+        }
     } else {
         HARD_ASSERT(false, "Unreachable");
     }

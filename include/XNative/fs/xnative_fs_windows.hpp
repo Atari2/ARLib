@@ -93,7 +93,8 @@ class Win32FileInfo {
         Win32FileAttribute::OFFLINE | Win32FileAttribute::READONLY | Win32FileAttribute::SPARSE_FILE |
         Win32FileAttribute::SYSTEM | Win32FileAttribute::TEMPORARY
         );
-        return (fileAttributes & regular_file_attrs) != 0;
+        return (fileAttributes & regular_file_attrs) != 0 &&
+               (fileAttributes & from_enum(Win32FileAttribute::DIRECTORY)) == 0;
     }
     size_t filesize() const { return fileSize; }
     Instant last_access() const {
@@ -119,7 +120,7 @@ class Win32DirectoryIterate {
     friend class Win32DirectoryIterator;
     Path m_path;
     bool m_recurse;
-    Win32DirectoryIterate() : m_path(), m_recurse(){};
+    Win32DirectoryIterate() : m_path(), m_recurse() {};
     Win32DirectoryIterate(Win32DirectoryIterate&& other) noexcept :
         m_path(move(other.m_path)), m_recurse(other.m_recurse) {}
     Win32DirectoryIterate& operator=(Win32DirectoryIterate&& other) noexcept {
@@ -133,13 +134,7 @@ class Win32DirectoryIterate {
     Win32DirectoryIterator end() const;
 };
 class Win32DirectoryIterator {
-    enum class State {
-        Uninitialized,
-        Directory,
-        File,
-        Recursing,
-        Finished
-    };
+    enum class State { Uninitialized, Directory, File, Recursing, Finished };
     friend Win32DirectoryIterate;
     friend struct PrintInfo<Win32DirectoryIterator>;
     Win32DirIterHandle m_hdl;
