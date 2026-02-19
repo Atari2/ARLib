@@ -1797,3 +1797,46 @@ TEST(ARLibTests, BigIntOrderingTests) {
     EXPECT_EQ(vec[1], c);
     EXPECT_EQ(vec[2], b);
 }
+TEST(ARLibTests, UniquePtrDerivedBaseTests) {
+    struct Base {
+        virtual ~Base() = default;
+        virtual StringView name() const { return "Base"_sv; }
+    };
+    struct Derived : public Base {
+        StringView name() const override { return "Derived"_sv; }
+        bool derived_only() const { return true; }
+    };
+    UniquePtr<Base> ptr{ new Derived };
+    UniquePtr<Base> ptr2 = UniquePtr<Derived>(new Derived);
+    EXPECT_EQ(ptr->name(), "Derived"_sv);
+    EXPECT_EQ(ptr2->name(), "Derived"_sv);
+    EXPECT_TRUE(ptr.get<Derived>()->derived_only());
+    EXPECT_TRUE(ptr2.get<Derived>()->derived_only());
+    EXPECT_TRUE(ptr.as<Derived>().derived_only());
+    EXPECT_TRUE(ptr2.as<Derived>().derived_only());
+}
+TEST(ARLibTests, SharedPtrDerivedBaseTests) {
+    struct Base {
+        virtual ~Base() = default;
+        virtual StringView name() const { return "Base"_sv; }
+    };
+    struct Derived : public Base {
+        StringView name() const override { return "Derived"_sv; }
+        bool derived_only() const { return true; }
+    };
+    SharedPtr<Base> empty{};
+    {
+        SharedPtr<Base> ptr{ new Derived };
+        SharedPtr<Base> ptr2 = SharedPtr<Derived>(new Derived);
+        SharedPtr<Base> ptr3 = ptr;
+        EXPECT_EQ(ptr->name(), "Derived"_sv);
+        EXPECT_EQ(ptr2->name(), "Derived"_sv);
+        EXPECT_EQ(ptr3->name(), "Derived"_sv);
+        EXPECT_TRUE(ptr.get<Derived>()->derived_only());
+        EXPECT_TRUE(ptr2.get<Derived>()->derived_only());
+        EXPECT_TRUE(ptr.as<Derived>().derived_only());
+        EXPECT_TRUE(ptr2.as<Derived>().derived_only());
+        empty = ptr3;
+    }
+    EXPECT_EQ(empty->name(), "Derived"_sv);
+}

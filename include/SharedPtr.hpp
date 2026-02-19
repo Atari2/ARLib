@@ -8,18 +8,20 @@
 namespace ARLib {
 template <typename T>
 class SharedPtr {
-    T* m_storage             = nullptr;
-    RefCountBase<T>* m_count = nullptr;
+    T* m_storage            = nullptr;
+    RefCountBase<>* m_count = nullptr;
+
+    template <typename U>
+    friend class SharedPtr;
     void decrease_instance_count_() {
         if (m_count == nullptr) return;
-        m_count->decref();
+        m_count->decref<T>();
         if (m_count->count() == 0) {
             delete m_count;
             m_count = nullptr;
         }
     }
-
-    SharedPtr(WeakPtr<T>& weak) { 
+    SharedPtr(WeakPtr<T>& weak) {
         m_storage = weak.m_storage;
         m_count   = weak.m_count;
         m_count->incref();
@@ -39,15 +41,45 @@ class SharedPtr {
         other.m_count   = nullptr;
         return *this;
     }
+    template <DerivedFrom<T> U>
+    SharedPtr(SharedPtr<U>&& other) noexcept : m_storage(other.m_storage), m_count(other.m_count) {
+        other.m_storage = nullptr;
+        other.m_count   = nullptr;
+    }
+    template <DerivedFrom<T> U>
+    SharedPtr& operator=(SharedPtr<U>&& other) noexcept {
+        decrease_instance_count_();
+        m_storage       = other.m_storage;
+        m_count         = other.m_count;
+        other.m_storage = nullptr;
+        other.m_count   = nullptr;
+        return *this;
+    }
     SharedPtr(nullptr_t) = delete;
-    SharedPtr(T* ptr) : m_storage(ptr), m_count(new RefCountBase<T>{ m_storage }) {
+    SharedPtr(T* ptr) : m_storage(ptr), m_count(new RefCountBase<>{ m_storage }) {
         HARD_ASSERT(ptr, "Pointer passed to SharedPtr must not be null");
     }
     SharedPtr(T&& storage) {
         m_storage = new T{ move(storage) };
-        m_count   = new RefCountBase<T>{ m_storage };
+        m_count   = new RefCountBase<>{ m_storage };
+    }
+    template <DerivedFrom<T> U>
+    SharedPtr(U* ptr) : m_storage(ptr), m_count(new RefCountBase<>{ m_storage }) {
+        HARD_ASSERT(ptr, "Pointer passed to SharedPtr must not be null");
+    }
+    template <DerivedFrom<T> U>
+    SharedPtr(U&& storage) {
+        m_storage = new U{ move(storage) };
+        m_count   = new RefCountBase<>{ m_storage };
     }
     SharedPtr(const SharedPtr& other) {
+        m_storage = other.m_storage;
+        m_count   = other.m_count;
+        if (m_storage == nullptr && m_count == nullptr) return;
+        m_count->incref();
+    }
+    template <DerivedFrom<T> U>
+    SharedPtr(const SharedPtr<U>& other) {
         m_storage = other.m_storage;
         m_count   = other.m_count;
         if (m_storage == nullptr && m_count == nullptr) return;
@@ -56,9 +88,24 @@ class SharedPtr {
     template <typename... Args>
     SharedPtr(EmplaceT<T>, Args&&... args) {
         m_storage = new T{ Forward<Args>(args)... };
-        m_count   = new RefCountBase<T>{ m_storage };
+        m_count   = new RefCountBase<>{ m_storage };
+    }
+    template <DerivedFrom<T> U, typename... Args>
+    SharedPtr(EmplaceT<U>, Args&&... args) {
+        m_storage = new U{ Forward<Args>(args)... };
+        m_count   = new RefCountBase<>{ m_storage };
     }
     SharedPtr& operator=(const SharedPtr& other) {
+        if (this == &other) return *this;
+        reset();
+        m_storage = other.m_storage;
+        m_count   = other.m_count;
+        if (m_storage == nullptr || m_count == nullptr) return *this;
+        m_count->incref();
+        return *this;
+    }
+    template <DerivedFrom<T> U>
+    SharedPtr& operator=(const SharedPtr<U>& other) {
         if (this == &other) return *this;
         reset();
         m_storage = other.m_storage;
@@ -70,7 +117,7 @@ class SharedPtr {
     bool operator==(const SharedPtr& other) const { return m_storage == other.m_storage; }
     bool operator==(const T* other_ptr) const { return m_storage == other_ptr; }
     T* release() {
-        T* ptr = m_count->release_storage();
+        T* ptr = m_count->release_storage<T>();
         decrease_instance_count_();
         m_count   = nullptr;
         m_storage = nullptr;
@@ -89,6 +136,22 @@ class SharedPtr {
     WeakPtr<T> weakptr() const { return WeakPtr{ m_storage, m_count }; }
     T* get() { return m_storage; }
     const T* get() const { return m_storage; }
+    template <DerivedFrom<T> U>
+    U* get() {
+        return static_cast<U*>(m_storage);
+    }
+    template <DerivedFrom<T> U>
+    const U* get() const {
+        return static_cast<const T*>(m_storage);
+    }
+    template <DerivedFrom<T> U>
+    U& as() {
+        return *get<U>();
+    }
+    template <DerivedFrom<T> U>
+    const U& as() const {
+        return *get<U>();
+    }
     auto refcount() const { return m_count ? m_count->count() : 0ul; }
     bool exists() const { return m_storage != nullptr; }
     T* operator->() { return m_storage; }
@@ -97,21 +160,19 @@ class SharedPtr {
     const T& operator*() const { return *m_storage; }
     ~SharedPtr() { decrease_instance_count_(); }
 };
-
 template <typename T>
 SharedPtr<T> WeakPtr<T>::lock() {
     return SharedPtr{ *this };
 }
-
 template <typename T>
 class SharedPtr<T[]> {
-    using RefCount    = RefCountBase<T, true>;
+    using RefCount    = RefCountBase<true>;
     T* m_storage      = nullptr;
     RefCount* m_count = nullptr;
     size_t m_size     = 0ull;
     void decrease_instance_count_() {
         if (m_count == nullptr) return;
-        m_count->decref();
+        m_count->decref<T>();
         if (m_count->count() == 0) {
             delete m_count;
             m_count = nullptr;
@@ -154,7 +215,7 @@ class SharedPtr<T[]> {
     }
     bool operator==(const SharedPtr& other) const { return m_storage == other.m_storage; }
     T* release() {
-        T* ptr = m_count->release_storage();
+        T* ptr = m_count->release_storage<T>();
         decrease_instance_count_();
         m_count   = nullptr;
         m_storage = nullptr;

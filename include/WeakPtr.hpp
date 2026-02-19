@@ -12,32 +12,39 @@
     #define SYNC_DEC(x) __sync_sub_and_fetch(x, 1)
 #endif
 namespace ARLib {
-template <typename T, bool Multiple = false>
+template <bool Multiple = false>
 class RefCountBase {
     unsigned long m_counter   = 1;
     unsigned long m_weak_refs = 0;
-    T* m_object               = nullptr;
+    void* m_object               = nullptr;
+
+    template <typename T>
     void destroy() noexcept {
+        T* mem = static_cast<T*>(m_object);
         if constexpr (Multiple) {
-            delete[] m_object;
+            delete[] mem;
         } else {
-            delete m_object;
+            delete mem;
         }
     }
 
     public:
     constexpr RefCountBase() noexcept = default;
+    template <typename T>
     explicit RefCountBase(T* object) : m_object(object) {}
+    explicit RefCountBase(void* object) : m_object(object) {}
     RefCountBase(const RefCountBase&)            = delete;
     RefCountBase& operator=(const RefCountBase&) = delete;
     void incref() noexcept { SYNC_INC(cast<volatile long*>(&m_counter)); }
     void incweakref() noexcept { SYNC_INC(cast<volatile long*>(&m_weak_refs)); }
+    template <typename T>
     void decref() noexcept {
-        if (SYNC_DEC(cast<volatile long*>(&m_counter)) == 0) { destroy(); }
+        if (SYNC_DEC(cast<volatile long*>(&m_counter)) == 0) { destroy<T>(); }
     }
     void decweakref() noexcept { SYNC_DEC(cast<volatile long*>(&m_weak_refs)); }
+    template <typename T>
     T* release_storage() {
-        T* ptr   = m_object;
+        T* ptr   = static_cast<T>(m_object);
         m_object = nullptr;
         return ptr;
     }
@@ -50,9 +57,9 @@ class SharedPtr;
 template <typename T>
 class WeakPtr {
     T* m_storage             = nullptr;
-    RefCountBase<T>* m_count = nullptr;
+    RefCountBase<>* m_count = nullptr;
     friend SharedPtr<T>;
-    WeakPtr(T* storage_ptr, RefCountBase<T>* count) : m_storage(storage_ptr), m_count(count) { m_count->incweakref(); }
+    WeakPtr(T* storage_ptr, RefCountBase<>* count) : m_storage(storage_ptr), m_count(count) { m_count->incweakref(); }
     void decrease_instance_count_() {
         if (m_count == nullptr) return;
         m_count->decweakref();

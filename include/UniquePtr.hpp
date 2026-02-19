@@ -14,13 +14,26 @@ class UniquePtr {
     UniquePtr(const UniquePtr&) = delete;
     explicit UniquePtr(T* ptr) : m_storage(ptr) {}
     explicit UniquePtr(T&& storage) : m_storage(new T{ move(storage) }) {}
+    template <DerivedFrom<T> U>
+    explicit UniquePtr(U* ptr) : m_storage(ptr) {}
+    template <DerivedFrom<T> U>
+    explicit UniquePtr(U&& storage) : m_storage(new U{ move(storage) }) {}
     UniquePtr(UniquePtr&& ptr) noexcept {
+        reset();
+        m_storage = ptr.release();
+    }
+    template <DerivedFrom<T> U>
+    UniquePtr(UniquePtr<U>&& ptr) noexcept {
         reset();
         m_storage = ptr.release();
     }
     template <typename... Args>
     explicit UniquePtr(EmplaceT<T>, Args&&... args) {
         m_storage = new T{ Forward<Args>(args)... };
+    }
+    template <DerivedFrom<T> U, typename... Args>
+    explicit UniquePtr(EmplaceT<U>, Args&&... args) {
+        m_storage = new U{ Forward<Args>(args)... };
     }
     UniquePtr& operator=(UniquePtr&& other) noexcept {
         reset();
@@ -47,7 +60,22 @@ class UniquePtr {
     T& operator*() & { return *m_storage; }
     const T& operator*() const& { return *m_storage; }
     T&& operator*() && = delete;
-
+    template <DerivedFrom<T> U>
+    U* get() {
+        return static_cast<U*>(m_storage);
+    }
+    template <DerivedFrom<T> U>
+    const U* get() const {
+        return static_cast<const U*>(m_storage);
+    }
+    template <DerivedFrom<T> U>
+    U& as() {
+        return *get<U>();
+    }
+    template <DerivedFrom<T> U>
+    const U& get() const {
+        return *get<U>();
+    }
     // this is operator* which doesn't cause object slicing when moving outside of the UniquePtr
     template <DerivedFrom<T> U = T>
     U moved() && {
