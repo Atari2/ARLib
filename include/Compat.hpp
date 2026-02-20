@@ -2,9 +2,9 @@
 #include "std_includes.hpp"
 
 #ifdef COMPILER_MSVC    // MSVC
-    #define arlib_unreachable __assume(0);
-    #define arlib_forceinline __forceinline
-    #define arlib_noop        __noop
+    #define arlib_unreachable         __assume(0);
+    #define arlib_forceinline         __forceinline
+    #define arlib_noop                __noop
     #define arlib_no_sanitize_address __declspec(no_sanitize_address)
     #if _MSC_FULL_VER > 193431942
         #define compiler_intrinsic [[msvc::intrinsic]]
@@ -22,8 +22,8 @@
     #endif
 
 #elif defined(COMPILER_GCC)    // GCC
-    #define arlib_unreachable __builtin_unreachable();
-    #define arlib_forceinline __attribute__((always_inline))
+    #define arlib_unreachable         __builtin_unreachable();
+    #define arlib_forceinline         __attribute__((always_inline))
     #define arlib_noop                ((void)0)
     #define arlib_no_sanitize_address __attribute__((no_sanitize_address))
     #define compiler_intrinsic
@@ -38,9 +38,9 @@
     #endif
 
 #elif defined(COMPILER_CLANG)    // CLANG
-    #define arlib_unreachable __builtin_unreachable();
-    #define arlib_forceinline __attribute__((always_inline))
-    #define arlib_noop        ((void)0)
+    #define arlib_unreachable         __builtin_unreachable();
+    #define arlib_forceinline         __attribute__((always_inline))
+    #define arlib_noop                ((void)0)
     #define arlib_no_sanitize_address __attribute__((no_sanitize_address))
     #define compiler_intrinsic
     #if __x86_64__ || __ppc64__
@@ -87,9 +87,9 @@ static_assert(sizeof(void*) == 8 && sizeof(unsigned long long) == 8);
 static_assert(sizeof(char) == 1);
 
 #ifdef COMPILER_MSVC
-    #define HAS_BUILTIN(builtin) 0
+    #define HAS_BUILTIN(builtin)    0
     #define ARLIB_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
 #else
-    #define HAS_BUILTIN(builtin) __has_builtin(builtin)
+    #define HAS_BUILTIN(builtin)    __has_builtin(builtin)
     #define ARLIB_NO_UNIQUE_ADDRESS [[no_unique_address]]
 #endif

@@ -41,6 +41,18 @@ struct SetupLocale {
     }
 };
 static const SetupLocale __localeSet{};
+String get_env(StringView name) {
+    return String{ ::getenv(name.data()) };
+}
+bool set_env(StringView name, StringView value) {
+    return ::setenv(name.data(), value.data(), 1) == 0;
+}
+bool has_env(StringView name) {
+    return ::getenv(name.data()) != nullptr;
+}
+bool unset_env(StringView name) {
+    return ::unsetenv(name.data()) == 0;
+}
 void print_last_error() {
     auto error = *__errno_location();
     if (error != 0) { puts(strerror(error)); }

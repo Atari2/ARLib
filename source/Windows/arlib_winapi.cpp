@@ -20,6 +20,25 @@ void print_last_error() {
         LocalFree(buffer);
     }
 }
+String get_env(StringView name) {
+    DWORD bufSize = GetEnvironmentVariableA(name.data(), NULL, 0);
+    if (bufSize == 0) { return String{}; }
+    String buffer{};
+    buffer.resize(bufSize);
+    GetEnvironmentVariableA(name.data(), buffer.rawptr(), bufSize);
+    return buffer;
+}
+bool set_env(StringView name, StringView value) {
+    return SetEnvironmentVariableA(name.data(), value.data());
+}
+bool has_env(StringView name) {
+    DWORD bufSize = GetEnvironmentVariableA(name.data(), NULL, 0);
+    if (bufSize == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND) return false;
+    return true;
+}
+bool unset_env(StringView name) {
+    return SetEnvironmentVariableA(name.data(), NULL);
+}
 String last_error() {
     auto last_error = GetLastError();
     if (last_error != 0) {

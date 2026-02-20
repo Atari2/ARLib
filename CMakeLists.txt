@@ -189,6 +189,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${ARLIB_SOURCE_DIR}/HashBase.cpp
     ${ARLIB_SOURCE_DIR}/JSONObject.cpp
     ${ARLIB_SOURCE_DIR}/JSONParser.cpp
+    ${ARLIB_SOURCE_DIR}/Logger.cpp
     ${ARLIB_SOURCE_DIR}/Matrix.cpp
     ${ARLIB_SOURCE_DIR}/Ordering.cpp
 	${ARLIB_SOURCE_DIR}/Path.cpp
@@ -264,6 +265,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/JSONParser.hpp
     ${ARLIB_INCLUDE_DIR}/LinkedSet.hpp
     ${ARLIB_INCLUDE_DIR}/List.hpp
+    ${ARLIB_INCLUDE_DIR}/Logger.hpp
     ${ARLIB_INCLUDE_DIR}/Macros.hpp
     ${ARLIB_INCLUDE_DIR}/Map.hpp
     ${ARLIB_INCLUDE_DIR}/MaybeOwned.hpp

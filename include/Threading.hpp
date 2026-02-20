@@ -42,8 +42,7 @@ class Mutex : private detail::MutexBase {
     bool operator!=(const Mutex& other) const { return native_handle() != other.native_handle(); }
     Ordering operator<=>(const Mutex& other) const { return CompareThreeWay(native_handle(), other.native_handle()); }
     void lock() {
-        bool e = MutexNative::lock(m_mutex);
-        if (!e) arlib_terminate();
+        HARD_ASSERT(MutexNative::lock(m_mutex), "Failed to lock mutex");
     }
     bool try_lock() noexcept { return MutexNative::trylock(m_mutex); }
     void unlock() { MutexNative::unlock(m_mutex); }
@@ -678,14 +677,20 @@ struct PrintInfo<Mutex> {
     const Mutex& m_mutex;
     using PtrT = decltype(m_mutex.native_handle());
     explicit PrintInfo(const Mutex& mutex) : m_mutex(mutex) {}
-    String repr() const { return "Mutex { "_s + PrintInfo<PtrT>{ m_mutex.native_handle() }.repr() + " }"_s; }
+    String repr() const {
+        return "Mutex{ native_handle: 0x"_s +
+               IntToStr<SupportedBase::Hexadecimal>(BitCast<uintptr_t>(m_mutex.native_handle())) + " }"_s + " }"_s;
+    }
 };
 template <>
 struct PrintInfo<RecursiveMutex> {
     const RecursiveMutex& m_mutex;
     using PtrT = decltype(m_mutex.native_handle());
     explicit PrintInfo(const RecursiveMutex& mutex) : m_mutex(mutex) {}
-    String repr() const { return "RecursiveMutex { "_s + PrintInfo<PtrT>{ m_mutex.native_handle() }.repr() + " }"_s; }
+    String repr() const {
+        return "RecursiveMutex { "_s +
+               IntToStr<SupportedBase::Hexadecimal>(BitCast<uintptr_t>(m_mutex.native_handle())) + " }"_s;
+    }
 };
 template <Printable M>
 struct PrintInfo<LockGuard<M>> {
@@ -697,7 +702,7 @@ template <Printable M>
 struct PrintInfo<UniqueLock<M>> {
     const UniqueLock<M>& m_lock;
     explicit PrintInfo(const UniqueLock<M>& lock) : m_lock(lock) {}
-    String repr() const { return "UniqueLock { "_s + PrintInfo<M>{ *m_lock.mutex() }.repr() + " }"_s; }
+    String repr() const { return "UniqueLock { "_s + PrintInfo<M>{ *m_lock.mutex() }.repr() + ", locked: " + BoolToStr(m_lock.owns_lock()) + " }"_s; }
 };
 template <Printable... Args>
 struct PrintInfo<ScopedLock<Args...>> {
