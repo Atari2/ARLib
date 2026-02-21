@@ -300,11 +300,11 @@ ThreadState __cdecl cond_timedwait(CondHandle condition, MutexHandle mutex, cons
     return res;
 }
 ThreadState __cdecl cond_broadcast(CondHandle condition) {
-    condition->_get_cv()->notify_one();
+    condition->_get_cv()->notify_all();
     return ThreadState::Success;
 }
 ThreadState __cdecl cond_signal(CondHandle condition) {
-    condition->_get_cv()->notify_all();
+    condition->_get_cv()->notify_one();
     return ThreadState::Success;
 }
 void __cdecl cond_do_broadcast_at_thread_exit() {

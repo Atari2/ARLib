@@ -112,12 +112,15 @@ void Date::fill_date(const Instant& inst, Date& d) {
     time.dwHighDateTime = (filetime >> (sizeof(DWORD) * CHAR_BIT)) & MAXDWORD;
     if (d.has_timezone()) {
         FILETIME ltime{};
-        FileTimeToLocalFileTime(&time, &ltime);
+        BOOL success = FileTimeToLocalFileTime(&time, &ltime);
+        HARD_ASSERT(success, "Failed to convert file time to local file time");
         auto utcdiff                = filetime_diff_in_ms(time, ltime) / 3'600'000;
         d.m_tz_info.m_diff_from_utc = static_cast<int8_t>(utcdiff);
-        FileTimeToSystemTime(&ltime, &stime);
+        success = FileTimeToSystemTime(&ltime, &stime);
+        HARD_ASSERT(success, "Failed to convert local file time to system time");
     } else {
-        FileTimeToSystemTime(&time, &stime);
+        BOOL success = FileTimeToSystemTime(&time, &stime);
+        HARD_ASSERT(success, "Failed to convert file time to system time");
     }
     d.m_day             = static_cast<uint8_t>(stime.wDay);
     d.m_dayofweek       = static_cast<uint8_t>(stime.wDayOfWeek);
@@ -141,10 +144,13 @@ Instant Date::date_to_instant(const Date& d) {
     stime.wMilliseconds = static_cast<WORD>(d.m_extra_precision.millis().value);
     if (d.has_timezone()) {
         FILETIME ltime{};
-        SystemTimeToFileTime(&stime, &ltime);
-        LocalFileTimeToFileTime(&ltime, &time);
+        BOOL success = SystemTimeToFileTime(&stime, &ltime);
+        HARD_ASSERT(success, "Failed to convert system time to file time");
+        success = LocalFileTimeToFileTime(&ltime, &time);
+        HARD_ASSERT(success, "Failed to convert local file time to file time");
     } else {
-        SystemTimeToFileTime(&stime, &time);
+        BOOL success = SystemTimeToFileTime(&stime, &time);
+        HARD_ASSERT(success, "Failed to convert system time to file time");
     }
     // 100-nanoseconds ticks
     int64_t raw_value = static_cast<int64_t>(time.dwLowDateTime) | (static_cast<int64_t>(time.dwHighDateTime) << 32);
@@ -155,7 +161,7 @@ String Date::date_to_string(const Date& d, Date::Format fmt) {
     char buf[256];
     if (fmt == Format::YYYYDDMMhhmmss && d.has_timezone()) {
         int ret = ARLib::sprintf(
-        buf, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhuUTC%+03hhd", d.m_year, d.m_month, d.m_day, d.m_hour, d.m_minute,
+        buf, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu UTC%+03hhd", d.m_year, d.m_month, d.m_day, d.m_hour, d.m_minute,
         d.m_second, d.m_tz_info.m_diff_from_utc
         );
         buf[ret] = '\0';
@@ -164,8 +170,16 @@ String Date::date_to_string(const Date& d, Date::Format fmt) {
         buf, "%04hu-%02hhu-%02hhu %02hhu:%02hhu:%02hhu", d.m_year, d.m_month, d.m_day, d.m_hour, d.m_minute, d.m_second
         );
         buf[ret] = '\0';
-    } else /* Format::WithEnglishNames */ {
+    } else if (fmt == Format::WithEnglishNames && d.has_timezone()) {
         // Tuesday, May 2 2023, 16:13:40
+        StringView weekday = d.dayname();
+        StringView monthn  = d.monthname();
+        int ret = ARLib::sprintf(
+        buf, "%s, %s %02hhu %04hu, %02hhu:%02hhu:%02hhu UTC%+03hhd", weekday.data(), monthn.data(), d.m_day, d.m_year,
+        d.m_hour, d.m_minute, d.m_second, d.m_tz_info.m_diff_from_utc
+        );
+        buf[ret] = '\0';
+    } else /* if (fmt == Format::WithEnglishNames) */ {
         StringView weekday = d.dayname();
         StringView monthn  = d.monthname();
         int ret            = ARLib::sprintf(

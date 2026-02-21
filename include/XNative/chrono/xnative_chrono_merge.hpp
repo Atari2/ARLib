@@ -75,7 +75,6 @@ namespace internal {
         { { TimeConversionAction::Mul, 1'000'000'000 }, { TimeConversionAction::Mul, 1'000'000 }, { TimeConversionAction::Mul, 1'000 },     { TimeConversionAction::Non, 1 }            }
     };
     // clang-format on
-
     template <TimeUnitType To, TimeUnitType From>
     constexpr To convert_time_unit(From unit) {
         using TimeArray      = TypeArray<Seconds, Millis, Micros, Nanos>;
@@ -203,7 +202,9 @@ constexpr Nanos operator""_ns(unsigned long long value) {
     template <>                                                                                                        \
     struct PrintInfo<UnitType> {                                                                                       \
         const UnitType& m_unit;                                                                                        \
-        String repr() const { return IntToStr(m_unit.value) + " " ext; }                                               \
+        String repr() const {                                                                                          \
+            return IntToStr(m_unit.value) + " " ext;                                                                   \
+        }                                                                                                              \
     }
 PRINT_IMPL_FOR_TIME(Seconds, "s");
 PRINT_IMPL_FOR_TIME(Millis, "ms");
@@ -345,6 +346,17 @@ struct PrintInfo<Date> {
     const Date& m_date;
     PrintInfo(const Date& date) : m_date(date) {}
     String repr() const { return m_date.to_string(); }
+    String repr(const String& format) const {
+        if (format.size() != 1) return m_date.to_string();    // fallback
+        switch (format.front()) {
+            case 'e':
+                return m_date.to_string(Date::Format::WithEnglishNames);
+            case 'y':
+                return m_date.to_string(Date::Format::YYYYDDMMhhmmss);
+            default:
+                return m_date.to_string();
+        }
+    }
 };
 template <>
 struct PrintInfo<CommonTime> {

@@ -26,7 +26,6 @@ class Vector {
     using ConstReverseIter = ConstReverseIterator<T>;
 
     T* m_storage        = nullptr;
-    T* m_end_of_storage = nullptr;
     size_t m_capacity   = 0;
     size_t m_size       = 0;
     void append_internal_single_(T&& value)
@@ -47,7 +46,6 @@ class Vector {
         for (size_t i = 0; i < m_size; ++i) { m_storage[i].~T(); }
         deallocate<T, DeallocType::Multiple>(m_storage);
         m_storage        = nullptr;
-        m_end_of_storage = nullptr;
         m_size           = 0;
         m_capacity       = 0;
     }
@@ -72,7 +70,6 @@ class Vector {
         }
         deallocate<T, DeallocType::Multiple>(m_storage);
         m_storage        = new_storage;
-        m_end_of_storage = m_storage + m_capacity;
     }
     constexpr arlib_forceinline bool assert_size_(size_t index) const { return index < m_size; }
 
@@ -83,7 +80,7 @@ class Vector {
         for (const auto& elem : ilist) { append(elem); }
     }
     Vector(T*& storage_ptr, size_t size) :
-        m_storage(storage_ptr), m_end_of_storage(storage_ptr + size), m_capacity(size), m_size(size) {
+        m_storage(storage_ptr), m_capacity(size), m_size(size) {
         storage_ptr = nullptr;
     }
     template <IteratorConcept Iter>
@@ -94,11 +91,9 @@ class Vector {
     }
     Vector(Vector&& other) noexcept {
         m_storage              = other.m_storage;
-        m_end_of_storage       = other.m_end_of_storage;
         m_capacity             = other.m_capacity;
         m_size                 = other.m_size;
         other.m_storage        = nullptr;
-        other.m_end_of_storage = nullptr;
         other.m_size           = 0;
         other.m_capacity       = 0;
     }
@@ -125,11 +120,9 @@ class Vector {
     Vector& operator=(Vector&& other) noexcept {
         deallocate<T, DeallocType::Multiple>(m_storage);
         m_storage              = other.m_storage;
-        m_end_of_storage       = other.m_end_of_storage;
         m_capacity             = other.m_capacity;
         m_size                 = other.m_size;
         other.m_storage        = nullptr;
-        other.m_end_of_storage = nullptr;
         other.m_size           = 0;
         other.m_capacity       = 0;
         return *this;

@@ -42,7 +42,9 @@ class Mutex : private detail::MutexBase {
     bool operator!=(const Mutex& other) const { return native_handle() != other.native_handle(); }
     Ordering operator<=>(const Mutex& other) const { return CompareThreeWay(native_handle(), other.native_handle()); }
     void lock() {
-        HARD_ASSERT(MutexNative::lock(m_mutex), "Failed to lock mutex");
+        bool lock_success = MutexNative::lock(m_mutex);
+        HARD_ASSERT(lock_success, "Failed to lock mutex");
+        if (!lock_success) arlib_terminate();
     }
     bool try_lock() noexcept { return MutexNative::trylock(m_mutex); }
     void unlock() { MutexNative::unlock(m_mutex); }
@@ -274,7 +276,9 @@ class ConditionVariable {
     void notify_one() { ConditionVariableNative::notify_one(m_cv); }
     void notify_all() { ConditionVariableNative::notify_all(m_cv); }
     void wait(UniqueLock<Mutex>& lock) { ConditionVariableNative::wait(m_cv, &lock); }
-    CVStatus wait_for(UniqueLock<Mutex>& lock, Duration ns) { return ConditionVariableNative::wait_for(m_cv, &lock, ns); }
+    CVStatus wait_for(UniqueLock<Mutex>& lock, Duration ns) {
+        return ConditionVariableNative::wait_for(m_cv, &lock, ns);
+    }
     CVStatus wait_until(UniqueLock<Mutex>& lock, Instant ns) {
         return ConditionVariableNative::wait_until(m_cv, &lock, ns);
     }
@@ -702,7 +706,10 @@ template <Printable M>
 struct PrintInfo<UniqueLock<M>> {
     const UniqueLock<M>& m_lock;
     explicit PrintInfo(const UniqueLock<M>& lock) : m_lock(lock) {}
-    String repr() const { return "UniqueLock { "_s + PrintInfo<M>{ *m_lock.mutex() }.repr() + ", locked: " + BoolToStr(m_lock.owns_lock()) + " }"_s; }
+    String repr() const {
+        return "UniqueLock { "_s + PrintInfo<M>{ *m_lock.mutex() }.repr() +
+               ", locked: " + BoolToStr(m_lock.owns_lock()) + " }"_s;
+    }
 };
 template <Printable... Args>
 struct PrintInfo<ScopedLock<Args...>> {
