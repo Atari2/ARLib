@@ -1,43 +1,40 @@
 #include "Logger.hpp"
 namespace ARLib {
+void ARLib::LoggingBackendTs::log(LogLevel level, StringView message) {
+    ScopedLock lock{ m_mutex };
+    this->_log_ts(level, message);
+}
+void ConsoleLoggerTs::_log_ts(LogLevel level, StringView message) {
+    if (!should_log(level)) return;
+    Printer::print("{}", message);
+}
+void ARLib::ConsoleLogger::log(LogLevel level, StringView message) {
+    if (!should_log(level)) return;
+    Printer::print("{}", message);
+}
 void Logger::LoggingStorage::add_backend(const String& name, SharedPtr<LoggingBackend> backend) {
-    ScopedLock lock(m_mutex);
-    m_store.insert(name, move(backend));
+    m_store.with_lock([&name, backend = move(backend)](LoggingStore& map) { 
+        map.insert(name, move(backend));
+    });
 }
 void Logger::LoggingStorage::remove_backend(const String& name) {
-    ScopedLock lock(m_mutex);
-    m_store.remove(name);
+    m_store.with_lock([&name](LoggingStore& map) { 
+        map.remove(name); 
+    });
 }
 Logger::LoggingStorage::ResultType Logger::LoggingStorage::get(StringView name) {
-    if (auto it = m_store.find(name); it != m_store.end()) {
+    auto store = m_store.lock();
+    if (auto it = store->find(name); it != store->end()) {
         return (*it).val();
     } else {
         return LoggerStorageError::NotFound;
     }
 }
-Logger::LoggingStorage::ResultTypeTs Logger::LoggingStorage::get_ts(StringView name) {
-    UniqueLock lock{ m_mutex };
-    if (auto it = m_store.find(name); it != m_store.end()) {
-        auto backend = (*it).val();
-        return Pair{ move(backend), move(lock) };
-    } else {
-        return LoggerStorageError::NotFound;
-    }
+Logger::LoggingStorage::ResultType Logger::get_named_logger(StringView name) {
+    return store().get(name);
 }
-void Logger::LoggingStorage::free(ResultTypeTs locked_backend) {
-    if (locked_backend.is_error()) {
-        locked_backend.ignore_error();
-    }
-
-}
-void Logger::LoggingStorage::free(Pair<SharedPtr<LoggingBackend>, UniqueLock<Mutex>> locked_backend) {
-    // the destructor will do the work.
-}
-void Logger::register_default_logger(SharedPtr<LoggingBackend> backend) {
-    store().add_backend("default"_s, move(backend));
-}
-void Logger::register_named_logger(String name, SharedPtr<LoggingBackend> backend) {
-    store().add_backend(name, move(backend));
+Logger::LoggingStorage::ResultType Logger::get_default_logger() {
+    return store().get("default"_sv);
 }
 
 }    // namespace ARLib

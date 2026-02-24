@@ -73,8 +73,17 @@ class FlatMap {
     auto find(O&& value) const {
         return m_table.template find<O, OHashCls>(Forward<O>(value));
     }
+    auto find(const Key& value) { return m_table.find(value); }
+    // support heterogeneous lookup
+    template <typename O, typename OHashCls = Hash<RemoveCvRefT<O>>>
+    requires(EqualityComparableWith<O, Key> && Hashable<O, OHashCls>)
+    auto find(O&& value) {
+        return m_table.template find<O, OHashCls>(Forward<O>(value));
+    }
     auto begin() const { return m_table.begin(); }
     auto end() const { return m_table.end(); }
+    auto begin() { return m_table.begin(); }
+    auto end() { return m_table.end(); }
     auto iter() { return IteratorView{ *this }; }
     auto iter() const { return IteratorView{ *this }; }
     bool contains(const Key& value) const { return find(value) != end(); }
@@ -89,7 +98,7 @@ class FlatMap {
             // we overwrite the old value with the new one
             // note 1: reusing `entry` here is valid because since it wasn't inserted, it has not been moved from.
             // note 2: const_cast is valid (and required) because we're allowed to touch the value, and the original object is not const
-            const_cast<Entry&>(v).val() = entry.val(); 
+            const_cast<Entry&>(v).val() = entry.val();
         }
         return Pair<bool, const Entry&>{ ins, v };
     }
@@ -97,13 +106,13 @@ class FlatMap {
     template <typename... Args>
     requires Constructible<Entry, Args...>
     auto insert(Args&&... args) {
-        return m_table.insert(Entry{ Forward<Args>(args)... });
+        return insert(Entry{ Forward<Args>(args)... });
     }
     Val& get_or_default(const Key& key)
     requires DefaultConstructible<Val>
     {
         auto entry                  = Entry{ Key{ key }, Val{} };
-        auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
+        auto&& [is_not_present, it] = m_table.prepare_for_insert(entry);
         if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
         return const_cast<Val&>((*it).val());
     }
@@ -113,13 +122,13 @@ class FlatMap {
     requires DefaultConstructible<Val>
     {
         auto entry                  = Entry{ Key{ key }, Val{} };
-        auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
+        auto&& [is_not_present, it] = m_table.prepare_for_insert(entry);
         if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
         return const_cast<Val&>((*it).val());
     }
     Val& get_or_insert(const Key& key, Val&& val) {
         auto entry                  = Entry{ Key{ key }, Forward<Val>(val) };
-        auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
+        auto&& [is_not_present, it] = m_table.prepare_for_insert(entry);
         if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
         return const_cast<Val&>((*it).val());
     }
@@ -127,7 +136,7 @@ class FlatMap {
     requires(EqualityComparableWith<O, Key> && Hashable<O, OHashCls> && !SameAsCvRef<O, Key> && Constructible<Key, O>)
     Val& get_or_insert(O&& key, Val&& val) {
         auto entry                  = Entry{ Key{ key }, Forward<Val>(val) };
-        auto&& [is_not_present, it] = m_table.__hashmap_private_prepare_for_insert(entry);
+        auto&& [is_not_present, it] = m_table.prepare_for_insert(entry);
         if (is_not_present) { return m_table.__hashmap_private_insert(it, move(entry)).val(); }
         return const_cast<Val&>((*it).val());
     }

@@ -94,7 +94,11 @@ static Pair<DWORD, DWORD> ModeToAccessFlags(const char* mode) {
                 creat = CREATE_NEW;
                 break;
             case '+':
-                desiredAccess |= (GENERIC_WRITE | GENERIC_READ);
+                if (desiredAccess & FILE_APPEND_DATA) {
+                    desiredAccess |= GENERIC_READ;
+                } else {
+                    desiredAccess |= (GENERIC_WRITE | GENERIC_READ);
+                }
                 break;
             default:
                 break;
@@ -169,7 +173,7 @@ bool Win32DeleteFileW(const wchar_t* filename) {
     return DeleteFile(filename);
 }
 bool Win32RenameFileW(const wchar_t* filename_old, const wchar_t* filename_new) {
-    return MoveFile(filename_old, filename_old);
+    return MoveFile(filename_old, filename_new);
 }
 int Win32SeekFile(FILE* fp, int off, int whence) {
     auto mapWhence = [](int w) -> DWORD {

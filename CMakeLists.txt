@@ -252,6 +252,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/FixedMatrix.hpp
     ${ARLIB_INCLUDE_DIR}/FlatMap.hpp
     ${ARLIB_INCLUDE_DIR}/FlatSet.hpp
+    ${ARLIB_INCLUDE_DIR}/FormatString.hpp
     ${ARLIB_INCLUDE_DIR}/Functional.hpp
     ${ARLIB_INCLUDE_DIR}/Graph.hpp
     ${ARLIB_INCLUDE_DIR}/Hash.hpp

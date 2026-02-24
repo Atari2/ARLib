@@ -90,7 +90,9 @@ class File {
         }
     }
     WriteResult write(StringView str) {
-        if (m_mode != OpenFileMode::Write && m_mode != OpenFileMode::Append) {
+        bool is_writable = (m_mode & OpenFileMode::Write) != OpenFileMode::None;
+        bool is_append   = (m_mode & OpenFileMode::Append) != OpenFileMode::None;
+        if (!is_writable && !is_append) {
             return FileError{ "Can't write to a file opened in read-only mode"_s, m_filename };
         }
         auto len = ARLib::fwrite(str.data(), sizeof(char), str.size(), m_ptr);

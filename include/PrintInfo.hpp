@@ -146,6 +146,26 @@ struct PrintInfo<char[N]> {
         }
     }
 };
+template <size_t N>
+struct PrintInfo<const char (&)[N]> {
+    const char (&m_str)[N];
+    explicit PrintInfo(const char (&str)[N]) : m_str(str) {}
+    String repr() const { return String{ m_str }; }
+    String repr(const String& format) {
+        auto v = String{ m_str };
+        if (format.size() != 1) return v;
+        switch (format[0]) {
+            case 'U':
+            case 'u':
+                return v.upper();
+            case 'L':
+            case 'l':
+                return v.lower();
+            default:
+                return v;
+        }
+    }
+};
 template <Printable T, size_t N, size_t M>
 requires(!IsArrayV<T>)
 struct PrintInfo<T[N][M]> {

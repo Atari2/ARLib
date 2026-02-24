@@ -54,15 +54,35 @@ requires Hashable<T, HashCls>
 class FlatSet;
 template <typename T, typename HashCls, typename KeyComparer>
 requires Hashable<T, HashCls>
-class FlatSetIterator {
+class ConstFlatSetIterator {
     friend FlatSet<T, HashCls, KeyComparer>;
     const FlatSet<T, HashCls, KeyComparer>* m_set;
     size_t m_current_bucket = 0;
     BitMask<uint32_t> m_current_item{ 0 };
     public:
-    FlatSetIterator(const FlatSet<T, HashCls, KeyComparer>* set, size_t bucket, BitMask<uint32_t> item) :
+    ConstFlatSetIterator(const FlatSet<T, HashCls, KeyComparer>* set, size_t bucket, BitMask<uint32_t> item) :
         m_set{ set }, m_current_bucket{ bucket }, m_current_item{ item } {}
     const T& operator*() const;
+    bool operator==(const ConstFlatSetIterator& other) const {
+        return m_set == other.m_set && m_current_bucket == other.m_current_bucket &&
+               m_current_item == other.m_current_item;
+    }
+    size_t size() const { return m_set->size(); }
+    ConstFlatSetIterator operator++(int);
+    ConstFlatSetIterator& operator++();
+};
+template <typename T, typename HashCls, typename KeyComparer>
+requires Hashable<T, HashCls>
+class FlatSetIterator {
+    friend FlatSet<T, HashCls, KeyComparer>;
+    FlatSet<T, HashCls, KeyComparer>* m_set;
+    size_t m_current_bucket = 0;
+    BitMask<uint32_t> m_current_item{ 0 };
+    public:
+    FlatSetIterator(FlatSet<T, HashCls, KeyComparer>* set, size_t bucket, BitMask<uint32_t> item) :
+        m_set{ set }, m_current_bucket{ bucket }, m_current_item{ item } {}
+    const T& operator*() const;
+    T& operator*();
     bool operator==(const FlatSetIterator& other) const {
         return m_set == other.m_set && m_current_bucket == other.m_current_bucket &&
                m_current_item == other.m_current_item;
@@ -222,7 +242,14 @@ concept FlatSetItemCanBeCompared = requires(const Comparer& cmp, const Key& t, c
 template <typename T, typename HashCls = Hash<T>, typename KeyComparer = DefaultKeyComparer<T>>
 requires Hashable<T, HashCls>
 class FlatSet {
+    // friend-ing hashmap so it can call
+    // prepare_for_insert and __hashmap_private_insert
+    template <typename Key, typename Val, typename _MapHashCls>
+    requires Hashable<Key, _MapHashCls>
+    friend class FlatMap;
+
     friend FlatSetIterator<T, HashCls, KeyComparer>;
+    friend ConstFlatSetIterator<T, HashCls, KeyComparer>;
     using Control                                    = internal::Control;
     using MetadataBlock                              = internal::MetadataBlock;
     constexpr static inline size_t bucket_size       = internal::flatset_bucket_size;
@@ -283,6 +310,10 @@ class FlatSet {
             group = (group + 1) % num_groups;
         }
     }
+    T& __hashmap_private_insert(FlatSetIterator<T, HashCls, KeyComparer> it, T&& value) {
+        auto& val = m_buckets[it.m_current_bucket].m_bucket.initialize_at(*it.m_current_item, Forward<T>(value));
+        return val;
+    }
     template <typename O>
     constexpr static bool CanBeCompared = FlatSetItemCanBeCompared<KeyComparer, T, O>;
 
@@ -310,7 +341,7 @@ class FlatSet {
         m_buckets.resize(base_buckets);
         m_size = 0;
     }
-    auto find(const T& value) const {
+    auto find(const T& value) {
         const size_t num_groups = m_buckets.size();
         const size_t hash       = m_hasher(value);
         size_t group            = h1(hash) % num_groups;
@@ -321,6 +352,43 @@ class FlatSet {
                 auto bit = *it;
                 if (m_cmp(value, b.m_bucket.at(bit))) {
                     return FlatSetIterator<T, HashCls, KeyComparer>{ this, group, it };
+                }
+            }
+            if (internal::match_empty(b.m_ctrl_block)) return end();
+            group = (group + 1) % num_groups;
+        }
+    }
+    template <typename O, typename OHashCls = Hash<O>>
+    requires(Hashable<O, OHashCls> && (EqualityComparableWith<O, T> || CanBeCompared<O>))
+    auto find(const O& value) {
+        const auto hasher       = OHashCls{};
+        const size_t num_groups = m_buckets.size();
+        const size_t hash       = hasher(value);
+        size_t group            = h1(hash) % num_groups;
+        while (true) {
+            const Bucket& b = m_buckets[group];
+            const auto mask = internal::match(h2(hash), b.m_ctrl_block);
+            for (auto it = mask.begin(); it != mask.end(); ++it) {
+                auto bit = *it;
+                if (m_cmp(value, b.m_bucket.at(bit))) {
+                    return FlatSetIterator<T, HashCls, KeyComparer>{ this, group, it };
+                }
+            }
+            if (internal::match_empty(b.m_ctrl_block)) return end();
+            group = (group + 1) % num_groups;
+        }
+    }
+    auto find(const T& value) const {
+        const size_t num_groups = m_buckets.size();
+        const size_t hash       = m_hasher(value);
+        size_t group            = h1(hash) % num_groups;
+        while (true) {
+            const Bucket& b = m_buckets[group];
+            const auto mask = internal::match(h2(hash), b.m_ctrl_block);
+            for (auto it = mask.begin(); it != mask.end(); ++it) {
+                auto bit = *it;
+                if (m_cmp(value, b.m_bucket.at(bit))) {
+                    return ConstFlatSetIterator<T, HashCls, KeyComparer>{ this, group, it };
                 }
             }
             if (internal::match_empty(b.m_ctrl_block)) return end();
@@ -340,21 +408,31 @@ class FlatSet {
             for (auto it = mask.begin(); it != mask.end(); ++it) {
                 auto bit = *it;
                 if (m_cmp(value, b.m_bucket.at(bit))) {
-                    return FlatSetIterator<T, HashCls, KeyComparer>{ this, group, it };
+                    return ConstFlatSetIterator<T, HashCls, KeyComparer>{ this, group, it };
                 }
             }
             if (internal::match_empty(b.m_ctrl_block)) return end();
             group = (group + 1) % num_groups;
         }
     }
-    auto begin() const {
+    auto begin() {
         for (size_t i = 0; i < m_buckets.size(); ++i) {
             auto mask = internal::match_non_empty(m_buckets[i].m_ctrl_block);
             if (mask != BitMask{ 0_u32 }) { return FlatSetIterator<T, HashCls, KeyComparer>{ this, i, mask }; }
         }
         return end();
     }
-    auto end() const { return FlatSetIterator<T, HashCls, KeyComparer>{ this, m_buckets.size(), BitMask{ 0_u32 } }; }
+    auto end() { return FlatSetIterator<T, HashCls, KeyComparer>{ this, m_buckets.size(), BitMask{ 0_u32 } }; }
+    auto begin() const {
+        for (size_t i = 0; i < m_buckets.size(); ++i) {
+            auto mask = internal::match_non_empty(m_buckets[i].m_ctrl_block);
+            if (mask != BitMask{ 0_u32 }) { return ConstFlatSetIterator<T, HashCls, KeyComparer>{ this, i, mask }; }
+        }
+        return end();
+    }
+    auto end() const {
+        return ConstFlatSetIterator<T, HashCls, KeyComparer>{ this, m_buckets.size(), BitMask{ 0_u32 } };
+    }
     auto iter() { return IteratorView{ *this }; }
     auto iter() const { return IteratorView{ *this }; }
     bool contains(const T& value) const { return find(value) != end(); }
@@ -399,11 +477,6 @@ class FlatSet {
             group = (group + 1) % num_groups;
         }
     }
-    auto __hashmap_private_prepare_for_insert(const T& value) { return prepare_for_insert(value); }
-    T& __hashmap_private_insert(FlatSetIterator<T, HashCls, KeyComparer> it, T&& value) {
-        auto& val = m_buckets[it.m_current_bucket].m_bucket.initialize_at(*it.m_current_item, Forward<T>(value));
-        return val;
-    }
     Pair<bool, const T&> insert(T&& value) {
         auto&& [ins, it] = prepare_for_insert(value);
         if (!ins) return { false, *it };
@@ -416,6 +489,13 @@ requires Hashable<T, HashCls>
 const T& FlatSetIterator<T, HashCls, KeyComparer>::operator*() const {
     return m_set->m_buckets[m_current_bucket].m_bucket.at(*m_current_item);
 }
+template <typename T, typename HashCls, typename KeyComparer>
+requires Hashable<T, HashCls>
+T& FlatSetIterator<T, HashCls, KeyComparer>::operator*() {
+    return m_set->m_buckets[m_current_bucket].m_bucket.at(*m_current_item); 
+}
+
+
 template <typename T, typename HashCls, typename KeyComparer>
 requires Hashable<T, HashCls>
 FlatSetIterator<T, HashCls, KeyComparer>& FlatSetIterator<T, HashCls, KeyComparer>::operator++() {
@@ -433,6 +513,31 @@ template <typename T, typename HashCls, typename KeyComparer>
 requires Hashable<T, HashCls>
 FlatSetIterator<T, HashCls, KeyComparer> FlatSetIterator<T, HashCls, KeyComparer>::operator++(int) {
     FlatSetIterator copy{ *this };
+    this->operator++();
+    return copy;
+}
+template <typename T, typename HashCls, typename KeyComparer>
+requires Hashable<T, HashCls>
+const T& ConstFlatSetIterator<T, HashCls, KeyComparer>::operator*() const {
+    return m_set->m_buckets[m_current_bucket].m_bucket.at(*m_current_item);
+}
+template <typename T, typename HashCls, typename KeyComparer>
+requires Hashable<T, HashCls>
+ConstFlatSetIterator<T, HashCls, KeyComparer>& ConstFlatSetIterator<T, HashCls, KeyComparer>::operator++() {
+    auto end = BitMask{ 0_u32 };
+    ++m_current_item;
+    while (m_current_item == end) {
+        ++m_current_bucket;
+        if (m_current_bucket == m_set->m_buckets.size()) return *this;    // we're at end
+        // reset item mask
+        m_current_item = internal::match_non_empty(m_set->m_buckets[m_current_bucket].m_ctrl_block);
+    }
+    return *this;
+}
+template <typename T, typename HashCls, typename KeyComparer>
+requires Hashable<T, HashCls>
+ConstFlatSetIterator<T, HashCls, KeyComparer> ConstFlatSetIterator<T, HashCls, KeyComparer>::operator++(int) {
+    ConstFlatSetIterator copy{ *this };
     this->operator++();
     return copy;
 }
