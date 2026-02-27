@@ -27,15 +27,15 @@ class SyncData {
     LockSyncData<DataType> lock() { return LockSyncData{ *this }; }
     template <typename Functor>
     requires CallableWith<Functor, AddLvalueReferenceT<DataType>>
-    void with_lock(Functor&& func) {
+    auto with_lock(Functor&& func) {
         UniqueLock l{ m_mutex };
-        func(m_data);
+        return func(m_data);
     }
     template <typename Functor>
     requires CallableWith<Functor, AddLvalueReferenceT<AddConstT<DataType>>>
-    void with_lock(Functor&& func) const {
+    auto with_lock(Functor&& func) const {
         UniqueLock l{ m_mutex };
-        func(m_data);
+        return func(m_data);
     }
     DataType extract() { 
         DataType tp{ move(m_data) };

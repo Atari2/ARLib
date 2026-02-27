@@ -37,6 +37,23 @@ class File {
     explicit File(Path filepath) : m_filename(move(filepath)), m_mode(OpenFileMode::None) {}
     explicit File(FsString filename) : m_filename(move(filename)), m_mode(OpenFileMode::None) {}
     explicit File(NonFsString filename) : m_filename(convert_from_non_fs_to_fs(filename)), m_mode(OpenFileMode::None) {}
+    File(const File& other)            = delete;
+    File& operator=(const File& other) = delete;
+    File(File&& other) noexcept : m_ptr(other.m_ptr), m_filename(move(other.m_filename)), m_mode(other.m_mode) {
+        other.m_ptr  = nullptr;
+        other.m_mode = OpenFileMode::None;
+    }
+    File& operator=(File&& other) noexcept {
+        if (this != &other) {
+            if (m_mode != OpenFileMode::None) { ARLib::fclose(m_ptr); }
+            m_ptr        = other.m_ptr;
+            m_filename   = move(other.m_filename);
+            m_mode       = other.m_mode;
+            other.m_ptr  = nullptr;
+            other.m_mode = OpenFileMode::None;
+        }
+        return *this;
+    }
     OpenFileMode mode() const { return m_mode; }
     const auto& name() const { return m_filename; }
     void remove() {
@@ -66,9 +83,7 @@ class File {
         bool is_writable = (mode & OpenFileMode::Write) != OpenFileMode::None;
         bool is_append   = (mode & OpenFileMode::Append) != OpenFileMode::None;
 
-        if (is_writable && is_append) {
-            return FileError{ "Append mode implies write mode"_s, m_filename };
-        }
+        if (is_writable && is_append) { return FileError{ "Append mode implies write mode"_s, m_filename }; }
 
         if (is_readable && is_writable) {
             m_ptr = fopen(m_filename.string().data(), "w+");

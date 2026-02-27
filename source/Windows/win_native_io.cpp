@@ -15,22 +15,31 @@ constexpr static DWORD todw(Integral auto v) {
 struct SaveCodePage {
     UINT old_cp{};
     UINT old_output_cp{};
+    DWORD old_console_mode{};
 };
 SaveCodePage __utf8Set{};
 struct SetupCodePage {
     SetupCodePage() {
         UINT cp                 = GetConsoleCP();
         UINT ocp                = GetConsoleOutputCP();
+        BOOL success            = GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &__utf8Set.old_console_mode);
         __utf8Set.old_cp        = cp;
         __utf8Set.old_output_cp = ocp;
+
         if (cp != CP_UTF8) {
             BOOL res = SetConsoleCP(CP_UTF8) && SetConsoleOutputCP(CP_UTF8);
             if (!res) { assertion_failed__(); }
+        }
+        if (success) {
+            SetConsoleMode(
+            GetStdHandle(STD_OUTPUT_HANDLE), __utf8Set.old_console_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING
+            );
         }
     }
     ~SetupCodePage() {
         SetConsoleCP(__utf8Set.old_cp);
         SetConsoleOutputCP(__utf8Set.old_output_cp);
+        if (__utf8Set.old_console_mode) { SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), __utf8Set.old_console_mode); }
     }
 };
 extern "C"

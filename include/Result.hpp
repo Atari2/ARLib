@@ -363,7 +363,7 @@ struct PrintInfo<Result<T, Err>> {
         static_assert(!IsLvalueReferenceV<decltype(tr.to_ok())>, "to_ok() must not return an lvalue reference");       \
         if (tr.is_error()) {                                                                                           \
             ASSERT_NOT_REACHED_FMT(                                                                                    \
-            "MUST(" STRINGIFY(expression) ") failed \"%s\"", print_conditional(tr.to_error()).data()                   \
+            "%s \"%s\"", "MUST(" STRINGIFY(expression) ") failed", print_conditional(tr.to_error()).data()            \
             );                                                                                                         \
         }                                                                                                              \
         if constexpr (!SameAsCvRef<decltype(tr.to_ok()), DefaultOk>) { return tr.to_ok(); }                            \

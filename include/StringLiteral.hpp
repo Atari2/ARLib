@@ -4,7 +4,6 @@
 #include "StringView.hpp"
 #include "cstring_compat.hpp"
 namespace ARLib {
-
 // this is a weird class
 // it attempts at adding a convenience API around a compile time string
 // e.g. "hello world"
@@ -119,10 +118,33 @@ struct StringLiteral {
         }
         return true;
     }
+    consteval Span<const char> span() const { return Span{ _m_str, m_size }; }
+    consteval StringView view() const { return StringView{ _m_str, m_size }; }
+    template <Integral T = int64_t>
+    consteval T to_integral() const {
+        if constexpr (UnsignedIntegral<T>) {
+            // if the number is not signed we have to check that the string doesn't have a minus sign
+            // we do this by parsing the number as a signed number and checking that it's positive
+            // parsing twice is OK because it is done at compile time 0 costs at runtime.
+            auto sign_check = cxpr::StrViewTo64Decimal(view()) > 0;
+            CONSTEVAL_STATIC_ASSERT(
+            sign_check, "to_integral() of string literal is negative but target type is unsigned"
+            );
+        }
+        auto ret = cxpr::StrViewTo64Decimal<IsSigned<T>>(view());
+        CONSTEVAL_STATIC_ASSERT(
+        ret >= NumberTraits<T>::min && ret <= NumberTraits<T>::max, "to_integral() of string literal is out of range"
+        );
+        return static_cast<T>(ret);
+    };
 };
 template <size_t N>
 consteval StringLiteral<N> sl(const char (&str)[N]) {
     return str;
+}
+template <StringLiteral S>
+consteval auto operator""_l() {
+    return S;
 }
 template <size_t N>
 StringLiteral(const char (&str)[N]) -> StringLiteral<N>;
@@ -130,6 +152,6 @@ template <size_t N>
 struct PrintInfo<StringLiteral<N>> {
     const StringLiteral<N>& m_string;
     PrintInfo(const StringLiteral<N>& string) : m_string(string) {}
-    String repr() const { return String{ m_string.ptr() }; }
+    String repr() const { return String{ m_string._m_str, m_string.m_size }; }
 };
 }    // namespace ARLib

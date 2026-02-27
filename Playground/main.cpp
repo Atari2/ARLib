@@ -8,10 +8,15 @@
 
 using namespace ARLib;
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv) {
-    Logger::register_default_logger(ConsoleLogger{ LogLevel::Trace });
-    Logger::register_named_logger("file"_s, FileLogger{ LogLevel::Info, "log.txt"_s });
-    Logger::register_named_logger("buffer"_s, StringLogger{ LogLevel::Debug });
-    for (size_t i = 0; i < 10; i++) { Logger::log(LogLevel::Warning, "Hello from {} {}."_sv, "ARLib", i); }
+    auto console_logger = MUST(ConsoleLogger::create("default"_s, LogLevel::Trace, "%c%m %l test"));
+    auto file_logger = MUST(FileLogger::create("file"_s, LogLevel::Info, "log.txt"_s));
+    auto string_logger = MUST(StringLogger::create("buffer"_s, LogLevel::Debug, DefaultLogFormat));
+    Logger::register_logger(console_logger);
+    Logger::register_logger(file_logger);
+    Logger::register_logger(string_logger);
+    for (size_t i = 0; i < 10; i++) {
+        Logger::log(LogLevel::Info, "Hello from {} {}."_sv, "ARLib", i);
+    }
     auto logger = Logger::get_named_logger("buffer"_sv);
     if (logger.is_ok()) { Printer::print("String logger contents: {}", logger.to_ok().as<StringLogger>().output()); }
     return 0;

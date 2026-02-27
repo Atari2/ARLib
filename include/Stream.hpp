@@ -8,6 +8,10 @@ namespace ARLib {
 struct BaseStream {
     // write bytes
     virtual Result<size_t> write(Span<const uint8_t> buffer) = 0;
+    // write characters
+    virtual Result<size_t> write(Span<const char> buffer) = 0;
+    // write characters with string view
+    virtual Result<size_t> write(StringView view) = 0;
     // read n bytes
     virtual Result<Vector<uint8_t>> read(size_t n) = 0;
     // read until end
@@ -65,8 +69,14 @@ class FileStream : public CharacterStream {
     public:
     FileStream(File&& file) : m_file{ move(file) } {}
     FileStream(Path filepath) : m_file{ move(filepath) } {}
+    FileStream(const FileStream& other)                = delete;
+    FileStream& operator=(const FileStream& other)     = delete;
+    FileStream(FileStream&& other) noexcept            = default;
+    FileStream& operator=(FileStream&& other) noexcept = default;
     DiscardResult<FileError> open() override;
     Result<size_t> write(Span<const uint8_t> buffer) override;
+    Result<size_t> write(Span<const char> buffer) override;
+    Result<size_t> write(StringView view) override;
     Result<Vector<uint8_t>> read(size_t n) override;
     Result<Vector<uint8_t>> read() override;
     Result<size_t> write_string(StringView buffer) override;
@@ -82,7 +92,7 @@ class FileStream : public CharacterStream {
         return false;
     }
     bool is_open() const override { return m_file.is_open(); }
-    bool is_filestream() const override { return true;  }
+    bool is_filestream() const override { return true; }
     virtual ~FileStream() = default;
 };
 class BufferedFileStream : public FileStream {
@@ -97,7 +107,13 @@ class BufferedFileStream : public FileStream {
         FileStream{ Forward<File>(file) }, m_buffer_capacity{ buffer_size }, m_buffer{} {
         m_buffer.reserve(buffer_size);
     }
+    BufferedFileStream(const BufferedFileStream& other)                = delete;
+    BufferedFileStream& operator=(const BufferedFileStream& other)     = delete;
+    BufferedFileStream(BufferedFileStream&& other) noexcept            = default;
+    BufferedFileStream& operator=(BufferedFileStream&& other) noexcept = default;
     Result<size_t> write(Span<const uint8_t> buffer) override;
+    Result<size_t> write(Span<const char> buffer) override;
+    Result<size_t> write(StringView view) override;
     Result<Vector<uint8_t>> read(size_t n) override;
     Result<Vector<uint8_t>> read() override;
     Result<size_t> write_string(StringView buffer) override;
@@ -115,6 +131,8 @@ class StringStream : public CharacterStream {
     StringStream() = default;
     StringStream(String buffer) : m_buffer{ move(buffer) } {}
     Result<size_t> write(Span<const uint8_t> buffer) override;
+    Result<size_t> write(Span<const char> buffer) override;
+    Result<size_t> write(StringView view) override;
     Result<Vector<uint8_t>> read(size_t n) override;
     Result<Vector<uint8_t>> read() override;
     Result<size_t> write_string(StringView buffer) override;

@@ -68,6 +68,17 @@ Result<size_t> FileStream::write(Span<const uint8_t> buffer) {
     RETURN_ERROR_STRING(res);
     return res.to_ok();
 }
+Result<size_t> FileStream::write(Span<const char> buffer) {
+    StringView view{ buffer.data(), buffer.size_bytes() };
+    auto res = m_file.write(view);
+    RETURN_ERROR_STRING(res);
+    return res.to_ok();
+}
+Result<size_t> FileStream::write(StringView view) {
+    auto res = m_file.write(view);
+    RETURN_ERROR_STRING(res);
+    return res.to_ok();
+}
 Result<Vector<uint8_t>> FileStream::read(size_t n) {
     auto res = m_file.read_n(n);
     RETURN_ERROR_STRING(res);
@@ -132,6 +143,43 @@ Result<size_t> BufferedFileStream::write(Span<const uint8_t> buffer) {
         if (res.is_error()) { 
             auto error = res.to_error();
             return error->error_string(); 
+        }
+    }
+    return view.size();
+}
+Result<size_t> BufferedFileStream::write(Span<const char> buffer) {
+    StringView view{ buffer.data(), buffer.size_bytes() };
+    size_t rem_buffer = m_buffer_capacity - m_buffer.size();
+    if (buffer.size() <= rem_buffer) {
+        // we can still fit the entire to-write buffer into our inline buffer
+        m_buffer.append(view);
+    } else {
+        // append what we can fit, flush the buffer to file, and then write the rest
+        m_buffer.append(view.substring(rem_buffer));
+        auto res = m_file.write(m_buffer);
+        m_buffer.clear();
+        m_buffer.append(view.substringview_fromlen(rem_buffer));
+        if (res.is_error()) {
+            auto error = res.to_error();
+            return error->error_string();
+        }
+    }
+    return view.size();
+}
+Result<size_t> BufferedFileStream::write(StringView view) {
+    size_t rem_buffer = m_buffer_capacity - m_buffer.size();
+    if (view.size() <= rem_buffer) {
+        // we can still fit the entire to-write buffer into our inline buffer
+        m_buffer.append(view);
+    } else {
+        // append what we can fit, flush the buffer to file, and then write the rest
+        m_buffer.append(view.substring(rem_buffer));
+        auto res = m_file.write(m_buffer);
+        m_buffer.clear();
+        m_buffer.append(view.substringview_fromlen(rem_buffer));
+        if (res.is_error()) {
+            auto error = res.to_error();
+            return error->error_string();
         }
     }
     return view.size();
@@ -206,6 +254,25 @@ BufferedFileStream::~BufferedFileStream() {
 // STRING STREAM
 Result<size_t> StringStream::write(Span<const uint8_t> buffer) {
     StringView bufview{ reinterpret_cast<const char*>(buffer.data()), buffer.size_bytes() };
+    int64_t to_write   = static_cast<int64_t>(bufview.size());
+    int64_t space_left = static_cast<int64_t>(m_buffer.size() - m_pos);
+    if (auto needed_space = to_write - space_left; needed_space > 0) {
+        m_buffer.resize(m_buffer.size() + static_cast<size_t>(needed_space));
+    }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_buffer[m_pos] = bufview[i]; }
+    return static_cast<size_t>(to_write);
+}
+Result<size_t> StringStream::write(Span<const char> buffer) {
+    StringView bufview{ buffer.data(), buffer.size_bytes() };
+    int64_t to_write   = static_cast<int64_t>(bufview.size());
+    int64_t space_left = static_cast<int64_t>(m_buffer.size() - m_pos);
+    if (auto needed_space = to_write - space_left; needed_space > 0) {
+        m_buffer.resize(m_buffer.size() + static_cast<size_t>(needed_space));
+    }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_buffer[m_pos] = bufview[i]; }
+    return static_cast<size_t>(to_write);
+}
+Result<size_t> StringStream::write(StringView bufview) {
     int64_t to_write   = static_cast<int64_t>(bufview.size());
     int64_t space_left = static_cast<int64_t>(m_buffer.size() - m_pos);
     if (auto needed_space = to_write - space_left; needed_space > 0) {
