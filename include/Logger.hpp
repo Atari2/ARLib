@@ -12,12 +12,13 @@ constexpr static inline uint8_t _newline_buffer[]{ '\n' };
 constexpr static inline Span<const uint8_t> _newline_span{ _newline_buffer };
 MAKE_FANCY_ENUM(LogLevel, uint8_t, Critical = 5, Error = 4, Warning = 3, Info = 2, Debug = 1, Trace = 0);
 MAKE_FANCY_ENUM(LoggingError, uint8_t, FormatError, OutputError, OpenStreamError, LoggerNotFoundError);
-constexpr StringView DefaultLogFormat = "%c[%n|%l - %u][%t]%r %m";
+constexpr StringView DefaultLogFormat     = "%c[%n|%l - %u][%t]%r %m";
 constexpr StringView DefaultLogFileFormat = "[%n|%l - %u][%t] %m";
 class LoggingFormat {
-    enum class LoggingFormatSpecifier {
+    enum class LoggingFormatSpecifier : uint8_t {
         Message,
         LogLevel,
+        LogLevelShort,
         Timestamp,
         ThreadId,
         DefaultColor,
@@ -32,21 +33,61 @@ class LoggingFormat {
     static Result<LoggingFormat, LoggingError> from_string(StringView format);
     String format_message(StringView message, LogLevel level, StringView logger_name) const;
 };
+#ifdef __INTELLISENSE__
+constexpr bool is_intellisense = true;
+#else
+constexpr bool is_intellisense = false;
+#endif
+template <typename... Args>
+using LoggerStringParam = ConditionalT<is_intellisense, StringView, FormatString<sizeof...(Args)>>;
+
+template <typename T>
+concept LoggingPrintable = Printable<RemoveReferenceT<T>>;
 class LoggingBackend {
     String m_name;
     LogLevel m_level;
     LoggingFormat m_format;
     friend class LoggingBackendTs;
-    protected:
-    String format_message(StringView message, LogLevel level) const;
-    protected:
-    LoggingBackend(String name, LogLevel level, LoggingFormat format) :
-        m_name{ name }, m_level{ level }, m_format{ format } {}
+    friend class Logger;
     public:
     using LogResult = DiscardResult<LoggingError>;
+    protected:
+    String format_message(StringView message, LogLevel level) const;
+    LoggingBackend(String name, LogLevel level, LoggingFormat format) :
+        m_name{ name }, m_level{ level }, m_format{ format } {}
+    virtual LogResult log(LogLevel level, StringView message) = 0;
+    public:
     constexpr bool should_log(LogLevel level) const { return level >= m_level; }
     const String& name() const { return m_name; }
-    virtual LogResult log(LogLevel level, StringView message) = 0;
+    template <LoggingPrintable... Args>
+    LogResult log(LogLevel level, LoggerStringParam<Args...> str, Args&&... args) {
+        auto formatted_string = Printer::format(move(str), Forward<Args>(args)...);
+        return log(level, formatted_string);
+    }
+    template <LoggingPrintable... Args>
+    LogResult log_critical(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Critical, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    LogResult log_error(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Error, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    LogResult log_warning(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Warning, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    LogResult log_info(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Info, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    LogResult log_debug(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Debug, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    LogResult log_trace(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Trace, move(str), Forward<Args>(args)...);
+    }
     virtual bool supports_color() { return false; }
     virtual ~LoggingBackend() = default;
 };
@@ -154,8 +195,9 @@ class FileLogger : public StreamLogger<FileStream> {
 };
 class BufferedFileLogger : public StreamLogger<BufferedFileStream> {
     String m_file_path;
-    BufferedFileLogger(String name, LogLevel level, LoggingFormat format, String file_path, BufferedFileStream&& stream) :
-        StreamLogger<BufferedFileStream>{ name, level, format, move(stream) }, m_file_path{ move(file_path) } {}
+    BufferedFileLogger(
+    String name, LogLevel level, LoggingFormat format, String file_path, BufferedFileStream&& stream
+    ) : StreamLogger<BufferedFileStream>{ name, level, format, move(stream) }, m_file_path{ move(file_path) } {}
     public:
     static Result<SharedPtr<LoggingBackend>, LoggingError>
     create(String name, LogLevel level, String file_path, StringView format = DefaultLogFileFormat) {
@@ -179,12 +221,12 @@ class StringLogger : public StreamLogger<StringStream> {
         };
     }
     String output() const { return m_stream->str(); }
+    auto lines() const { return StringViewStream{ *m_stream }.lines_view(); }
 };
 class FileLoggerTs : public StreamLoggerTs<FileStream> {
     String m_file_path;
     FileLoggerTs(String name, LogLevel level, LoggingFormat format, String file_path, FileStream&& stream) :
-        StreamLoggerTs<FileStream>{ name, level, format, move(stream) }, m_file_path{ move(file_path) } {
-    }
+        StreamLoggerTs<FileStream>{ name, level, format, move(stream) }, m_file_path{ move(file_path) } {}
     public:
     static Result<SharedPtr<LoggingBackend>, LoggingError>
     create(String name, LogLevel level, String file_path, StringView format = DefaultLogFileFormat) {
@@ -247,20 +289,14 @@ class Logger {
     }
     public:
     static void register_logger(SharedPtr<LoggingBackend> backend) {
-        auto name_copy = backend->name();
+        String name_copy = backend->name();
         store().add_backend(move(name_copy), move(backend));
     }
     static LoggingStorage::ResultType get_named_logger(StringView name);
     static LoggingStorage::ResultType get_default_logger();
-#ifdef __INTELLISENSE__
-    #define LOGGER_STRING_PARAM_TYPE StringView
-#else
-    #define LOGGER_STRING_PARAM_TYPE FormatString<sizeof...(Args)>
-#endif
-    template <typename... Args>
-    requires(... && Printable<RemoveReferenceT<Args>>)
+    template <LoggingPrintable... Args>
     static LoggingBackend::LogResult
-    log(StringView logger_name, LogLevel level, LOGGER_STRING_PARAM_TYPE str, Args&&... args) {
+    log(StringView logger_name, LogLevel level, LoggerStringParam<Args...> str, Args&&... args) {
         auto formatted_string = Printer::format(move(str), Forward<Args>(args)...);
         if (auto it = store().get(logger_name); it.is_ok()) {
             auto backend = it.to_ok();
@@ -268,9 +304,8 @@ class Logger {
         }
         return {};
     }
-    template <typename... Args>
-    requires(... && Printable<RemoveReferenceT<Args>>)
-    static LoggingBackend::LogResult log(LogLevel level, LOGGER_STRING_PARAM_TYPE str, Args&&... args) {
+    template <LoggingPrintable... Args>
+    static LoggingBackend::LogResult log(LogLevel level, LoggerStringParam<Args...> str, Args&&... args) {
         auto formatted_string = Printer::format(move(str), Forward<Args>(args)...);
         auto& sync_store      = Logger::store();
         return sync_store.m_store.with_lock(
@@ -279,6 +314,30 @@ class Logger {
             return {};
         }
         );
+    }
+    template <LoggingPrintable... Args>
+    static LoggingBackend::LogResult log_critical(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Critical, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    static LoggingBackend::LogResult log_error(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Error, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    static LoggingBackend::LogResult log_warning(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Warning, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    static LoggingBackend::LogResult log_info(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Info, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    static LoggingBackend::LogResult log_debug(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Debug, move(str), Forward<Args>(args)...);
+    }
+    template <LoggingPrintable... Args>
+    static LoggingBackend::LogResult log_trace(LoggerStringParam<Args...> str, Args&&... args) {
+        return log(LogLevel::Trace, move(str), Forward<Args>(args)...);
     }
 };
 }    // namespace ARLib

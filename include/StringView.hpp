@@ -4,7 +4,7 @@
 #include "PrintInfo.hpp"
 #include "String.hpp"
 namespace ARLib {
-
+class StringViewStream;
 template <typename T>
 class Vector;
 // this class is not necessarily null-terminated
@@ -12,7 +12,10 @@ class StringView {
     char* m_start_mut   = nullptr;
     const char* m_start = nullptr;
     size_t m_size       = 0;
-    [[noreturn]] static void cxpr_error() { new int[0]; arlib_unreachable }
+    [[noreturn]] static void cxpr_error() {
+        new int[0];
+        arlib_unreachable
+    }
     constexpr void check_offset(const size_t off) const {
         if (m_size < off) { cxpr_error(); }
     }
@@ -42,6 +45,10 @@ class StringView {
     constexpr StringView(T buf) : m_start_mut(buf), m_start(buf) {
         m_size = strlen(buf);
     }
+    constexpr StringView(Iterator<char> begin, Iterator<char> end) :
+        m_start(begin.ptr()), m_size(static_cast<size_t>(end.ptr() - begin.ptr())) {}
+    constexpr StringView(ConstIterator<char> begin, ConstIterator<char> end) :
+        m_start(begin.ptr()), m_size(static_cast<size_t>(end.ptr() - begin.ptr())) {}
     explicit StringView(const String& ref) : m_start(ref.data()) { m_size = ref.length(); }
     explicit StringView(String& ref) : m_start_mut(ref.rawptr()), m_start(ref.data()) { m_size = ref.length(); }
     constexpr StringView(const StringView& view) = default;
@@ -194,6 +201,9 @@ class StringView {
         }
         return StringView{ m_start + front, m_start + back + 1 };
     }
+    StringViewStream stream() const&;
+    StringViewStream stream() &;
+    StringViewStream stream() &&;
 };
 constexpr StringView operator""_sv(const char* source, size_t len) {
     return StringView{ source, len };

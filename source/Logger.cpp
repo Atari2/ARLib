@@ -21,24 +21,26 @@ namespace AnsiEsc {
     };
 }    // namespace AnsiEsc
 Result<LoggingFormat, LoggingError> LoggingFormat::from_string(StringView format) {
-    String current_literal{};
+    auto current_literal = format.begin();
     LoggingFormat fmt{};
     bool in_specifier = false;
-    for (size_t i = 0; i < format.size(); ++i) {
-        const char c = format[i];
+    for (auto it = format.begin(); it != format.end(); ++it) {
+        const char c = *it;
         if (in_specifier) {
             switch (c) {
                 case '%':
                     // %% -> literal %
-                    current_literal += '%';
+                    fmt.m_parts.emplace("%");
                     break;
                 case 'm':
                 case 'M':
                     fmt.m_parts.emplace(LoggingFormatSpecifier::Message);
                     break;
                 case 'l':
-                case 'L':
                     fmt.m_parts.emplace(LoggingFormatSpecifier::LogLevel);
+                    break;
+                case 'L':
+                    fmt.m_parts.emplace(LoggingFormatSpecifier::LogLevelShort);
                     break;
                 case 'u':
                 case 'U':
@@ -67,21 +69,19 @@ Result<LoggingFormat, LoggingError> LoggingFormat::from_string(StringView format
                 default:
                     return LoggingError::FormatError;
             }
-            in_specifier = false;
+            in_specifier    = false;
+            current_literal = it + 1;
         } else {
             if (c == '%') {
                 in_specifier = true;
-                if (!current_literal.is_empty()) {
-                    fmt.m_parts.emplace(current_literal);
-                    current_literal.clear();
-                }
-            } else {
-                current_literal += c;
+                StringView literal{ current_literal, it };
+                if (!literal.empty()) { fmt.m_parts.emplace(literal.str()); }
+                current_literal = it + 1;
             }
         }
-        
     }
-    fmt.m_parts.emplace(current_literal);
+    StringView literal{ current_literal, format.end() };
+    fmt.m_parts.emplace(literal.str());
     return fmt;
 }
 String LoggingFormat::format_message(StringView message, LogLevel level, StringView logger_name) const {
@@ -95,6 +95,9 @@ String LoggingFormat::format_message(StringView message, LogLevel level, StringV
                     break;
                 case LoggingFormatSpecifier::LogLevel:
                     output.append(enum_to_str_view(level));
+                    break;
+                case LoggingFormatSpecifier::LogLevelShort:
+                    output.append(enum_to_str_view(level)[0]); 
                     break;
                 case LoggingFormatSpecifier::LoggerName:
                     output.append(logger_name);
@@ -139,14 +142,14 @@ LoggingBackend::LogResult LoggingBackendTs::log(LogLevel level, StringView messa
 LoggingBackend::LogResult ConsoleLoggerTs::_log_ts(LogLevel level, StringView message) {
     if (!should_log(level)) return {};
     auto formatted_message = format_message(message, level);
-    ARLib::puts(formatted_message.data());
-    return {};
+    int ret                = ARLib::puts(formatted_message.data());
+    return ret == EOF ? LogResult{ LoggingError::OutputError } : LogResult{ DefaultOk{} };
 }
 LoggingBackend::LogResult ConsoleLogger::log(LogLevel level, StringView message) {
     if (!should_log(level)) return {};
     auto formatted_message = format_message(message, level);
-    ARLib::puts(formatted_message.data());
-    return {};
+    int ret                = ARLib::puts(formatted_message.data());
+    return ret == EOF ? LogResult{ LoggingError::OutputError } : LogResult{ DefaultOk{} };
 }
 void Logger::LoggingStorage::add_backend(const String& name, SharedPtr<LoggingBackend> backend) {
     m_store.with_lock([&name, backend = move(backend)](LoggingStore& map) { map.insert(name, move(backend)); });

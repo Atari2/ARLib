@@ -1,18 +1,18 @@
 #include "Stream.hpp"
 #include "Vector.hpp"
 namespace ARLib {
-// FILE STREAM ITERATORS
-CharacterStream::LinesIterator FileStream::Lines::begin() {
-    return FileStream::LinesIterator{ m_stream };
+// CHARACTER STREAM ITERATORS
+CharacterStream::LinesIterator CharacterStream::Lines::begin() {
+    return CharacterStream::LinesIterator{ m_stream };
 }
-CharacterStream::LinesIterator FileStream::Lines::end() {
-    return FileStream::LinesIterator{ m_stream, true };
+CharacterStream::LinesIterator CharacterStream::Lines::end() {
+    return CharacterStream::LinesIterator{ m_stream, true };
 }
-CharacterStream::LinesIterator FileStream::Lines::begin() const {
-    return FileStream::LinesIterator{ m_stream };
+CharacterStream::LinesIterator CharacterStream::Lines::begin() const {
+    return CharacterStream::LinesIterator{ m_stream };
 }
-CharacterStream::LinesIterator FileStream::Lines::end() const {
-    return FileStream::LinesIterator{ m_stream, true };
+CharacterStream::LinesIterator CharacterStream::Lines::end() const {
+    return CharacterStream::LinesIterator{ m_stream, true };
 }
 CharacterStream::LinesIterator::LinesIterator(MaybeOwned<CharacterStream> stream, bool end) :
     m_stream{ move(stream) }, m_end{ end } {
@@ -26,16 +26,16 @@ CharacterStream::LinesIterator::LinesIterator(MaybeOwned<CharacterStream> stream
         }
     }
 }
-bool CharacterStream::LinesIterator::operator==(const FileStream::LinesIterator& other) const {
+bool CharacterStream::LinesIterator::operator==(const CharacterStream::LinesIterator& other) const {
     return m_end == other.m_end && m_stream == other.m_stream;
 }
-bool CharacterStream::LinesIterator::operator!=(const FileStream::LinesIterator& other) const {
+bool CharacterStream::LinesIterator::operator!=(const CharacterStream::LinesIterator& other) const {
     return m_end != other.m_end || m_stream != other.m_stream;
 }
 String CharacterStream::LinesIterator::operator*() {
     return m_current_line;
 }
-CharacterStream::LinesIterator& FileStream::LinesIterator::operator++() {
+CharacterStream::LinesIterator& CharacterStream::LinesIterator::operator++() {
     if (m_eof_reached) { m_end = true; }
     if (!m_end) {
         auto readres = m_stream->read_line(m_eof_reached);
@@ -47,7 +47,7 @@ CharacterStream::LinesIterator& FileStream::LinesIterator::operator++() {
     }
     return *this;
 }
-CharacterStream::LinesIterator FileStream::LinesIterator::operator++(int) {
+CharacterStream::LinesIterator CharacterStream::LinesIterator::operator++(int) {
     auto copy = *this;
     ++(*this);
     return copy;
@@ -104,17 +104,17 @@ Result<size_t> FileStream::write_string(StringView buffer) {
 }
 Result<String> FileStream::read_string() {
     auto res = m_file.read_all();
-    if (res.is_error()) { 
+    if (res.is_error()) {
         auto error = res.to_error();
-        return Result<String>{ error->error_string(), emplace_error }; 
+        return Result<String>{ error->error_string(), emplace_error };
     }
     return Result<String>{ res.to_ok(), emplace_ok };
 }
 Result<String> FileStream::read_line(bool& eof_reached) {
     auto res = m_file.read_line(eof_reached);
-    if (res.is_error()) { 
+    if (res.is_error()) {
         auto error = res.to_error();
-        return Result<String>{ error->error_string(), emplace_error }; 
+        return Result<String>{ error->error_string(), emplace_error };
     }
     return Result<String>{ res.to_ok(), emplace_ok };
 }
@@ -140,9 +140,9 @@ Result<size_t> BufferedFileStream::write(Span<const uint8_t> buffer) {
         auto res = m_file.write(m_buffer);
         m_buffer.clear();
         m_buffer.append(view.substringview_fromlen(rem_buffer));
-        if (res.is_error()) { 
+        if (res.is_error()) {
             auto error = res.to_error();
-            return error->error_string(); 
+            return error->error_string();
         }
     }
     return view.size();
@@ -250,6 +250,137 @@ void BufferedFileStream::flush() {
 }
 BufferedFileStream::~BufferedFileStream() {
     flush();
+}
+// STRING VIEW STREAM
+StringViewStream::LinesViewIterator StringViewStream::LinesView::begin() {
+    return StringViewStream::LinesViewIterator{ m_stream };
+}
+StringViewStream::LinesViewIterator StringViewStream::LinesView::end() {
+    return StringViewStream::LinesViewIterator{ m_stream, true };
+}
+StringViewStream::LinesViewIterator StringViewStream::LinesView::begin() const {
+    return StringViewStream::LinesViewIterator{ m_stream };
+}
+StringViewStream::LinesViewIterator StringViewStream::LinesView::end() const {
+    return StringViewStream::LinesViewIterator{ m_stream, true };
+}
+StringViewStream::LinesViewIterator::LinesViewIterator(MaybeOwned<StringViewStream> stream, bool end) :
+    m_stream{ move(stream) }, m_end{ end } {
+    if (!m_end) {
+        auto readres = m_stream->read_line_view(m_eof_reached);
+        if (readres.is_error()) {
+            m_end = true;
+            readres.ignore_error();
+        } else {
+            m_current_line = readres.to_ok();
+        }
+    }
+}
+bool StringViewStream::LinesViewIterator::operator==(const StringViewStream::LinesViewIterator& other) const {
+    return m_end == other.m_end && m_stream == other.m_stream;
+}
+bool StringViewStream::LinesViewIterator::operator!=(const StringViewStream::LinesViewIterator& other) const {
+    return m_end != other.m_end || m_stream != other.m_stream;
+}
+StringView StringViewStream::LinesViewIterator::operator*() {
+    return m_current_line;
+}
+StringViewStream::LinesViewIterator& StringViewStream::LinesViewIterator::operator++() {
+    if (m_eof_reached) { m_end = true; }
+    if (!m_end) {
+        auto readres = m_stream->read_line_view(m_eof_reached);
+        if (readres.is_error()) {
+            m_end = true;
+        } else {
+            m_current_line = readres.to_ok();
+        }
+    }
+    return *this;
+}
+StringViewStream::LinesViewIterator StringViewStream::LinesViewIterator::operator++(int) {
+    auto copy = *this;
+    ++(*this);
+    return copy;
+}
+Result<size_t> StringViewStream::write(Span<const uint8_t> buffer) {
+    StringView bufview{ reinterpret_cast<const char*>(buffer.data()), buffer.size_bytes() };
+    int64_t to_write   = static_cast<int64_t>(bufview.size());
+    int64_t space_left = static_cast<int64_t>(m_view.size() - m_pos);
+    if (auto needed_space = to_write - space_left; needed_space > 0) {
+        return Error{ "Cannot write to StringViewStream: not enough space" };
+    }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_view.index(m_pos) = bufview[i]; }
+    return static_cast<size_t>(to_write);
+}
+Result<size_t> StringViewStream::write(Span<const char> buffer) {
+    StringView bufview{ buffer.data(), buffer.size_bytes() };
+    int64_t to_write   = static_cast<int64_t>(bufview.size());
+    int64_t space_left = static_cast<int64_t>(m_view.size() - m_pos);
+    if (auto needed_space = to_write - space_left; needed_space > 0) {
+        return Error{ "Cannot write to StringViewStream: not enough space" };
+    }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_view.index(m_pos) = bufview[i]; }
+    return static_cast<size_t>(to_write);
+}
+Result<size_t> StringViewStream::write(StringView bufview) {
+    int64_t to_write   = static_cast<int64_t>(bufview.size());
+    int64_t space_left = static_cast<int64_t>(m_view.size() - m_pos);
+    if (auto needed_space = to_write - space_left; needed_space > 0) {
+        return Error{ "Cannot write to StringViewStream: not enough space" };
+    }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_view.index(m_pos) = bufview[i]; }
+    return static_cast<size_t>(to_write);
+}
+Result<Vector<uint8_t>> StringViewStream::read(size_t n) {
+    size_t left = m_view.size() - m_pos;
+    if (n > left) { n = left; }
+    String repr = m_view.substringview(m_pos, m_pos + n).str();
+    auto* ptr   = reinterpret_cast<uint8_t*>(repr.release());
+    return Vector<uint8_t>{ ptr, m_view.size() };
+}
+Result<Vector<uint8_t>> StringViewStream::read() {
+    String repr = m_view.str();
+    auto* ptr   = reinterpret_cast<uint8_t*>(repr.release());
+    return Vector<uint8_t>{ ptr, m_view.size() };
+}
+Result<size_t> StringViewStream::write_string(StringView buffer) {
+    int64_t to_write   = static_cast<int64_t>(buffer.size());
+    int64_t space_left = static_cast<int64_t>(m_view.size() - m_pos);
+    if (auto needed_space = to_write - space_left; needed_space > 0) {
+        return Error{ "Cannot write to StringViewStream: not enough space" };
+    }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_view.index(m_pos) = buffer[i]; }
+    return static_cast<size_t>(to_write);
+}
+Result<String> StringViewStream::read_string() {
+    return Result<String>{ str(), emplace_ok };
+}
+Result<String> StringViewStream::read_line(bool& eof_reached) {
+    size_t pos_of_n = m_view.index_of('\n', m_pos);
+    if (pos_of_n == String::npos) {
+        eof_reached = true;
+        auto line   = m_view.substring(m_pos);
+        m_pos       = m_view.size();
+        return { move(line), emplace_ok };
+    }
+    auto ret = m_view.substringview(m_pos, pos_of_n);
+    m_pos    = pos_of_n + 1;
+    return { ret, emplace_ok };
+}
+Result<StringView> StringViewStream::read_string_view() {
+    return Result<StringView>{ m_view, emplace_ok };
+}
+Result<StringView> StringViewStream::read_line_view(bool& eof_reached) {
+    size_t pos_of_n = m_view.index_of('\n', m_pos);
+    if (pos_of_n == StringView::npos) {
+        eof_reached = true;
+        auto line   = m_view.substring(m_pos);
+        m_pos       = m_view.size();
+        return { move(line), emplace_ok };
+    }
+    auto ret = m_view.substringview(m_pos, pos_of_n);
+    m_pos    = pos_of_n + 1;
+    return { ret, emplace_ok };
 }
 // STRING STREAM
 Result<size_t> StringStream::write(Span<const uint8_t> buffer) {

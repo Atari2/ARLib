@@ -2,6 +2,7 @@
 #include "Ordering.hpp"
 #include "Vector.hpp"
 #include "Span.hpp"
+#include "Stream.hpp"
 namespace ARLib {
 [[nodiscard]] Ordering StringView::operator<=>(const StringView& other) const {
     auto val = strncmp(m_start, other.m_start, other.size());
@@ -55,5 +56,14 @@ Span<const char> StringView::span() const {
 }
 Span<const uint8_t> StringView::bytespan() const {
     return Span<const uint8_t>{ reinterpret_cast<const uint8_t*>(m_start), m_size };
+}
+StringViewStream StringView::stream() const& {
+    return StringViewStream{ *this };
+}
+StringViewStream StringView::stream() & {
+    return StringViewStream{ *this };
+}
+StringViewStream StringView::stream() && {
+    return StringViewStream{ move(*this) };
 }
 }    // namespace ARLib

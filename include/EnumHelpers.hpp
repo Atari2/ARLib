@@ -68,12 +68,22 @@ namespace EnumHelpers {
         while ((isspace(view[last_idx]) || view[last_idx] == ',') && last_idx > 0) last_idx--;
         return view.substringview(0, last_idx + 1);
     }
+
     template <Enum T>
-    requires(!get_enum_full_string<T>({}).empty())
+    constexpr StringView enum_full_string = get_enum_full_string<T>({});
+
+    template <Enum T>
+    constexpr StringView enum_view = strip_trailing_commas(enum_full_string<T>);
+
+    template <Enum T>
+    constexpr size_t enum_count = count_enum_values(enum_view<T>);
+
+    template <Enum T>
+    requires(!enum_full_string<T>.empty())
     struct EnumArrayProvider<T> {
         constexpr static auto construct_enum_array(TagType<T>) {
-            constexpr StringView view = strip_trailing_commas(get_enum_full_string<T>({}));
-            Array<Pair<StringView, T>, count_enum_values(view)> enum_map_l;
+            constexpr StringView view = enum_view<T>;
+            Array<Pair<StringView, T>, enum_count<T>> enum_map_l;
             UnderlyingTypeT<T> current_val{};
             auto get_pair = [&view, &current_val](size_t first_idx, size_t second_idx) {
                 constexpr bool Signed = IsSigned<UnderlyingTypeT<T>>;
@@ -115,9 +125,9 @@ namespace EnumHelpers {
     };
     template <Enum T>
     constexpr auto construct_enum_map(
-    const Array<Pair<StringView, T>, count_enum_values(strip_trailing_commas(get_enum_full_string<T>({})))>& enum_array
+    const Array<Pair<StringView, T>, enum_count<T>>& enum_array
     ) {
-        constexpr size_t sz = count_enum_values(strip_trailing_commas(get_enum_full_string<T>({})));
+        constexpr size_t sz = enum_count<T>;
         EnumStrHashMap<T, sz> map;
         for (const auto& [k, v] : enum_array) {
             const bool inserted = map.insert(v, k);

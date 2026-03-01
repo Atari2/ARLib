@@ -7,6 +7,8 @@
 #include "Types.hpp"
 #include "cstring_compat.hpp"
 namespace ARLib {
+class StringStream;
+class StringViewStream;
 class StringView;
 class Ordering;
 template <typename T>
@@ -93,6 +95,24 @@ class String {
     explicit constexpr String(T other) : m_size(strlen(other)) {
         grow_if_needed(m_size);
         strncpy(m_data_buf, other, m_size);
+        m_data_buf[m_size] = '\0';
+    }
+    constexpr String(Iterator<char> begin, Iterator<char> end) {
+        const char* b = begin.ptr();
+        const char* e = end.ptr();
+        HARD_ASSERT_FMT((e >= b), "End pointer (%p) must not be before begin pointer (%p)", e, b)
+        m_size = static_cast<size_t>(e - b);
+        grow_if_needed(m_size);
+        strncpy(m_data_buf, b, m_size);
+        m_data_buf[m_size] = '\0';
+    }
+    constexpr String(ConstIterator<char> begin, ConstIterator<char> end) {
+        const char* b = begin.ptr();
+        const char* e = end.ptr();
+        HARD_ASSERT_FMT((e >= b), "End pointer (%p) must not be before begin pointer (%p)", e, b)
+        m_size = static_cast<size_t>(e - b);
+        grow_if_needed(m_size);
+        strncpy(m_data_buf, b, m_size);
         m_data_buf[m_size] = '\0';
     }
     String(const String& other) noexcept : m_size(other.m_size) {
@@ -529,6 +549,11 @@ class String {
     void reserve(size_t new_capacity) { grow_if_needed(new_capacity); }
     Span<const char> span() const;
     Span<const uint8_t> bytespan() const;
+    StringStream stream() const&;
+    StringStream stream() &;
+    StringStream stream() &&;
+    StringViewStream stream_view() const&;
+    StringViewStream stream_view() &;
 };
 inline String operator""_s(const char* source, size_t len) {
     return String{ source, len };

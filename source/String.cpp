@@ -3,6 +3,7 @@
 #include "Ordering.hpp"
 #include "StringView.hpp"
 #include "Vector.hpp"
+#include "Stream.hpp"
 #include "Span.hpp"
 namespace ARLib {
 [[nodiscard]] bool String::operator==(const StringView& other) const {
@@ -126,7 +127,6 @@ namespace ARLib {
     const auto ptr = get_buf_internal();
     return StringView{ ptr, ptr + m_size };
 }
-
 String::String(StringView other) : m_size(other.length()) {
     bool local = m_size <= SMALL_STRING_CAP;
     if (local) {
@@ -326,7 +326,7 @@ String String::concat(const char* other) const& {
     copy.append(sother);
     return copy;
 }
-String String::concat(StringView other)&& {
+String String::concat(StringView other) && {
     auto other_size = other.size();
     String moved{ move(*this) };
     if (other_size == 0) return moved;
@@ -336,7 +336,7 @@ String String::concat(StringView other)&& {
     moved.set_size(new_size);
     return moved;
 }
-String String::concat(const char* other)&& {
+String String::concat(const char* other) && {
     String moved{ move(*this) };
     StringView sother{ other };
     moved.append(sother);
@@ -347,5 +347,20 @@ Span<const char> String::span() const {
 }
 Span<const uint8_t> String::bytespan() const {
     return Span<const uint8_t>{ reinterpret_cast<const uint8_t*>(get_buf_internal()), m_size };
+}
+StringStream String::stream() const& {
+    return StringStream{ *this };
+}
+StringStream String::stream() & {
+    return StringStream{ *this };
+}
+StringStream String::stream() && {
+    return StringStream{ move(*this) };
+}
+StringViewStream String::stream_view() const& {
+    return StringViewStream{ *this };
+}
+StringViewStream String::stream_view()& {
+    return StringViewStream{ *this };
 }
 }    // namespace ARLib

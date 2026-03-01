@@ -18,17 +18,17 @@ class IteratorBase {
     constexpr IteratorBase(IteratorBase<T>&& other) noexcept : m_current(other.m_current) { other.m_current = nullptr; }
 
     public:
+    constexpr const T* const ptr() const { return m_current; }
     constexpr bool operator==(const IteratorBase<T>& other) const { return m_current == other.m_current; }
     constexpr bool operator!=(const IteratorBase<T>& other) const { return m_current != other.m_current; }
     constexpr bool operator<(const IteratorBase<T>& other) { return m_current < other.m_current; }
     constexpr bool operator>(const IteratorBase<T>& other) { return m_current > other.m_current; }
 };
-// for some godforsaken reason
-#define m_current IteratorBase<T>::m_current
 template <typename T>
 class Iterator final : public IteratorBase<T> {
+    using IteratorBase<T>::m_current;
     public:
-    explicit Iterator(T* start) : IteratorBase<T>(start) {}
+    constexpr explicit Iterator(T* start) : IteratorBase<T>(start) {}
     Iterator(const Iterator<T>& other) : IteratorBase<T>(other) {}
     Iterator(Iterator<T>&& other) noexcept : IteratorBase<T>(other) {}
     T& operator*() { return *m_current; }
@@ -74,6 +74,7 @@ class Iterator final : public IteratorBase<T> {
 };
 template <typename Ct>
 class ConstIterator final : public IteratorBase<typename AddConst<Ct>::type> {
+    using IteratorBase<typename AddConst<Ct>::type>::m_current;
 
     public:
     using T = AddConstT<Ct>;
@@ -125,6 +126,7 @@ class ConstIterator final : public IteratorBase<typename AddConst<Ct>::type> {
 };
 template <typename T>
 class ReverseIterator final : public IteratorBase<T> {
+    using IteratorBase<T>::m_current;
     public:
     explicit ReverseIterator(T* end) : IteratorBase<T>(end) {}
     ReverseIterator(const ReverseIterator<T>& other) : IteratorBase<T>(other.m_current) {}
@@ -168,6 +170,7 @@ class ReverseIterator final : public IteratorBase<T> {
 template <typename Ct>
 class ConstReverseIterator final : public IteratorBase<typename AddConst<Ct>::type> {
     using T = typename AddConst<Ct>::type;
+    using IteratorBase<T>::m_current;
 
     public:
     explicit ConstReverseIterator(T* end) : IteratorBase<T>(end) {}
@@ -211,7 +214,6 @@ class ConstReverseIterator final : public IteratorBase<typename AddConst<Ct>::ty
     }
     ConstReverseIterator<Ct> operator-(Integral auto offset) { return { m_current + offset }; }
 };
-#undef m_current
 template <typename T, ComparatorType CMP, typename = EnableIfT<IsNonboolIntegral<T>>>
 class LoopIterator {
     T m_current;
