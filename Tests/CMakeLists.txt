@@ -39,8 +39,6 @@ FetchContent_Declare(
     GIT_TAG        main
 )
 
-enable_testing()
-
 include (GoogleTest)
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -55,6 +53,7 @@ add_executable(ARLibTestSuite ${TEST_SOURCE_FILES})
 if (MSVC)
 	set_property(TARGET ARLibTestSuite PROPERTY MSVC_RUNTIME_LIBRARY ${ARLIB_MSVC_LIB_TYPE})
 	target_compile_options(ARLibTestSuite PRIVATE ${AVX_FLAGS} /EHsc ${ARLIB_SANITIZERS_FLAGS})
+	target_link_options(ARLibTestSuite PRIVATE $<$<CONFIG:Debug>:/PROFILE> $<$<CONFIG:Debug>:/DEBUG:FULL>)
 else()
 	set(ARLIB_DEFAULT_COMPILE_OPTIONS -msse4.1 ${AVX_FLAGS} -fno-exceptions -Wall -Wextra)
 	if (WIN32)

@@ -392,6 +392,7 @@ if (ON_WINDOWS)
 endif()
 
 if (ARLIB_TOP_LEVEL)
+    enable_testing()
 	add_subdirectory(Tests)
 	add_subdirectory(Playground)
 	add_subdirectory(Benchmark)
