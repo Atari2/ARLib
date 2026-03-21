@@ -103,7 +103,7 @@ namespace EnumHelpers {
                     Signed ? static_cast<Ut>(cxpr::StrViewToI64(sub.substringview_fromlen(equal_idx + 1))) :
                                    static_cast<Ut>(cxpr::StrViewToU64(sub.substringview_fromlen(equal_idx + 1)))
                     );
-                    current_val = from_enum(value) + UnderlyingTypeT<T>{ 1 };
+                    current_val = from_enum(value) + Ut{ 1 };
                     return Pair{ sub.substringview_fromlen(
                                  first_nospace_idx,
                                  (last_nospace_idx < equal_idx ? last_nospace_idx : equal_idx) - first_nospace_idx
@@ -132,7 +132,7 @@ namespace EnumHelpers {
         for (const auto& [k, v] : enum_array) {
             const bool inserted = map.insert(v, k);
             if (is_constant_evaluated()) {
-                // this allocation is here for the same reason as the one at line 178
+                // this allocation is here for the same reason as the one as below in enum_to_str_view
                 if (!inserted) { new int[static_cast<size_t>(from_enum(v))]; }
             }
         }
@@ -223,7 +223,7 @@ Optional<T> enum_parse(StringView v) {
         return p.second();
     });
 }
-template <typename T>
+template <Enum T>
 constexpr bool enum_has_value(StringView ename) {
     if constexpr (EnumHelpers::EnumSupportsMap<T>) {
         constexpr const auto& enum_map = EnumHelpers::EnumMapProvider<T>::enum_array;
@@ -235,7 +235,7 @@ constexpr bool enum_has_value(StringView ename) {
         return true;    // lie about "None" support because not all enums are "fancy" and we don't want a static_assert fail on those.
     }
 }
-template <typename T>
+template <Enum T>
 constexpr T get_enum_none() {
     if constexpr (requires { T::None; }) {
         return T::None;
@@ -256,8 +256,7 @@ template <EnumHelpers::EnumSupportsMap T>
 constexpr auto for_each_enum() {
     return ForEachEnum<T>{};
 }
-template <EnumHelpers::EnumSupportsMap T, typename Functor>
-requires(requires { declval<Functor>()(declval<T>()); })
+template <EnumHelpers::EnumSupportsMap T, CallableWith<T> Functor>
 constexpr auto for_each_enum(Functor func) {
     using Res = InvokeResultT<Functor, T>;
     if constexpr (IsVoid<Res>::value) {

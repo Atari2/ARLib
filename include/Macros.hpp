@@ -38,3 +38,8 @@
 
 
 #define USE_NEW_TUPLE 1
+#ifdef __INTELLISENSE__
+constexpr bool is_intellisense = true;
+#else
+constexpr bool is_intellisense = false;
+#endif

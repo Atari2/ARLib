@@ -302,33 +302,41 @@ StringViewStream::LinesViewIterator StringViewStream::LinesViewIterator::operato
     ++(*this);
     return copy;
 }
+Span<char> StringViewStream::_writeable_span() {
+    // this const_cast is fine because the pointer underlying the StringView is writable when created
+    // it's just necessary because the StringView itself doesn't allow modifications.
+    return Span<char>{ const_cast<char*>(m_view.data()), m_view.size() };
+}
 Result<size_t> StringViewStream::write(Span<const uint8_t> buffer) {
     StringView bufview{ reinterpret_cast<const char*>(buffer.data()), buffer.size_bytes() };
+    auto writeable_span = _writeable_span();
     int64_t to_write   = static_cast<int64_t>(bufview.size());
     int64_t space_left = static_cast<int64_t>(m_view.size() - m_pos);
     if (auto needed_space = to_write - space_left; needed_space > 0) {
         return Error{ "Cannot write to StringViewStream: not enough space" };
     }
-    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_view.index(m_pos) = bufview[i]; }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { writeable_span[m_pos] = bufview[i]; }
     return static_cast<size_t>(to_write);
 }
 Result<size_t> StringViewStream::write(Span<const char> buffer) {
     StringView bufview{ buffer.data(), buffer.size_bytes() };
+    auto writeable_span = _writeable_span();
     int64_t to_write   = static_cast<int64_t>(bufview.size());
     int64_t space_left = static_cast<int64_t>(m_view.size() - m_pos);
     if (auto needed_space = to_write - space_left; needed_space > 0) {
         return Error{ "Cannot write to StringViewStream: not enough space" };
     }
-    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_view.index(m_pos) = bufview[i]; }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { writeable_span[m_pos] = bufview[i]; }
     return static_cast<size_t>(to_write);
 }
 Result<size_t> StringViewStream::write(StringView bufview) {
-    int64_t to_write   = static_cast<int64_t>(bufview.size());
+    int64_t to_write    = static_cast<int64_t>(bufview.size());
+    auto writeable_span = _writeable_span();
     int64_t space_left = static_cast<int64_t>(m_view.size() - m_pos);
     if (auto needed_space = to_write - space_left; needed_space > 0) {
         return Error{ "Cannot write to StringViewStream: not enough space" };
     }
-    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_view.index(m_pos) = bufview[i]; }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { writeable_span[m_pos] = bufview[i]; }
     return static_cast<size_t>(to_write);
 }
 Result<Vector<uint8_t>> StringViewStream::read(size_t n) {
@@ -344,12 +352,13 @@ Result<Vector<uint8_t>> StringViewStream::read() {
     return Vector<uint8_t>{ ptr, m_view.size() };
 }
 Result<size_t> StringViewStream::write_string(StringView buffer) {
+    auto writeable_span = _writeable_span();
     int64_t to_write   = static_cast<int64_t>(buffer.size());
     int64_t space_left = static_cast<int64_t>(m_view.size() - m_pos);
     if (auto needed_space = to_write - space_left; needed_space > 0) {
         return Error{ "Cannot write to StringViewStream: not enough space" };
     }
-    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { m_view.index(m_pos) = buffer[i]; }
+    for (size_t i = 0; to_write > 0; --to_write, ++m_pos, ++i) { writeable_span[m_pos] = buffer[i]; }
     return static_cast<size_t>(to_write);
 }
 Result<String> StringViewStream::read_string() {

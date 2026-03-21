@@ -153,6 +153,7 @@ class StringStream : public CharacterStream {
 class StringViewStream : public CharacterStream {
     size_t m_pos{ 0 };
     StringView m_view;
+    Span<char> _writeable_span();
     public:
     class LinesViewIterator {
         MaybeOwned<StringViewStream> m_stream;

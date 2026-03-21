@@ -3,6 +3,7 @@
 #include "Utility.hpp"
 #include "Iterator.hpp"
 #include "Pair.hpp"
+#include "PrintInfo.hpp"
 namespace ARLib {
 template <typename T>
 class Span {
@@ -50,5 +51,20 @@ class Span {
         return Span(m_begin + offset, m_begin + offset + count);
     }
     constexpr bool operator==(const Span& other) const noexcept = default;
+};
+
+template <Printable T>
+struct PrintInfo<Span<T>> {
+    const Span<T>& m_span;
+    PrintInfo(const Span<T>& span) : m_span(span) {}
+    String repr() const {
+        String result = "["_s;
+        for (size_t i = 0; i < m_span.size(); i++) {
+            result += print_conditional(m_span[i]);
+            if (i != m_span.size() - 1) { result += ", "; }
+        }
+        result += "]";
+        return result;
+    }
 };
 }    // namespace ARLib

@@ -97,7 +97,7 @@ String LoggingFormat::format_message(StringView message, LogLevel level, StringV
                     output.append(enum_to_str_view(level));
                     break;
                 case LoggingFormatSpecifier::LogLevelShort:
-                    output.append(enum_to_str_view(level)[0]); 
+                    output.append(enum_to_str_view(level).first()); 
                     break;
                 case LoggingFormatSpecifier::LoggerName:
                     output.append(logger_name);

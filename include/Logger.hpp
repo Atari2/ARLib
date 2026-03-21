@@ -33,11 +33,6 @@ class LoggingFormat {
     static Result<LoggingFormat, LoggingError> from_string(StringView format);
     String format_message(StringView message, LogLevel level, StringView logger_name) const;
 };
-#ifdef __INTELLISENSE__
-constexpr bool is_intellisense = true;
-#else
-constexpr bool is_intellisense = false;
-#endif
 template <typename... Args>
 using LoggerStringParam = ConditionalT<is_intellisense, StringView, FormatString<sizeof...(Args)>>;
 
