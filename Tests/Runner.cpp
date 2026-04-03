@@ -325,6 +325,12 @@ TEST(ARLibTests, VariantTests) {
     EXPECT_EQ(variant.contains_type<float>(), false);
     EXPECT_EQ(variant.contains_type<int>(), true);
     EXPECT_EQ(variant.get<int>(), 10);
+    auto opt = variant.get_if<int>();
+    EXPECT_TRUE(opt.has_value());
+    EXPECT_EQ(*opt, 10);
+    auto opt2 = variant.get_if<String>();
+    EXPECT_FALSE(opt2.has_value()); 
+    EXPECT_TRUE(opt2.empty());
     Variant<Monostate> mono{};
     EXPECT_EQ(mono.is_active(), false);
     mono = Monostate{};

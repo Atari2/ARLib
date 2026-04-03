@@ -267,6 +267,20 @@ namespace v2 {
             HARD_ASSERT(index == m_current_type, "get<>() in variant was trying to access not current type");
             return m_storage.template as<T>();
         }
+        template <typename T>
+        requires VariantAnyOf<T, Types...>
+        Optional<T&> get_if() {
+            [[maybe_unused]] constexpr size_t index = VariantArray::template IndexOf<T>;
+            if (index != m_current_type) return {};
+            return Optional<T&>{ m_storage.template as<T>() };
+        }
+        template <typename T>
+        requires VariantAnyOf<T, Types...>
+        Optional<const T&> get_if() const {
+            [[maybe_unused]] constexpr size_t index = VariantArray::template IndexOf<T>;
+            if (index != m_current_type) return {};
+            return Optional<const T&>{ m_storage.template as<T>() };
+        }
         template <size_t Index>
         requires(Index < ntypes)
         const auto& get() const {
@@ -280,6 +294,20 @@ namespace v2 {
             using T = typename VariantArray::template At<Index>;
             HARD_ASSERT(Index == m_current_type, "get<>() in variant was trying to access not current type");
             return m_storage.template as<T>();
+        }
+        template <size_t Index>
+        requires(Index < ntypes)
+        const auto& get_if() const {
+            using T = typename VariantArray::template At<Index>;
+            if (Index != m_current_type) return Optional<const T&>{};
+            return Optional<const T&>{ m_storage.template as<T>() };
+        }
+        template <size_t Index>
+        requires(Index < ntypes)
+        auto& get_if() {
+            using T = typename VariantArray::template At<Index>;
+            if (Index != m_current_type) return Optional<T&>{};
+            return Optional<T&>{ m_storage.template as<T>() };
         }
         template <typename... Args>
         requires(variant_constructible(type_carrier, PackCarrier<Args...>{}))
