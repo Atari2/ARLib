@@ -180,6 +180,7 @@ list(APPEND LIB_SOURCE_FILES_CPP
     ${ARLIB_SOURCE_DIR}/CharConv.cpp
     ${ARLIB_SOURCE_DIR}/CSVParser.cpp
     ${ARLIB_SOURCE_DIR}/DebugNewDelete.cpp
+    ${ARLIB_SOURCE_DIR}/DoubleFromChars.cpp
     ${ARLIB_SOURCE_DIR}/EventLoop.cpp
     ${ARLIB_SOURCE_DIR}/File.cpp
 	${ARLIB_SOURCE_DIR}/FileSystem.cpp
@@ -243,6 +244,7 @@ list(APPEND LIB_SOURCE_FILES_H
     ${ARLIB_INCLUDE_DIR}/CxprHashMap.hpp
     ${ARLIB_INCLUDE_DIR}/DebugNewDelete.hpp
     ${ARLIB_INCLUDE_DIR}/Destructuring.hpp
+    ${ARLIB_INCLUDE_DIR}/DoubleFromChars.hpp
     ${ARLIB_INCLUDE_DIR}/EnumConcepts.hpp
     ${ARLIB_INCLUDE_DIR}/EnumHelpers.hpp
     ${ARLIB_INCLUDE_DIR}/Enumerate.hpp

@@ -9,17 +9,17 @@ class MaybeOwned {
     Variant<SharedPtr<T>, RefBox<T>> m_obj;
 
     T* internal_ptr() {
-        if (m_obj.template contains_type<SharedPtr<T>>()) {
-            return m_obj.template get<SharedPtr<T>>().get();
+        if (m_obj.contains_type<SharedPtr<T>>()) {
+            return m_obj.get<SharedPtr<T>>().get();
         } else {
-            return m_obj.template get<RefBox<T>>().ptr();
+            return m_obj.get<RefBox<T>>().ptr();
         }
     }
     const T* internal_ptr() const {
-        if (m_obj.template contains_type<SharedPtr<T>>()) {
-            return m_obj.template get<SharedPtr<T>>().get();
+        if (m_obj.contains_type<SharedPtr<T>>()) {
+            return m_obj.get<SharedPtr<T>>().get();
         } else {
-            return m_obj.template get<RefBox<T>>().ptr();
+            return m_obj.get<RefBox<T>>().ptr();
         }
     }
     MaybeOwned(T* ptr) : m_obj{ SharedPtr<T>{ ptr } } {}

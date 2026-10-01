@@ -302,7 +302,7 @@ String IntToStr(Integral auto value) {
             while (uvalue > 0) {
                 Integral auto rem = uvalue % 16;
                 if (rem > 9)
-                    rev[idx--] = (static_cast<char>(rem) + 'W');  // W = 'a' - 10
+                    rev[idx--] = (static_cast<char>(rem) + 'W');    // W = 'a' - 10
                 else
                     rev[idx--] = (static_cast<char>(rem) + '0');
                 uvalue >>= 4;
@@ -364,7 +364,7 @@ inline String ToString(Stringable auto& value) {
 }
 String IntToStrFormatted(Integral auto value, const String& format) {
     if (format.size() != 1 && format.size() != 2) { return IntToStr(value); }
-    char base = format.size() == 2 ? format[1] : format[0];
+    char base         = format.size() == 2 ? format[1] : format[0];
     char wants_prefix = format.size() == 2 ? format[0] == '#' : false;
     switch (base) {
         case 'D':
@@ -419,6 +419,15 @@ String IntToStrFormatted(Integral auto value, const String& format) {
             return IntToStr(value);
     }
 }
+String DoubleToStrFormatted(FloatingPoint auto value, const String& format) {
+    size_t idx = 0;
+    if (format.starts_with(".")) { idx = 1; }
+    if (auto prec = StrViewToInt(format.substringview(idx)); prec.is_ok()) {
+        return DoubleToStr(value, prec.to_ok());
+    } else {
+        return DoubleToStr(value);
+    }
+}
 #define _PRINT_LAMBDA_WRAP(func)                                                                                       \
     [](const auto& v, [[maybe_unused]] const String& fmt) {                                                            \
         return func(v);                                                                                                \
@@ -433,7 +442,7 @@ BASIC_PRINT_IMPL(unsigned long, IntToStr, IntToStrFormatted)
 BASIC_PRINT_IMPL(long long, IntToStr, IntToStrFormatted)
 BASIC_PRINT_IMPL(unsigned long long, IntToStr, IntToStrFormatted)
 BASIC_PRINT_IMPL(long double, LongDoubleToStr, _PRINT_LAMBDA_WRAP(LongDoubleToStr))
-BASIC_PRINT_IMPL(double, DoubleToStr, _PRINT_LAMBDA_WRAP(DoubleToStr))
+BASIC_PRINT_IMPL(double, DoubleToStr, DoubleToStrFormatted)
 BASIC_PRINT_IMPL(float, FloatToStr, _PRINT_LAMBDA_WRAP(FloatToStr))
 BASIC_PRINT_IMPL(unsigned char, IntToStr, IntToStrFormatted);
 BASIC_PRINT_IMPL(char, CharToStr, _PRINT_LAMBDA_WRAP(CharToStr))

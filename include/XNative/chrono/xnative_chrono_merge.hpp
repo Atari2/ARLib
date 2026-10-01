@@ -210,10 +210,11 @@ PRINT_IMPL_FOR_TIME(Seconds, "s");
 PRINT_IMPL_FOR_TIME(Millis, "ms");
 PRINT_IMPL_FOR_TIME(Micros, "us");
 PRINT_IMPL_FOR_TIME(Nanos, "ns");
+
 class CommonTime {
     using TimeArray = TypeArray<Seconds, Millis, Micros, Nanos>;
     Variant<Seconds, Millis, Micros, Nanos> m_time;
-    enum class Type { Seconds, Millis, Micros, Nanos };
+    enum class Type : uint8_t { Seconds, Millis, Micros, Nanos };
     Type m_type;
     template <TimeUnitType T>
     Ordering compare_self_with_other(const T& other) const;

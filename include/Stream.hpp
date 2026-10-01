@@ -172,12 +172,12 @@ class StringViewStream : public CharacterStream {
         MaybeOwned<StringViewStream> m_stream;
         public:
         LinesView(StringViewStream& stream) :
-            m_stream{ MaybeOwned<StringViewStream>::template lended<StringViewStream>(stream) } {
+            m_stream{ MaybeOwned<StringViewStream>::lended<StringViewStream>(stream) } {
             if (auto& fs = *m_stream; !fs.is_open()) { fs.open(); }
         }
         LinesView(StringViewStream&& stream) :
             m_stream{
-                MaybeOwned<StringViewStream>::template owned<StringViewStream>(Forward<StringViewStream>(stream))
+                MaybeOwned<StringViewStream>::owned<StringViewStream>(Forward<StringViewStream>(stream))
             } {
             if (auto& fs = *m_stream; !fs.is_open()) { fs.open(); }
         }
