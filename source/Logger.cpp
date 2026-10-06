@@ -10,6 +10,7 @@ namespace AnsiEsc {
     constexpr auto blue     = escape + "34m";
     constexpr auto white    = escape + "37m";
     constexpr auto defaultc = escape + "39m";
+    constexpr auto rgb      = escape + "38;2;";
 
     constexpr StringView color_map[]{
         defaultc.view(),    // trace
@@ -24,6 +25,11 @@ Result<LoggingFormat, LoggingError> LoggingFormat::from_string(StringView format
     auto current_literal = format.begin();
     LoggingFormat fmt{};
     bool in_specifier = false;
+    enum class ColorSpec {
+        None,
+        StartColorSpec,
+        Value,
+    } color_spec_state = ColorSpec::None;
     for (auto it = format.begin(); it != format.end(); ++it) {
         const char c = *it;
         if (in_specifier) {
@@ -51,6 +57,8 @@ Result<LoggingFormat, LoggingError> LoggingFormat::from_string(StringView format
                     fmt.m_parts.emplace(LoggingFormatSpecifier::ThreadId);
                     break;
                 case 'c':
+                    color_spec_state = ColorSpec::StartColorSpec;
+                    break;
                 case 'C':
                     fmt.m_parts.emplace(LoggingFormatSpecifier::DefaultColor);
                     break;
@@ -71,6 +79,30 @@ Result<LoggingFormat, LoggingError> LoggingFormat::from_string(StringView format
             }
             in_specifier    = false;
             current_literal = it + 1;
+        } else if (color_spec_state != ColorSpec::None) {
+            switch (color_spec_state) {
+                case ColorSpec::StartColorSpec:
+                    if (c == '{') {
+                        color_spec_state = ColorSpec::Value;
+                        current_literal  = it + 1;
+                    } else {
+                        return LoggingError::FormatError;
+                    }
+                    break;
+                case ColorSpec::Value:
+                    if (c == '}') {
+                        // end of color spec
+                        StringView color_spec = StringView{ current_literal, it };
+                        color_spec_state      = ColorSpec::None;
+                        if (auto oc = Color::from_spec(color_spec); oc.has_value()) {
+                            fmt.m_parts.emplace(*oc);
+                        } else {
+                            return LoggingError::FormatError;
+                        }
+                        current_literal = it + 1;
+                    }
+                    break;
+            }
         } else {
             if (c == '%') {
                 in_specifier = true;
@@ -97,7 +129,7 @@ String LoggingFormat::format_message(StringView message, LogLevel level, StringV
                     output.append(enum_to_str_view(level));
                     break;
                 case LoggingFormatSpecifier::LogLevelShort:
-                    output.append(enum_to_str_view(level).first()); 
+                    output.append(enum_to_str_view(level).first());
                     break;
                 case LoggingFormatSpecifier::LoggerName:
                     output.append(logger_name);
@@ -124,6 +156,15 @@ String LoggingFormat::format_message(StringView message, LogLevel level, StringV
                     output.append('\n');
                     break;
             }
+        } else if (specifier.contains_type<Color>()) {
+            const auto& spec = specifier.get<Color>();
+            output.append(AnsiEsc::rgb);
+            output.append(IntToStr(spec.r()));
+            output.append(';');
+            output.append(IntToStr(spec.g()));
+            output.append(';');
+            output.append(IntToStr(spec.b()));
+            output.append('m');
         } else {
             // literals
             const auto& literal = specifier.get<String>();
@@ -170,5 +211,9 @@ Logger::LoggingStorage::ResultType Logger::get_named_logger(StringView name) {
 }
 Logger::LoggingStorage::ResultType Logger::get_default_logger() {
     return store().get("default"_sv);
+}
+PrintInfo<LoggingFormat::Color>::PrintInfo(const LoggingFormat::Color& color) : color{ color } {}
+String PrintInfo<LoggingFormat::Color>::repr() const {
+    return "{"_s + IntToStr(color.r()) + "," + IntToStr(color.g()) + "," + IntToStr(color.b()) + "}";
 }
 }    // namespace ARLib

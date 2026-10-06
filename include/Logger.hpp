@@ -26,7 +26,63 @@ class LoggingFormat {
         LoggerName,
         LineBreak
     };
-    using LoggingFormatPart = Variant<LoggingFormatSpecifier, String>;
+    public:
+    class Color {
+        public:
+        struct RGB {
+            uint8_t r;
+            uint8_t g;
+            uint8_t b;
+        };
+        constexpr static inline Array<Pair<StringView, RGB>, 16> names{
+            Pair{ "black"_sv,          RGB{ 0, 0, 0 }       },
+            Pair{ "red"_sv,            RGB{ 196, 0, 0 }     },
+            Pair{ "green"_sv,          RGB{ 0, 196, 0 }     },
+            Pair{ "yellow"_sv,         RGB{ 196, 126, 0 }   },
+            Pair{ "blue"_sv,           RGB{ 0, 0, 196 }     },
+            Pair{ "magenta"_sv,        RGB{ 196, 0, 196 }   },
+            Pair{ "cyan"_sv,           RGB{ 0, 196, 196 }   },
+            Pair{ "white"_sv,          RGB{ 196, 196, 196 } },
+            Pair{ "bright_black"_sv,   RGB{ 78, 78, 78 }    },
+            Pair{ "bright_red"_sv,     RGB{ 220, 78, 78 }   },
+            Pair{ "bright_green"_sv,   RGB{ 78, 220, 78 }   },
+            Pair{ "bright_yellow"_sv,  RGB{ 243, 243, 78 }  },
+            Pair{ "bright_blue"_sv,    RGB{ 78, 78, 220 }   },
+            Pair{ "bright_magenta"_sv, RGB{ 243, 78, 243 }  },
+            Pair{ "bright_cyan"_sv,    RGB{ 78, 243, 243 }  },
+            Pair{ "bright_white"_sv,   RGB{ 255, 255, 255 } }
+        };
+        static Optional<Color> from_spec(StringView spec) {
+            if (auto oc = Color::from_name(spec); oc.has_value()) { return oc; }
+            auto s =
+            spec.split(",").iter().map([](auto& v) { return StrViewToInt(v.trim()); }).map_ok().collect<Vector<int>>();
+            if (s.size() == 3) {
+                return Color{
+                    RGB{ static_cast<uint8_t>(s[0]), static_cast<uint8_t>(s[1]), static_cast<uint8_t>(s[2]) }
+                };
+            } else {
+                return Optional<Color>{};
+            }
+        }
+        static Color from_rgb(uint8_t r, uint8_t g, uint8_t b) {
+            return Color{
+                RGB{ r, g, b }
+            };
+        }
+        static Optional<Color> from_name(StringView name) {
+            return names.iter().find_if([&](auto& np) { return np.first() == name; }).map([](auto& np) {
+                return Color{ np.second() };
+            });
+        }
+        uint8_t r() const { return color.r; }
+        uint8_t g() const { return color.g; }
+        uint8_t b() const { return color.b; }
+        private:
+        Color(RGB rgb) : color{ rgb } {}
+        RGB color;
+    };
+    private:
+    using LoggingFormatPart = Variant<LoggingFormatSpecifier, Color, String>;
     Vector<LoggingFormatPart> m_parts;
     public:
     LoggingFormat() = default;
@@ -143,8 +199,12 @@ class StreamLogger : public LoggingBackend {
     LogResult log(LogLevel level, StringView message) override {
         if (!should_log(level)) return {};
         auto formatted_message = format_message(message, level);
-        TRY(m_stream->write(formatted_message.view()).map_error([](auto&& e) { return LoggingError::OutputError; }));
-        TRY(m_stream->write(_newline_span).map_error([](auto&& e) { return LoggingError::OutputError; }));
+        TRY(m_stream->write(formatted_message.view()).map_error([]([[maybe_unused]] auto&& e) {
+            return LoggingError::OutputError;
+        }));
+        TRY(m_stream->write(_newline_span).map_error([]([[maybe_unused]] auto&& e) {
+            return LoggingError::OutputError;
+        }));
         return {};
     }
 };
@@ -157,8 +217,12 @@ class StreamLoggerTs : public LoggingBackendTs {
     LogResult _log_ts(LogLevel level, StringView message) override {
         if (!should_log(level)) return {};
         auto formatted_message = format_message(message, level);
-        TRY(m_stream->write(formatted_message.view()).map_error([](auto&& e) { return LoggingError::OutputError; }));
-        TRY(m_stream->write(_newline_span).map_error([](auto&& e) { return LoggingError::OutputError; }));
+        TRY(m_stream->write(formatted_message.view()).map_error([]([[maybe_unused]] auto&& e) {
+            return LoggingError::OutputError;
+        }));
+        TRY(m_stream->write(_newline_span).map_error([]([[maybe_unused]] auto&& e) {
+            return LoggingError::OutputError;
+        }));
         return {};
     }
     StreamLoggerTs(String name, LogLevel level, LoggingFormat format, T&& stream) :
@@ -182,7 +246,7 @@ class FileLogger : public StreamLogger<FileStream> {
     create(String name, LogLevel level, String file_path, StringView format = DefaultLogFileFormat) {
         TRY_SET(parsed_format, LoggingFormat::from_string(format));
         FileStream stream{ file_path };
-        TRY(stream.open().map_error([](auto&& e) { return LoggingError::OpenStreamError; }));
+        TRY(stream.open().map_error([]([[maybe_unused]] auto&& e) { return LoggingError::OpenStreamError; }));
         return SharedPtr<LoggingBackend>{
             new FileLogger{ move(name), level, move(parsed_format), move(file_path), move(stream) }
         };
@@ -198,7 +262,7 @@ class BufferedFileLogger : public StreamLogger<BufferedFileStream> {
     create(String name, LogLevel level, String file_path, StringView format = DefaultLogFileFormat) {
         TRY_SET(parsed_format, LoggingFormat::from_string(format));
         BufferedFileStream stream{ file_path };
-        TRY(stream.open().map_error([](auto&& e) { return LoggingError::OpenStreamError; }));
+        TRY(stream.open().map_error([]([[maybe_unused]] auto&& e) { return LoggingError::OpenStreamError; }));
         return SharedPtr<LoggingBackend>{
             new BufferedFileLogger{ move(name), level, move(parsed_format), move(file_path), move(stream) }
         };
@@ -227,7 +291,7 @@ class FileLoggerTs : public StreamLoggerTs<FileStream> {
     create(String name, LogLevel level, String file_path, StringView format = DefaultLogFileFormat) {
         TRY_SET(parsed_format, LoggingFormat::from_string(format));
         FileStream stream{ file_path };
-        TRY(stream.open().map_error([](auto&& e) { return LoggingError::OpenStreamError; }));
+        TRY(stream.open().map_error([]([[maybe_unused]] auto&& e) { return LoggingError::OpenStreamError; }));
         return SharedPtr<LoggingBackend>{
             new FileLoggerTs{ move(name), level, move(parsed_format), move(file_path), move(stream) }
         };
@@ -243,7 +307,7 @@ class BufferedFileLoggerTs : public StreamLoggerTs<BufferedFileStream> {
     create(String name, LogLevel level, String file_path, StringView format = DefaultLogFileFormat) {
         TRY_SET(parsed_format, LoggingFormat::from_string(format));
         BufferedFileStream stream{ file_path };
-        TRY(stream.open().map_error([](auto&& e) { return LoggingError::OpenStreamError; }));
+        TRY(stream.open().map_error([]([[maybe_unused]] auto&& e) { return LoggingError::OpenStreamError; }));
         return SharedPtr<LoggingBackend>{
             new BufferedFileLoggerTs{ move(name), level, move(parsed_format), move(file_path), move(stream) }
         };
@@ -335,4 +399,12 @@ class Logger {
         return log(LogLevel::Trace, move(str), Forward<Args>(args)...);
     }
 };
+
+template <>
+struct PrintInfo<LoggingFormat::Color> {
+    const LoggingFormat::Color& color;
+    explicit PrintInfo(const LoggingFormat::Color& parser);
+    String repr() const;
+};
+
 }    // namespace ARLib
