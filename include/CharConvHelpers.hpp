@@ -286,8 +286,7 @@ inline auto StrViewToU64Hexadecimal(const StringView str) {
     return StrViewTo64Hexadecimal<false>(str);
 }
 template <size_t Base>
-constexpr size_t StrLenFromIntegral(Integral auto v) noexcept {
-    static_assert(!IsSigned<decltype(v)>, "Value must be unsigned");
+constexpr size_t StrLenFromIntegral(UnsignedIntegral auto v) noexcept {
     size_t value          = static_cast<size_t>(v);
     size_t n              = 1;
     constexpr size_t base = Base;

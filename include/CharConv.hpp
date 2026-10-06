@@ -425,7 +425,28 @@ String DoubleToStrFormatted(FloatingPoint auto value, const String& format) {
     if (auto prec = StrViewToInt(format.substringview(idx)); prec.is_ok()) {
         return DoubleToStr(value, prec.to_ok());
     } else {
+        prec.ignore_error();
         return DoubleToStr(value);
+    }
+}
+String LongDoubleToStrFormatted(FloatingPoint auto value, const String& format) {
+    size_t idx = 0;
+    if (format.starts_with(".")) { idx = 1; }
+    if (auto prec = StrViewToInt(format.substringview(idx)); prec.is_ok()) {
+        return LongDoubleToStr(value, prec.to_ok());
+    } else {
+        prec.ignore_error();
+        return LongDoubleToStr(value);
+    }
+}
+String FloatToStrFormatted(FloatingPoint auto value, const String& format) {
+    size_t idx = 0;
+    if (format.starts_with(".")) { idx = 1; }
+    if (auto prec = StrViewToInt(format.substringview(idx)); prec.is_ok()) {
+        return FloatToStr(value, prec.to_ok());
+    } else {
+        prec.ignore_error();
+        return FloatToStr(value);
     }
 }
 #define _PRINT_LAMBDA_WRAP(func)                                                                                       \
@@ -441,9 +462,9 @@ BASIC_PRINT_IMPL(long, IntToStr, IntToStrFormatted)
 BASIC_PRINT_IMPL(unsigned long, IntToStr, IntToStrFormatted)
 BASIC_PRINT_IMPL(long long, IntToStr, IntToStrFormatted)
 BASIC_PRINT_IMPL(unsigned long long, IntToStr, IntToStrFormatted)
-BASIC_PRINT_IMPL(long double, LongDoubleToStr, _PRINT_LAMBDA_WRAP(LongDoubleToStr))
+BASIC_PRINT_IMPL(long double, LongDoubleToStr, LongDoubleToStrFormatted)
 BASIC_PRINT_IMPL(double, DoubleToStr, DoubleToStrFormatted)
-BASIC_PRINT_IMPL(float, FloatToStr, _PRINT_LAMBDA_WRAP(FloatToStr))
+BASIC_PRINT_IMPL(float, FloatToStr, FloatToStrFormatted)
 BASIC_PRINT_IMPL(unsigned char, IntToStr, IntToStrFormatted);
 BASIC_PRINT_IMPL(char, CharToStr, _PRINT_LAMBDA_WRAP(CharToStr))
 BASIC_PRINT_IMPL(bool, BoolToStr, _PRINT_LAMBDA_WRAP(BoolToStr))
