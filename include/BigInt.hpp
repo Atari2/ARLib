@@ -173,6 +173,7 @@ class BigInt {
     bool fits() const;
     void clear() { m_buffer.clear_retain(); }
     uint64_t to_absolute_value() const;
+    double to_double_lossy() const;
 };
 static inline const BigInt __bigint_zero = BigInt{};
 static inline const BigInt __bigint_one  = BigInt{ 1 };

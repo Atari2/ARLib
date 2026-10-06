@@ -59,7 +59,7 @@ BigInt BigInt::multiplication(const BigInt& left, const BigInt& right) {
 }
 // checks if value fits into a uint64_t, without sign
 bool BigInt::fits() const {
-    return size() <= NumberTraits<uint64_t>::size;
+    return size() <= (NumberTraits<uint64_t>::max_digits / 2);
 }
 uint64_t BigInt::to_absolute_value_for_division() const {
     uint64_t pows[] = { 1ull,
@@ -69,11 +69,24 @@ uint64_t BigInt::to_absolute_value_for_division() const {
                         1'00'00'00'00ull,
                         1'00'00'00'00'00ull,
                         1'00'00'00'00'00'00ull,
-                        1'00'00'00'00'00'00'00ull };
-    static_assert(sizeof_array(pows) == NumberTraits<uint64_t>::size);
+                        1'00'00'00'00'00'00'00ull,
+                        1'00'00'00'00'00'00'00'00ull,
+                        1'00'00'00'00'00'00'00'00'00ull };
+    static_assert(sizeof_array(pows) == NumberTraits<uint64_t>::max_digits / 2);
     if (!fits()) return NumberTraits<uint64_t>::max;
     uint64_t value = 0;
     for (size_t i = 0; i < m_buffer.size(); i++) { value += (static_cast<uint64_t>(m_buffer[i]) * pows[i]); }
+    return value;
+}
+double BigInt::to_double_lossy() const {
+    if (size() > NumberTraits<double>::max_digits / 2) {
+        // not representable in a double
+        return NumberTraits<double>::max;
+    }
+    double value = 0;
+    for (const auto [i, v] : enumerate(m_buffer)) {
+        value += (static_cast<double>(v) * pow(100, static_cast<double>(i)));
+    }
     return value;
 }
 uint64_t BigInt::to_absolute_value() const {
@@ -85,8 +98,9 @@ uint64_t BigInt::to_absolute_value() const {
                                      1'00'00'00'00ll,
                                      1'00'00'00'00'00ll,
                                      1'00'00'00'00'00'00ll,
-                                     1'00'00'00'00'00'00'00ll };
-        static_assert(sizeof_array(pows) == NumberTraits<int64_t>::size);
+                                     1'00'00'00'00'00'00'00ll,
+                                     1'00'00'00'00'00'00'00'00ll };
+        static_assert(sizeof_array(pows) == NumberTraits<int64_t>::max_digits / 2);
         if (!fits()) return static_cast<uint64_t>(NumberTraits<int64_t>::min);
         int64_t value = 0;
         for (size_t i = 0; i < m_buffer.size(); i++) { value += (static_cast<int64_t>(m_buffer[i]) * pows[i]); }
@@ -100,7 +114,10 @@ uint64_t BigInt::to_absolute_value() const {
                                       1'00'00'00'00ull,
                                       1'00'00'00'00'00ull,
                                       1'00'00'00'00'00'00ull,
-                                      1'00'00'00'00'00'00'00ull };
+                                      1'00'00'00'00'00'00'00ull,
+                                      1'00'00'00'00'00'00'00'00ull,
+                                      1'00'00'00'00'00'00'00'00'00ull };
+        static_assert(sizeof_array(pows) == NumberTraits<uint64_t>::max_digits / 2);
         if (!fits()) return NumberTraits<uint64_t>::max;
         uint64_t value = 0;
         for (size_t i = 0; i < m_buffer.size(); i++) { value += (static_cast<uint64_t>(m_buffer[i]) * pows[i]); }
