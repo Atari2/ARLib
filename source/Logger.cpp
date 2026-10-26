@@ -2,15 +2,15 @@
 #include "Chrono.hpp"
 namespace ARLib {
 namespace AnsiEsc {
-    constexpr auto escape   = "\x1b["_l;
-    constexpr auto reset    = escape + "0m";
-    constexpr auto red      = escape + "31m";
-    constexpr auto green    = escape + "32m";
-    constexpr auto yellow   = escape + "33m";
-    constexpr auto blue     = escape + "34m";
-    constexpr auto white    = escape + "37m";
-    constexpr auto defaultc = escape + "39m";
-    constexpr auto rgb      = escape + "38;2;";
+    constexpr auto escape                 = "\x1b["_l;
+    constexpr auto reset                  = escape + "0m";
+    constexpr auto red                    = escape + "31m";
+    [[maybe_unused]] constexpr auto green = escape + "32m";
+    constexpr auto yellow                 = escape + "33m";
+    constexpr auto blue                   = escape + "34m";
+    [[maybe_unused]] constexpr auto white = escape + "37m";
+    constexpr auto defaultc               = escape + "39m";
+    constexpr auto rgb                    = escape + "38;2;";
 
     constexpr StringView color_map[]{
         defaultc.view(),    // trace
@@ -21,6 +21,31 @@ namespace AnsiEsc {
         red.view()          // critical
     };
 }    // namespace AnsiEsc
+Optional<LoggingFormat::Color> LoggingFormat::Color::from_spec(StringView spec) {
+    if (auto oc = Color::from_name(spec); oc.has_value()) { return oc; }
+    auto s = spec.split(",")
+             .iter()
+             .map([](auto& v) { return StrViewToInt(v.trim()); })
+             .filter_map([](Result<int>&& v) -> Optional<uint8_t> {
+                 if (v.is_ok()) {
+                     if (auto rv = v.to_ok(); rv >= 0 && rv <= 255) return static_cast<uint8_t>(rv);
+                 } else {
+                     v.ignore_error();
+                 }
+                 return {};
+             })
+             .collect<Vector<uint8_t>>();
+    if (s.size() == 3) {
+        return Color{ s[0], s[1], s[2] };
+    } else {
+        return Optional<Color>{};
+    }
+}
+Optional<LoggingFormat::Color> LoggingFormat::Color::from_name(StringView name) {
+    return color_names.iter().find_if([&](auto& np) { return np.first() == name; }).map([](auto& np) {
+        return LoggingFormat::Color{ np.second() };
+    });
+}
 Result<LoggingFormat, LoggingError> LoggingFormat::from_string(StringView format) {
     auto current_literal = format.begin();
     LoggingFormat fmt{};
@@ -81,6 +106,9 @@ Result<LoggingFormat, LoggingError> LoggingFormat::from_string(StringView format
             current_literal = it + 1;
         } else if (color_spec_state != ColorSpec::None) {
             switch (color_spec_state) {
+                case ColorSpec::None:
+                    arlib_unreachable;
+                    break;
                 case ColorSpec::StartColorSpec:
                     if (c == '{') {
                         color_spec_state = ColorSpec::Value;
@@ -159,11 +187,11 @@ String LoggingFormat::format_message(StringView message, LogLevel level, StringV
         } else if (specifier.contains_type<Color>()) {
             const auto& spec = specifier.get<Color>();
             output.append(AnsiEsc::rgb);
-            output.append(IntToStr(spec.r()));
+            output.append(IntToStr(spec.r));
             output.append(';');
-            output.append(IntToStr(spec.g()));
+            output.append(IntToStr(spec.g));
             output.append(';');
-            output.append(IntToStr(spec.b()));
+            output.append(IntToStr(spec.b));
             output.append('m');
         } else {
             // literals
@@ -214,6 +242,6 @@ Logger::LoggingStorage::ResultType Logger::get_default_logger() {
 }
 PrintInfo<LoggingFormat::Color>::PrintInfo(const LoggingFormat::Color& color) : color{ color } {}
 String PrintInfo<LoggingFormat::Color>::repr() const {
-    return "{"_s + IntToStr(color.r()) + "," + IntToStr(color.g()) + "," + IntToStr(color.b()) + "}";
+    return "{"_s + IntToStr(color.r) + "," + IntToStr(color.g) + "," + IntToStr(color.b) + "}";
 }
 }    // namespace ARLib

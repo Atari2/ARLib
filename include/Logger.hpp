@@ -27,61 +27,32 @@ class LoggingFormat {
         LineBreak
     };
     public:
-    class Color {
-        public:
-        struct RGB {
-            uint8_t r;
-            uint8_t g;
-            uint8_t b;
-        };
-        constexpr static inline Array<Pair<StringView, RGB>, 16> names{
-            Pair{ "black"_sv,          RGB{ 0, 0, 0 }       },
-            Pair{ "red"_sv,            RGB{ 196, 0, 0 }     },
-            Pair{ "green"_sv,          RGB{ 0, 196, 0 }     },
-            Pair{ "yellow"_sv,         RGB{ 196, 126, 0 }   },
-            Pair{ "blue"_sv,           RGB{ 0, 0, 196 }     },
-            Pair{ "magenta"_sv,        RGB{ 196, 0, 196 }   },
-            Pair{ "cyan"_sv,           RGB{ 0, 196, 196 }   },
-            Pair{ "white"_sv,          RGB{ 196, 196, 196 } },
-            Pair{ "bright_black"_sv,   RGB{ 78, 78, 78 }    },
-            Pair{ "bright_red"_sv,     RGB{ 220, 78, 78 }   },
-            Pair{ "bright_green"_sv,   RGB{ 78, 220, 78 }   },
-            Pair{ "bright_yellow"_sv,  RGB{ 243, 243, 78 }  },
-            Pair{ "bright_blue"_sv,    RGB{ 78, 78, 220 }   },
-            Pair{ "bright_magenta"_sv, RGB{ 243, 78, 243 }  },
-            Pair{ "bright_cyan"_sv,    RGB{ 78, 243, 243 }  },
-            Pair{ "bright_white"_sv,   RGB{ 255, 255, 255 } }
-        };
-        static Optional<Color> from_spec(StringView spec) {
-            if (auto oc = Color::from_name(spec); oc.has_value()) { return oc; }
-            auto s =
-            spec.split(",").iter().map([](auto& v) { return StrViewToInt(v.trim()); }).map_ok().collect<Vector<int>>();
-            if (s.size() == 3) {
-                return Color{
-                    RGB{ static_cast<uint8_t>(s[0]), static_cast<uint8_t>(s[1]), static_cast<uint8_t>(s[2]) }
-                };
-            } else {
-                return Optional<Color>{};
-            }
-        }
-        static Color from_rgb(uint8_t r, uint8_t g, uint8_t b) {
-            return Color{
-                RGB{ r, g, b }
-            };
-        }
-        static Optional<Color> from_name(StringView name) {
-            return names.iter().find_if([&](auto& np) { return np.first() == name; }).map([](auto& np) {
-                return Color{ np.second() };
-            });
-        }
-        uint8_t r() const { return color.r; }
-        uint8_t g() const { return color.g; }
-        uint8_t b() const { return color.b; }
-        private:
-        Color(RGB rgb) : color{ rgb } {}
-        RGB color;
+    struct Color {
+        static Optional<Color> from_spec(StringView spec);
+        static Optional<Color> from_name(StringView name);
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
     };
     private:
+    constexpr static inline Array<Pair<StringView, Color>, 16> color_names{
+        Pair{ "black"_sv,          Color{ 0, 0, 0 }       },
+        Pair{ "red"_sv,            Color{ 196, 0, 0 }     },
+        Pair{ "green"_sv,          Color{ 0, 196, 0 }     },
+        Pair{ "yellow"_sv,         Color{ 196, 126, 0 }   },
+        Pair{ "blue"_sv,           Color{ 0, 0, 196 }     },
+        Pair{ "magenta"_sv,        Color{ 196, 0, 196 }   },
+        Pair{ "cyan"_sv,           Color{ 0, 196, 196 }   },
+        Pair{ "white"_sv,          Color{ 196, 196, 196 } },
+        Pair{ "bright_black"_sv,   Color{ 78, 78, 78 }    },
+        Pair{ "bright_red"_sv,     Color{ 220, 78, 78 }   },
+        Pair{ "bright_green"_sv,   Color{ 78, 220, 78 }   },
+        Pair{ "bright_yellow"_sv,  Color{ 243, 243, 78 }  },
+        Pair{ "bright_blue"_sv,    Color{ 78, 78, 220 }   },
+        Pair{ "bright_magenta"_sv, Color{ 243, 78, 243 }  },
+        Pair{ "bright_cyan"_sv,    Color{ 78, 243, 243 }  },
+        Pair{ "bright_white"_sv,   Color{ 255, 255, 255 } }
+    };
     using LoggingFormatPart = Variant<LoggingFormatSpecifier, Color, String>;
     Vector<LoggingFormatPart> m_parts;
     public:
@@ -399,12 +370,10 @@ class Logger {
         return log(LogLevel::Trace, move(str), Forward<Args>(args)...);
     }
 };
-
 template <>
 struct PrintInfo<LoggingFormat::Color> {
     const LoggingFormat::Color& color;
     explicit PrintInfo(const LoggingFormat::Color& parser);
     String repr() const;
 };
-
 }    // namespace ARLib

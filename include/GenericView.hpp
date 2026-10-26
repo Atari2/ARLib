@@ -143,6 +143,7 @@ class IteratorView {
         ++m_end;
         return collector;
     }
+    ContainerType collect() { return collect<ContainerType>(); }
     template <typename NewCont = Cont>
     NewCont collect()
     requires Pushable<NewCont, IteratorOutputType<Iter>>
@@ -217,6 +218,12 @@ class IteratorView {
     template <typename Functor>
     auto map(Functor func) {
         auto map_iter = MapIterate{ *this, func };
+        return IteratorView<decltype(map_iter)>{ release_container(), map_iter.begin(), map_iter.end() };
+    }
+    template <typename OtherType>
+    requires ConvertibleTo<OutputType, OtherType>
+    auto cast() {
+        auto map_iter = MapIterate{ *this, [](auto&& v) -> OtherType { return static_cast<OtherType>(v); } };
         return IteratorView<decltype(map_iter)>{ release_container(), map_iter.begin(), map_iter.end() };
     }
     template <typename Functor>
