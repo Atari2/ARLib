@@ -65,7 +65,23 @@ concept ResultType = IsResultTypeV<T>;
 
 template <typename T>
 using ReadOnlyView = GenericView<AddConstT<T>>;
-template <Iterable Cont, typename Iter = decltype(declval<Cont>().begin())>
+
+template <typename T>
+concept HasContainerReferenceInformation = requires {
+    { T::ContainerReference } -> SameAs<bool>;
+};
+template <typename T>
+struct ContainerReferenceInformation {
+    constexpr static inline bool value = false;
+};
+template <typename T>
+requires HasContainerReferenceInformation<T>
+struct ContainerReferenceInformation<T> {
+    constexpr static inline bool value = T::ContainerReference;
+};
+template <
+Iterable Cont, typename Iter = decltype(declval<Cont>().begin()),
+bool IsContainerReference = ContainerReferenceInformation<Cont>::value>
 class IteratorView {
     using IterRet      = ConditionalT<CopyConstructible<Iter>, Iter, AddLvalueReferenceT<Iter>>;
     using ConstIterRet = AddConstT<IterRet>;
@@ -73,7 +89,7 @@ class IteratorView {
     Iter m_end;
     using ItemType       = RemoveReferenceT<IteratorInputType<Iter>>;
     using OutputType     = RemoveReferenceT<IteratorOutputType<Iter>>;
-    using FindOutputType = IteratorOutputType<Iter>;
+    using FindOutputType = ConditionalT<IsContainerReference, IteratorOutputType<Iter>, RemoveReferenceT<IteratorOutputType<Iter>>>;
     using ContainerType  = ContainerTypeT<Cont>;
     Optional<ContainerType> m_stolen_container{};
     Optional<ContainerType> release_container() {
@@ -81,8 +97,9 @@ class IteratorView {
         return released;
     }
     public:
-    using InnerContainer                    = ContainerType;
-    IteratorView(const IteratorView& other) = delete;
+    using InnerContainer                            = ContainerType;
+    constexpr static inline bool ContainerReference = IsContainerReference;
+    IteratorView(const IteratorView& other)         = delete;
     IteratorView(IteratorView&& other) noexcept :
         m_begin(move(other.m_begin)), m_end(move(other.m_end)), m_stolen_container(move(other.m_stolen_container)) {}
     explicit IteratorView(ContainerType&& storage) :
@@ -300,6 +317,8 @@ class IteratorView {
         return {};
     }
 };
+template <Iterable Cont>
+explicit IteratorView(Cont& cont) -> IteratorView<Cont, decltype(declval<Cont>().begin()), true>;
 template <Printable T>
 struct PrintInfo<GenericView<T>> {
     const GenericView<T>& m_view;

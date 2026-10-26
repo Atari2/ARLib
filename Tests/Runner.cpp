@@ -1879,3 +1879,10 @@ TEST(ARLibTests, SharedPtrOrderingTests) {
     EXPECT_EQ(*vec2[1], "2");
     EXPECT_EQ(*vec2[2], "3");
 }
+TEST(ARLibTests, GenericViewReferenceTests) {
+    auto v = Vector{ 1, 2, 3 };
+    auto rit = v.iter().find(1);
+    auto mit = Vector{ 1, 2, 3 }.iter().find(1);
+    static_assert(SameAs<decltype(rit), Optional<int&>>, "find() on a reference iterator view may return an lreference to a value");
+    static_assert(SameAs<decltype(mit), Optional<int>>, "find() on a moved r-reference iterator view must return a value");
+}
