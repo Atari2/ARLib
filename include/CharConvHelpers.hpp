@@ -140,14 +140,7 @@ Result<RetType> StrViewTo64Binary(const StringView str) {
     // out of range check
     constexpr size_t max_int64_size  = strlen("111111111111111111111111111111111111111111111111111111111111111");
     constexpr size_t max_uint64_size = strlen("1111111111111111111111111111111111111111111111111111111111111111");
-    auto get_max_size                = [&]() {
-        if (Signed)
-            return max_int64_size;
-        else
-            return max_uint64_size;
-    };
-
-    constexpr auto max_size = get_max_size();
+    constexpr auto max_size = Signed ? max_int64_size : max_uint64_size;
 
     if (end_idx - start_idx > max_size) return "Failed to convert string to integer, out of range"_s;
     // 0-1 => 48-49
