@@ -79,7 +79,7 @@ Result<LoggingFormat, LoggingError> LoggingFormat::from_string(StringView format
                     break;
                 case 't':
                 case 'T':
-                    fmt.m_parts.emplace(LoggingFormatSpecifier::ThreadId);
+                    fmt.m_parts.emplace(LoggingFormatSpecifier::LThreadId);
                     break;
                 case 'c':
                     color_spec_state = ColorSpec::StartColorSpec;
@@ -168,7 +168,7 @@ String LoggingFormat::format_message(StringView message, LogLevel level, StringV
                         output.append(now.to_string());
                     }
                     break;
-                case LoggingFormatSpecifier::ThreadId:
+                case LoggingFormatSpecifier::LThreadId:
                     {
                         auto tid = ThisThread::id();
                         output.append(PrintInfo{ tid }.repr());
@@ -240,8 +240,8 @@ Logger::LoggingStorage::ResultType Logger::get_named_logger(StringView name) {
 Logger::LoggingStorage::ResultType Logger::get_default_logger() {
     return store().get("default"_sv);
 }
-PrintInfo<LoggingFormat::Color>::PrintInfo(const LoggingFormat::Color& color) : color{ color } {}
+PrintInfo<LoggingFormat::Color>::PrintInfo(const LoggingFormat::Color& color) : m_color{ color } {}
 String PrintInfo<LoggingFormat::Color>::repr() const {
-    return "{"_s + IntToStr(color.r) + "," + IntToStr(color.g) + "," + IntToStr(color.b) + "}";
+    return "{"_s + IntToStr(m_color.r) + "," + IntToStr(m_color.g) + "," + IntToStr(m_color.b) + "}";
 }
 }    // namespace ARLib

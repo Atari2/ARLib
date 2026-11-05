@@ -20,7 +20,7 @@ class LoggingFormat {
         LogLevel,
         LogLevelShort,
         Timestamp,
-        ThreadId,
+        LThreadId,
         DefaultColor,
         NoColor,
         LoggerName,
@@ -372,8 +372,8 @@ class Logger {
 };
 template <>
 struct PrintInfo<LoggingFormat::Color> {
-    const LoggingFormat::Color& color;
-    explicit PrintInfo(const LoggingFormat::Color& parser);
+    const LoggingFormat::Color& m_color;
+    explicit PrintInfo(const LoggingFormat::Color& color);
     String repr() const;
 };
 }    // namespace ARLib
