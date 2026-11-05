@@ -3,7 +3,7 @@ cmake_policy(SET CMP0117 NEW)
 cmake_minimum_required(VERSION 3.20)
 project(ARLib VERSION 0.1)
 include(GNUInstallDirs)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(ARLIB_SOURCE_FILES "")
 set(ARLIB_PUBLIC_COMPILE_DEFINITIONS "")
@@ -498,11 +498,13 @@ else()
         list(APPEND ARLIB_COMPILE_WARNINGS
 			-Wno-gnu-zero-variadic-macro-arguments
 			-Wno-nested-anon-types
+			-Wno-c2y-extensions
 		)
     elseif(ON_CLANG)
     	list(APPEND ARLIB_COMPILE_WARNINGS
 			-Wno-gnu-zero-variadic-macro-arguments
 			-Wno-nested-anon-types
+			-Wno-c2y-extensions
 		)
 	endif()
     if (ARLIB_USE_MOLD)
