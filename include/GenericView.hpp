@@ -146,6 +146,20 @@ class IteratorView {
         for (auto it = m_begin; it != m_end; ++it) { collector.append(*it); }
         return collector;
     }
+    template <Constructible<OutputType> JoinObj>
+    requires Pushable<OutputType, OutputType>
+    OutputType join_with(JoinObj obj) {
+        --m_end;    // move end one before
+        OutputType joiner{ Forward<JoinObj>(obj) };
+        OutputType collector{};
+        for (auto it = m_begin; it != m_end; ++it) {
+            collector.append(*it);
+            collector.append(joiner);
+        }
+        collector.append(*m_end);
+        ++m_end;
+        return collector;
+    }
     template <typename NewCont, Constructible<OutputType> JoinObj>
     requires Pushable<NewCont, OutputType>
     NewCont join_with(JoinObj obj) {
