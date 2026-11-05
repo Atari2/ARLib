@@ -18,7 +18,7 @@ class IteratorBase {
     constexpr IteratorBase(IteratorBase<T>&& other) noexcept : m_current(other.m_current) { other.m_current = nullptr; }
 
     public:
-    constexpr const T* const ptr() const { return m_current; }
+    constexpr const T* ptr() const { return m_current; }
     constexpr bool operator==(const IteratorBase<T>& other) const { return m_current == other.m_current; }
     constexpr bool operator!=(const IteratorBase<T>& other) const { return m_current != other.m_current; }
     constexpr bool operator<(const IteratorBase<T>& other) { return m_current < other.m_current; }
