@@ -51,7 +51,9 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, msg);                                                                     \
             } else {                                                                                                   \
-                _assert_puts(ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);       \
+                _assert_printf(                                                                                        \
+                ARLib::SourceLocation::current(), "ASSERTION \"%s\" FAILED: " msg "\n", STRINGIFY(val)                 \
+                );                                                                                                     \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
             arlib_unreachable                                                                                          \
@@ -62,7 +64,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
                 CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                     \
             } else {                                                                                                   \
                 _assert_printf(                                                                                        \
-                ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__    \
+                ARLib::SourceLocation::current(), "ASSERTION \"%s\" FAILED: " fmt "\n", STRINGIFY(val), __VA_ARGS__    \
                 );                                                                                                     \
                 assertion_failed__();                                                                                  \
             }                                                                                                          \
@@ -74,7 +76,9 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
             if (is_constant_evaluated()) {                                                                             \
                 CONSTEVAL_STATIC_ASSERT(val, msg);                                                                     \
             } else {                                                                                                   \
-                _assert_puts(ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " msg);       \
+                _assert_printf(                                                                                        \
+                ARLib::SourceLocation::current(), "ASSERTION \"%s\" FAILED: " msg "\n", STRINGIFY(val)                 \
+                );                                                                                                     \
             }                                                                                                          \
         }
     #define SOFT_ASSERT_FMT(val, fmt, ...)                                                                             \
@@ -83,7 +87,7 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
                 CONSTEVAL_STATIC_ASSERT(val, fmt);                                                                     \
             } else {                                                                                                   \
                 _assert_printf(                                                                                        \
-                ARLib::SourceLocation::current(), "ASSERTION \"" STRINGIFY(val) "\" FAILED: " fmt "\n", __VA_ARGS__    \
+                ARLib::SourceLocation::current(), "ASSERTION \"%s\" FAILED: " fmt "\n", STRINGIFY(val), __VA_ARGS__    \
                 );                                                                                                     \
             }                                                                                                          \
         }
@@ -116,6 +120,10 @@ bool assert_ptr_non_eq(const T1& first, const T2& second) {
     }
 
 #define TODO_CLS(cls)                                                                                                  \
-    cls() { todo__(); };                                                                                               \
-    static void todo__() { HARD_ASSERT(false, CONCAT(STRINGIFY(cls), " is not implemented yet")) }
+    cls() {                                                                                                            \
+        todo__();                                                                                                      \
+    };                                                                                                                 \
+    static void todo__() {                                                                                             \
+        HARD_ASSERT(false, CONCAT(STRINGIFY(cls), " is not implemented yet"))                                          \
+    }
 #define TODO(func) HARD_ASSERT(false, CONCAT(STRINGIFY(func), " not implemented yet"))
