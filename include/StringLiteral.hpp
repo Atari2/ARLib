@@ -47,6 +47,7 @@ struct StringLiteral {
     consteval const char* ptr() const { return _m_str; }
     consteval size_t size() const { return m_size; }
     consteval char operator[](const size_t index) const { return _m_str[index]; }
+    consteval char& operator[](const size_t index) { return _m_str[index]; }
     template <size_t M>
     consteval size_t count(const char (&c)[M]) const {
         size_t count                = 0;
@@ -137,6 +138,12 @@ struct StringLiteral {
         );
         return static_cast<T>(ret);
     };
+    consteval const char* begin() const {
+        return _m_str;
+    }
+    consteval const char* end() const {
+        return _m_str + m_size;
+    }
 };
 template <size_t N>
 consteval StringLiteral<N> sl(const char (&str)[N]) {
